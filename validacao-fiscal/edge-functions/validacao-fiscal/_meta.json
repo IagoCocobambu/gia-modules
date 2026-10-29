@@ -1,0 +1,23 @@
+{
+  "name": "validacao-fiscal",
+  "handlers": [
+    "contas",
+    "lojas",
+    "notas"
+  ],
+  "secrets_required": [
+    "GIA_SERVER_DATABASE_URL"
+  ],
+  "integracoes": [
+    "api-dw"
+  ],
+  "public_routes": [],
+  "leitura_ampla": {
+    "permissao": "validacao-fiscal.ler-rede",
+    "handlers": []
+  },
+  "verify_jwt": true,
+  "auth_enforced_by": "generated-wrapper (GoTrue /auth/v1/user)",
+  "generated_by": "gia pack (server-codegen)",
+  "routing": "POST /functions/v1/<moduleId>/<handler> (fallback: body.__handler)"
+}

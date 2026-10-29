@@ -1,0 +1,42 @@
+{
+  "name": "@modules/teste",
+  "version": "0.1.0",
+  "description": "Teste — módulo GIA",
+  "private": true,
+  "type": "module",
+  "author": "iago.pereira@cocobambu.com",
+  "files": [
+    "src",
+    "PRD.md",
+    "INTEGRATION.md",
+    "README.md",
+    "gia.config.ts",
+    "tsconfig.json",
+    "assets",
+    "migrations",
+    "edge-functions",
+    "validation-report.json"
+  ],
+  "scripts": {
+    "dev": "gia dev",
+    "validate": "gia validate",
+    "format": "prettier --write .",
+    "pack": "gia pack"
+  },
+  "dependencies": {
+    "@gia-cb/sdk": "^0.1.0-alpha",
+    "@gia-cb/ui": "^0.1.0-alpha",
+    "@tanstack/react-query": "^5.100.14",
+    "lucide-react": "^1.16.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@gia-cb/cli": "^0.1.0-alpha",
+    "@gia-cb/dev-shell": "^0.1.0-alpha",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prettier": "^3.8.3",
+    "typescript": "~5.6.3"
+  }
+}
