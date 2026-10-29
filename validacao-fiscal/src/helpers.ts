@@ -311,20 +311,32 @@ function dataBr(data: string): string {
   return data.split('-').reverse().join('/')
 }
 
-/**
- * Nome do arquivo no padrão do portal: `GIA-<módulo>-<loja>-<período do filtro>`.
- * Ex.: `GIA-Validação Fiscal-01.CB GOIANIA-20.10.2026 a 26.10.2026`. Caracteres
- * que o Windows não aceita em nome de arquivo viram espaço.
- */
-export function nomeArquivoExport(loja: string, de: string, ate: string): string {
+/** `2026-10-20`/`2026-10-26` → `20.10.2026 a 26.10.2026` (um dia só → `20.10.2026`). */
+export function periodoArquivo(de: string, ate: string): string {
   const fmt = (d: string) => d.split('-').reverse().join('.')
-  const periodo = de === ate ? fmt(de) : `${fmt(de)} a ${fmt(ate)}`
+  return de === ate ? fmt(de) : `${fmt(de)} a ${fmt(ate)}`
+}
+
+/**
+ * Nome do arquivo no padrão do portal: `GIA - <módulo> - <detalhe> - <período>.<extensão>`.
+ * Ex.: `GIA - Validação Fiscal - 01.CB GOIANIA - 20.10.2026 a 26.10.2026.xlsx`.
+ * Caracteres que o sistema de arquivos recusa viram espaço.
+ *
+ * TEMPORÁRIO: mesma assinatura do `nomeArquivoExport` do `@gia-cb/ui`, que ainda
+ * não existe na 0.1.0-alpha.66. Quando a SDK trouxer, troque o import e apague esta.
+ */
+export function nomeArquivoExport(p: {
+  modulo: string
+  detalhe: string
+  periodo: string
+  extensao: string
+}): string {
   const seguro = (t: string) =>
     t
       .replace(/[\\/:*?"<>|]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-  return `GIA-${seguro(NOME_MODULO)}-${seguro(loja)}-${periodo}`
+  return `GIA - ${seguro(p.modulo)} - ${seguro(p.detalhe)} - ${seguro(p.periodo)}.${p.extensao}`
 }
 
 type CelulaExport = string | number | null

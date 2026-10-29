@@ -24,7 +24,7 @@ Docker, sem `.env`** (a API é pública).
 Copie `.env.example` para `.env` e preencha:
 
 - `GIA_SERVER_DATABASE_URL` — DW (contas, schema `simphony_api_bi`, só leitura);
-- `GIA_DEV_CRED_API_DW_BASE_URL` / `GIA_DEV_CRED_API_DW_TOKEN` — API de notas;
+- `GIA_DEV_CRED_APIDW_BASE_URL` / `GIA_DEV_CRED_APIDW_TOKEN` — API de notas;
 
 Ajuste `empresas[].locRefs.BIAPI` no `gia.config.ts` para os `loc_ref` reais das lojas.
 
@@ -32,6 +32,6 @@ Ajuste `empresas[].locRefs.BIAPI` no `gia.config.ts` para os `loc_ref` reais das
 
 - `src/server/lojas.ts` — Empresas do escopo com vínculo BIAPI.
 - `src/server/contas.ts` — contas do Simphony no DW.
-- `src/server/notas.ts` — notas da `api-dw` (`ctx.credencial('api-dw')`), de D−1 a D+1.
+- `src/server/notas.ts` — notas da `api-dw` (`ctx.credencial('apidw')`), de D−1 a D+1.
 - `src/helpers.ts` — regra de conciliação (`validateData`) e linhas do Excel.
 - `src/views/ValidacaoFiscalView.tsx` — tela (filtros, cards, tabela, export `.xlsx`).

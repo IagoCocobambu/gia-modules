@@ -9,7 +9,7 @@
     "GIA_SERVER_DATABASE_URL"
   ],
   "integracoes": [
-    "api-dw"
+    "apidw"
   ],
   "public_routes": [],
   "leitura_ampla": {

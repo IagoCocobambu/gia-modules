@@ -196,8 +196,8 @@ status e o **Exportar** ficam no topo da lista.
 O botão **Exportar** da tabela gera um arquivo **.xlsx** só com as linhas que
 passam nos **filtros da tela** (status e filtros de coluna, de todas as páginas),
 em ordem de data/hora, no modelo de planilha do GIA, com o nome
-\`GIA-Validação Fiscal-<Loja>-<período>.xlsx\` (ex.:
-\`GIA-Validação Fiscal-01.CB GOIANIA-20.10.2026 a 26.10.2026.xlsx\`).
+\`GIA - Validação Fiscal - <Loja> - <período>.xlsx\` (ex.:
+\`GIA - Validação Fiscal - 01.CB GOIANIA - 20.10.2026 a 26.10.2026.xlsx\`).
 
 - No topo: título com loja e período, e uma linha com o filtro de status, as
   janelas usadas, a quantidade de linhas e a hora em que o arquivo foi gerado.

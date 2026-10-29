@@ -1,6 +1,6 @@
 {
   "name": "@modules/validacao-fiscal",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Validação Fiscal — módulo GIA (exemplo de consumo de API externa)",
   "private": true,
   "type": "module",
@@ -24,8 +24,8 @@
     "pack": "gia pack"
   },
   "dependencies": {
-    "@gia-cb/sdk": "^0.1.0-alpha",
-    "@gia-cb/ui": "^0.1.0-alpha",
+    "@gia-cb/sdk": "0.1.0-alpha.66",
+    "@gia-cb/ui": "0.1.0-alpha.66",
     "@tanstack/react-query": "^5.100.14",
     "exceljs": "^4.4.0",
     "lucide-react": "^1.16.0",
@@ -33,8 +33,8 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@gia-cb/cli": "^0.1.0-alpha",
-    "@gia-cb/dev-shell": "^0.1.0-alpha",
+    "@gia-cb/cli": "0.1.0-alpha.66",
+    "@gia-cb/dev-shell": "0.1.0-alpha.66",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "prettier": "^3.8.3",

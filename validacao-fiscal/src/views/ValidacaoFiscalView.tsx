@@ -40,6 +40,7 @@ import {
   hojeLocal,
   NOME_MODULO,
   nomeArquivoExport,
+  periodoArquivo,
   preencherPlanilha,
   passaNoFiltro,
   somarDias,
@@ -102,7 +103,12 @@ async function exportarXlsx(linhas: ValidationResult[], consulta: Consulta, filt
   )
   const a = document.createElement('a')
   a.href = url
-  a.download = `${nomeArquivoExport(consulta.lojaNome, consulta.de, consulta.ate)}.xlsx`
+  a.download = nomeArquivoExport({
+    modulo: NOME_MODULO,
+    detalhe: consulta.lojaNome,
+    periodo: periodoArquivo(consulta.de, consulta.ate),
+    extensao: 'xlsx',
+  })
   a.click()
   URL.revokeObjectURL(url)
 }

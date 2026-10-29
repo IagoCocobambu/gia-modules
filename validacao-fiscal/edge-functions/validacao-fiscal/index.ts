@@ -769,7 +769,7 @@ __giaHandlers["notas"] = (() => {
   }
 
   /** Id da integração da api-dw.cocobambu.com no hub de Credenciais. */
-  const INTEGRACAO = 'api-dw'
+  const INTEGRACAO = 'apidw'
   const MAX_DIAS_PERIODO = 31
   const DATA_RE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -845,7 +845,11 @@ __giaHandlers["notas"] = (() => {
     })
     if (!r.ok) throw new HttpError(502, `A API de notas respondeu ${r.status}.`)
     const json = (await r.json()) as unknown
-    const brutos = Array.isArray(json) ? (json as Record<string, unknown>[]) : []
+    // 200 com algo que não é lista (ex.: mensagem de erro) é falha, não "zero notas" —
+    // senão a tela marcaria todas as contas da loja como sem nota fiscal.
+    if (!Array.isArray(json))
+      throw new HttpError(502, 'A API de notas devolveu um formato inesperado.')
+    const brutos = json as Record<string, unknown>[]
 
     // Dedup pela chave de acesso: a mesma nota conta uma vez só.
     const porChave = new Map<string, Invoice>()

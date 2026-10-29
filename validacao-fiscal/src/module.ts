@@ -5,7 +5,7 @@ import { validacaoFiscalRoutes } from './routes'
 export const validacaoFiscalModule = defineModule({
   id: 'validacao-fiscal',
   label: 'Validação Fiscal',
-  version: '0.1.0',
+  version: '0.1.1',
   description:
     'Concilia as contas fechadas no PDV (Simphony) com as notas fiscais (NFC-e) emitidas por loja e período.',
   icon: 'FileCheck',

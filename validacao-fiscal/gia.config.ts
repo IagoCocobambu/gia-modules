@@ -2,7 +2,7 @@
 //
 // Os dados da tela vêm dos handlers em `src/server/` rodando no Node:
 // - contas.ts → DW (schema simphony_api_bi) via GIA_SERVER_DATABASE_URL do .env;
-// - notas.ts  → api-dw.cocobambu.com/invoices/?loc_ref=<BIAPI> via GIA_DEV_CRED_API_DW_* do .env.
+// - notas.ts  → api-dw.cocobambu.com/invoices/?loc_ref=<BIAPI> via GIA_DEV_CRED_APIDW_* do .env.
 // Por isso não há fixtures — só personas e as empresas simuladas, que precisam
 // do `locRefs.BIAPI` (o loc_ref da loja no Simphony) para aparecer no seletor. O
 // mesmo loc_ref busca as contas no DW e as notas na API.

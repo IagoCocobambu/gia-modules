@@ -10,8 +10,8 @@
 | **Autor**              | Iago Pereira (iago.pereira@cocobambu.com) |
 | **Versão do PRD**      | `1.2`                                     |
 | **Status**             | `em-dev`                                  |
-| **Última atualização** | 2026-10-28                                |
-| **SDK version mínima** | `@gia-cb/sdk@^0.1.0-alpha`                |
+| **Última atualização** | 2026-10-29                                |
+| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.66`              |
 
 ---
 
@@ -150,8 +150,8 @@ GIA** (título na linha 1, subtítulo cinza na 2, cabeçalho `#DBE9FF` na 4,
 congelado e com autofiltro). Valores em R$ (`"R$" #,##0.00`), datas como data.
 Última linha **Total** com `SUBTOTAL(109)` de cada coluna monetária — soma só os
 registros exportados (e só os visíveis se filtrar no Excel). Nome
-`GIA-<módulo>-<loja>-<período do filtro>.xlsx`, ex.
-`GIA-Validação Fiscal-01.CB GOIANIA-20.10.2026 a 26.10.2026.xlsx`.
+`GIA - <módulo> - <loja> - <período do filtro>.xlsx`, ex.
+`GIA - Validação Fiscal - 01.CB GOIANIA - 20.10.2026 a 26.10.2026.xlsx`.
 
 **Prioridade**: must-have
 
@@ -201,7 +201,7 @@ O módulo não tem escrita.
 | Integração                          | Propósito          | Camada                   | Credencial                                         |
 | ----------------------------------- | ------------------ | ------------------------ | -------------------------------------------------- |
 | DW (`simphony_api_bi`)              | Contas do Simphony | handler `contas` (`sql`) | `GIA_SERVER_DATABASE_URL` (já conectado no portal) |
-| `api-dw.cocobambu.com` `/invoices/` | Notas fiscais      | handler `notas`          | hub de Credenciais, integração `api-dw`            |
+| `api-dw.cocobambu.com` `/invoices/` | Notas fiscais      | handler `notas`          | hub de Credenciais, integração `apidw`             |
 
 ### 5.4 BFF / processamento em segundo plano
 
@@ -301,7 +301,7 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 
 ### Decisões pendentes
 
-- [ ] Cadastrar a `api-dw.cocobambu.com` no hub de Credenciais — id da integração (assumido `api-dw`) e forma de autenticação (Mardson).
+- [x] `api-dw.cocobambu.com` no hub de Credenciais — já cadastrada com o id `apidw` (confirmado pelo time GIA na revisão da 0.1.0). Liberação do módulo na integração: time GIA, na instalação.
 
 ---
 

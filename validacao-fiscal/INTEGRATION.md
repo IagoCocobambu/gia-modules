@@ -3,9 +3,9 @@
 ## 1. Identificação
 
 - **Módulo**: `validacao-fiscal` — Validação Fiscal
-- **Versão do pacote**: 0.1.0
+- **Versão do pacote**: 0.1.1
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
-- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha
+- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.66 (fixada)
 
 ## 2. Fontes de dados externas
 
@@ -15,14 +15,13 @@ Módulo **read-only** — não cria tabela nem migration no portal.
 | ----------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | `lojas.ts`              | `ctx.empresas()` (Empresas com `locRefs.BIAPI`)                                                           | —                                                    |
 | `contas.ts`             | DW, schema `simphony_api_bi` (`guest_check`, `revenue_centers`, `order_types`, `operations_daily_totals`) | `sql` do SDK (`GIA_SERVER_DATABASE_URL`), só leitura |
-| `notas.ts`              | `api-dw.cocobambu.com/invoices/?loc_ref=` (o mesmo `locRefs.BIAPI` das contas)                            | `ctx.credencial('api-dw')`                           |
+| `notas.ts`              | `api-dw.cocobambu.com/invoices/?loc_ref=` (o mesmo `locRefs.BIAPI` das contas)                            | `ctx.credencial('apidw')`                            |
 
 ### 2.1 Credenciais / integrações
 
-- [ ] **Hub de Credenciais**: cadastrar a `api-dw.cocobambu.com` com id **`api-dw`**
-      (o handler declara `integracoes: ['api-dw']`) e liberar este módulo nela.
-      ⚠️ O id e a forma de autenticação ainda precisam ser confirmados — se o id for
-      outro, trocar a constante `INTEGRACAO` e o `config` em `src/server/notas.ts`.
+- [ ] **Hub de Credenciais**: a `api-dw.cocobambu.com` já está cadastrada com id
+      **`apidw`** (o handler declara `integracoes: ['apidw']`). Falta liberar este
+      módulo nela — feito pelo time GIA na instalação.
 - [ ] `GIA_SERVER_DATABASE_URL` — DW (já conectado no portal, segundo o time de infra).
 
 ## 3. Posição no menu
@@ -37,6 +36,9 @@ Módulo **read-only** — não cria tabela nem migration no portal.
 
 - `validacao-fiscal.ler` — consultar a validação.
 - `validacao-fiscal.exportar` — exportar em Excel.
+
+Na instalação, as duas chaves vão só para o grupo **Admin**; os demais acessos são
+dados pelos gestores, pela tela.
 
 ## 5. Observações
 
