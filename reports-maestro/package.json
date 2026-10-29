@@ -1,0 +1,47 @@
+{
+  "name": "@modules/reports-maestro",
+  "version": "0.1.0",
+  "description": "Reports Maestro — pedidos de delivery do Maestro por loja e período (módulo GIA)",
+  "private": true,
+  "type": "module",
+  "author": "Iago Pereira <iago.pereira@cocobambu.com>",
+  "files": [
+    "src",
+    "PRD.md",
+    "INTEGRATION.md",
+    "README.md",
+    "gia.config.ts",
+    "tsconfig.json",
+    "assets",
+    "migrations",
+    "edge-functions",
+    "validation-report.json"
+  ],
+  "scripts": {
+    "dev": "gia dev",
+    "validate": "gia validate",
+    "format": "prettier --write .",
+    "pack": "gia pack"
+  },
+  "dependencies": {
+    "@gia-cb/sdk": "0.1.0-alpha.66",
+    "@gia-cb/ui": "0.1.0-alpha.66",
+    "@tanstack/react-query": "^5.100.14",
+    "exceljs": "^4.4.0",
+    "lucide-react": "^1.16.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@gia-cb/cli": "0.1.0-alpha.66",
+    "@gia-cb/dev-shell": "0.1.0-alpha.66",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prettier": "^3.8.3",
+    "typescript": "~5.8.3"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "msw@2.15.0": true
+  }
+}
