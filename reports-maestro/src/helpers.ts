@@ -1,4 +1,3 @@
-import type { BadgeProps } from '@gia-cb/ui'
 import type { Worksheet } from 'exceljs'
 import type { PedidoMaestro } from './types'
 
@@ -57,11 +56,43 @@ export function periodoArquivo(de: string, ate: string): string {
   return de === ate ? fmt(de) : `${fmt(de)} a ${fmt(ate)}`
 }
 
-/** Status que a API devolve hoje; outro valor aparece em cinza. */
-export const VARIANTE_STATUS_PEDIDO: Record<string, BadgeProps['variant']> = {
-  CONFIRMED: 'info',
-  DISPATCHED: 'success',
-  CANCELLED: 'destructive',
+/** Chave do status no filtro de status: pedido sem status vira `''`. */
+export function chaveStatus(p: PedidoMaestro): string {
+  return p.status_do_pedido ?? ''
+}
+
+/** Chave da origem no filtro de origem: pedido sem origem vira `''`. */
+export function chaveOrigem(p: PedidoMaestro): string {
+  return p.origem ?? ''
+}
+
+/**
+ * Quantos pedidos há em cada chave. `base` entra com 0 antes da contagem — é como
+ * o filtro mantém visível (e desmarcável) uma opção que o OUTRO filtro zerou.
+ */
+export function contarPor(
+  pedidos: PedidoMaestro[],
+  chave: (p: PedidoMaestro) => string,
+  base: Iterable<string> = []
+): Map<string, number> {
+  const m = new Map<string, number>()
+  for (const k of base) m.set(k, 0)
+  for (const p of pedidos) m.set(chave(p), (m.get(chave(p)) ?? 0) + 1)
+  return m
+}
+
+/** Aplica os filtros de chips: conjunto vazio = não filtra por aquela dimensão. */
+export function filtrarPedidos(
+  pedidos: PedidoMaestro[],
+  status: ReadonlySet<string>,
+  origens: ReadonlySet<string>
+): PedidoMaestro[] {
+  if (status.size === 0 && origens.size === 0) return pedidos
+  return pedidos.filter(
+    (p) =>
+      (status.size === 0 || status.has(chaveStatus(p))) &&
+      (origens.size === 0 || origens.has(chaveOrigem(p)))
+  )
 }
 
 export interface TotaisPedidos {

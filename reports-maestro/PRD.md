@@ -120,8 +120,33 @@ ação · Nº parceiro · Nº conta · CPF cliente · Nome cliente · Qtd pedido
 cliente · Tel. cliente · Rua · Núm. · Referência · Retirada · Confirmado por ·
 Cancelado por · Origem · Status pedido · Valor pedido · Valor entrega · Total pago ·
 Desconto total · Forma pgto · Descontos. Busca global, filtro e ordenação por
-coluna, escolha de colunas visíveis e linha **Total** (soma das 4 colunas em R$ das
-linhas filtradas).
+coluna e escolha de colunas visíveis. Acima da tabela:
+
+- **4 cards de totais** (fechados por padrão; o botão **Totais** no cabeçalho da
+  tabela abre/fecha, com transição; desativado antes da 1ª pesquisa; o estado vale
+  enquanto a tela está aberta) — Valor pedido, Valor entrega, Total pago e Desconto total —
+  com a soma dos pedidos do período nos status e origens marcados (todos, se nada). A busca
+  e os filtros de coluna da tabela não mudam os totais; para somar esse recorte,
+  use a linha **Total** do Excel (RF-5).
+- **Painel de filtros** (fechado por padrão; o botão **Filtros** no cabeçalho da
+  tabela abre/fecha, com transição; desativado antes da 1ª pesquisa; fechar NÃO limpa
+  a seleção — o botão mostra quantos chips estão marcados). O botão é próprio do
+  módulo: o de filtros condicionais do `DataReport` não expõe o estado e some no
+  celular. Dentro do painel:
+- **Filtro de status** (no painel de filtros, visual de chips/pílulas, distinto dos
+  cards de totais) — Todos, Confirmados, Despachados, A caminho
+  (`GOING_TO_DESTINATION`) e Cancelados (sempre
+  visíveis, mesmo com 0), mais um chip para qualquer outro status que a API
+  devolver. Cada chip mostra a quantidade de pedidos (respeitando o filtro de origem). **Clicar
+  filtra** a tabela, os cards de totais e o export por aquele status; seleção
+  **múltipla** (liga/desliga por status), "Todos" limpa. Status com 0 não clica.
+  Nova pesquisa limpa a seleção.
+- **Filtro de origem** (abaixo do de status, mesmo visual e regras) — um chip por
+  origem presente no período (a API já devolve em português: "iFood", "App Coco
+  Bambu", ...; sem dicionário), em ordem alfabética, "Sem origem" por último. Os
+  dois filtros se combinam (E); a contagem de cada um respeita o OUTRO filtro, não
+  o próprio. Chip marcado que ficou com 0 continua visível e desmarcável.
+- **Coluna Origem** mostra a origem num badge neutro centralizado, como o status.
 
 **Prioridade**: must-have
 
@@ -148,7 +173,10 @@ valores em R$, datas como data e linha **Total** com `SUBTOTAL(109)`. Nome
 ### 4.2 Fluxos principais
 
 **Fluxo C1 — Consultar**: abre `/reports-maestro` → loja e período → Pesquisar →
-handler `pedidos` → tabela com a linha Total.
+handler `pedidos` → cards de totais, filtros de status e de origem + tabela de pedidos.
+
+**Fluxo C4 — Filtrar por status/origem**: clica em um ou mais chips de status e/ou de origem → tabela,
+totais e export passam a mostrar só esses status e origens → "Todos" limpa cada barra.
 
 **Fluxo C2 — Achar um pedido**: digita número, CPF ou nome na busca da tabela.
 
@@ -200,12 +228,21 @@ Não usa.
 - **RN-2**: O período é de 1 a 31 dias, sem datas futuras, data final ≥ inicial.
   As datas são interpretadas pela API no fuso America/Sao_Paulo.
 - **RN-3**: Todos os pedidos do período entram, inclusive `CANCELLED` (igual ao
-  legado). A linha Total soma o que está filtrado na tabela.
+  legado). Sem status marcado no filtro, os totais somam todos os pedidos do período
+  (cancelados inclusive); com status marcados, só os desses status. A linha Total do
+  Excel soma o que estava na tabela (status + busca + filtros de coluna) ao exportar.
 - **RN-4**: Datas exibidas e exportadas em horário de São Paulo (`data_de_criacao_horario_sp`,
   `data_de_acao_horario_sp`), sem conversão de fuso no navegador.
 - **RN-5**: O módulo mostra dados pessoais do cliente (CPF, nome, email, telefone,
   endereço), como o legado — acesso restrito a quem tem `reports-maestro.ler` e às
   lojas do seu escopo.
+- **RN-6**: O status do pedido é traduzido por um dicionário único
+  (`src/status-pedido.ts`), usado pelo filtro de status (plural: "Cancelados") e
+  pela coluna da tabela (singular: "Cancelado"), inclusive na busca e no filtro de
+  coluna: `CONFIRMED` → Confirmado, `DISPATCHED` → Despachado,
+  `GOING_TO_DESTINATION` → A caminho, `CANCELLED` → Cancelado. Status fora do
+  dicionário aparece como veio da API, em cinza. O Excel mantém o valor original
+  da API, como o legado.
 
 Histórico: o módulo não altera dados, então não há trilha de mutação.
 
@@ -217,7 +254,14 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 - [ ] Leitor sem `reports-maestro.exportar` não vê o botão Exportar
 - [ ] Handler recusa (403) empresa fora do escopo
 - [ ] Mesma loja e período trazem os mesmos pedidos que o Reports Maestro legado
-- [ ] Soma das colunas em R$ do Excel bate com a linha Total da tela
+- [ ] Linha Total do Excel bate com a soma das colunas em R$ das linhas exportadas
+- [ ] Cards de totais batem com a linha Total do Excel exportado sem busca/filtro de coluna
+- [ ] Quantidades de cada filtro de chips somam o "Todos" e não mudam ao marcar chip da própria barra
+- [ ] Marcar origem recalcula as quantidades de status (e vice-versa); chip marcado com 0 continua desmarcável
+- [ ] Coluna Origem mostra badge centralizado
+- [ ] Botão Totais abre/fecha os cards de totais (fechados por padrão), em desktop e mobile
+- [ ] Botão Filtros abre/fecha o painel de status/origem (fechado por padrão); fechado com filtro ativo mostra a quantidade marcada
+- [ ] Clicar em status filtra tabela, totais e export; "Todos" limpa
 - [ ] Mobile (375x667), tablet (768x1024), desktop (1280x720) funcionam; tabela vira cards
 - [ ] Tema light/dark coerentes
 - [ ] FAQ cobre todas as funcionalidades e regras
@@ -299,7 +343,7 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 | 1   | Pedidos | `[data-tour="reports-maestro-filtros"]`   | Escolha loja e período |
 | 2   | Pedidos | `[data-tour="reports-maestro-pesquisar"]` | Pesquisar              |
 | 3   | Pedidos | `[data-tour="reports-maestro-toolbar"]`   | Busca, colunas e Excel |
-| 4   | Pedidos | `[data-tour="reports-maestro-frame"]`     | Pedidos e linha Total  |
+| 4   | Pedidos | `[data-tour="reports-maestro-frame"]`     | Pedidos                |
 
 ---
 

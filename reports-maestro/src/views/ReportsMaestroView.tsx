@@ -1,7 +1,6 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Bike, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Bike, LayoutDashboard, RefreshCw, SlidersHorizontal } from 'lucide-react'
 import {
-  Badge,
   Button,
   DataReport,
   EmptyState,
@@ -9,15 +8,26 @@ import {
   WidthFrame,
   nomeArquivoExport,
   toast,
+  Tooltip,
   type ColumnDef,
 } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
 import { useTourReplayTrigger } from '@gia-cb/sdk/modules'
 import { useCanAccess } from '@gia-cb/sdk/permissions'
 import { useLojasReportsMaestro, usePedidosReportsMaestro } from '../api/reports-maestro'
+import { BadgeOrigemPedido } from '../components/BadgeOrigemPedido'
+import { BadgeStatusPedido } from '../components/BadgeStatusPedido'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
+import { OrigemFiltro } from '../components/OrigemFiltro'
+import { Recolhivel } from '../components/Recolhivel'
+import { StatusFiltro } from '../components/StatusFiltro'
+import { TotaisCards } from '../components/TotaisCards'
 import {
+  chaveOrigem,
+  chaveStatus,
   COLUNAS_EXPORT,
+  contarPor,
+  filtrarPedidos,
   formatBRL,
   formatDataHora,
   hojeLocal,
@@ -27,8 +37,8 @@ import {
   somarDias,
   somarPedidos,
   validarPeriodo,
-  VARIANTE_STATUS_PEDIDO,
 } from '../helpers'
+import { statusPedido } from '../status-pedido'
 import type { Consulta, PedidoMaestro } from '../types'
 
 /** Abaixo desta largura (px) a tela usa o layout de celular — o mesmo corte do
@@ -42,6 +52,36 @@ const CAMPOS_CARD = new Set<keyof PedidoMaestro>([
   'status_do_pedido',
   'total_pago',
 ])
+
+/**
+ * Barra de rolagem fina e discreta para tudo que rola dentro da tela (corpo da
+ * tabela, lista de cards, rolagem única do celular). As divs que rolam ficam
+ * dentro do `DataReport`, que não aceita classe pra elas — então o estilo desce
+ * por seletor de descendente a partir do frame.
+ *
+ * Chrome/Edge/Safari: `::-webkit-scrollbar` — trilho suave arredondado e
+ * polegar em pílula de 6px por dentro dele (borda transparente +
+ * `bg-clip-padding` dá o respiro), sem setas.
+ * Firefox não tem esses pseudo-elementos e cai no `scrollbar-width/color`
+ * padrão. Os dois não podem valer juntos: no Chrome 121+ o padrão desliga o
+ * webkit — por isso o fallback fica atrás do `@supports not selector(...)`.
+ */
+const SCROLLBAR_ELEGANTE = [
+  '[&_*::-webkit-scrollbar]:size-2.5',
+  '[&_*::-webkit-scrollbar-track]:rounded-full',
+  '[&_*::-webkit-scrollbar-track]:bg-border/50',
+  '[&_*::-webkit-scrollbar-corner]:bg-transparent',
+  '[&_*::-webkit-scrollbar-thumb]:rounded-full',
+  '[&_*::-webkit-scrollbar-thumb]:border-2',
+  '[&_*::-webkit-scrollbar-thumb]:border-solid',
+  '[&_*::-webkit-scrollbar-thumb]:border-transparent',
+  '[&_*::-webkit-scrollbar-thumb]:bg-clip-padding',
+  '[&_*::-webkit-scrollbar-thumb]:bg-muted-foreground/50',
+  '[&_*::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/70',
+  '[&_*::-webkit-scrollbar-thumb:active]:bg-muted-foreground/85',
+  '[@supports_not_selector(::-webkit-scrollbar)]:[&_*]:[scrollbar-width:thin]',
+  '[@supports_not_selector(::-webkit-scrollbar)]:[&_*]:[scrollbar-color:color-mix(in_oklab,var(--color-muted-foreground)_50%,transparent)_color-mix(in_oklab,var(--color-border)_50%,transparent)]',
+].join(' ')
 
 /**
  * `true` quando a ÁREA da tela é estreita. Mede o elemento — não a janela — pelo
@@ -116,6 +156,42 @@ export function ReportsMaestroView() {
   const carregando = pedidosQuery.isFetching
   const erro = pedidosQuery.error ?? lojasQuery.error
 
+  // Filtros de chips (vazio = todos). Os dois juntos filtram a tabela, os totais
+  // em R$ e o export. A contagem de cada filtro respeita o OUTRO (status conta só
+  // as origens marcadas e vice-versa), mas não o próprio — senão marcar um chip
+  // zeraria os vizinhos. As opções vêm do período inteiro (`base`), pra um chip
+  // marcado nunca sumir.
+  const [statusFiltro, setStatusFiltro] = useState<ReadonlySet<string>>(() => new Set())
+  const [origemFiltro, setOrigemFiltro] = useState<ReadonlySet<string>>(() => new Set())
+  // Painéis acima da tabela — cards de totais em R$ e filtros de status/origem:
+  // fechados por padrão, cada um abre pelo seu botão no cabeçalho da tabela
+  // ("Totais", "Filtros"). A escolha vale até sair da tela (nova pesquisa mantém).
+  // Fechar o painel de filtros NÃO limpa o que está marcado — o número no botão
+  // avisa que a tabela continua filtrada.
+  const [totaisAbertos, setTotaisAbertos] = useState(false)
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false)
+  const qtdFiltrosAtivos = statusFiltro.size + origemFiltro.size
+  const painelVisivel = consulta !== null && !erro
+  const vazio = useMemo<ReadonlySet<string>>(() => new Set(), [])
+  const contagemStatus = useMemo(() => {
+    if (!pedidosQuery.data) return null
+    const base = new Set(pedidos.map(chaveStatus))
+    return contarPor(filtrarPedidos(pedidos, vazio, origemFiltro), chaveStatus, base)
+  }, [pedidosQuery.data, pedidos, origemFiltro, vazio])
+  const contagemOrigem = useMemo(() => {
+    if (!pedidosQuery.data) return null
+    const base = new Set(pedidos.map(chaveOrigem))
+    return contarPor(filtrarPedidos(pedidos, statusFiltro, vazio), chaveOrigem, base)
+  }, [pedidosQuery.data, pedidos, statusFiltro, vazio])
+  const pedidosFiltrados = useMemo(
+    () => filtrarPedidos(pedidos, statusFiltro, origemFiltro),
+    [pedidos, statusFiltro, origemFiltro]
+  )
+  const totais = useMemo(
+    () => (pedidosQuery.data ? somarPedidos(pedidosFiltrados) : null),
+    [pedidosQuery.data, pedidosFiltrados]
+  )
+
   const semAlteracao =
     consulta !== null &&
     consulta.empresaId === empresaIdSelecionada &&
@@ -134,6 +210,8 @@ export function ReportsMaestroView() {
       toast.error('Informe uma loja.')
       return
     }
+    setStatusFiltro(new Set())
+    setOrigemFiltro(new Set())
     setConsulta({
       empresaId: loja.empresaId,
       lojaNome: loja.nome,
@@ -149,18 +227,44 @@ export function ReportsMaestroView() {
         const meta = CAMPOS_CARD.has(col.campo) ? { mobile: 'primary' as const } : undefined
         const base = { id: col.campo, accessorKey: col.campo, header: col.header, meta }
         if (col.campo === 'status_do_pedido') {
+          // Valor da coluna = nome traduzido, pra busca, filtro de coluna e ordenação
+          // usarem o que o usuário vê ("Cancelado", não "CANCELLED").
+          return {
+            id: col.campo,
+            header: col.header,
+            meta,
+            accessorFn: (p) => (p.status_do_pedido ? statusPedido(p.status_do_pedido).rotulo : ''),
+            // Centralizado na coluna da tabela; no card do celular fica alinhado
+            // com os outros campos.
+            cell: ({ row }) => {
+              const s = row.original.status_do_pedido
+              return (
+                <div className={cn('flex', !compacto && 'justify-center')}>
+                  {s ? (
+                    <BadgeStatusPedido status={s} />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </div>
+              )
+            },
+          }
+        }
+        if (col.campo === 'origem') {
+          // Badge colorido por canal (a origem já vem em português da API),
+          // centralizado como o status.
           return {
             ...base,
             cell: ({ row }) => {
-              const s = row.original.status_do_pedido
-              if (!s) return <span className="text-muted-foreground">—</span>
+              const o = row.original.origem
               return (
-                <Badge
-                  variant={VARIANTE_STATUS_PEDIDO[s] ?? 'secondary'}
-                  className="whitespace-nowrap"
-                >
-                  {s}
-                </Badge>
+                <div className={cn('flex', !compacto && 'justify-center')}>
+                  {o ? (
+                    <BadgeOrigemPedido origem={o} />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </div>
               )
             },
           }
@@ -197,7 +301,7 @@ export function ReportsMaestroView() {
           },
         }
       }),
-    []
+    [compacto]
   )
 
   if (!canView) {
@@ -208,11 +312,10 @@ export function ReportsMaestroView() {
     )
   }
 
-  const totais = somarPedidos(pedidos)
   const subtitle = consulta
     ? `${consulta.lojaNome} · ${formatDataHora(consulta.de)}${
         consulta.de !== consulta.ate ? ` a ${formatDataHora(consulta.ate)}` : ''
-      }${pedidosQuery.data ? ` · total pago ${formatBRL(totais.total_pago)}` : ''}`
+      }`
     : 'Pedidos de delivery do Maestro por loja e período.'
 
   let emptyState
@@ -256,7 +359,7 @@ export function ReportsMaestroView() {
     // O WidthFrame desenha os botões de expandir/retrair largura FORA da sua borda:
     // nada de overflow nele (cortaria os botões) — o scroll fica na div interna.
     <WidthFrame
-      className="h-[calc(100vh-6.5rem)] md:h-[calc(100vh-7.5rem)]"
+      className={cn('h-[calc(100vh-6.5rem)] md:h-[calc(100vh-7.5rem)]', SCROLLBAR_ELEGANTE)}
       data-tour="reports-maestro-frame"
     >
       {/* No celular a página tem UMA rolagem só (esta div) e a lista cresce com o
@@ -280,13 +383,91 @@ export function ReportsMaestroView() {
           compacto={compacto}
         />
 
+        {/* Dois painéis independentes, cada um aberto pelo seu botão no cabeçalho da
+            tabela. Cada `Recolhivel` recolhido cancela o próprio gap do container. */}
+        <Recolhivel className="shrink-0" visivel={painelVisivel && totaisAbertos}>
+          <TotaisCards totais={totais} carregando={carregando} compacto={compacto} />
+        </Recolhivel>
+        <Recolhivel className="shrink-0" visivel={painelVisivel && filtrosAbertos}>
+          <div className="flex flex-col gap-3">
+            <StatusFiltro
+              contagem={contagemStatus}
+              selecionados={statusFiltro}
+              onSelecionar={setStatusFiltro}
+              carregando={carregando}
+              compacto={compacto}
+            />
+            <OrigemFiltro
+              contagem={contagemOrigem}
+              selecionados={origemFiltro}
+              onSelecionar={setOrigemFiltro}
+              carregando={carregando}
+              compacto={compacto}
+            />
+          </div>
+        </Recolhivel>
+
+        {/* Célula da tabela nunca quebra linha (a coluna alarga e a tabela rola na
+            horizontal). Vai por seletor porque o DataReport não aceita classe por
+            célula; o card do celular não usa <td>, então segue quebrando normal. */}
         <DataReport
-          className={compacto ? 'shrink-0' : 'min-h-0 flex-1'}
+          className={cn('[&_td]:whitespace-nowrap', compacto ? 'shrink-0' : 'min-h-0 flex-1')}
           fillHeight={!compacto}
           title={NOME_MODULO}
           titleExtra={<TourReplayButton onClick={replayTour} />}
           subtitle={subtitle}
-          data={erro ? [] : pedidos}
+          actions={
+            <>
+              <Tooltip
+                content={
+                  filtrosAbertos
+                    ? 'Ocultar os filtros de status e origem'
+                    : qtdFiltrosAtivos > 0
+                      ? `Mostrar os filtros de status e origem (${qtdFiltrosAtivos} marcado${qtdFiltrosAtivos === 1 ? '' : 's'})`
+                      : 'Mostrar os filtros de status e origem'
+                }
+              >
+                <Button
+                  variant={filtrosAbertos ? 'default' : 'outline'}
+                  size="sm"
+                  aria-pressed={filtrosAbertos}
+                  disabled={!consulta || !!erro}
+                  onClick={() => setFiltrosAbertos((v) => !v)}
+                  data-tour="reports-maestro-filtros-toggle"
+                >
+                  <SlidersHorizontal className="h-4 w-4" /> Filtros
+                  {/* Com o painel fechado, o número avisa que a tabela está filtrada. */}
+                  {qtdFiltrosAtivos > 0 && (
+                    <span
+                      className={cn(
+                        'rounded-full px-1.5 text-xs tabular-nums transition-colors duration-fast',
+                        filtrosAbertos
+                          ? 'bg-primary-foreground/20 text-primary-foreground'
+                          : 'bg-primary text-primary-foreground'
+                      )}
+                    >
+                      {qtdFiltrosAtivos}
+                    </span>
+                  )}
+                </Button>
+              </Tooltip>
+              <Tooltip
+                content={totaisAbertos ? 'Ocultar os totais em R$' : 'Mostrar os totais em R$'}
+              >
+                <Button
+                  variant={totaisAbertos ? 'default' : 'outline'}
+                  size="sm"
+                  aria-pressed={totaisAbertos}
+                  disabled={!consulta || !!erro}
+                  onClick={() => setTotaisAbertos((v) => !v)}
+                  data-tour="reports-maestro-totais-toggle"
+                >
+                  <LayoutDashboard className="h-4 w-4" /> Totais
+                </Button>
+              </Tooltip>
+            </>
+          }
+          data={erro ? [] : pedidosFiltrados}
           columns={columns}
           loading={carregando}
           getRowId={(p) => p.id}
@@ -296,19 +477,6 @@ export function ReportsMaestroView() {
           pageSize={100}
           columnVisibilityToggle={!compacto}
           fullscreenToggle={!compacto}
-          summaryRow={(linhas) => {
-            const t = somarPedidos(linhas)
-            const total = (v: number) => (
-              <span className="whitespace-nowrap font-semibold tabular-nums">{formatBRL(v)}</span>
-            )
-            return {
-              nome_loja: <span className="font-semibold">Total</span>,
-              valor_do_pedido: total(t.valor_do_pedido),
-              valor_da_entrega: total(t.valor_da_entrega),
-              total_pago: total(t.total_pago),
-              desconto_total: total(t.desconto_total),
-            }
-          }}
           onExport={
             canExport && consulta && pedidosQuery.data
               ? (visiveis) => exportarXlsx(visiveis, consulta)
