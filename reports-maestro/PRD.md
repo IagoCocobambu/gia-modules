@@ -122,31 +122,40 @@ Cancelado por · Origem · Status pedido · Valor pedido · Valor entrega · Tot
 Desconto total · Forma pgto · Descontos. Busca global, filtro e ordenação por
 coluna e escolha de colunas visíveis. Acima da tabela:
 
-- **4 cards de totais** (fechados por padrão; o botão **Totais** no cabeçalho da
-  tabela abre/fecha, com transição; desativado antes da 1ª pesquisa; o estado vale
-  enquanto a tela está aberta) — Valor pedido, Valor entrega, Total pago e Desconto total —
-  com a soma dos pedidos do período nos status e origens marcados (todos, se nada). A busca
-  e os filtros de coluna da tabela não mudam os totais; para somar esse recorte,
-  use a linha **Total** do Excel (RF-5).
-- **Painel de filtros** (fechado por padrão; o botão **Filtros** no cabeçalho da
-  tabela abre/fecha, com transição; desativado antes da 1ª pesquisa; fechar NÃO limpa
-  a seleção — o botão mostra quantos chips estão marcados). O botão é próprio do
-  módulo: o de filtros condicionais do `DataReport` não expõe o estado e some no
-  celular. Dentro do painel:
-- **Filtro de status** (no painel de filtros, visual de chips/pílulas, distinto dos
-  cards de totais) — Todos, Confirmados, Despachados, A caminho
-  (`GOING_TO_DESTINATION`) e Cancelados (sempre
-  visíveis, mesmo com 0), mais um chip para qualquer outro status que a API
-  devolver. Cada chip mostra a quantidade de pedidos (respeitando o filtro de origem). **Clicar
-  filtra** a tabela, os cards de totais e o export por aquele status; seleção
-  **múltipla** (liga/desliga por status), "Todos" limpa. Status com 0 não clica.
-  Nova pesquisa limpa a seleção.
-- **Filtro de origem** (abaixo do de status, mesmo visual e regras) — um chip por
-  origem presente no período (a API já devolve em português: "iFood", "App Coco
+- **4 cards de totais** (acima da tabela, começam abertos se a altura da tela for
+  > = 700 px e fechados abaixo disso; o botão **Totais** no
+  > cabeçalho da tabela abre/fecha, com transição de altura + fade; desativado antes da
+  > 1ª pesquisa; o estado vale enquanto a tela está aberta) — Valor pedido, Valor
+  > entrega, Total pago e Desconto total —
+  > com a soma dos pedidos do período nos status e origens marcados (todos, se nada). A busca
+  > e os filtros de coluna da tabela não mudam os totais; para somar esse recorte,
+  > use a linha **Total** do Excel (RF-5).
+- **Dialog de filtros** (`Modal` da `@gia-cb/ui`, tela cheia no celular, aberto
+  pelo botão **Filtros** no cabeçalho da tabela; desativado antes da 1ª pesquisa).
+  Marcar chips **não** filtra na hora: o dialog edita um rascunho (começa do filtro
+  aplicado ao abrir). Rodapé: **Limpar filtros** (desmarca as duas barras no
+  rascunho) e **Ver N pedidos** (aplica o rascunho e fecha; N = pedidos que sobram
+  com o rascunho). X, clique fora e Esc fecham **descartando** o rascunho. Filtro
+  aplicado continua valendo com o dialog fechado — o botão mostra quantos chips
+  estão aplicados.
+  O botão é próprio do módulo: o de filtros condicionais do `DataReport` não expõe
+  o estado e some no celular. Dentro do dialog:
+- **Filtro de status** (no dialog de filtros, visual de chips/pílulas, distinto dos
+  cards de totais) — Todos e um chip por status **presente nos pedidos** (com
+  quantidade > 0 respeitando o filtro de origem marcado), traduzido e ordenado pelo
+  dicionário (RN-6, ordem da vida do pedido); status fora do dicionário depois, em
+  ordem alfabética. Cada chip mostra a quantidade de pedidos. Seleção **múltipla**
+  (liga/desliga por status), "Todos" limpa; aplicada em "Ver N pedidos", filtra a
+  tabela, os cards de totais e o export. Chip que entra/sai da lista tem transição
+  (fade + escala). Nova pesquisa limpa a seleção.
+- **Filtro de origem** (ao lado do de status no desktop, abaixo no celular; mesmo visual e regras) — um chip por
+  origem presente nos pedidos (quantidade > 0 respeitando o status marcado; a API já devolve em português: "iFood", "App Coco
   Bambu", ...; sem dicionário), em ordem alfabética, "Sem origem" por último. Os
   dois filtros se combinam (E); a contagem de cada um respeita o OUTRO filtro, não
   o próprio. Chip marcado que ficou com 0 continua visível e desmarcável.
-- **Coluna Origem** mostra a origem num badge neutro centralizado, como o status.
+- **Coluna Origem** mostra a origem num badge centralizado, como o status, colorido
+  por canal (iFood rosa, 99Food âmbar, App Coco Bambu azul, Pedido manual cinza;
+  canal desconhecido só com contorno).
 
 **Prioridade**: must-have
 
@@ -239,9 +248,17 @@ Não usa.
 - **RN-6**: O status do pedido é traduzido por um dicionário único
   (`src/status-pedido.ts`), usado pelo filtro de status (plural: "Cancelados") e
   pela coluna da tabela (singular: "Cancelado"), inclusive na busca e no filtro de
-  coluna: `CONFIRMED` → Confirmado, `DISPATCHED` → Despachado,
-  `GOING_TO_DESTINATION` → A caminho, `CANCELLED` → Cancelado. Status fora do
-  dicionário aparece como veio da API, em cinza. O Excel mantém o valor original
+  coluna. Ordem da vida do pedido; a cor agrupa por fase:
+  - antes de sair (info): `RECEIVED` → Recebido, `CONFIRMED` → Confirmado,
+    `PACKED` → Embalado;
+  - em trânsito (warning): `DISPATCHED` → Despachado, `ON_ROUTE` → Em rota,
+    `GOING_TO_DESTINATION` → A caminho;
+  - entregue (success): `DELIVERED` → Entregue, `COMPLETED` → Concluído;
+  - não entregue/retorno (exception): `ORDER_NOT_DELIVERED` → Não entregue,
+    `RETURN_TO_ORIGIN` → Retornando, `RETURNED` → Retornado;
+  - `CANCELLED` → Cancelado (destructive).
+
+  Status fora do dicionário aparece como veio da API, em cinza. O Excel mantém o valor original
   da API, como o legado.
 
 Histórico: o módulo não altera dados, então não há trilha de mutação.
@@ -259,8 +276,8 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 - [ ] Quantidades de cada filtro de chips somam o "Todos" e não mudam ao marcar chip da própria barra
 - [ ] Marcar origem recalcula as quantidades de status (e vice-versa); chip marcado com 0 continua desmarcável
 - [ ] Coluna Origem mostra badge centralizado
-- [ ] Botão Totais abre/fecha os cards de totais (fechados por padrão), em desktop e mobile
-- [ ] Botão Filtros abre/fecha o painel de status/origem (fechado por padrão); fechado com filtro ativo mostra a quantidade marcada
+- [ ] Botão Totais abre/fecha os cards de totais acima da tabela (abertos de início se a altura da tela for >= 700 px, fechados abaixo), em desktop e mobile
+- [ ] Botão Filtros abre o dialog de status/origem; marcar chips não fecha; "Limpar filtros" desmarca tudo; tabela só muda em "Ver N pedidos" (que fecha); X/fora/Esc descartam o marcado; filtros mostram só status/origens com pedidos; fechado com filtro ativo, o botão mostra a quantidade marcada
 - [ ] Clicar em status filtra tabela, totais e export; "Todos" limpa
 - [ ] Mobile (375x667), tablet (768x1024), desktop (1280x720) funcionam; tabela vira cards
 - [ ] Tema light/dark coerentes

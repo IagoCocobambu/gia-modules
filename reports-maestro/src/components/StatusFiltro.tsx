@@ -12,22 +12,30 @@ interface StatusFiltroProps {
   className?: string
 }
 
+const ORDEM = Object.keys(STATUS_PEDIDO)
+
+/** Status do dicionário na ordem dele; os de fora depois, em ordem alfabética. */
+function compararStatus(a: string, b: string): number {
+  const ia = ORDEM.indexOf(a)
+  const ib = ORDEM.indexOf(b)
+  if (ia !== -1 || ib !== -1)
+    return (ia === -1 ? ORDEM.length : ia) - (ib === -1 ? ORDEM.length : ib)
+  return a.localeCompare(b, 'pt-BR')
+}
+
 /**
- * Filtro por status do pedido. Os status do dicionário (`status-pedido.ts`)
- * aparecem sempre, na ordem dele e mesmo com 0, pro layout não pular; status
- * fora do dicionário entram depois, em ordem alfabética.
+ * Filtro por status do pedido: um chip por status presente na pesquisa (o
+ * `FiltroChips` ainda esconde os que a outra barra zerou), traduzido pelo
+ * dicionário (`status-pedido.ts`).
  */
 export function StatusFiltro({ contagem, ...props }: StatusFiltroProps) {
-  const extras = contagem ? [...contagem.keys()].filter((k) => !(k in STATUS_PEDIDO)).sort() : []
-  const opcoes: OpcaoChip[] = [...Object.keys(STATUS_PEDIDO), ...extras].map((chave) => {
-    const s = statusPedido(chave)
-    return {
-      chave,
-      label: s.rotuloPlural,
-      quantidade: contagem?.get(chave) ?? 0,
-      icone: s.icone,
-      corIcone: s.corIcone,
-    }
-  })
-  return <FiltroChips rotulo="Filtrar por status" opcoes={opcoes} {...props} />
+  const opcoes: OpcaoChip[] | null = contagem
+    ? [...contagem.entries()]
+        .sort(([a], [b]) => compararStatus(a, b))
+        .map(([chave, quantidade]) => {
+          const s = statusPedido(chave)
+          return { chave, label: s.rotuloPlural, quantidade, icone: s.icone, corIcone: s.corIcone }
+        })
+    : null
+  return <FiltroChips rotulo="Status" opcoes={opcoes} {...props} />
 }

@@ -24,7 +24,7 @@ export const tour = defineTour({
       screen: '/reports-maestro',
       target: '[data-tour="reports-maestro-filtros-toggle"]',
       title: 'Filtros de status e origem',
-      body: 'Clique em **Filtros** para abrir os botões de **status** e de **origem** — eles filtram a tabela, os totais e o Excel, e dá para combinar os dois. Fechar o painel não tira o filtro: o número no botão mostra quantos estão marcados.',
+      body: 'Clique em **Filtros** para abrir uma janela com os botões de **status** e de **origem** que existem nos pedidos pesquisados. Marque o que quiser (dá para combinar os dois) e clique em **Ver N pedidos** para filtrar a tabela, os totais e o Excel — antes disso nada muda. Depois de aplicado, o número no botão mostra quantos estão marcados.',
       placement: 'bottom',
     },
     {
@@ -32,7 +32,7 @@ export const tour = defineTour({
       screen: '/reports-maestro',
       target: '[data-tour="reports-maestro-totais-toggle"]',
       title: 'Totais em R$',
-      body: 'Depois de pesquisar, clique em **Totais** para abrir os cards com a soma de Valor pedido, Valor entrega, Total pago e Desconto total. Clique de novo para fechar. Os totais seguem os filtros de status e de origem.',
+      body: 'Depois de pesquisar, clique em **Totais** para abrir, acima da tabela, os cards com a soma de Valor pedido, Valor entrega, Total pago e Desconto total. Clique de novo para fechar. Os totais seguem os filtros de status e de origem.',
       placement: 'bottom',
     },
     {

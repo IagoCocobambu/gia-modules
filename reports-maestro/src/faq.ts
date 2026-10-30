@@ -19,12 +19,14 @@ A tabela mostra **uma linha por pedido**, na ordem de criação.
 
 ## Cards de totais
 
-O botão **Totais**, no cabeçalho da tabela (ao lado de Filtros), abre e fecha
-**4 cards** com a soma, em R$, dos pedidos do período **nos status e nas origens
-marcados** nos filtros (todos, se nada estiver marcado). Os cards começam
-**fechados**; com eles abertos o botão fica preenchido. O botão só funciona
-depois da primeira pesquisa, e a escolha de aberto/fechado vale até você sair da
-tela (pesquisar de novo não fecha os cards):
+O botão **Totais**, no cabeçalho da tabela (ao lado de Filtros), abre e fecha,
+acima da tabela, **4 cards** com a soma, em R$, dos pedidos do período **nos
+status e nas origens marcados** nos filtros (todos, se nada estiver marcado). Os
+cards começam **abertos** em telas com 700 px de altura ou mais e **fechados** em
+telas mais baixas (para sobrar espaço para a tabela); com eles abertos o botão
+fica preenchido. O botão só
+funciona depois da primeira pesquisa, e a escolha de aberto/fechado vale até
+você sair da tela (pesquisar de novo não fecha os cards):
 
 | Card | Soma da coluna |
 |---|---|
@@ -41,29 +43,47 @@ Excel soma só o que foi exportado.
 
 ## Filtro de status
 
-O botão **Filtros**, no cabeçalho da tabela (ao lado de Totais), abre e fecha o
-painel com os filtros de status e de origem. O painel começa **fechado** e o
-botão só funciona depois da primeira pesquisa.
+O botão **Filtros**, no cabeçalho da tabela (ao lado de Totais), abre uma
+janela no meio da tela (no celular, em tela cheia) com os filtros de status e de
+origem. Marque quantos botões quiser: **nada muda na tabela enquanto você
+marca**. O filtro só vale quando você clica em **Ver N pedidos**, no rodapé — o
+*N* já mostra quantos pedidos vão sobrar com o que está marcado. **Limpar
+filtros** desmarca tudo na janela (clique em *Ver N pedidos* depois para
+aplicar). Fechar pelo **X**, com um clique fora ou com **Esc** **descarta** o
+que você marcou e deixa a tabela como estava. O botão só funciona depois da
+primeira pesquisa.
 
-A primeira barra do painel é **Filtrar por status**: um botão arredondado por
-status, cada um com a **quantidade de pedidos**:
+A janela tem duas listas lado a lado (no celular, uma embaixo da outra). A
+primeira é **Status**: um botão arredondado por status, cada um com a
+**quantidade de pedidos** à direita. Só aparecem os status que existem nos
+pedidos pesquisados — por exemplo, se nenhum pedido do período foi cancelado,
+não há botão *Cancelados*:
 
 | Botão | Conta |
 |---|---|
 | **Todos** | todos os pedidos |
+| **Recebidos** | status *Recebido* |
 | **Confirmados** | status *Confirmado* |
+| **Embalados** | status *Embalado* |
 | **Despachados** | status *Despachado* |
+| **Em rota** | status *Em rota* |
 | **A caminho** | status *A caminho* |
+| **Entregues** | status *Entregue* |
+| **Concluídos** | status *Concluído* |
+| **Não entregues** | status *Não entregue* |
+| **Retornando** | status *Retornando* |
+| **Retornados** | status *Retornado* |
 | **Cancelados** | status *Cancelado* |
 
-Se a API trouxer outro status, ele ganha um botão com o próprio nome (e *Sem
-status* para pedido sem status). Confirmados, Despachados, A caminho e
-Cancelados aparecem sempre, mesmo com 0.
+Os botões seguem a ordem da vida do pedido, e a cor do ícone mostra a fase
+(veja *O que cada coluna mostra → Status do pedido*). Se a API trouxer um
+status fora desta lista, ele ganha um botão no fim, com o próprio nome (e *Sem
+status* para pedido sem status).
 
 ## Filtro de origem
 
-Logo abaixo fica a barra **Filtrar por origem**, que funciona igual: um botão
-por canal que teve pedido no período (ex.: *99Food*, *App Coco Bambu*, *iFood*,
+Ao lado fica a lista **Origem**, que funciona igual: um botão
+só para cada canal que tem pedido na pesquisa (ex.: *99Food*, *App Coco Bambu*, *iFood*,
 *Pedido manual*), em ordem alfabética, cada um com a quantidade de pedidos.
 Pedido sem origem aparece em *Sem origem*. Os nomes são os mesmos que o Maestro
 usa — a coluna **Origem** da tabela mostra o mesmo nome num badge colorido por
@@ -73,22 +93,23 @@ contorno, sem cor.
 
 ## Como os dois filtros funcionam
 
-- **Clique num botão para filtrar** — o botão marcado fica preenchido com a cor
-  de destaque. Dá para marcar **mais de um** na mesma barra (ex.: *Confirmados* +
-  *Despachados* + *A caminho*, deixando os cancelados de fora).
+- **Marque os botões e clique em Ver N pedidos** — o botão marcado fica
+  preenchido com a cor de destaque. Dá para marcar **mais de um** na mesma
+  barra (ex.: *Entregues* + *Concluídos*, para ver só o que chegou ao cliente).
 - Clique de novo num botão marcado para desmarcar, ou em **Todos** para limpar
   aquela barra. Uma nova pesquisa limpa as duas.
-- **Fechar o painel não tira o filtro.** Com algo marcado, o botão **Filtros**
-  mostra quantos estão marcados (ex.: *Filtros 2*) — é o aviso de que a tabela, os
-  totais e o Excel estão filtrados. Para limpar, abra o painel e clique em
-  **Todos**.
+- **Depois de aplicar, o filtro fica valendo.** Com algo aplicado, o botão
+  **Filtros** mostra quantos estão marcados (ex.: *Filtros 2*) — é o aviso de que
+  a tabela, os totais e o Excel estão filtrados. Para tirar, abra de novo,
+  clique em **Limpar filtros** e depois em **Ver N pedidos**.
 - Os dois filtros **se somam**: marcar *Cancelados* e *iFood* mostra só os
   pedidos cancelados do iFood.
 - **As quantidades de uma barra seguem a outra.** Com *iFood* marcado na origem,
-  os botões de status contam só os pedidos do iFood (e vice-versa). Marcar um
-  botão **não** muda as quantidades da própria barra.
-- Botão com **0** pedidos fica apagado e não clica — a não ser que já esteja
-  marcado, para você poder desmarcar.
+  os botões de status contam só os pedidos do iFood (e vice-versa) — e os status
+  que o iFood não tem **somem** da lista enquanto *iFood* estiver marcado.
+  Marcar um botão **não** muda as quantidades da própria barra.
+- Botão já marcado que ficou com **0** pela outra barra continua aparecendo, para
+  você poder desmarcar.
 
 Os filtros valem para a **tabela**, para os **cards de totais** e para o **Excel
 exportado**. A busca e os filtros de coluna da tabela continuam funcionando por
@@ -144,21 +165,30 @@ As colunas são as mesmas do relatório antigo (UniGUI), na mesma ordem:
 português; o **Excel** traz o valor original do Maestro (como no relatório
 antigo):
 
-| Na tela | No Excel | Significado |
+| Na tela | No Excel | Fase (cor) |
 |---|---|---|
-| **Confirmado** | *CONFIRMED* | confirmado — veja quem confirmou em *Confirmado por* |
-| **Despachado** | *DISPATCHED* | despachado |
-| **A caminho** | *GOING_TO_DESTINATION* | a caminho do destino |
-| **Cancelado** | *CANCELLED* | cancelado — veja quem cancelou em *Cancelado por* |
+| **Recebido** | *RECEIVED* | antes de sair da loja (azul) |
+| **Confirmado** | *CONFIRMED* | antes de sair da loja (azul) — veja quem confirmou em *Confirmado por* |
+| **Embalado** | *PACKED* | antes de sair da loja (azul) |
+| **Despachado** | *DISPATCHED* | em trânsito (amarelo) |
+| **Em rota** | *ON_ROUTE* | em trânsito (amarelo) |
+| **A caminho** | *GOING_TO_DESTINATION* | em trânsito (amarelo) |
+| **Entregue** | *DELIVERED* | entregue (verde) |
+| **Concluído** | *COMPLETED* | entregue (verde) |
+| **Não entregue** | *ORDER_NOT_DELIVERED* | não entregue / retorno (rosa) |
+| **Retornando** | *RETURN_TO_ORIGIN* | não entregue / retorno (rosa) — voltando para a loja |
+| **Retornado** | *RETURNED* | não entregue / retorno (rosa) — já voltou para a loja |
+| **Cancelado** | *CANCELLED* | cancelado (vermelho) — veja quem cancelou em *Cancelado por* |
 
-Status que não estiver nesta lista aparece em cinza, com o nome que veio do
-Maestro. A busca e o filtro da coluna *Status pedido* usam o nome em português
-(digite "cancelado", não "CANCELLED").
+A cor do status na tabela (e do ícone no filtro) indica a fase; o nome e o ícone
+diferenciam os status dentro dela. Status que não estiver nesta lista aparece em
+cinza, com o nome que veio do Maestro. A busca e o filtro da coluna *Status
+pedido* usam o nome em português (digite "cancelado", não "CANCELLED").
 
 Pedidos cancelados **entram** na lista, nos cards de totais e nos totais do
-Excel, como no relatório antigo. Para tirá-los da soma, marque *Confirmados*,
-*Despachados* e *A caminho* no filtro de status: a tabela, os totais e o Excel passam a ignorar os
-cancelados.
+Excel, como no relatório antigo. Para tirá-los da soma, marque no filtro de
+status todos os status que têm pedidos, **menos** *Cancelados*: a tabela, os
+totais e o Excel passam a ignorar os cancelados.
       `,
     },
     {
@@ -242,19 +272,23 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'Pedidos cancelados entram no total?',
-          a: 'Entram, como no relatório antigo: sem nenhum status marcado no filtro de status, a lista e os cards de totais trazem todos os pedidos do período. Para somar só os válidos, clique em Confirmados, Despachados e A caminho no filtro de status — a tabela, os cards de totais e o Excel exportado passam a deixar os cancelados de fora.',
+          a: 'Entram, como no relatório antigo: sem nenhum status marcado no filtro de status, a lista e os cards de totais trazem todos os pedidos do período. Para somar só os válidos, marque no filtro de status todos os status que aparecem, menos Cancelados, e clique em "Ver N pedidos" — a tabela, os cards de totais e o Excel exportado passam a deixar os cancelados de fora.',
         },
         {
           q: 'Onde estão os filtros de status e de origem?',
-          a: 'Clique no botão Filtros, no cabeçalho da tabela, ao lado de Totais. Ele abre o painel com os dois filtros; clique de novo para fechar. O painel começa fechado, e o botão fica desativado até você fazer a primeira pesquisa.',
+          a: 'Clique no botão Filtros, no cabeçalho da tabela, ao lado de Totais. Ele abre uma janela no meio da tela com os dois filtros. Marque os botões e clique em "Ver N pedidos" para aplicar. O botão fica desativado até você fazer a primeira pesquisa.',
         },
         {
-          q: 'Fechei o painel de filtros e a tabela continua filtrada. Por quê?',
-          a: 'Fechar o painel só esconde os botões: o que você marcou continua valendo para a tabela, os totais e o Excel. O número ao lado de "Filtros" mostra quantos estão marcados. Para limpar, abra o painel e clique em "Todos" em cada barra — ou faça uma nova pesquisa.',
+          q: 'Marquei um status e a tabela não mudou. Por quê?',
+          a: 'O filtro só vale quando você clica em "Ver N pedidos", no rodapé da janela — o N mostra quantos pedidos vão sobrar com o que está marcado. Se você fechar a janela pelo X, com um clique fora ou com Esc, o que marcou é descartado e a tabela fica como estava.',
+        },
+        {
+          q: 'Fechei a janela de filtros e a tabela continua filtrada. Por quê?',
+          a: 'Um filtro aplicado em "Ver N pedidos" continua valendo para a tabela, os totais e o Excel depois que a janela fecha. O número ao lado de "Filtros" mostra quantos estão marcados. Para tirar, abra de novo, clique em "Limpar filtros" e depois em "Ver N pedidos" — ou faça uma nova pesquisa.',
         },
         {
           q: 'Onde estão os totais em R$?',
-          a: 'Clique no botão Totais, no cabeçalho da tabela, ao lado de Exportar. Ele abre os cards com a soma de Valor pedido, Valor entrega, Total pago e Desconto total; clique de novo para fechar. Os cards começam fechados, e o botão fica desativado até você fazer a primeira pesquisa.',
+          a: 'Clique no botão Totais, no cabeçalho da tabela, ao lado de Exportar. Ele abre, acima da tabela, os cards com a soma de Valor pedido, Valor entrega, Total pago e Desconto total; clique de novo para fechar. Os cards já começam abertos em telas com 700 px de altura ou mais e fechados em telas mais baixas (como celular deitado ou notebook pequeno), e o botão fica desativado até você fazer a primeira pesquisa.',
         },
         {
           q: 'Filtrei a tabela, mas os cards de totais não mudaram. Por quê?',
@@ -262,11 +296,11 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'Marquei um status e as quantidades dos outros botões de status não mudaram. Está certo?',
-          a: 'Está: marcar um botão não muda as quantidades da própria barra, para você ver o quadro todo enquanto filtra. O que muda são a tabela, os cards de totais, o Excel e as quantidades da OUTRA barra (marcar iFood faz os status contarem só os pedidos do iFood). Para tirar o filtro, clique de novo no botão marcado ou em "Todos".',
+          a: 'Está: marcar um botão não muda as quantidades da própria barra, para você ver o quadro todo enquanto filtra. O que muda são as quantidades da OUTRA barra (marcar iFood faz os status contarem só os pedidos do iFood) e, depois de "Ver N pedidos", a tabela, os cards de totais e o Excel. Para desmarcar, clique de novo no botão marcado ou em "Todos".',
         },
         {
-          q: 'Por que um status do filtro está apagado e não clica?',
-          a: 'Porque não há nenhum pedido com aquele status no período pesquisado (ele mostra 0). Confirmados, Despachados, A caminho e Cancelados aparecem sempre, mesmo zerados.',
+          q: 'Por que um status (ou uma origem) não aparece no filtro?',
+          a: 'O filtro só mostra o que existe nos pedidos pesquisados. Se nenhum pedido do período tem aquele status, não há botão para ele. E a outra barra também conta: com iFood marcado na origem, somem os status que nenhum pedido do iFood tem (e vice-versa). Desmarque a outra barra para ver todos de novo.',
         },
         {
           q: 'Os cards de totais batem com o Excel?',

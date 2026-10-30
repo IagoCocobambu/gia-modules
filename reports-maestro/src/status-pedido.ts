@@ -1,4 +1,18 @@
-import { CircleCheck, CircleDashed, CircleX, Navigation, Truck } from 'lucide-react'
+import {
+  CircleCheck,
+  CircleCheckBig,
+  CircleDashed,
+  CircleX,
+  Inbox,
+  Navigation,
+  Package,
+  PackageCheck,
+  PackageX,
+  Route,
+  Store,
+  Truck,
+  Undo2,
+} from 'lucide-react'
 import type { ComponentType, SVGProps } from 'react'
 import type { BadgeProps } from '@gia-cb/ui'
 
@@ -7,6 +21,10 @@ import type { BadgeProps } from '@gia-cb/ui'
  * (`status_do_pedido`) → como o portal mostra. É a ÚNICA fonte da tradução —
  * o filtro de status e a coluna "Status pedido" da tabela leem daqui. Status
  * novo da API: acrescente uma entrada (a ordem aqui é a ordem dos chips).
+ *
+ * A ordem segue a vida do pedido, e a cor agrupa por fase: antes de sair (info),
+ * em trânsito (warning), entregue (success), não entregue/retorno (exception) e
+ * cancelado (destructive). Dentro da fase, o ícone diferencia.
  *
  * O Excel exportado mantém o valor original da API, como no relatório antigo.
  */
@@ -25,31 +43,67 @@ export interface DefStatusPedido {
   corPonto: string
 }
 
+const ANTES_DE_SAIR = {
+  variante: 'info',
+  corIcone: 'text-info',
+  corPonto: 'bg-info',
+} as const
+
+const EM_TRANSITO = {
+  variante: 'warning',
+  corIcone: 'text-warning',
+  corPonto: 'bg-warning',
+} as const
+
+const ENTREGUE = {
+  variante: 'success',
+  corIcone: 'text-success',
+  corPonto: 'bg-success',
+} as const
+
+const NAO_ENTREGUE = {
+  variante: 'exception',
+  corIcone: 'text-accent-exception-soft-foreground',
+  corPonto: 'bg-accent-exception-soft-foreground',
+} as const
+
 export const STATUS_PEDIDO: Record<string, DefStatusPedido> = {
+  RECEIVED: { rotulo: 'Recebido', rotuloPlural: 'Recebidos', icone: Inbox, ...ANTES_DE_SAIR },
   CONFIRMED: {
     rotulo: 'Confirmado',
     rotuloPlural: 'Confirmados',
-    variante: 'info',
     icone: CircleCheck,
-    corIcone: 'text-info',
-    corPonto: 'bg-info',
+    ...ANTES_DE_SAIR,
   },
-  DISPATCHED: {
-    rotulo: 'Despachado',
-    rotuloPlural: 'Despachados',
-    variante: 'success',
-    icone: Truck,
-    corIcone: 'text-success',
-    corPonto: 'bg-success',
-  },
+  PACKED: { rotulo: 'Embalado', rotuloPlural: 'Embalados', icone: Package, ...ANTES_DE_SAIR },
+  DISPATCHED: { rotulo: 'Despachado', rotuloPlural: 'Despachados', icone: Truck, ...EM_TRANSITO },
+  ON_ROUTE: { rotulo: 'Em rota', rotuloPlural: 'Em rota', icone: Route, ...EM_TRANSITO },
   GOING_TO_DESTINATION: {
     rotulo: 'A caminho',
     rotuloPlural: 'A caminho',
-    variante: 'warning',
     icone: Navigation,
-    corIcone: 'text-warning',
-    corPonto: 'bg-warning',
+    ...EM_TRANSITO,
   },
+  DELIVERED: { rotulo: 'Entregue', rotuloPlural: 'Entregues', icone: PackageCheck, ...ENTREGUE },
+  COMPLETED: {
+    rotulo: 'Concluído',
+    rotuloPlural: 'Concluídos',
+    icone: CircleCheckBig,
+    ...ENTREGUE,
+  },
+  ORDER_NOT_DELIVERED: {
+    rotulo: 'Não entregue',
+    rotuloPlural: 'Não entregues',
+    icone: PackageX,
+    ...NAO_ENTREGUE,
+  },
+  RETURN_TO_ORIGIN: {
+    rotulo: 'Retornando',
+    rotuloPlural: 'Retornando',
+    icone: Undo2,
+    ...NAO_ENTREGUE,
+  },
+  RETURNED: { rotulo: 'Retornado', rotuloPlural: 'Retornados', icone: Store, ...NAO_ENTREGUE },
   CANCELLED: {
     rotulo: 'Cancelado',
     rotuloPlural: 'Cancelados',

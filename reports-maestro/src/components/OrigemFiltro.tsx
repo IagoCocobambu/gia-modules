@@ -14,7 +14,8 @@ interface OrigemFiltroProps {
 /**
  * Filtro por origem (canal) do pedido. A API já devolve a origem em português
  * ("iFood", "App Coco Bambu", ...), então não há dicionário: aparece um chip por
- * origem presente no período, em ordem alfabética, e "Sem origem" por último.
+ * origem presente na pesquisa (o `FiltroChips` ainda esconde as que a outra
+ * barra zerou), em ordem alfabética, e "Sem origem" por último.
  */
 export function OrigemFiltro({ contagem, ...props }: OrigemFiltroProps) {
   const opcoes: OpcaoChip[] | null = contagem
@@ -22,5 +23,5 @@ export function OrigemFiltro({ contagem, ...props }: OrigemFiltroProps) {
         .sort(([a], [b]) => (a === '' ? 1 : b === '' ? -1 : a.localeCompare(b, 'pt-BR')))
         .map(([chave, quantidade]) => ({ chave, label: chave || 'Sem origem', quantidade }))
     : null
-  return <FiltroChips rotulo="Filtrar por origem" opcoes={opcoes} {...props} />
+  return <FiltroChips rotulo="Origem" opcoes={opcoes} {...props} />
 }
