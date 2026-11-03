@@ -11,7 +11,7 @@
 | **Versão do PRD**      | `1.2`                                     |
 | **Status**             | `em-dev`                                  |
 | **Última atualização** | 2026-10-29                                |
-| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.66`              |
+| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.67`              |
 
 ---
 

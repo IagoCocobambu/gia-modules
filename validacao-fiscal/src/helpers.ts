@@ -317,28 +317,6 @@ export function periodoArquivo(de: string, ate: string): string {
   return de === ate ? fmt(de) : `${fmt(de)} a ${fmt(ate)}`
 }
 
-/**
- * Nome do arquivo no padrão do portal: `GIA - <módulo> - <detalhe> - <período>.<extensão>`.
- * Ex.: `GIA - Validação Fiscal - 01.CB GOIANIA - 20.10.2026 a 26.10.2026.xlsx`.
- * Caracteres que o sistema de arquivos recusa viram espaço.
- *
- * TEMPORÁRIO: mesma assinatura do `nomeArquivoExport` do `@gia-cb/ui`, que ainda
- * não existe na 0.1.0-alpha.66. Quando a SDK trouxer, troque o import e apague esta.
- */
-export function nomeArquivoExport(p: {
-  modulo: string
-  detalhe: string
-  periodo: string
-  extensao: string
-}): string {
-  const seguro = (t: string) =>
-    t
-      .replace(/[\\/:*?"<>|]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  return `GIA - ${seguro(p.modulo)} - ${seguro(p.detalhe)} - ${seguro(p.periodo)}.${p.extensao}`
-}
-
 type CelulaExport = string | number | null
 
 type TipoColunaExport = 'texto' | 'inteiro' | 'moeda' | 'data' | 'dataHora'
