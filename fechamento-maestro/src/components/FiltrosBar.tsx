@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Search } from 'lucide-react'
 import { Button, DatePicker, Field, SearchableSelect, Tooltip } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
@@ -21,6 +22,8 @@ interface FiltrosBarProps {
   semAlteracao: boolean
   /** Layout de celular: campos empilhados, ocupando a largura toda. */
   compacto: boolean
+  /** Título do módulo, à esquerda (no celular, em cima dos campos). */
+  titulo: ReactNode
   className?: string
 }
 
@@ -33,6 +36,7 @@ export function FiltrosBar({
   onPesquisar,
   semAlteracao,
   compacto,
+  titulo,
   className,
 }: FiltrosBarProps) {
   const hoje = hojeLocal()
@@ -50,66 +54,78 @@ export function FiltrosBar({
     </Button>
   )
 
+  // Título à esquerda e os filtros à direita; no celular, título em cima.
   return (
     <div
       className={cn(
         'rounded-lg border border-border bg-surface p-3',
-        compacto ? 'flex flex-col gap-3' : 'flex flex-wrap items-end gap-3',
+        compacto ? 'flex flex-col gap-3' : 'flex flex-wrap items-end justify-between gap-3',
         className
       )}
-      data-tour="fechamento-maestro-filtros"
     >
-      <Field label="Loja" className={compacto ? 'w-full' : 'w-80'}>
-        {(controle) => (
-          <SearchableSelect<number>
-            triggerProps={controle}
-            options={lojas.map((l) => ({
-              value: l.empresaId,
-              label: l.nome,
-              description: l.ativo ? undefined : 'Inativa',
-            }))}
-            value={value.empresaId}
-            onChange={(empresaId) => set({ empresaId })}
-            placeholder={lojasLoading ? 'Carregando lojas…' : 'Selecione a loja'}
-            searchPlaceholder="Buscar loja…"
-            emptyLabel="Nenhuma loja disponível"
-            disabled={lojasLoading}
-          />
-        )}
-      </Field>
+      <div className="flex min-w-0 items-center gap-2 self-center">{titulo}</div>
 
-      <div className={compacto ? 'grid grid-cols-2 gap-3' : 'contents'}>
-        <Field label="Data inicial" className={compacto ? 'min-w-0' : 'w-44'}>
+      <div
+        className={compacto ? 'flex flex-col gap-3' : 'flex flex-wrap items-end gap-3'}
+        data-tour="fechamento-maestro-filtros"
+      >
+        <Field label="Loja" className={compacto ? 'w-full' : 'w-80'}>
           {(controle) => (
-            <DatePicker {...controle} value={value.de} max={hoje} onChange={(de) => set({ de })} />
-          )}
-        </Field>
-        <Field label="Data final" className={compacto ? 'min-w-0' : 'w-44'}>
-          {(controle) => (
-            <DatePicker
-              {...controle}
-              value={value.ate}
-              max={hoje}
-              onChange={(ate) => set({ ate })}
+            <SearchableSelect<number>
+              triggerProps={controle}
+              options={lojas.map((l) => ({
+                value: l.empresaId,
+                label: l.nome,
+                description: l.ativo ? undefined : 'Inativa',
+              }))}
+              value={value.empresaId}
+              onChange={(empresaId) => set({ empresaId })}
+              placeholder={lojasLoading ? 'Carregando lojas…' : 'Selecione a loja'}
+              searchPlaceholder="Buscar loja…"
+              emptyLabel="Nenhuma loja disponível"
+              disabled={lojasLoading}
             />
           )}
         </Field>
-      </div>
 
-      {/* Botão desativado não recebe o mouse: a dica fica num invólucro focável. */}
-      <div className={compacto ? 'w-full' : 'ml-auto'}>
-        {semAlteracao && !pesquisando ? (
-          <Tooltip content="Nenhum filtro mudou desde a última pesquisa — o resultado na tela já é este.">
-            <span
-              tabIndex={0}
-              className="inline-flex w-full rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {botao}
-            </span>
-          </Tooltip>
-        ) : (
-          botao
-        )}
+        <div className={compacto ? 'grid grid-cols-2 gap-3' : 'contents'}>
+          <Field label="Data inicial" className={compacto ? 'min-w-0' : 'w-44'}>
+            {(controle) => (
+              <DatePicker
+                {...controle}
+                value={value.de}
+                max={hoje}
+                onChange={(de) => set({ de })}
+              />
+            )}
+          </Field>
+          <Field label="Data final" className={compacto ? 'min-w-0' : 'w-44'}>
+            {(controle) => (
+              <DatePicker
+                {...controle}
+                value={value.ate}
+                max={hoje}
+                onChange={(ate) => set({ ate })}
+              />
+            )}
+          </Field>
+        </div>
+
+        {/* Botão desativado não recebe o mouse: a dica fica num invólucro focável. */}
+        <div className={compacto ? 'w-full' : undefined}>
+          {semAlteracao && !pesquisando ? (
+            <Tooltip content="Nenhum filtro mudou desde a última pesquisa — o resultado na tela já é este.">
+              <span
+                tabIndex={0}
+                className="inline-flex w-full rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {botao}
+              </span>
+            </Tooltip>
+          ) : (
+            botao
+          )}
+        </div>
       </div>
     </div>
   )

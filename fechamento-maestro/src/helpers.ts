@@ -63,17 +63,37 @@ export function periodoArquivo(de: string, ate: string): string {
   return de === ate ? fmt(de) : `${fmt(de)} a ${fmt(ate)}`
 }
 
-/** Nome de cada grupo de forma de pagamento na tela e no Excel. */
+/**
+ * Nome de cada tipo de forma de pagamento na coluna TIPO, no detalhe e no Excel —
+ * os do legado. "ONLINE VR" é o que soma em Adquirentes.
+ */
 export const ROTULO_TIPO: Record<TipoPagamento, string> = {
-  online: 'Online',
-  adquirente: 'Adquirente',
-  offline: 'Offline',
-  nao_classificado: 'Não classificado',
+  online: 'ONLINE',
+  adquirente: 'ONLINE VR',
+  offline: 'OFFLINE',
+  nao_classificado: 'SEM CLASSIFICAÇÃO',
+}
+
+/** Tipos das formas de pagamento do pedido, sem repetir, na ordem em que aparecem. */
+export function tiposDoPedido(p: PedidoFechamento): TipoPagamento[] {
+  return [...new Set(p.pagamentos.map((pg) => pg.tipo))]
+}
+
+/** Coluna TIPO do legado: os tipos do pedido separados por "; " (`ONLINE; ONLINE VR`). */
+export function rotuloTiposDoPedido(p: PedidoFechamento): string {
+  return tiposDoPedido(p)
+    .map((t) => ROTULO_TIPO[t])
+    .join('; ')
 }
 
 /** Pedido entra na contagem de divergências: não cancelado e com check reprovado. */
 export function divergente(p: PedidoFechamento): boolean {
   return !p.cancelado && (!p.check_pagamentos || !p.check_descontos)
+}
+
+/** Online do pedido sem o incentivo que foi para Descontos parceiro (regra do legado). */
+function onlineLiquido(p: PedidoFechamento): number {
+  return p.total_pago_online - p.abatimento_online
 }
 
 /** Soma em centavos e devolve em reais — sem acumular erro de ponto flutuante. */
@@ -90,8 +110,9 @@ function resumir(data: string, pedidos: PedidoFechamento[]): ResumoDia {
     valor_do_pedido: somar(validos, (p) => p.valor_do_pedido),
     valor_da_entrega: somar(validos, (p) => p.valor_da_entrega),
     total_pago: somar(validos, (p) => p.total_pago),
-    online: somar(validos, (p) => p.total_pago_online),
-    adquirentes: somar(validos, (p) => p.total_pago_adquirentes),
+    online: somar(validos, onlineLiquido),
+    adquirentes_online: somar(validos, (p) => p.total_pago_adquirentes_online),
+    adquirentes_offline: somar(validos, (p) => p.total_pago_adquirentes_offline),
     offline: somar(validos, (p) => p.total_pago_offline),
     nao_classificado: somar(validos, (p) => p.total_nao_classificado),
     descontos: somar(validos, (p) => p.desconto_total),
@@ -132,25 +153,28 @@ export function pagamentosSemClassificacao(
 }
 
 /**
- * Cards de totais do período. Venda (total pago, grupos, descontos, sem
- * classificação) só dos não cancelados; os cancelados têm os próprios cards.
- * Descontos: o parceiro banca o `incentivo_parceiro`; o resto do desconto total é
- * da loja — os dois campos que o legado recebia da API.
+ * Os 12 indicadores do legado (`calculateSummary` do Fechamento Diário). Venda
+ * só dos não cancelados; os cancelados têm os seus. O incentivo que vai para
+ * Descontos parceiro sai do Online (também do Cancelado online). Descontos loja
+ * é o desconto total dos pedidos com venda concluída (DISPATCHED ou DELIVERED).
  */
 export function resumirTotais(pedidos: PedidoFechamento[]): TotaisPeriodo {
   const validos = pedidos.filter((p) => !p.cancelado)
   const cancelados = pedidos.filter((p) => p.cancelado)
   return {
-    total_pago: somar(validos, (p) => p.total_pago),
-    online: somar(validos, (p) => p.total_pago_online),
-    adquirentes: somar(validos, (p) => p.total_pago_adquirentes),
+    online: somar(validos, onlineLiquido),
+    adquirentes_online: somar(validos, (p) => p.total_pago_adquirentes_online),
+    adquirentes_offline: somar(validos, (p) => p.total_pago_adquirentes_offline),
     offline: somar(validos, (p) => p.total_pago_offline),
-    cancelado: somar(cancelados, (p) => p.total_pago),
-    cancelado_online: somar(cancelados, (p) => p.total_pago_online),
-    cancelado_adquirentes: somar(cancelados, (p) => p.total_pago_adquirentes),
+    cancelado_online: somar(cancelados, onlineLiquido),
+    cancelado_adquirentes_online: somar(cancelados, (p) => p.total_pago_adquirentes_online),
+    cancelado_adquirentes_offline: somar(cancelados, (p) => p.total_pago_adquirentes_offline),
     cancelado_offline: somar(cancelados, (p) => p.total_pago_offline),
-    descontos_loja: somar(validos, (p) => p.desconto_total - p.incentivo_parceiro),
-    descontos_parceiro: somar(validos, (p) => p.incentivo_parceiro),
+    descontos_loja: somar(
+      pedidos.filter((p) => p.venda_concluida),
+      (p) => p.desconto_total
+    ),
+    descontos_parceiro: somar(validos, (p) => p.desconto_parceiro),
     nao_classificado: somar(validos, (p) => p.total_nao_classificado),
     pagamentos_sem_classificacao: pagamentosSemClassificacao(validos).length,
     divergentes: validos.filter(divergente).length,
@@ -216,7 +240,20 @@ export const COLUNAS_DIA: ColunaExport<ResumoDia>[] = [
   },
   { header: 'Total pago', valor: (d) => d.total_pago, tipo: 'moeda', largura: 15, total: true },
   { header: 'Online', valor: (d) => d.online, tipo: 'moeda', largura: 15, total: true },
-  { header: 'Adquirentes', valor: (d) => d.adquirentes, tipo: 'moeda', largura: 15, total: true },
+  {
+    header: 'Adquirentes online',
+    valor: (d) => d.adquirentes_online,
+    tipo: 'moeda',
+    largura: 15,
+    total: true,
+  },
+  {
+    header: 'Adquirentes offline',
+    valor: (d) => d.adquirentes_offline,
+    tipo: 'moeda',
+    largura: 15,
+    total: true,
+  },
   { header: 'Offline', valor: (d) => d.offline, tipo: 'moeda', largura: 15, total: true },
   {
     header: 'Não classificado',
@@ -266,8 +303,15 @@ export const COLUNAS_PEDIDO: ColunaExport<PedidoFechamento>[] = [
   { header: 'Total pago', valor: (p) => p.total_pago, tipo: 'moeda', largura: 14, total: true },
   { header: 'Online', valor: (p) => p.total_pago_online, tipo: 'moeda', largura: 14, total: true },
   {
-    header: 'Adquirentes',
-    valor: (p) => p.total_pago_adquirentes,
+    header: 'Adquirentes online',
+    valor: (p) => p.total_pago_adquirentes_online,
+    tipo: 'moeda',
+    largura: 14,
+    total: true,
+  },
+  {
+    header: 'Adquirentes offline',
+    valor: (p) => p.total_pago_adquirentes_offline,
     tipo: 'moeda',
     largura: 14,
     total: true,
@@ -300,9 +344,17 @@ export const COLUNAS_PEDIDO: ColunaExport<PedidoFechamento>[] = [
     largura: 14,
     total: true,
   },
+  {
+    header: 'Desconto parceiro',
+    valor: (p) => p.desconto_parceiro,
+    tipo: 'moeda',
+    largura: 14,
+    total: true,
+  },
   { header: 'Check pagamentos', valor: (p) => ok(p.check_pagamentos), tipo: 'texto', largura: 13 },
   { header: 'Check descontos', valor: (p) => ok(p.check_descontos), tipo: 'texto', largura: 13 },
   { header: 'Forma pgto', valor: (p) => p.forma_de_pagamentos, tipo: 'texto', largura: 40 },
+  { header: 'Tipo', valor: (p) => rotuloTiposDoPedido(p), tipo: 'texto', largura: 22 },
   { header: 'Descontos', valor: (p) => p.descontos, tipo: 'texto', largura: 40 },
   { header: 'Divergências', valor: (p) => p.divergencias.join(' '), tipo: 'texto', largura: 50 },
 ]

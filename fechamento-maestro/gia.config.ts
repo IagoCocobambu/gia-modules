@@ -19,6 +19,11 @@ export default {
       name: 'Exportador',
       permissions: ['fechamento-maestro.ler', 'fechamento-maestro.exportar'],
     },
+    {
+      id: 'atendimento',
+      name: 'Atendimento (dados do cliente)',
+      permissions: ['fechamento-maestro.ler', 'fechamento-maestro.ver-dados-cliente'],
+    },
   ],
 
   // Lojas com o mesmo nome da lista de lojas do legado (gia.empresas.nome_fantasia).

@@ -18,9 +18,9 @@ interface Grupo {
 }
 
 /**
- * As formas de pagamento que a regra não reconheceu, agrupadas pelo nome que veio
- * do Maestro — é esse nome que o time GIA precisa para incluir na regra. Cada
- * pedido da lista abre o detalhe da conciliação.
+ * As formas de pagamento sem classificação (vieram do Maestro sem nome ou como
+ * DESCONHECIDO), agrupadas pelo texto que veio. Cada pedido da lista abre o
+ * detalhe da conciliação.
  */
 export function SemClassificacaoDialog({
   aberto,
@@ -48,8 +48,8 @@ export function SemClassificacaoDialog({
         <Modal.Header>
           <Modal.Title>Pagamentos sem classificação</Modal.Title>
           <Modal.Description>
-            Formas de pagamento que a regra do fechamento não reconheceu. Anote o nome e avise o
-            time GIA para incluí-la em Online, Adquirentes ou Offline.
+            Formas de pagamento que vieram do Maestro sem nome (vazias ou DESCONHECIDO), então não
+            dá para saber se são Online, Adquirentes ou Offline. Confira o pedido no Maestro.
           </Modal.Description>
         </Modal.Header>
         <Modal.Body className="space-y-4">

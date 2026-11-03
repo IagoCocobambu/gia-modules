@@ -15,7 +15,7 @@ interface BadgeTipoPagamentoProps {
   className?: string
 }
 
-/** Grupo da forma de pagamento no fechamento (Online, Adquirente, Offline...). */
+/** Tipo da forma de pagamento, com o nome do legado (ONLINE, ONLINE VR, OFFLINE...). */
 export function BadgeTipoPagamento({ tipo, className }: BadgeTipoPagamentoProps) {
   return (
     <Badge variant={VARIANTE_TIPO[tipo]} className={cn('whitespace-nowrap', className)}>

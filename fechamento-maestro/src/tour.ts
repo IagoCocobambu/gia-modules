@@ -24,7 +24,7 @@ export const tour = defineTour({
       screen: '/fechamento-maestro',
       target: '[data-tour="fechamento-maestro-totais-toggle"]',
       title: 'Totais do período',
-      body: 'Abre e fecha a barra de totais do período: total pago dividido em **Online**, **Adquirentes** e **Offline**, o que foi **cancelado** (com a mesma divisão), os descontos da **loja** e do **parceiro** e o que ficou **sem classificação**. Passe o mouse num indicador para ver a conta; se o de pagamentos sem classificação ficar vermelho, clique nele para ver a lista.',
+      body: 'Abre e fecha a barra de totais do período (só no computador), com os 12 indicadores do sistema antigo: **Online**, **Adquirentes online**, **Adquirentes offline** e **Offline**, o que foi **cancelado** (com a mesma divisão), os descontos da **loja** e do **parceiro** e o que ficou **sem classificação**. Passe o mouse num indicador para ver a conta; se o de pagamentos sem classificação ficar vermelho, clique nele para ver a lista.',
       placement: 'bottom',
     },
     {
@@ -39,8 +39,8 @@ export const tour = defineTour({
       id: 'toolbar',
       screen: '/fechamento-maestro',
       target: '[data-tour="fechamento-maestro-toolbar"]',
-      title: 'Busca, colunas e Excel',
-      body: 'Busque, escolha as **colunas** visíveis e **exporte** em Excel (com a permissão de exportação). O arquivo traz 3 abas: fechamento diário, pedidos e cancelados.',
+      title: 'Colunas e Excel',
+      body: 'Ligue as **colunas** que começam desligadas (valores por grupo, checks, endereço...) e **exporte** em Excel (com a permissão de exportação). O arquivo traz 3 abas: fechamento diário, pedidos e cancelados. Para filtrar, use o funil de cada coluna; no celular há um campo de busca.',
       placement: 'bottom',
     },
     {

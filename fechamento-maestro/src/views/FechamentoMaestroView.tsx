@@ -25,6 +25,7 @@ import { useFechamentoMaestro, useLojasFechamentoMaestro } from '../api/fechamen
 import { BadgeCheck } from '../components/BadgeCheck'
 import { BadgeOrigemPedido } from '../components/BadgeOrigemPedido'
 import { BadgeStatusPedido } from '../components/BadgeStatusPedido'
+import { BadgeTipoPagamento } from '../components/BadgeTipoPagamento'
 import { DashboardDialog } from '../components/DashboardDialog'
 import { DetalhePedidoDialog } from '../components/DetalhePedidoDialog'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
@@ -44,7 +45,9 @@ import {
   preencherPlanilha,
   resumirPorDia,
   resumirTotais,
+  rotuloTiposDoPedido,
   somarDias,
+  tiposDoPedido,
   validarPeriodo,
 } from '../helpers'
 import { statusPedido } from '../status-pedido'
@@ -90,25 +93,62 @@ const BOTAO_TOOLBAR = 'px-2.5 @max-lg:px-4 @5xl:px-4'
 const ROTULO_TOOLBAR = '@lg:hidden @5xl:inline'
 
 /** Campos que formam a face do card no celular; o resto fica em "ver mais". */
-const CAMPOS_CARD_PEDIDO = new Set<string>([
+const CAMPOS_CARD_PEDIDO = new Set<string>(['n_pedido', 'data_de_criacao', 'total_pago', 'tipo'])
+
+/**
+ * Colunas obrigatórias do legado (`isMandatory`): sempre visíveis, fora do menu de
+ * colunas.
+ */
+const COLUNAS_OBRIGATORIAS = new Set<string>([
   'n_pedido',
   'data_de_criacao',
-  'total_pago',
-  'check_pagamentos',
+  'nome_cliente',
+  'origem',
+  'status_do_pedido',
+  'forma_de_pagamentos',
+  'tipo',
 ])
 
-/** Colunas monetárias da tabela de pedidos, na ordem da tela. */
-const MOEDAS_PEDIDO: { campo: keyof PedidoFechamento; header: string }[] = [
-  { campo: 'total_pago', header: 'Total pago' },
-  { campo: 'total_pago_online', header: 'Online' },
-  { campo: 'total_pago_adquirentes', header: 'Adquirentes' },
-  { campo: 'total_pago_offline', header: 'Offline' },
-  { campo: 'total_nao_classificado', header: 'Não classificado' },
-  { campo: 'desconto_total', header: 'Desconto total' },
-  { campo: 'valor_do_pedido', header: 'Valor pedido' },
-  { campo: 'valor_da_entrega', header: 'Valor entrega' },
-  { campo: 'incentivo_parceiro', header: 'Incentivo parceiro' },
-]
+/**
+ * Colunas inativas do legado: nascem desligadas e se ligam pelo menu de colunas.
+ * As ativas (`DEFAULT_SELECTED_COLUMNS` do legado) são as que não estão aqui.
+ */
+const COLUNAS_INATIVAS: Record<string, false> = Object.fromEntries(
+  [
+    'data',
+    'total_pago_online',
+    'total_pago_adquirentes_online',
+    'total_pago_adquirentes_offline',
+    'total_pago_offline',
+    'total_de_descontos',
+    'venda_concluida',
+    'check_pagamentos',
+    'check_descontos',
+    'data_de_acao',
+    'cpf_cliente',
+    'quantidade_pedidos',
+    'email_cliente',
+    'telefone_cliente',
+    'street_name',
+    'street_number',
+    'reference',
+    'retirada',
+    'confirmado_por',
+    'cancelado_por',
+    'valor_do_pedido',
+    'valor_da_entrega',
+    'descontos',
+    'tipo_entrega',
+    'nome_loja',
+  ].map((id) => [id, false as const])
+)
+
+type CampoTexto = {
+  [K in keyof PedidoFechamento]: PedidoFechamento[K] extends string | null ? K : never
+}[keyof PedidoFechamento]
+type CampoNumero = {
+  [K in keyof PedidoFechamento]: PedidoFechamento[K] extends number ? K : never
+}[keyof PedidoFechamento]
 
 /** Barra de rolagem fina para o que rola dentro da tela (mesma do Reports Maestro). */
 const SCROLLBAR_ELEGANTE = [
@@ -286,33 +326,94 @@ export function FechamentoMaestroView() {
     })
   }
 
+  // Ordem do `ALL_COLUMNS` do legado: as calculadas primeiro, depois os campos da
+  // API. Ativas, inativas e obrigatórias: `COLUNAS_INATIVAS` e `COLUNAS_OBRIGATORIAS`.
   const colunasPedido = useMemo<ColumnDef<PedidoFechamento, unknown>[]>(() => {
-    const meta = (campo: string) =>
-      CAMPOS_CARD_PEDIDO.has(campo) ? { mobile: 'primary' as const } : undefined
+    const base = (id: string) => ({
+      id,
+      meta: CAMPOS_CARD_PEDIDO.has(id) ? { mobile: 'primary' as const } : undefined,
+      enableHiding: !COLUNAS_OBRIGATORIAS.has(id),
+    })
     const centro = (conteudo: ReactNode) => (
       <div className={cn('flex', !compacto && 'justify-center')}>{conteudo}</div>
     )
+    const texto = (id: CampoTexto, header: string): ColumnDef<PedidoFechamento, unknown> => ({
+      ...base(id),
+      accessorKey: id,
+      header,
+      cell: ({ row }) => row.original[id] ?? vazio,
+    })
+    const valor = (id: CampoNumero, header: string): ColumnDef<PedidoFechamento, unknown> => ({
+      ...base(id),
+      accessorKey: id,
+      header,
+      cell: ({ row }) => moeda(row.original[id]),
+    })
+    const dataHora = (id: 'data' | 'data_de_criacao' | 'data_de_acao', header: string) =>
+      ({
+        ...base(id),
+        accessorKey: id,
+        header,
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap tabular-nums">{formatDataHora(row.original[id])}</span>
+        ),
+      }) satisfies ColumnDef<PedidoFechamento, unknown>
+    const check = (id: 'check_pagamentos' | 'check_descontos', header: string) =>
+      ({
+        ...base(id),
+        header,
+        accessorFn: (p) => (p[id] ? 'OK' : 'Divergente'),
+        cell: ({ row }) => centro(<BadgeCheck ok={row.original[id]} />),
+      }) satisfies ColumnDef<PedidoFechamento, unknown>
+
     return [
+      // Calculadas
+      dataHora('data', 'Data'),
+      valor('total_pago_online', 'Total pago online'),
+      valor('total_pago_adquirentes_online', 'Total pago adquirentes online'),
+      valor('total_pago_adquirentes_offline', 'Total pago adquirentes offline'),
+      valor('total_pago_offline', 'Total pago offline'),
+      valor('total_de_descontos', 'Total de descontos'),
       {
-        id: 'n_pedido',
+        ...base('venda_concluida'),
+        header: 'Venda concluída',
+        accessorFn: (p) => (p.venda_concluida ? 'Sim' : 'Não'),
+      },
+      check('check_pagamentos', 'Check pagamentos'),
+      check('check_descontos', 'Check descontos'),
+      // Campos da API
+      {
+        ...base('n_pedido'),
         accessorKey: 'n_pedido',
         header: 'Nº pedido',
-        meta: meta('n_pedido'),
         cell: ({ row }) => <span className="font-medium">{row.original.n_pedido || '—'}</span>,
       },
+      dataHora('data_de_criacao', 'Data criação'),
+      dataHora('data_de_acao', 'Data de ação'),
+      texto('n_parceiro', 'Nº parceiro'),
+      texto('n_conta', 'Nº conta'),
+      texto('cpf_cliente', 'CPF cliente'),
+      texto('nome_cliente', 'Nome cliente'),
       {
-        id: 'data_de_criacao',
-        accessorKey: 'data_de_criacao',
-        header: 'Data criação',
-        meta: meta('data_de_criacao'),
+        ...base('quantidade_pedidos'),
+        accessorKey: 'quantidade_pedidos',
+        header: 'Qtd pedidos',
         cell: ({ row }) => (
-          <span className="whitespace-nowrap tabular-nums">
-            {formatDataHora(row.original.data_de_criacao)}
+          <span className="tabular-nums">
+            {row.original.quantidade_pedidos?.toLocaleString('pt-BR') ?? '—'}
           </span>
         ),
       },
+      texto('email_cliente', 'Email cliente'),
+      texto('telefone_cliente', 'Telefone cliente'),
+      texto('street_name', 'Rua'),
+      texto('street_number', 'Número'),
+      texto('reference', 'Referência'),
+      texto('retirada', 'Retirada'),
+      texto('confirmado_por', 'Confirmado por'),
+      texto('cancelado_por', 'Cancelado por'),
       {
-        id: 'origem',
+        ...base('origem'),
         accessorKey: 'origem',
         header: 'Origem',
         cell: ({ row }) =>
@@ -320,8 +421,8 @@ export function FechamentoMaestroView() {
       },
       {
         // Valor da coluna = nome traduzido, pra busca e filtro usarem o que se vê.
-        id: 'status_do_pedido',
-        header: 'Status pedido',
+        ...base('status_do_pedido'),
+        header: 'Status do pedido',
         accessorFn: (p) => (p.status_do_pedido ? statusPedido(p.status_do_pedido).rotulo : ''),
         cell: ({ row }) =>
           centro(
@@ -332,55 +433,35 @@ export function FechamentoMaestroView() {
             )
           ),
       },
+      valor('valor_do_pedido', 'Valor do pedido'),
+      valor('valor_da_entrega', 'Valor da entrega'),
+      valor('total_pago', 'Total pago'),
+      valor('desconto_total', 'Desconto total'),
+      texto('forma_de_pagamentos', 'Forma de pagamento'),
       {
-        id: 'check_pagamentos',
-        header: 'Check pagamentos',
-        meta: meta('check_pagamentos'),
-        accessorFn: (p) => (p.check_pagamentos ? 'OK' : 'Divergente'),
-        cell: ({ row }) => centro(<BadgeCheck ok={row.original.check_pagamentos} />),
+        // Coluna TIPO do legado. Valor = "ONLINE; ONLINE VR", pra busca e filtro.
+        ...base('tipo'),
+        header: 'Tipo',
+        accessorFn: rotuloTiposDoPedido,
+        cell: ({ row }) => {
+          const tipos = tiposDoPedido(row.original)
+          return centro(
+            tipos.length === 0 ? (
+              vazio
+            ) : (
+              // Quando os badges quebram de linha, cada linha também fica centralizada.
+              <div className={cn('flex flex-wrap gap-1', !compacto && 'justify-center')}>
+                {tipos.map((t) => (
+                  <BadgeTipoPagamento key={t} tipo={t} />
+                ))}
+              </div>
+            )
+          )
+        },
       },
-      {
-        id: 'check_descontos',
-        header: 'Check descontos',
-        accessorFn: (p) => (p.check_descontos ? 'OK' : 'Divergente'),
-        cell: ({ row }) => centro(<BadgeCheck ok={row.original.check_descontos} />),
-      },
-      ...MOEDAS_PEDIDO.map(({ campo, header }): ColumnDef<PedidoFechamento, unknown> => ({
-        id: campo,
-        accessorKey: campo,
-        header,
-        meta: meta(campo),
-        cell: ({ row }) => moeda(row.original[campo] as number),
-      })),
-      {
-        id: 'venda_concluida',
-        header: 'Venda concluída',
-        accessorFn: (p) => (p.venda_concluida ? 'Sim' : 'Não'),
-      },
-      {
-        id: 'forma_de_pagamentos',
-        accessorKey: 'forma_de_pagamentos',
-        header: 'Forma pgto',
-        cell: ({ row }) => row.original.forma_de_pagamentos ?? vazio,
-      },
-      {
-        id: 'descontos',
-        accessorKey: 'descontos',
-        header: 'Descontos',
-        cell: ({ row }) => row.original.descontos ?? vazio,
-      },
-      {
-        id: 'nome_cliente',
-        accessorKey: 'nome_cliente',
-        header: 'Cliente',
-        cell: ({ row }) => row.original.nome_cliente ?? vazio,
-      },
-      {
-        id: 'tipo_entrega',
-        accessorKey: 'tipo_entrega',
-        header: 'Tipo entrega',
-        cell: ({ row }) => row.original.tipo_entrega ?? vazio,
-      },
+      texto('descontos', 'Descontos'),
+      texto('tipo_entrega', 'Tipo de entrega'),
+      texto('nome_loja', 'Nome loja'),
     ]
   }, [compacto])
 
@@ -481,22 +562,25 @@ export function FechamentoMaestroView() {
           </span>
         </Button>
       </Tooltip>
-      <Tooltip
-        content={totaisAbertos ? 'Ocultar os totais do período' : 'Mostrar os totais do período'}
-      >
-        <Button
-          variant={totaisAbertos ? 'default' : 'outline'}
-          className={BOTAO_TOOLBAR}
-          aria-label="Totais"
-          aria-pressed={totaisAbertos}
-          disabled={!painelDisponivel}
-          onClick={() => setTotaisEscolhidos(!totaisAbertos)}
-          data-tour="fechamento-maestro-totais-toggle"
+      {/* A barra de totais só existe no desktop; no celular, nem o botão. */}
+      {!compacto && (
+        <Tooltip
+          content={totaisAbertos ? 'Ocultar os totais do período' : 'Mostrar os totais do período'}
         >
-          <ChartPie className="h-4 w-4" />
-          <span className={ROTULO_TOOLBAR}>Totais</span>
-        </Button>
-      </Tooltip>
+          <Button
+            variant={totaisAbertos ? 'default' : 'outline'}
+            className={BOTAO_TOOLBAR}
+            aria-label="Totais"
+            aria-pressed={totaisAbertos}
+            disabled={!painelDisponivel}
+            onClick={() => setTotaisEscolhidos(!totaisAbertos)}
+            data-tour="fechamento-maestro-totais-toggle"
+          >
+            <ChartPie className="h-4 w-4" />
+            <span className={ROTULO_TOOLBAR}>Totais</span>
+          </Button>
+        </Tooltip>
+      )}
       <Tooltip content="Abrir o dashboard do período (vendas por canal)">
         <Button
           variant="outline"
@@ -539,9 +623,15 @@ export function FechamentoMaestroView() {
           onPesquisar={pesquisar}
           semAlteracao={semAlteracao}
           compacto={compacto}
+          titulo={
+            <>
+              <h1 className="truncate text-lg font-semibold text-foreground">{NOME_MODULO}</h1>
+              <TourReplayButton onClick={replayTour} />
+            </>
+          }
         />
 
-        <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos}>
+        <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos && !compacto}>
           <ResumoCards
             totais={totais}
             carregando={carregando}
@@ -556,13 +646,15 @@ export function FechamentoMaestroView() {
             compacto ? 'shrink-0' : 'min-h-0 flex-1'
           )}
           fillHeight={!compacto}
-          title={NOME_MODULO}
-          titleExtra={<TourReplayButton onClick={replayTour} />}
+          title="Pedidos"
           subtitle={subtitle}
           actions={acoes}
           loading={carregando}
-          globalSearch
-          columnVisibilityToggle={!compacto}
+          // Busca genérica só no celular; no desktop, os filtros de cada coluna.
+          globalSearch={compacto}
+          // Também no celular: é por ele que se ligam as colunas inativas nos cards.
+          columnVisibilityToggle
+          initialColumnVisibility={COLUNAS_INATIVAS}
           fullscreenToggle={!compacto}
           emptyState={emptyState}
           toolbarTourId="fechamento-maestro-toolbar"

@@ -8,9 +8,9 @@
 | **Label visível**      | Fechamento Maestro                        |
 | **Categoria**          | `operacional`                             |
 | **Autor**              | Iago Pereira (iago.pereira@cocobambu.com) |
-| **Versão do PRD**      | `1.0`                                     |
+| **Versão do PRD**      | `1.1`                                     |
 | **Status**             | `em-dev`                                  |
-| **Última atualização** | 2026-10-30                                |
+| **Última atualização** | 2026-11-03                                |
 | **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.67`              |
 
 ---
@@ -35,16 +35,16 @@ pagamento com um cadastro de classificações (`gia_relatorios.formas_pagamento`
 banco do Maestro), editável na própria tela. O token da API é obtido com
 usuário/senha fixos no servidor Delphi.
 
-O código desse frontend React (onde ficava a conta do fechamento) **não veio** com
-o legado; só o backend Delphi.
+O frontend React (onde fica a conta do fechamento, em
+`src/utils/paymentClassification.ts` e `src/App.tsx`) chegou em 2026-11-03, em
+`legacy-gia/fechamento-maestro/fechamento-maestro`.
 
 ### 1.3 Por que vale a pena resolver?
 
 A migração para o GIA tira a credencial do código (hub de Credenciais), aplica o
-escopo de lojas no servidor, funciona no celular e exporta em Excel. E, por decisão
-do negócio, o módulo usa **somente a API** — sem consultar banco —, então a
-classificação das formas de pagamento passa a ser uma **regra fixa e documentada**
-(RN-4) em vez de um cadastro que cada um podia alterar.
+escopo de lojas no servidor, funciona no celular e exporta em Excel. O tipo das
+formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
+`gia_relatorios.formas_pagamento` — só leitura; a edição continua fora (§8).
 
 ---
 
@@ -77,7 +77,9 @@ classificação das formas de pagamento passa a ser uma **regra fixa e documenta
 - Período > 31 dias, data final < inicial ou data futura: recusado com mensagem.
 - API demora mais de 90 s: 504 com a sugestão de reduzir o período.
 - API fora do ar ou integração não liberada: estado de erro com a mensagem e "Tentar de novo".
-- Forma de pagamento nova (não reconhecida pela RN-4): vai para "Não classificado" e o pedido fica divergente.
+- Vale novo fora do cadastro ONLINE VR: entra como ONLINE (pré-pago) ou OFFLINE, como no legado.
+- Forma de pagamento sem nome ou `DESCONHECIDO`: SEM CLASSIFICAÇÃO e o pedido fica divergente.
+- Banco do Maestro fora do ar: 502 "Não foi possível ler o cadastro de formas de pagamento".
 - Forma de pagamento ou desconto sem valor entre parênteses: pedido divergente, com o item citado.
 - Loja sem delivery no período: estado vazio "Nenhum pedido".
 
@@ -100,19 +102,49 @@ classificação das formas de pagamento passa a ser uma **regra fixa e documenta
 
 - O handler `fechamento` chama `GET /Delivery/?loc_ref&start_date&end_date` com a
   credencial `apidw` e concilia cada pedido no servidor (RN-4 a RN-7).
-- Nenhuma consulta a banco de dados.
+- Em paralelo, lê do banco do Maestro as formas `ONLINE VR` ativas de
+  `gia_relatorios.formas_pagamento` (`sql`, só `SELECT`), a cada pesquisa.
 
 ### RF-4: Fechamento por dia
 
 - Na tela, um dia = pesquisar com data inicial = final (a barra de totais
   mostra o dia). O fechamento dia a dia de um período fica na aba "Fechamento
-  diário" do Excel (RF-8): Pedidos, Cancelados, Total pago, Online, Adquirentes,
-  Offline, Não classificado, Descontos, Valor pedido, Valor entrega, Divergências.
+  diário" do Excel (RF-8): Pedidos, Cancelados, Valor pedido, Valor entrega, Total
+  pago, Online (já sem o abatimento da RN-10), Adquirentes online, Adquirentes
+  offline, Offline, Não classificado, Descontos, Divergências.
 
 ### RF-5: Tabela de pedidos (conciliação)
 
-- Uma linha por pedido com origem, status, Check pagamentos, Check descontos, os
-  valores por grupo, venda concluída, textos originais de pagamento/desconto.
+- Uma linha por pedido. Colunas no padrão do legado (`ALL_COLUMNS` /
+  `DEFAULT_SELECTED_COLUMNS` / `isMandatory` de `constants.ts`), nesta ordem — as
+  calculadas primeiro, depois as da API:
+  - **Calculadas (inativas)**: Data, Total pago online, Total pago adquirentes
+    online, Total pago adquirentes offline, Total pago offline, Total de
+    descontos, Venda concluída, Check pagamentos, Check descontos.
+  - **API**: Nº pedido\*, Data criação\*, Data de ação, **Nº parceiro**, **Nº
+    conta**, CPF cliente, Nome cliente\*, Qtd pedidos, Email cliente, Telefone
+    cliente, Rua, Número, Referência, Retirada, Confirmado por, Cancelado por,
+    Origem\*, Status do pedido\*, Valor do pedido, Valor da entrega, **Total
+    pago**, **Desconto total**, Forma de pagamento\*, Tipo\*, Descontos, Tipo de
+    entrega, Nome loja.
+  - **Ativas** (aparecem de cara): as marcadas com \* e as em negrito — Nº pedido,
+    Data criação, Nº parceiro, Nº conta, Nome cliente, Origem, Status do pedido,
+    Total pago, Desconto total, Forma de pagamento, Tipo. As demais nascem
+    desligadas (`initialColumnVisibility`) e se ligam no menu de colunas, inclusive
+    no celular.
+  - \* **Obrigatórias**: não saem no menu de colunas (`enableHiding: false`).
+  - Não classificado e Incentivo parceiro não existem no legado e saíram da tabela
+    (decisão de 2026-11-03); continuam nos totais, no detalhe e no Excel.
+- Celular: o card mostra Nº pedido, Data criação, Total pago e Tipo; o resto das
+  colunas ligadas vai em "ver mais".
+- **Tipo** (coluna TIPO / `tipo_pagamento_calc` do legado): os tipos das formas do
+  pedido, sem repetir, na ordem em que aparecem, separados por `; ` — `ONLINE`,
+  `ONLINE VR`, `OFFLINE`, `SEM CLASSIFICAÇÃO` (RN-4). Na tela, um badge por tipo;
+  busca e filtro da coluna usam o texto. Vai também no Excel.
+- Dados pessoais (CPF, e-mail, telefone, número, referência): sem
+  `fechamento-maestro.ver-dados-cliente` chegam mascarados do servidor (RN-12).
+- Busca genérica (`globalSearch`) só no celular; no desktop, os filtros por
+  coluna (`conditionalFilters`).
 - Filtro "Só divergências" (com a contagem do período).
 - Linha divergente destacada; clicar abre o detalhe (RF-6).
 
@@ -123,27 +155,31 @@ classificação das formas de pagamento passa a ser uma **regra fixa e documenta
 
 ### RF-7: Barra de totais
 
-- Barra de 12 indicadores do período inteiro, nesta ordem. Aberta em telas com
-  altura ≥ 700 px e fechada abaixo (segue o resize, via `matchMedia`); depois que
-  o usuário usa o botão "Totais", vale a escolha dele até recarregar:
-  1. Total pago, Online, Adquirentes, Offline — pedidos não cancelados.
-  2. Cancelado, Cancelado online, Cancelado adquirentes, Cancelado offline —
-     total pago dos pedidos cancelados e a divisão pelos grupos (RN-8).
+- **Só no desktop**: no celular a barra e o botão "Totais" não aparecem
+  (decisão de 2026-11-03).
+- Os 12 indicadores do Fechamento Diário do legado em produção, nesta ordem.
+  Aberta em telas com altura ≥ 700 px e fechada abaixo (segue o resize, via
+  `matchMedia`); depois que o usuário usa o botão "Totais", vale a escolha dele
+  até recarregar:
+  1. Online (RN-10), Adquirentes online, Adquirentes offline, Offline — pedidos
+     não cancelados (RN-4).
+  2. Cancelado online, Cancelado adquirentes online, Cancelado adquirentes
+     offline, Cancelado offline (RN-8).
   3. Descontos loja, Descontos parceiro (RN-10), Valor sem classificação e
      Pagamentos sem classificação (quantidade).
 - Cada indicador: ícone num quadradinho tingido + valor em negrito colorido +
   rótulo em minúsculas embaixo. Grade de largura total com colunas que dividem
   12 (container query: 2 → 3 → 4 → 6), pra as linhas fecharem cheias. Tooltip
   com a explicação da conta em cada um.
-- Cores (tokens semânticos): Total pago `success`, Online `info`, Adquirentes
-  `primary`, Offline `warning`; Cancelado `destructive` só se > 0; Sem
-  classificação (valor) `warning` só se ≠ 0; o resto neutro.
+- Cores (tokens semânticos): Online `info`, Adquirentes online/offline `primary`,
+  Offline `warning`; cancelados `destructive` só se > 0; Sem classificação
+  (valor) `warning` só se ≠ 0; o resto neutro.
 - O indicador "Pagamentos sem classificação" fica vermelho e clicável quando > 0: abre
   a lista das formas não reconhecidas, agrupadas pelo nome, com valor e pedidos;
   cada pedido abre o detalhe (RF-6).
-- Conteúdo da tela de referência do legado; os grupos Adquirentes
-  Online/Offline da referência **não** foram adotados (decisão de 2026-10-30:
-  manter os grupos da RN-4).
+- Conferido contra o print do legado em produção (loja 01, 02/11/2026): os 12
+  valores batem centavo a centavo. Revoga a decisão de 2026-10-30 de não adotar
+  Adquirentes Online/Offline.
 
 ### RF-8: Exportar Excel
 
@@ -188,23 +224,32 @@ classificação das formas de pagamento passa a ser uma **regra fixa e documenta
 
 ### 5.1 Schema de banco
 
-Não se aplica — o módulo não grava nem lê banco. Só API.
+O módulo não cria tabela nem migration e não grava nada. Só lê, do banco do
+Maestro (o `UniConnMaestro` do legado), via `sql` de `@gia-cb/sdk/server`:
+
+```sql
+select descricao, origem
+from gia_relatorios.formas_pagamento
+where coalesce(is_deleted, false) = false and tipo = 'ONLINE VR'
+```
 
 ### 5.2 Permissões (obrigatório)
 
-| Key                           | Descrição                                   | Granularidade     |
-| ----------------------------- | ------------------------------------------- | ----------------- |
-| `fechamento-maestro.ler`      | Consultar o fechamento das lojas do escopo  | Leitura           |
-| `fechamento-maestro.exportar` | Exportar o fechamento e os pedidos em Excel | Operação especial |
+| Key                                    | Descrição                                                 | Granularidade     |
+| -------------------------------------- | --------------------------------------------------------- | ----------------- |
+| `fechamento-maestro.ler`               | Consultar o fechamento das lojas do escopo                | Leitura           |
+| `fechamento-maestro.exportar`          | Exportar o fechamento e os pedidos em Excel               | Operação especial |
+| `fechamento-maestro.ver-dados-cliente` | Ver CPF, e-mail, telefone e endereço completos do cliente | Dado sensível     |
 
 O módulo não tem escrita.
 
 ### 5.3 Integrações externas
 
-| Integração                          | Propósito          | Camada                             | Credencial                             |
-| ----------------------------------- | ------------------ | ---------------------------------- | -------------------------------------- |
-| `api-dw.cocobambu.com` `/Delivery/` | Pedidos do Maestro | handler `fechamento`               | hub de Credenciais, integração `apidw` |
-| Cadastro de Empresas do portal      | Lojas do escopo    | handler `lojas` (`ctx.empresas()`) | —                                      |
+| Integração                                           | Propósito          | Camada                             | Credencial                                    |
+| ---------------------------------------------------- | ------------------ | ---------------------------------- | --------------------------------------------- |
+| `api-dw.cocobambu.com` `/Delivery/`                  | Pedidos do Maestro | handler `fechamento`               | hub de Credenciais, integração `apidw`        |
+| Banco do Maestro (`gia_relatorios.formas_pagamento`) | Formas ONLINE VR   | handler `fechamento` (`sql`)       | secret `GIA_SERVER_DATABASE_URL` (só leitura) |
+| Cadastro de Empresas do portal                       | Lojas do escopo    | handler `lojas` (`ctx.empresas()`) | —                                             |
 
 ### 5.4 BFF / processamento em segundo plano
 
@@ -222,34 +267,61 @@ Não usa.
 - **RN-1**: O `loc_ref` da API é o número antes do primeiro ponto no nome da Empresa,
   com 2 dígitos (`"01.CB GOIANIA"` → `01`) — porte do `ExtrairNumeroLoja` do legado.
 - **RN-2**: Período de 1 a 31 dias, sem datas futuras, data final ≥ inicial.
-- **RN-3**: Só dados da API do DW. Nenhuma consulta a banco (decisão do negócio,
-  2026-10-30) — o cadastro `gia_relatorios.formas_pagamento` do legado não é usado.
-- **RN-4**: Classificação das formas de pagamento — regra fixa, sobre o nome sem
-  acento e em maiúsculas, a primeira que casar vence:
-  1. **Offline**: contém `CASH` ou `DINHEIRO`.
-  2. **Online**: contém `PRE PAGO` ou `ONLINE`.
-  3. **Adquirente**: contém `CREDIT`, `DEBIT`, `CREDITO`, `DEBITO`, `VOUCHER`,
-     `VALE`, `TICKET`, `ALELO`, `SODEXO`, `PLUXEE` ou `VR`.
-  4. Senão, **Não classificado**.
+- **RN-3**: Pedidos da API do DW; a lista de formas `ONLINE VR` do cadastro
+  `gia_relatorios.formas_pagamento` do banco do Maestro, como no legado (decisão de
+  2026-11-03; revoga o "só API" de 2026-10-30). Só leitura — sem edição (§8).
+- **RN-4**: Tipo de cada forma de pagamento — a `classifyPaymentSegment` do legado.
+  Sobre o texto antes do `(valor)`, sem o cartão mascarado (`**** 1234 - `), em
+  maiúsculas; a primeira que casar vence:
+  1. Vazio ou `DESCONHECIDO` → **SEM CLASSIFICAÇÃO** (soma em "Sem classificação").
+  2. O texto sem o sufixo ` - PRE PAGO` **contém** a descrição de uma forma
+     `ONLINE VR` ativa do cadastro cuja `origem` é vazia ou igual à do pedido
+     (comparadas normalizadas: minúsculas, espaços → `_`, `APP CB` = `App Coco
+Bambu`, `99 Food` = `99Food`) → **ONLINE VR** (soma em **Adquirentes**).
+  3. Termina em ` - PRE PAGO` → **ONLINE** (soma em **Online**).
+  4. Qualquer outra → **OFFLINE** (soma em **Offline**), inclusive `CREDIT
+OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
+     As linhas do cadastro com tipo `ONLINE` ou `OFFLINE` não mudam o resultado,
+     como no legado. Linha `ONLINE VR` com descrição vazia é ignorada (casaria com tudo).
 - **RN-5**: Check pagamentos OK ⇔ todas as formas têm valor e classificação e a soma
   delas = `total_pago`, centavo a centavo.
 - **RN-6**: Check descontos OK ⇔ todos os descontos têm valor e a soma = `desconto_total`.
-- **RN-7**: Venda concluída ⇔ status `DELIVERED` ou `COMPLETED`.
+- **RN-7**: Venda concluída ⇔ status `DISPATCHED` ou `DELIVERED` (o pedido saiu
+  da loja). `COMPLETED` é o prato pronto na cozinha, ainda não despachado, e não
+  conta (decisão de 2026-11-03; o legado só aceitava `DISPATCHED`).
 - **RN-8**: Pedidos `CANCELLED` ficam fora dos valores de venda e da contagem de
-  divergências; o total pago deles aparece nos cards "Cancelado" (dividido pelos
-  grupos da RN-4) e vai numa aba própria do Excel.
+  divergências; o total pago deles aparece nos cards "Cancelado" (divididos como
+  os de venda: online, adquirentes online, adquirentes offline, offline) e vai
+  numa aba própria do Excel.
+- **RN-4a**: Adquirentes online = ONLINE VR cuja forma termina em ` - PRE PAGO`;
+  Adquirentes offline = ONLINE VR sem esse sufixo (ex.: `VR Refeição`). Vale para
+  os cards de venda e de cancelados.
 - **RN-9**: O dia do fechamento é a data de criação do pedido (horário de São Paulo).
-- **RN-10**: Descontos parceiro = Σ `incentivo_parceiro`; Descontos loja = Σ
-  (`desconto_total` − `incentivo_parceiro`), só pedidos não cancelados. São os dois
-  únicos campos de desconto que o model do legado repassava ao frontend.
+- **RN-10**: Descontos, como o `calculateSummary` do legado:
+  - **Descontos parceiro** = Σ `incentivo_parceiro` dos pedidos não cancelados
+    que **não são 99Food** e têm alguma forma ONLINE VR ou OFFLINE.
+  - Esse incentivo **sai do Online** do pedido quando ele tem parte ONLINE (vale
+    também para Cancelado online). Por isso Online + Adquirentes + Offline + Sem
+    classificação = total pago − o incentivo abatido.
+  - **Descontos loja** = Σ `desconto_total` dos pedidos com venda concluída
+    (RN-7: `DISPATCHED` ou `DELIVERED`). O legado usava só `DISPATCHED`, o que
+    zerava o desconto das lojas que marcam `DELIVERED` (03.CB JK em 02/11:
+    R$ 181,39 contra R$ 9.550,36); `DELIVERED` foi incluído (decisão de 2026-11-03).
 - **RN-11**: Vendas por canal = Σ `total_pago` dos pedidos não cancelados, agrupado
-  pela `origem` da API (vazia → "Sem origem"). A soma dos canais = Total pago da
-  barra de totais.
+  pela `origem` da API (vazia → "Sem origem").
+- **RN-12**: Dados pessoais do cliente completos só com
+  `fechamento-maestro.ver-dados-cliente`. Sem ela, o handler devolve os campos
+  **já mascarados** (o dado completo não chega ao navegador), com a regra do
+  Reports Maestro: CPF `***.456.789-**` (fora de 11 dígitos: `***`); e-mail
+  `jo***@gmail.com`; telefone `(11) *****-4321` (sem DDD reconhecível:
+  `*****-4321`; menos de 8 dígitos: `***`); número e referência `***`. Nome do
+  cliente e rua ficam visíveis.
 
-> **A validar com o negócio**: RN-4, RN-7, RN-8, RN-9 e RN-10 foram deduzidas de
-> 3.107 pedidos reais (loja 08, maio/2026) e do model do legado, porque o frontend
-> do legado, onde a conta ficava, não veio. Na amostra, 100% das formas foram
-> classificadas e Online + Adquirentes + Offline = total pago.
+> **Origem das regras**: RN-4, RN-4a e RN-10 são as do legado em produção,
+> conferidas contra o print dele (loja 01, 02/11/2026). RN-7 segue o legado com
+> `DELIVERED` incluído, por decisão de 2026-11-03. RN-8 e RN-9 seguem a validar.
+> A única diferença conhecida que sobra é a divisão dos itens (o legado quebra em
+> `,`/`;`; o módulo só separa na vírgula seguida de um item com valor).
 
 ---
 
@@ -257,16 +329,21 @@ Não usa.
 
 - [ ] Seletor mostra só lojas do escopo com número no nome
 - [ ] Período inválido é recusado com mensagem
-- [ ] Online + Adquirentes + Offline + Valor sem classificação = Total pago
-- [ ] Cancelado online + adquirentes + offline (+ sem classificação) = Cancelado
-- [ ] Descontos loja + Descontos parceiro = desconto total dos não cancelados
+- [ ] Mesma loja e dia: os 12 indicadores iguais aos do Fechamento Diário do legado
+- [ ] Online + Adquirentes online + Adquirentes offline + Offline + Valor sem classificação = total pago − incentivo abatido do Online (RN-10)
+- [ ] Barra de totais e botão Totais não aparecem no celular
+- [ ] Busca genérica só no celular; título do módulo à esquerda e filtros à direita
 - [ ] Indicador de pagamentos sem classificação abre a lista quando > 0
 - [ ] Dashboard: soma dos canais = Total pago; % da legenda somam ~100%
 - [ ] Aba Fechamento diário do Excel soma por data de criação, sem cancelados
 - [ ] "Só divergências" mostra só pedidos não cancelados com check divergente
 - [ ] Detalhe do pedido mostra grupo de cada forma e o motivo das divergências
+- [ ] Coluna Tipo mostra os tipos do pedido (ex.: `ONLINE; ONLINE VR`), filtra e vai no Excel
+- [ ] Mesmo dia/loja: Online, Adquirentes e Offline iguais aos do Fechamento Diário legado
 - [ ] Excel com 3 abas e totais que batem com a tela
 - [ ] Sem `fechamento-maestro.exportar` não há botão Exportar
+- [ ] Colunas na ordem do legado; de cara só as 11 ativas; obrigatórias fora do menu de colunas
+- [ ] Sem `fechamento-maestro.ver-dados-cliente`, a resposta do handler (DevTools → Rede) já traz CPF/e-mail/telefone/número/referência mascarados; com ela, completos
 - [ ] Mobile (375x667), tablet (768x1024), desktop (1280x720) funcionam; tabelas viram cards
 - [ ] Tema light/dark coerentes
 - [ ] FAQ cobre todas as funcionalidades e regras
@@ -276,8 +353,9 @@ Não usa.
 
 ## 8. Fora de escopo
 
-- Cadastro/edição de classificações das formas de pagamento (era do legado; sai
-  pela RN-3). Mudança de classificação = nova versão do módulo.
+- Cadastro/edição de classificações das formas de pagamento (a modal de
+  Admin/TI do legado). O módulo só lê o cadastro (RN-3); a manutenção dele fica
+  com o TI.
 - Consulta multi-loja e períodos acima de 31 dias.
 - Conciliação com extrato de adquirente ou com o Simphony.
 
@@ -294,12 +372,12 @@ Não usa.
 
 ## 10. Riscos e mitigações
 
-| Risco                                         | Mitigação                                                     |
-| --------------------------------------------- | ------------------------------------------------------------- |
-| Regra de classificação diferente da do legado | RN-4 documentada e marcada "a validar"; divergências visíveis |
-| Forma de pagamento nova não reconhecida       | Cai em "Não classificado" e marca o pedido divergente         |
-| API lenta em períodos longos                  | Limite de 31 dias e timeout de 90 s com mensagem clara        |
-| Dados pessoais do cliente na resposta         | Só nome do cliente vai à tela; acesso por permissão + escopo  |
+| Risco                                 | Mitigação                                                                                      |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Vale novo fora do cadastro ONLINE VR  | Entra em Online/Offline, igual ao legado; FAQ explica e manda pedir ao TI                      |
+| Banco do Maestro indisponível         | 502 com mensagem clara e "Tentar de novo"; nada é gravado                                      |
+| API lenta em períodos longos          | Limite de 31 dias e timeout de 90 s com mensagem clara                                         |
+| Dados pessoais do cliente na resposta | Mascarados no servidor sem `ver-dados-cliente` (RN-12); permissão + escopo checados no handler |
 
 ---
 
@@ -312,11 +390,14 @@ Não usa.
 ### Serviços externos
 
 - `api-dw.cocobambu.com` `/Delivery/`.
+- Banco do Maestro — tabela `gia_relatorios.formas_pagamento` (só leitura).
 
 ### Decisões pendentes
 
-- [ ] Validar RN-4, RN-7, RN-8, RN-9 e RN-10 com o financeiro.
+- [ ] Validar RN-8 e RN-9 com o financeiro.
 - [ ] Liberação deste módulo na integração `apidw` do hub de Credenciais — time GIA, na instalação.
+- [ ] Secret `GIA_SERVER_DATABASE_URL` da Edge Function apontando para o banco do
+      Maestro, com usuário só-leitura (`SELECT` em `gia_relatorios.formas_pagamento`) — time GIA.
 
 ---
 
@@ -324,7 +405,8 @@ Não usa.
 
 1. Como monto o fechamento de uma loja?
 2. O que soma cada card de totais (cancelados, descontos loja/parceiro, sem classificação)?
-3. Como uma forma de pagamento vira Online, Adquirentes ou Offline?
+3. Como uma forma de pagamento vira Online, Adquirentes ou Offline? O que é a coluna Tipo?
+   Por que um vale entrou em Online/Offline?
 4. O que significa um pedido "Divergente"?
 5. O que faço com valor em "Não classificado"?
 6. Por que os benefícios do iFood contam como Online?
@@ -344,14 +426,14 @@ Não usa.
 
 ## 13. Insumo pra Tour (obrigatório)
 
-| #   | Tela       | Target                                           | Mensagem               |
-| --- | ---------- | ------------------------------------------------ | ---------------------- |
-| 1   | Fechamento | `[data-tour="fechamento-maestro-filtros"]`       | Loja e período         |
-| 2   | Fechamento | `[data-tour="fechamento-maestro-pesquisar"]`     | Pesquisar              |
-| 3   | Fechamento | `[data-tour="fechamento-maestro-totais-toggle"]` | Totais do período      |
-| 4   | Fechamento | `[data-tour="fechamento-maestro-dashboard"]`     | Dashboard              |
-| 5   | Fechamento | `[data-tour="fechamento-maestro-toolbar"]`       | Busca, colunas e Excel |
-| 6   | Fechamento | `[data-tour="fechamento-maestro-frame"]`         | Divergências           |
+| #   | Tela       | Target                                           | Mensagem          |
+| --- | ---------- | ------------------------------------------------ | ----------------- |
+| 1   | Fechamento | `[data-tour="fechamento-maestro-filtros"]`       | Loja e período    |
+| 2   | Fechamento | `[data-tour="fechamento-maestro-pesquisar"]`     | Pesquisar         |
+| 3   | Fechamento | `[data-tour="fechamento-maestro-totais-toggle"]` | Totais do período |
+| 4   | Fechamento | `[data-tour="fechamento-maestro-dashboard"]`     | Dashboard         |
+| 5   | Fechamento | `[data-tour="fechamento-maestro-toolbar"]`       | Colunas e Excel   |
+| 6   | Fechamento | `[data-tour="fechamento-maestro-frame"]`         | Divergências      |
 
 ---
 
@@ -366,3 +448,24 @@ Não usa.
   a de pedidos. Os totais viraram uma barra de 12 indicadores:
   venda, cancelados por grupo, descontos loja/parceiro (RN-10) e sem classificação.
 - Dashboard em dialog com o gráfico Vendas por canal (RF-9, RN-11).
+
+### 2026-11-03 — v1.1 coluna Tipo e regra do legado
+
+- Com o frontend do legado em mãos, a RN-4 passou a ser a `classifyPaymentSegment`
+  dele: ONLINE VR pelo cadastro `gia_relatorios.formas_pagamento` (lido do banco do
+  Maestro, RN-3), ONLINE por ` - PRE PAGO`, OFFLINE no resto. Muda, por exemplo:
+  `CREDIT OFFLINE` passa de Adquirente para Offline; vales pré-pagos
+  (`MEAL_VOUCHER ...`, `PLUXEE`) passam de Online para Adquirentes.
+- Nova coluna **Tipo** (TIPO do legado) na tabela e no Excel; rótulos do legado.
+- Colunas da tabela na ordem, ativas/inativas e obrigatórias do legado (RF-5),
+  com os campos que faltavam (Nº parceiro, Nº conta, Data de ação, dados do
+  cliente, endereço, confirmado/cancelado por, Nome loja). Saíram Não classificado
+  e Incentivo parceiro. Permissão nova `fechamento-maestro.ver-dados-cliente`
+  (RN-12), com o mascaramento do Reports Maestro.
+- Totais iguais ao legado em produção (conferido com o print da loja 01 em
+  02/11): Adquirentes online/offline (RN-4a), Descontos parceiro com abatimento
+  do Online (RN-10), Descontos loja dos pedidos com venda concluída e venda
+  concluída = `DISPATCHED`/`DELIVERED` (RN-7). Barra com os 12 indicadores do
+  legado (saíram Total pago e Cancelado), só no desktop.
+- Layout: título do módulo à esquerda e filtros à direita, na mesma barra; busca
+  genérica da tabela só no celular.

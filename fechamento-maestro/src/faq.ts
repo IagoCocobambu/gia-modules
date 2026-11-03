@@ -2,7 +2,7 @@ import type { ModuleFaq } from '@gia-cb/sdk/modules'
 
 export const faq: ModuleFaq = {
   summary:
-    'O **Fechamento Maestro** monta o fechamento diário dos **pedidos de delivery** de uma loja num período: soma o que foi pago em cada dia e divide em **Online** (pago no app ou no parceiro), **Adquirentes** (cartão na maquininha na entrega) e **Offline** (dinheiro). Também confere cada pedido — se as formas de pagamento somam o total pago e se os descontos somam o desconto total — e aponta as **divergências**. Os dados vêm da API do DW na hora da pesquisa; nada é gravado no portal.',
+    'O **Fechamento Maestro** monta o fechamento diário dos **pedidos de delivery** de uma loja num período: soma o que foi pago em cada dia e divide em **Online** (pago no app ou no parceiro), **Adquirentes** (vale-refeição e benefícios, o tipo ONLINE VR) e **Offline** (pago na entrega). Também confere cada pedido — se as formas de pagamento somam o total pago e se os descontos somam o desconto total — e aponta as **divergências**. Os pedidos vêm da API do DW na hora da pesquisa e os vales, do cadastro de formas de pagamento do Maestro; nada é gravado no portal.',
   sections: [
     {
       id: 'primeiros-passos',
@@ -15,12 +15,15 @@ export const faq: ModuleFaq = {
 2. Informe a **Data inicial** e a **Data final** — as duas começam em *ontem*.
 3. Clique em **Pesquisar**.
 
-A tela mostra, de cima para baixo:
+No alto da tela fica o título do módulo, à esquerda, e a loja e as datas, à
+direita. Depois de pesquisar, a tela mostra, de cima para baixo:
 
-- a **barra de totais** do período inteiro;
-- a **tabela de pedidos**: uma linha por pedido, com quanto dele foi Online,
-  Adquirentes e Offline e o resultado dos dois checks. **Clique num pedido** para
-  abrir o detalhe da conciliação.
+- a **barra de totais** do período inteiro (só no computador);
+- a **tabela de pedidos**: uma linha por pedido, com as colunas do sistema
+  antigo — número, cliente, origem, status, total pago, forma de pagamento e o
+  **Tipo** de cada forma (ONLINE, ONLINE VR, OFFLINE). Outras colunas (valores
+  por grupo, checks, endereço...) se ligam no botão de colunas. **Clique num
+  pedido** para abrir o detalhe da conciliação, com os valores e os checks.
 
 Para ver os valores de um dia só, pesquise com a **data inicial e a final iguais**
 àquele dia. O fechamento somado dia a dia de um período está na aba
@@ -36,33 +39,38 @@ fundo levemente vermelho.
 
 ## Totais do período
 
-O botão **Totais** abre e fecha, acima da tabela, uma **barra de indicadores**
-do período inteiro. Cada indicador tem um ícone, o **valor** em destaque e o
-nome embaixo. Os indicadores ocupam a largura toda, em colunas iguais: 6 por
-linha em telas largas, 4 ou 3 em telas médias e 2 no celular.
+No computador, o botão **Totais** abre e fecha, acima da tabela, uma **barra
+com os 12 indicadores** do Fechamento Diário do sistema antigo, do período
+inteiro. Cada indicador tem um ícone, o **valor** em destaque e o nome embaixo.
+Os indicadores ocupam a largura toda, em colunas iguais: 6 por linha em telas
+largas, 4 ou 3 em telas médias. **No celular a barra não aparece**, nem o botão
+Totais — lá a tela fica só com a tabela de pedidos.
 
 As cores ajudam a ler de relance: os grupos de pagamento têm cada um a sua cor;
-**Cancelado** fica vermelho quando há valor cancelado e **sem classificação**
-fica amarelo quando há valor — o normal é zero. Passe o mouse sobre um
-indicador (ou chegue nele com Tab) para ver a explicação da conta.
+os **cancelados** ficam vermelhos quando há valor e **sem classificação** fica
+amarelo quando há valor — o normal é zero. Passe o mouse sobre um indicador (ou
+chegue nele com Tab) para ver a explicação da conta.
 
 Os indicadores, na ordem:
 
 | Indicador | O que soma |
 |---|---|
-| **Total pago** | total pago dos pedidos não cancelados |
-| **Online** | parte paga online (app, iFood) |
-| **Adquirentes** | parte paga com cartão na maquininha, na entrega |
-| **Offline** | parte paga em dinheiro |
-| **Cancelado** | total pago dos pedidos **cancelados** |
-| **Cancelado online / adquirentes / offline** | o valor cancelado dividido pelos mesmos três grupos |
-| **Descontos loja** | parte do desconto bancada pela loja: desconto total menos o incentivo do parceiro |
-| **Descontos parceiro** | parte do desconto bancada pelo parceiro (ex.: iFood) — o *incentivo parceiro* do pedido |
-| **Sem classificação** (valor) | valor em formas de pagamento que a regra não reconheceu (o normal é zero) |
+| **Online** | formas ONLINE (pagas antes, no app ou no parceiro), **menos** o incentivo que foi para Descontos parceiro |
+| **Adquirentes online** | vales ONLINE VR pagos antes, no app ou no parceiro (o nome termina em *PRE PAGO*) |
+| **Adquirentes offline** | vales ONLINE VR passados na entrega, sem *PRE PAGO* (ex.: *VR Refeição*) |
+| **Offline** | parte paga na entrega, em dinheiro ou na maquininha (tipo OFFLINE) |
+| **Cancelado online / adquirentes online / adquirentes offline / offline** | o mesmo, só dos pedidos **cancelados** |
+| **Descontos loja** | desconto total dos pedidos **despachados ou entregues** (venda concluída) |
+| **Descontos parceiro** | incentivo do parceiro dos pedidos que **não são 99Food** e têm alguma forma ONLINE VR ou OFFLINE |
+| **Valor sem classificação** | valor em formas de pagamento que vieram sem nome (o normal é zero) |
 | **Pagamentos sem classificação** | quantas formas de pagamento ficaram sem classificação |
 
-Total pago = Online + Adquirentes + Offline + Sem classificação. Descontos loja
-+ Descontos parceiro = desconto total dos pedidos não cancelados.
+Como no sistema antigo, o incentivo que entra em **Descontos parceiro** sai do
+**Online** quando o pedido tem parte online: ele foi pago pelo parceiro, não
+pelo cliente. Por isso Online + Adquirentes online + Adquirentes offline +
+Offline + Sem classificação pode ficar abaixo do total pago, pela diferença do
+que foi para Descontos parceiro. O incentivo do 99Food não entra em Descontos
+parceiro.
 
 Quando há **pagamento sem classificação**, o último indicador fica **vermelho**:
 clique nele para ver a lista, agrupada pelo nome da forma de pagamento, com o
@@ -79,8 +87,8 @@ escolha até recarregar a página. A barra mostra sempre o período inteiro — 
 
 O botão **Dashboard** abre, numa janela, o gráfico **Vendas por canal**: um anel
 com a fatia de cada **origem** do pedido (App Coco Bambu, iFood, 99Food, Pedido
-manual...) no **total pago** do período. No meio do anel fica o **total** — o
-mesmo *Total pago* da barra de totais — e quantos pedidos entraram nele.
+manual...) no **total pago** do período. No meio do anel fica o **total pago**
+dos pedidos não cancelados e quantos pedidos entraram nele.
 
 Ao lado (embaixo, no celular) fica a **legenda**: cada canal com a cor, o valor
 pago e a porcentagem do total, do maior para o menor. As cores são as mesmas das
@@ -114,26 +122,32 @@ botão fica desativado.
       id: 'conciliacao',
       title: 'Como a conciliação funciona',
       content: `
-## Formas de pagamento → Online, Adquirentes, Offline
+## Tipo das formas de pagamento → Online, Adquirentes, Offline
 
 Cada pedido traz as formas de pagamento num texto como
 *PIX ONLINE PIX - PRE PAGO (144.9), BENEFICIO IFOOD ENTREGA - PRE PAGO (4.31)*.
-O módulo separa cada forma com o seu valor e classifica pelo nome, nesta ordem
-(a primeira regra que servir vale):
+O módulo separa cada forma com o seu valor e dá a ela um **tipo** — a mesma
+regra do Fechamento Diário do sistema antigo —, nesta ordem (a primeira que
+servir vale):
 
-| Grupo | Quando | Exemplos |
-|---|---|---|
-| **Offline** | dinheiro recebido na entrega | *CASH OFFLINE* |
-| **Online** | pago antes, no app ou no parceiro — o nome tem *PRE PAGO* ou *ONLINE* | *PIX - PRE PAGO*, *CREDIT ONLINE VISA - PRE PAGO*, *APPLE_PAY - PRE PAGO*, *BENEFICIO IFOOD - PRE PAGO*, *Wallet - Apple Pay - PRE PAGO* |
-| **Adquirentes** | cartão ou voucher passado na maquininha na entrega | *CREDIT OFFLINE*, *DEBIT OFFLINE*, *Master - Débito* |
-| **Não classificado** | nenhuma das regras acima | uma forma nova que o Maestro passe a mandar |
+| Tipo | Soma em | Quando | Exemplos |
+|---|---|---|---|
+| **SEM CLASSIFICAÇÃO** | Sem classificação | a forma veio sem nome ou como *DESCONHECIDO* | — |
+| **ONLINE VR** | Adquirentes online (com *PRE PAGO*) ou Adquirentes offline (sem) | o nome contém uma forma marcada como *ONLINE VR* no **cadastro de formas de pagamento** do Maestro (a da mesma origem do pedido, ou sem origem) | online: *MEAL_VOUCHER ONLINE ALELO - PRE PAGO*, *PLUXEE - PRE PAGO*; offline: *VR Refeição*, *Alelo Refeição* |
+| **ONLINE** | Online | o nome termina em *- PRE PAGO* | *PIX - PRE PAGO*, *CREDIT ONLINE VISA - PRE PAGO*, *BENEFICIO IFOOD - PRE PAGO* |
+| **OFFLINE** | Offline | qualquer outra forma | *CREDIT OFFLINE*, *DEBIT OFFLINE*, *CASH OFFLINE* |
 
-Os benefícios do iFood (*BENEFICIO IFOOD...*) contam como **Online**: são pagos
+A coluna **Tipo** da tabela mostra os tipos de cada pedido (ex.: *ONLINE; ONLINE
+VR* quando o pedido foi pago parte no cartão e parte no vale). Use o filtro da
+coluna para ver, por exemplo, só os pedidos com ONLINE VR.
+
+Os benefícios do iFood (*BENEFICIO IFOOD...*) contam como **ONLINE**: são pagos
 pelo iFood, não pelo cliente na entrega.
 
-A regra é fixa no módulo — não há cadastro de classificações. Se aparecer uma
-forma **Não classificado**, o pedido fica divergente; avise o time GIA para a
-regra ganhar essa forma.
+A lista do que é ONLINE VR vem do **cadastro de formas de pagamento** do Maestro,
+o mesmo do sistema antigo, lido a cada pesquisa. Uma forma nova de vale que não
+esteja no cadastro entra como ONLINE (se for pré-paga) ou OFFLINE — peça ao time
+de TI para incluí-la no cadastro.
 
 ## Os dois checks
 
@@ -141,7 +155,7 @@ Cada pedido passa por dois checks:
 
 | Check | Fica **OK** quando | Fica **Divergente** quando |
 |---|---|---|
-| **Check pagamentos** | todas as formas têm valor e classificação, e a soma delas é igual ao **Total pago** | alguma forma está *Não classificado* ou sem valor, ou a soma não bate com o total pago |
+| **Check pagamentos** | todas as formas têm valor e classificação, e a soma delas é igual ao **Total pago** | alguma forma está *SEM CLASSIFICAÇÃO* ou sem valor, ou a soma não bate com o total pago |
 | **Check descontos** | a soma dos descontos listados é igual ao **Desconto total** | a soma não bate, ou algum desconto veio sem valor |
 
 A comparação é **centavo a centavo** — não há tolerância. O detalhe do pedido
@@ -150,18 +164,20 @@ A comparação é **centavo a centavo** — não há tolerância. O detalhe do p
 
 ## Venda concluída
 
-Um pedido é **venda concluída** quando o status é *Entregue* (DELIVERED) ou
-*Concluído* (COMPLETED). A coluna *Venda concluída* e o Excel mostram isso;
-pedidos ainda em rota (por exemplo, *Despachado*) entram no fechamento
-normalmente, só não aparecem como concluídos.
+Um pedido é **venda concluída** quando o status é *Despachado* (DISPATCHED) ou
+*Entregue* (DELIVERED) — o pedido saiu da loja. *Concluído* (COMPLETED) é o prato
+pronto na cozinha, ainda não despachado, e **não** conta. A coluna *Venda
+concluída* e o Excel mostram isso, e só os pedidos com venda concluída entram
+em **Descontos loja**. Os demais pedidos não cancelados entram no fechamento
+normalmente.
 
 ## Pedidos cancelados
 
 Pedidos **cancelados** aparecem na tabela de pedidos, mas ficam **fora dos
-valores de venda** do fechamento (total pago, Online, Adquirentes, Offline,
-descontos, sem classificação) e da contagem de divergências. O que foi cancelado
-tem indicadores próprios: **Cancelado** e a divisão dele em online, adquirentes e
-offline. No Excel eles vão numa aba à parte.
+valores de venda** do fechamento (Online, Adquirentes, Offline, descontos, sem
+classificação) e da contagem de divergências. O que foi cancelado tem
+indicadores próprios: **Cancelado online, adquirentes online, adquirentes
+offline e offline**. No Excel eles vão numa aba à parte.
 
 ## Em que dia o pedido cai
 
@@ -175,35 +191,86 @@ Um pedido criado às 23h50 do dia 10 e entregue no dia 11 entra no dia **10**.
       content: `
 ## Tabela de pedidos
 
+A tabela segue o Fechamento Diário do sistema antigo. De cara aparecem: **Nº
+pedido, Data criação, Nº parceiro, Nº conta, Nome cliente, Origem, Status do
+pedido, Total pago, Desconto total, Forma de pagamento e Tipo**. As outras
+colunas começam **desligadas**: ligue-as no botão de **colunas** da barra da
+tabela. Nº pedido, Data criação, Nome cliente, Origem, Status do pedido, Forma
+de pagamento e Tipo são **obrigatórias** e não podem ser escondidas.
+
+Colunas que aparecem de cara:
+
 | Coluna | O que é |
 |---|---|
 | **Nº pedido** | número exibido ao cliente e à operação |
 | **Data criação** | quando o pedido foi criado (horário de São Paulo) |
+| **Nº parceiro** | número do pedido no parceiro (ex.: iFood) |
+| **Nº conta** | número da conta do pedido no Maestro |
+| **Nome cliente** | nome do cliente |
 | **Origem** | canal: App Coco Bambu, iFood, iFood Vasto, 99Food ou Pedido manual |
-| **Status pedido** | situação atual do pedido no Maestro, em português |
-| **Check pagamentos / Check descontos** | **OK** ou **Divergente** (veja *Como a conciliação funciona*) |
+| **Status do pedido** | situação atual do pedido no Maestro, em português |
 | **Total pago** | soma dos pagamentos do pedido, como veio do Maestro |
-| **Online / Adquirentes / Offline / Não classificado** | quanto de cada grupo há no pedido |
 | **Desconto total** | soma dos descontos do pedido, como veio do Maestro |
-| **Valor pedido / Valor entrega** | subtotal e taxa de entrega |
-| **Incentivo parceiro** | parte do desconto bancada pelo parceiro (ex.: iFood) |
-| **Venda concluída** | *Sim* quando o status é Entregue ou Concluído |
-| **Forma pgto / Descontos** | o texto original do Maestro, com o valor de cada item |
-| **Cliente / Tipo entrega** | nome do cliente e se a entrega é própria |
+| **Forma de pagamento** | o texto original do Maestro, com o valor de cada forma |
+| **Tipo** | o tipo de cada forma de pagamento: ONLINE, ONLINE VR, OFFLINE ou SEM CLASSIFICAÇÃO (veja *Como a conciliação funciona*) |
+
+Colunas desligadas (ligue pelo botão de colunas):
+
+| Coluna | O que é |
+|---|---|
+| **Data** | dia do fechamento em que o pedido cai (a data de criação) |
+| **Total pago online / adquirentes online / adquirentes offline / offline** | quanto do pedido foi ONLINE, ONLINE VR com e sem *PRE PAGO* e OFFLINE (o online do pedido sem abatimento do incentivo) |
+| **Total de descontos** | soma dos descontos listados no pedido |
+| **Venda concluída** | *Sim* quando o status é Despachado ou Entregue |
+| **Check pagamentos / Check descontos** | **OK** ou **Divergente** (veja *Como a conciliação funciona*) |
+| **Data de ação** | quando o pedido teve a última ação no Maestro |
+| **CPF / Email / Telefone cliente** | contato do cliente — podem vir mascarados (veja *Dados pessoais do cliente*) |
+| **Qtd pedidos** | quantos pedidos o cliente já fez |
+| **Rua / Número / Referência** | endereço de entrega — número e referência podem vir mascarados |
+| **Retirada** | se o cliente retirou na loja |
+| **Confirmado por / Cancelado por** | quem confirmou ou cancelou o pedido |
+| **Valor do pedido / Valor da entrega** | subtotal e taxa de entrega |
+| **Descontos** | o texto original dos descontos do Maestro, com o valor de cada item |
+| **Tipo de entrega** | se a entrega é própria ou do parceiro |
+| **Nome loja** | nome da loja como veio do Maestro |
+
+Mesmo com os checks desligados, o pedido com divergência fica com o fundo
+levemente vermelho, e o botão **Só divergências** continua funcionando.
 
 ## Busca, ordenação e colunas
 
-O campo de busca procura em todas as colunas da tabela de pedidos. Clique no
-cabeçalho de uma coluna para **ordenar**; o funil abre o **filtro** da coluna.
-O botão de **colunas** esconde as que você não precisa (vale até recarregar a
-página).
+No computador, filtre pelo **funil** de cada coluna (por exemplo, o Tipo ONLINE
+VR ou um número de pedido) e clique no cabeçalho para **ordenar**. No celular
+há um **campo de busca** que procura em todas as colunas de uma vez. O botão de
+**colunas** liga e desliga as colunas (vale até recarregar a página; ao abrir
+de novo, volta ao padrão).
+
+## Dados pessoais do cliente
+
+CPF, e-mail, telefone, número e referência do endereço só aparecem completos
+para quem tem a permissão **Ver os dados pessoais completos do cliente**. Para
+os demais, eles chegam **mascarados** do servidor:
+
+| Campo | Completo | Mascarado |
+|---|---|---|
+| **CPF cliente** | 123.456.789-01 | \\*\\*\\*.456.789-\\*\\* |
+| **Email cliente** | joao.silva@gmail.com | jo\\*\\*\\*@gmail.com |
+| **Telefone cliente** | (11) 98765-4321 | (11) \\*\\*\\*\\*\\*-4321 |
+| **Número / Referência** | 120 / Ap. 42 | \\*\\*\\* |
+
+O nome do cliente e o nome da rua aparecem sempre. O mascaramento é feito no
+servidor: sem a permissão, o dado completo nem chega ao seu navegador.
 
 ## No celular
 
-Os totais ficam em duas colunas; o indicador de pagamentos sem classificação
-abre a lista com um toque. A tabela de pedidos vira **cartões** com número, data, total pago e o check de
-pagamentos: toque em **ver mais** para os outros campos, e no cartão para abrir
-o detalhe. Todos os botões funcionam igual ao computador.
+No celular a **barra de totais não aparece** — para ver os totais e a lista de
+pagamentos sem classificação, use o computador. O título fica em cima, com a
+loja e as datas embaixo. A tabela de pedidos vira **cartões** com número, data,
+total pago e tipo: toque em **ver mais** para os outros campos ligados, e no
+cartão para abrir o detalhe. Use o **campo de busca** para achar um pedido. O
+botão de **colunas** também funciona no celular: as colunas que você ligar
+aparecem no *ver mais*. Só divergências, Dashboard e Exportar funcionam igual ao
+computador.
       `,
     },
     {
@@ -234,9 +301,10 @@ o total acompanha. O nome do arquivo segue o padrão do portal:
       title: 'De onde vêm os dados',
       content: `
 Os pedidos vêm da **API do DW** (\`api-dw.cocobambu.com\`, consulta *Delivery*),
-que lê o Maestro — a mesma fonte do **Reports Maestro**. A cada **Pesquisar** o
-portal busca os dados na hora e faz a conciliação; nada é gravado no portal e
-nenhum banco de dados é consultado.
+que lê o Maestro — a mesma fonte do **Reports Maestro**. A lista de formas
+**ONLINE VR** vem do **cadastro de formas de pagamento** do Maestro, o mesmo do
+sistema antigo. A cada **Pesquisar** o portal busca os dois na hora e faz a
+conciliação; nada é gravado no portal.
 
 A loja é identificada pelo **número no começo do nome** da Empresa no cadastro do
 portal: *01.CB GOIANIA* consulta a loja **01** no Maestro. Por isso só aparecem no
@@ -257,35 +325,51 @@ confere isso de novo a cada pesquisa.
       items: [
         {
           q: 'O que significa um pedido "Divergente"?',
-          a: 'Que a conta do pedido não fechou: ou a soma das formas de pagamento é diferente do total pago, ou alguma forma não foi reconhecida (Não classificado), ou a soma dos descontos é diferente do desconto total. Clique no pedido para ver o motivo exato e os valores de cada item.',
+          a: 'Que a conta do pedido não fechou: ou a soma das formas de pagamento é diferente do total pago, ou alguma forma veio sem nome (SEM CLASSIFICAÇÃO), ou a soma dos descontos é diferente do desconto total. Clique no pedido para ver o motivo exato e os valores de cada item.',
         },
         {
-          q: 'Apareceu valor em "Não classificado". O que faço?',
-          a: 'É uma forma de pagamento que a regra do módulo ainda não conhece — o Maestro passou a mandar um nome novo. Abra o pedido, anote o nome da forma e avise o time GIA para incluí-la na regra (Online, Adquirentes ou Offline). Até lá, o valor fica fora dos três grupos, mas continua no total pago.',
+          q: 'O que significa a coluna Tipo?',
+          a: 'É o tipo de cada forma de pagamento do pedido, como no Fechamento Diário do sistema antigo: ONLINE (pago antes, no app ou no parceiro), ONLINE VR (vale-refeição e benefícios, que somam em Adquirentes), OFFLINE (pago na entrega) e SEM CLASSIFICAÇÃO. Um pedido pago de duas formas mostra os dois tipos, separados por ponto e vírgula. Use o filtro da coluna para ver só um tipo.',
+        },
+        {
+          q: 'Apareceu valor em "Sem classificação". O que faço?',
+          a: 'É uma forma de pagamento que veio do Maestro sem nome ou como DESCONHECIDO — não dá para saber o tipo dela. Abra o pedido e confira-o no Maestro. O valor fica fora de Online, Adquirentes e Offline, mas continua no total pago, e o pedido fica divergente.',
         },
         {
           q: 'Por que os benefícios do iFood contam como Online?',
-          a: 'Porque não são pagos pelo cliente na entrega: o iFood banca o valor e repassa à loja, como um pagamento online. Eles vêm com "PRE PAGO" no nome (ex.: BENEFICIO IFOOD ENTREGA - PRE PAGO), e tudo que é pré-pago conta como Online.',
+          a: 'Porque não são pagos pelo cliente na entrega: o iFood banca o valor e repassa à loja, como um pagamento online. Eles vêm com "PRE PAGO" no nome (ex.: BENEFICIO IFOOD ENTREGA - PRE PAGO) e não estão no cadastro como ONLINE VR, então contam como ONLINE.',
         },
         {
           q: 'Qual a diferença entre Adquirentes e Offline?',
-          a: 'Os dois são pagos na entrega. Adquirentes é cartão ou voucher passado na maquininha (CREDIT OFFLINE, DEBIT OFFLINE, Master - Débito) — o dinheiro chega pela adquirente. Offline é dinheiro em espécie (CASH OFFLINE), que o entregador traz para a loja.',
+          a: 'Adquirentes (ONLINE VR) é o que foi pago com vale-refeição ou benefício que está no cadastro de formas de pagamento como ONLINE VR. Offline é o resto do que é pago na entrega e não é pré-pago: dinheiro (CASH OFFLINE) e cartão na maquininha (CREDIT OFFLINE, DEBIT OFFLINE).',
+        },
+        {
+          q: 'Qual a diferença entre Adquirentes online e Adquirentes offline?',
+          a: 'Os dois são vales ONLINE VR. Adquirentes online é o vale pago antes, no app ou no parceiro — o nome termina em PRE PAGO (ex.: MEAL_VOUCHER ONLINE ALELO - PRE PAGO, PLUXEE - PRE PAGO). Adquirentes offline é o vale passado na entrega, sem PRE PAGO (ex.: VR Refeição, Alelo Refeição, Ticket Refeição). É a mesma divisão do sistema antigo.',
+        },
+        {
+          q: 'Um vale-refeição entrou em Online ou Offline em vez de Adquirentes. Por quê?',
+          a: 'Porque o nome dele não está no cadastro de formas de pagamento do Maestro como ONLINE VR (para a origem do pedido ou para todas). Sem isso, a forma pré-paga entra como ONLINE e a não pré-paga como OFFLINE — igual ao sistema antigo. Peça ao time de TI para incluir a forma no cadastro; a mudança vale na próxima pesquisa.',
         },
         {
           q: 'Posso cadastrar ou mudar a classificação de uma forma de pagamento?',
-          a: 'Não pela tela. A classificação é uma regra fixa do módulo, aplicada ao nome que o Maestro manda, e não há cadastro de classificações como no sistema antigo. Para mudar ou incluir uma forma, peça ao time GIA — a mudança sai numa nova versão do módulo e vale para todas as lojas.',
+          a: 'Não por esta tela. A lista ONLINE VR vem do cadastro de formas de pagamento do Maestro, o mesmo do sistema antigo. Para incluir ou mudar uma forma, peça ao time de TI; a mudança vale para todas as lojas a partir da próxima pesquisa.',
         },
         {
           q: 'Pedidos cancelados entram no fechamento?',
-          a: 'Não nos valores de venda. Eles aparecem na tabela de pedidos, mas ficam fora do total pago, de Online, Adquirentes, Offline, dos descontos e da contagem de divergências. O valor cancelado aparece nos indicadores Cancelado, Cancelado online, Cancelado adquirentes e Cancelado offline. No Excel vão numa aba Cancelados à parte.',
+          a: 'Não nos valores de venda. Eles aparecem na tabela de pedidos, mas ficam fora de Online, Adquirentes, Offline, dos descontos e da contagem de divergências. O valor cancelado aparece nos indicadores Cancelado online, Cancelado adquirentes online, Cancelado adquirentes offline e Cancelado offline. No Excel vão numa aba Cancelados à parte.',
         },
         {
-          q: 'Como os descontos são divididos entre loja e parceiro?',
-          a: 'Cada pedido traz o desconto total e o incentivo do parceiro (a parte que o iFood ou outro parceiro banca). Descontos parceiro soma esse incentivo; Descontos loja é o desconto total menos o incentivo. Os dois juntos dão o desconto total dos pedidos não cancelados.',
+          q: 'Como são calculados Descontos loja e Descontos parceiro?',
+          a: 'Igual ao sistema antigo. Descontos loja soma o desconto total dos pedidos despachados ou entregues (status Despachado ou Entregue); pedido só Concluído (prato pronto) ou cancelado fica de fora. Descontos parceiro soma o incentivo do parceiro dos pedidos que não são do 99Food e têm alguma forma ONLINE VR ou OFFLINE. Esse incentivo sai do Online quando o pedido tem parte online, porque foi o parceiro, não o cliente, que pagou.',
+        },
+        {
+          q: 'Por que Online + Adquirentes + Offline não dá o total pago?',
+          a: 'Porque o incentivo que vai para Descontos parceiro sai do Online (regra do sistema antigo). Some de volta o valor de Descontos parceiro dos pedidos com parte online e a conta fecha com o total pago dos pedidos não cancelados — o mesmo total do meio do anel do Dashboard.',
         },
         {
           q: 'O indicador "Pagamentos sem classificação" ficou vermelho. O que faço?',
-          a: 'Clique nele para ver as formas de pagamento que a regra não reconheceu, com o valor e os pedidos de cada uma. Anote o nome da forma e avise o time GIA para incluí-la em Online, Adquirentes ou Offline. Até lá, o valor aparece em Valor sem classificação e o pedido fica divergente.',
+          a: 'Clique nele (no computador; no celular a barra de totais não aparece) para ver as formas de pagamento que vieram sem nome ou como DESCONHECIDO, com o valor e os pedidos de cada uma. Clique num pedido para abrir o detalhe e confira-o no Maestro. O valor aparece em Valor sem classificação e o pedido fica divergente.',
         },
         {
           q: 'Um pedido entregue depois da meia-noite cai em qual dia?',
@@ -293,7 +377,7 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'O que é "Venda concluída"?',
-          a: 'É Sim quando o pedido está com status Entregue (DELIVERED) ou Concluído (COMPLETED). Pedidos ainda despachados ou a caminho entram no fechamento do mesmo jeito; a coluna só indica se o Maestro já registrou a entrega.',
+          a: 'É Sim quando o pedido está com status Despachado (DISPATCHED) ou Entregue (DELIVERED) — o pedido já saiu da loja. Concluído (COMPLETED) é o prato pronto na cozinha, ainda não despachado, e fica como Não. Só os pedidos com venda concluída entram em Descontos loja.',
         },
       ],
     },
@@ -306,19 +390,19 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'O que significam as cores na barra de totais?',
-          a: 'Total pago fica verde e cada grupo de pagamento (Online, Adquirentes, Offline) tem a sua cor. Os indicadores de alerta só ganham cor quando há algo a olhar: Cancelado fica vermelho quando há valor cancelado, Sem classificação fica amarelo quando há valor e Pagamentos sem classificação fica vermelho (e vira botão) quando há algum. Passe o mouse sobre um indicador para ver a explicação da conta. Para esconder a barra, clique no botão Totais.',
+          a: 'Cada grupo de pagamento (Online, Adquirentes online e offline, Offline) tem a sua cor. Os indicadores de alerta só ganham cor quando há algo a olhar: os cancelados ficam vermelhos quando há valor, Valor sem classificação fica amarelo quando há valor e Pagamentos sem classificação fica vermelho (e vira botão) quando há algum. Passe o mouse sobre um indicador para ver a explicação da conta. Para esconder a barra, clique no botão Totais.',
+        },
+        {
+          q: 'Por que não vejo os totais no celular?',
+          a: 'A barra de totais só aparece no computador; no celular a tela fica com a tabela de pedidos. Para os totais, o Dashboard (total pago por canal) funciona no celular, e o Excel traz o fechamento dia a dia.',
         },
         {
           q: 'Quanto cada canal (iFood, app, 99Food) vendeu no período?',
           a: 'Clique em Dashboard. O gráfico Vendas por canal mostra a fatia de cada origem no total pago, com o valor e a porcentagem na legenda. Passe o mouse (ou toque, no celular) num canal para ver também quantos pedidos ele teve. Pedidos cancelados não entram.',
         },
         {
-          q: 'O total do dashboard é diferente do total pago da barra de totais. Por quê?',
-          a: 'Não deveria ser: os dois somam o total pago dos pedidos não cancelados do período inteiro. Se a pesquisa ainda estiver carregando, espere terminar. Se a diferença continuar, avise o suporte informando a loja e o período.',
-        },
-        {
           q: 'Os totais não mudaram quando filtrei. Está certo?',
-          a: 'Está. Os totais mostram sempre o período inteiro da pesquisa. O Só divergências e a busca mudam só a tabela de pedidos. Para ver a soma de um recorte, exporte o Excel: a aba Fechamento diário soma só os pedidos que estão na tabela.',
+          a: 'Está. Os totais mostram sempre o período inteiro da pesquisa. O Só divergências e os filtros de coluna mudam só a tabela de pedidos. Para ver a soma de um recorte, exporte o Excel: a aba Fechamento diário soma só os pedidos que estão na tabela.',
         },
         {
           q: 'Por que a consulta demora?',
@@ -342,6 +426,10 @@ confere isso de novo a cada pesquisa.
           a: 'A exportação exige a permissão `fechamento-maestro.exportar`. Com apenas `fechamento-maestro.ler` você consulta o fechamento na tela, mas não baixa a planilha. Peça a permissão ao gestor do seu grupo.',
         },
         {
+          q: 'Por que vejo o CPF, o e-mail e o telefone com asteriscos (***)?',
+          a: 'Porque você não tem a permissão "Ver os dados pessoais completos do cliente" (fechamento-maestro.ver-dados-cliente). Sem ela, CPF, e-mail, telefone, número e referência do endereço chegam mascarados. O nome do cliente e o nome da rua continuam visíveis. Se o seu trabalho exige os dados completos, peça a permissão ao gestor do seu grupo.',
+        },
+        {
           q: 'Por que minha loja não aparece no seletor?',
           a: 'O seletor lista só as lojas do seu escopo de Empresas no portal e, entre elas, só as que têm o número no começo do nome (ex.: "01.CB GOIANIA"). Se a loja é sua e não aparece, peça ao administrador para conferir seu escopo ou o nome da Empresa no cadastro.',
         },
@@ -352,7 +440,7 @@ confere isso de novo a cada pesquisa.
       items: [
         {
           q: 'A tela mostrou "Não foi possível consultar os dados". O que faço?',
-          a: 'Leia a mensagem abaixo do título: ela diz o motivo. "Demorou demais" pede um período menor. "A API de delivery respondeu 5xx" é instabilidade da API do DW; clique em Tentar de novo em alguns minutos. Mensagem de credencial ou integração (403/503) é com o administrador do portal.',
+          a: 'Leia a mensagem abaixo do título: ela diz o motivo. "Demorou demais" pede um período menor. "A API de delivery respondeu 5xx" é instabilidade da API do DW, e "Não foi possível ler o cadastro de formas de pagamento" é falha no banco do Maestro; nos dois casos, clique em Tentar de novo em alguns minutos. Mensagem de credencial ou integração (403/503) é com o administrador do portal.',
         },
         {
           q: 'A pesquisa voltou sem nenhum pedido. Está certo?',

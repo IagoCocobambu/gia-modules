@@ -8,7 +8,6 @@ import {
   HandCoins,
   Handshake,
   Store,
-  Wallet,
 } from 'lucide-react'
 import { Skeleton, Tooltip } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
@@ -39,8 +38,9 @@ const TOM_VALOR: Record<Tom, string> = {
 type CampoValor = Exclude<keyof TotaisPeriodo, 'pagamentos_sem_classificacao' | 'divergentes'>
 
 /**
- * Indicadores de valor, na ordem: venda, cancelados, descontos/sem classificação.
- * `tom` recebe o valor: os de alerta só ganham cor quando há algo a olhar.
+ * Indicadores de valor — os do Fechamento Diário do legado, na mesma ordem: venda,
+ * cancelados, descontos/sem classificação. `tom` recebe o valor: os de alerta só
+ * ganham cor quando há algo a olhar.
  */
 const INDICADORES: {
   campo: CampoValor
@@ -50,79 +50,79 @@ const INDICADORES: {
   tom: (valor: number) => Tom
 }[] = [
   {
-    campo: 'total_pago',
-    rotulo: 'total pago',
-    dica: 'Total pago dos pedidos não cancelados',
-    icone: Wallet,
-    tom: () => 'success',
-  },
-  {
     campo: 'online',
     rotulo: 'online',
-    dica: 'Parte paga online, no app ou no parceiro (PRE PAGO / ONLINE)',
+    dica: 'Formas ONLINE (PRE PAGO), menos o incentivo que foi para Descontos parceiro',
     icone: Globe,
     tom: () => 'info',
   },
   {
-    campo: 'adquirentes',
-    rotulo: 'adquirentes',
-    dica: 'Parte paga com cartão ou voucher na maquininha, na entrega',
+    campo: 'adquirentes_online',
+    rotulo: 'adquirentes online',
+    dica: 'Vales ONLINE VR pagos antes, no app ou no parceiro (PRE PAGO)',
+    icone: CreditCard,
+    tom: () => 'primary',
+  },
+  {
+    campo: 'adquirentes_offline',
+    rotulo: 'adquirentes offline',
+    dica: 'Vales ONLINE VR passados na entrega, sem PRE PAGO (ex.: VR Refeição)',
     icone: CreditCard,
     tom: () => 'primary',
   },
   {
     campo: 'offline',
     rotulo: 'offline',
-    dica: 'Parte paga em dinheiro, na entrega',
+    dica: 'Parte paga na entrega (dinheiro ou maquininha): formas sem PRE PAGO',
     icone: HandCoins,
     tom: () => 'warning',
   },
   {
-    campo: 'cancelado',
-    rotulo: 'cancelado',
-    dica: 'Total pago dos pedidos cancelados (fora do fechamento)',
+    campo: 'cancelado_online',
+    rotulo: 'cancelado online',
+    dica: 'Parte online dos pedidos cancelados (fora do fechamento)',
     icone: CircleX,
     tom: (v) => (v > 0 ? 'destructive' : 'neutro'),
   },
   {
-    campo: 'cancelado_online',
-    rotulo: 'cancelado online',
-    dica: 'Parte online do valor cancelado',
+    campo: 'cancelado_adquirentes_online',
+    rotulo: 'cancelado adquirentes online',
+    dica: 'Parte em adquirentes online dos pedidos cancelados',
     icone: CircleX,
-    tom: () => 'neutro',
+    tom: (v) => (v > 0 ? 'destructive' : 'neutro'),
   },
   {
-    campo: 'cancelado_adquirentes',
-    rotulo: 'cancelado adquirentes',
-    dica: 'Parte em adquirentes do valor cancelado',
+    campo: 'cancelado_adquirentes_offline',
+    rotulo: 'cancelado adquirentes offline',
+    dica: 'Parte em adquirentes offline dos pedidos cancelados',
     icone: CircleX,
-    tom: () => 'neutro',
+    tom: (v) => (v > 0 ? 'destructive' : 'neutro'),
   },
   {
     campo: 'cancelado_offline',
     rotulo: 'cancelado offline',
-    dica: 'Parte em dinheiro do valor cancelado',
+    dica: 'Parte offline dos pedidos cancelados',
     icone: CircleX,
-    tom: () => 'neutro',
+    tom: (v) => (v > 0 ? 'destructive' : 'neutro'),
   },
   {
     campo: 'descontos_loja',
     rotulo: 'descontos loja',
-    dica: 'Desconto bancado pela loja: desconto total menos o incentivo do parceiro',
+    dica: 'Desconto total dos pedidos despachados ou entregues (DISPATCHED / DELIVERED)',
     icone: Store,
     tom: () => 'neutro',
   },
   {
     campo: 'descontos_parceiro',
     rotulo: 'descontos parceiro',
-    dica: 'Desconto bancado pelo parceiro (ex.: iFood) — o incentivo parceiro',
+    dica: 'Incentivo do parceiro em pedidos (fora do 99Food) com ONLINE VR ou OFFLINE; sai do Online',
     icone: Handshake,
     tom: () => 'neutro',
   },
   {
     campo: 'nao_classificado',
     rotulo: 'sem classificação',
-    dica: 'Valor em formas de pagamento que a regra não reconheceu (o normal é zero)',
+    dica: 'Valor em formas de pagamento sem nome (vazia ou DESCONHECIDO) — o normal é zero',
     icone: CircleHelp,
     tom: (v) => (v !== 0 ? 'warning' : 'neutro'),
   },
@@ -176,9 +176,10 @@ const ITEM = cn(
 )
 
 /**
- * Totais do fechamento do período numa barra de indicadores: o que foi pago
- * (dividido em Online, Adquirentes e Offline), o que foi cancelado (com a mesma
- * divisão), os descontos da loja e do parceiro e o que ficou sem classificação.
+ * Totais do fechamento do período numa barra com os 12 indicadores do legado: o
+ * que foi pago (Online, Adquirentes online/offline, Offline), o que foi cancelado
+ * (com a mesma divisão), os descontos da loja e do parceiro e o que ficou sem
+ * classificação.
  *
  * Grade que ocupa a largura toda, com colunas que sempre dividem 12 (2, 3, 4 ou
  * 6, pela largura da barra — container query): as linhas fecham cheias, sem

@@ -12,7 +12,10 @@ export interface FechamentoLoja {
   ativo: boolean
 }
 
-/** Grupo da forma de pagamento no fechamento (regra fixa do handler). */
+/**
+ * Tipo da forma de pagamento (regra do legado, no handler). Na tela: ONLINE,
+ * ONLINE VR (`adquirente`, soma em Adquirentes), OFFLINE e SEM CLASSIFICAÇÃO.
+ */
 export type TipoPagamento = 'online' | 'adquirente' | 'offline' | 'nao_classificado'
 
 export interface Pagamento {
@@ -33,11 +36,29 @@ export interface PedidoFechamento {
   /** Dia do fechamento (`YYYY-MM-DD`) — data de criação do pedido. */
   data: string
   data_de_criacao: string | null
+  data_de_acao: string | null
+  n_parceiro: string | null
+  n_conta: string | null
+  /**
+   * CPF, e-mail, telefone, número e referência chegam MASCARADOS do servidor sem
+   * `fechamento-maestro.ver-dados-cliente` (ex.: `***.456.789-**`).
+   */
+  cpf_cliente: string | null
+  nome_cliente: string | null
+  /** Quantos pedidos o cliente já fez (informado pela API). */
+  quantidade_pedidos: number | null
+  email_cliente: string | null
+  telefone_cliente: string | null
+  street_name: string | null
+  street_number: string | null
+  reference: string | null
+  retirada: string | null
+  confirmado_por: string | null
+  cancelado_por: string | null
   origem: string | null
   status_do_pedido: string | null
   tipo_entrega: string | null
-  retirada: string | null
-  nome_cliente: string | null
+  nome_loja: string | null
   valor_do_pedido: number
   valor_da_entrega: number
   total_pago: number
@@ -48,11 +69,19 @@ export interface PedidoFechamento {
   pagamentos: Pagamento[]
   lista_descontos: Desconto[]
   total_pago_online: number
-  total_pago_adquirentes: number
+  /** ONLINE VR pago antes (" - PRE PAGO"): vale no app ou no parceiro. */
+  total_pago_adquirentes_online: number
+  /** ONLINE VR sem " - PRE PAGO": vale passado na entrega (ex.: VR Refeição). */
+  total_pago_adquirentes_offline: number
   total_pago_offline: number
   total_nao_classificado: number
   total_de_descontos: number
+  /** Incentivo que vai para Descontos parceiro (regra do legado); 0 se não se aplica. */
+  desconto_parceiro: number
+  /** Quanto do `desconto_parceiro` sai do Online (só se o pedido tem parte ONLINE). */
+  abatimento_online: number
   cancelado: boolean
+  /** Status DISPATCHED ou DELIVERED. COMPLETED é o prato pronto, ainda não saiu. */
   venda_concluida: boolean
   check_pagamentos: boolean
   check_descontos: boolean
@@ -61,6 +90,8 @@ export interface PedidoFechamento {
 
 export interface FechamentoResposta {
   pedidos: PedidoFechamento[]
+  /** `true` quando CPF, e-mail, telefone e endereço vieram mascarados. */
+  dadosClienteMascarados: boolean
 }
 
 /** Uma linha do fechamento diário: os pedidos de um dia somados. */
@@ -73,8 +104,10 @@ export interface ResumoDia {
   valor_do_pedido: number
   valor_da_entrega: number
   total_pago: number
+  /** Online já sem o incentivo que foi para Descontos parceiro (como o card). */
   online: number
-  adquirentes: number
+  adquirentes_online: number
+  adquirentes_offline: number
   offline: number
   nao_classificado: number
   descontos: number
@@ -82,20 +115,23 @@ export interface ResumoDia {
   divergentes: number
 }
 
-/** Cards de totais do período. Valores de venda: só pedidos NÃO cancelados. */
+/**
+ * Os 12 indicadores do legado. Valores de venda: só pedidos NÃO cancelados; os
+ * cancelados têm os seus.
+ */
 export interface TotaisPeriodo {
-  total_pago: number
+  /** Online menos o incentivo que foi para Descontos parceiro. */
   online: number
-  adquirentes: number
+  adquirentes_online: number
+  adquirentes_offline: number
   offline: number
-  /** Total pago dos pedidos cancelados, e a divisão dele pelos grupos. */
-  cancelado: number
   cancelado_online: number
-  cancelado_adquirentes: number
+  cancelado_adquirentes_online: number
+  cancelado_adquirentes_offline: number
   cancelado_offline: number
-  /** Desconto bancado pela loja: `desconto_total − incentivo_parceiro`. */
+  /** Desconto total dos pedidos com venda concluída (DISPATCHED ou DELIVERED). */
   descontos_loja: number
-  /** Desconto bancado pelo parceiro (iFood etc.): `incentivo_parceiro`. */
+  /** Incentivo do parceiro, pela regra do legado (`desconto_parceiro`). */
   descontos_parceiro: number
   /** Valor em formas de pagamento que a regra não reconheceu. */
   nao_classificado: number

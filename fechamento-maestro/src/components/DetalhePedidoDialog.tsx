@@ -96,7 +96,14 @@ export function DetalhePedidoDialog({ pedido, onFechar, className }: DetalhePedi
                 )}
                 <div className="divide-y divide-border">
                   <Linha rotulo="Online" valor={formatBRL(pedido.total_pago_online)} />
-                  <Linha rotulo="Adquirentes" valor={formatBRL(pedido.total_pago_adquirentes)} />
+                  <Linha
+                    rotulo="Adquirentes online"
+                    valor={formatBRL(pedido.total_pago_adquirentes_online)}
+                  />
+                  <Linha
+                    rotulo="Adquirentes offline"
+                    valor={formatBRL(pedido.total_pago_adquirentes_offline)}
+                  />
                   <Linha rotulo="Offline" valor={formatBRL(pedido.total_pago_offline)} />
                   {pedido.total_nao_classificado !== 0 && (
                     <Linha
@@ -143,6 +150,10 @@ export function DetalhePedidoDialog({ pedido, onFechar, className }: DetalhePedi
                 <Linha rotulo="Valor do pedido" valor={formatBRL(pedido.valor_do_pedido)} />
                 <Linha rotulo="Valor da entrega" valor={formatBRL(pedido.valor_da_entrega)} />
                 <Linha rotulo="Incentivo parceiro" valor={formatBRL(pedido.incentivo_parceiro)} />
+                <Linha
+                  rotulo="Vai para Descontos parceiro"
+                  valor={formatBRL(pedido.desconto_parceiro)}
+                />
                 <Linha rotulo="Tipo de entrega" valor={pedido.tipo_entrega ?? '—'} />
                 <Linha
                   rotulo="Venda concluída"

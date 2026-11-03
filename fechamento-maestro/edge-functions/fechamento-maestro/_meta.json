@@ -1,0 +1,22 @@
+{
+  "name": "fechamento-maestro",
+  "handlers": [
+    "fechamento",
+    "lojas"
+  ],
+  "secrets_required": [
+    "GIA_SERVER_DATABASE_URL"
+  ],
+  "integracoes": [
+    "apidw"
+  ],
+  "public_routes": [],
+  "leitura_ampla": {
+    "permissao": "fechamento-maestro.ler-rede",
+    "handlers": []
+  },
+  "verify_jwt": true,
+  "auth_enforced_by": "generated-wrapper (GoTrue /auth/v1/user)",
+  "generated_by": "gia pack (server-codegen)",
+  "routing": "POST /functions/v1/<moduleId>/<handler> (fallback: body.__handler)"
+}

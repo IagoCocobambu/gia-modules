@@ -17,5 +17,10 @@ export const fechamentoMaestroPermissions = definePermissions({
       description: 'Exportar o fechamento e os pedidos em Excel (.xlsx)',
       groupPath: ['Fechamento Maestro'],
     },
+    {
+      key: 'fechamento-maestro.ver-dados-cliente',
+      description: 'Ver os dados pessoais completos do cliente (CPF, e-mail, telefone e endereço)',
+      groupPath: ['Fechamento Maestro'],
+    },
   ],
 })
