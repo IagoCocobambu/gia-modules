@@ -4,9 +4,13 @@
 // api-dw.cocobambu.com/Delivery/ com a credencial GIA_DEV_CRED_APIDW_* do `.env`.
 // Por isso não há fixtures — só personas e as Empresas simuladas.
 //
-// O `label` faz o papel do nome da Empresa no portal (nome_fantasia): o número no
-// começo dele ("01.CB GOIANIA" → "01") é o `loc_ref` da API de delivery, como no
-// legado. Empresa sem número (ex.: o Escritório) não aparece no seletor.
+// O `loc_ref` da API de delivery é o número da loja. Sai primeiro do vínculo com a
+// BI do Simphony (`locRefs.BIAPI`, ex.: '01 CB Go' → "01") e, na falta, do `label`,
+// que faz o papel do nome da Empresa no portal ("01.CB GOIANIA" → "01"). Empresa sem
+// nenhum dos dois (ex.: o Escritório) fica fora do seletor, com um aviso.
+//
+// Personas: só o Admin ('*') e "Dados do cliente" veem CPF, e-mail, telefone e
+// endereço completos; Leitor e Exportador recebem esses campos mascarados.
 
 export default {
   moduleId: 'reports-maestro',
@@ -19,11 +23,20 @@ export default {
       name: 'Exportador',
       permissions: ['reports-maestro.ler', 'reports-maestro.exportar'],
     },
+    {
+      id: 'dados-cliente',
+      name: 'Dados do cliente',
+      permissions: [
+        'reports-maestro.ler',
+        'reports-maestro.exportar',
+        'reports-maestro.ver-dados-cliente',
+      ],
+    },
   ],
 
   // Lojas com o mesmo nome da lista de lojas do legado (gia.empresas.nome_fantasia).
   empresas: [
-    { id: 1, label: '01.CB GOIANIA' },
+    { id: 1, label: '01.CB GOIANIA', locRefs: { BIAPI: '01 CB Go' } },
     { id: 2, label: '02.CB ANALIA FRANCO' },
     { id: 3, label: '03.CB JK' },
     { id: 4, label: '04.CB SAO LUIS' },
@@ -35,11 +48,12 @@ export default {
     { id: 10, label: '10.CB MEIRELES' },
     { id: 11, label: '11.CB DOM PASTEL' },
     { id: 12, label: '12.CB BEIRA MAR' },
-    { id: 13, label: '13.CB MARKET PLACE' },
+    { id: 13, label: '13.CB MARKET PLACE', locRefs: { BIAPI: '13CBMa' } },
     { id: 14, label: '14.CB CAMPINAS' },
     { id: 15, label: '15.CB CRYSTAL' },
     { id: 16, label: '16.CB VILA VELHA' },
-    { id: 17, label: '17.CB RECIFE' },
+    // Renomeada sem o prefixo: o número sai do vínculo BIAPI.
+    { id: 17, label: 'CB RECIFE', locRefs: { BIAPI: '17. CB R' } },
     { id: 18, label: '18.VASTO BSB' },
     { id: 19, label: '19.CB PORTO ALEGRE' },
     { id: 20, label: '20.CB ANHEMBI' },
@@ -119,6 +133,7 @@ export default {
     { id: 96, label: '96. CB Campinas Shopping' },
     { id: 97, label: '97. CB Tijuca Shopping' },
     { id: 98, label: '98. CB Joinville' },
+    // Sem número no nome nem vínculo BIAPI: fica fora do seletor.
     { id: 9000, label: 'Escritório' },
   ],
 

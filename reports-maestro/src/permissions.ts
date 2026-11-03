@@ -18,5 +18,10 @@ export const reportsMaestroPermissions = definePermissions({
       description: 'Exportar os pedidos de delivery em Excel (.xlsx)',
       groupPath: ['Reports Maestro'],
     },
+    {
+      key: 'reports-maestro.ver-dados-cliente',
+      description: 'Ver os dados pessoais completos do cliente (CPF, e-mail, telefone e endereço)',
+      groupPath: ['Reports Maestro'],
+    },
   ],
 })

@@ -2,7 +2,7 @@ import type { ModuleFaq } from '@gia-cb/sdk/modules'
 
 export const faq: ModuleFaq = {
   summary:
-    'O **Reports Maestro** lista, para uma loja e um período, todos os **pedidos de delivery** que passaram pelo Maestro — App Coco Bambu, iFood, 99Food e pedidos manuais — com número do pedido, cliente, endereço, quem confirmou ou cancelou, status, valores e formas de pagamento. Os dados vêm da API do DW na hora da pesquisa; nada é gravado no portal. Quem tem a permissão de exportação baixa o resultado em Excel.',
+    'O **Reports Maestro** lista, para uma loja e um período, todos os **pedidos de delivery** que passaram pelo Maestro — App Coco Bambu, iFood, 99Food e pedidos manuais — com número do pedido, cliente, endereço, quem confirmou ou cancelou, status, valores e formas de pagamento. Os dados vêm da API do DW na hora da pesquisa; nada é gravado no portal. CPF, e-mail, telefone e endereço completos do cliente só aparecem para quem tem a permissão de ver dados do cliente; para os demais eles vêm mascarados. Quem tem a permissão de exportação baixa o resultado em Excel.',
   sections: [
     {
       id: 'primeiros-passos',
@@ -23,7 +23,7 @@ O botão **Totais**, no cabeçalho da tabela (ao lado de Filtros), abre e fecha,
 acima da tabela, **4 cards** com a soma, em R$, dos pedidos do período **nos
 status e nas origens marcados** nos filtros (todos, se nada estiver marcado). Os
 cards começam **abertos** em telas com 700 px de altura ou mais e **fechados** em
-telas mais baixas (para sobrar espaço para a tabela); com eles abertos o botão
+telas mais baixas e **no celular** (para sobrar espaço para a tabela); com eles abertos o botão
 fica preenchido. O botão só
 funciona depois da primeira pesquisa, e a escolha de aberto/fechado vale até
 você sair da tela (pesquisar de novo não fecha os cards):
@@ -134,7 +134,9 @@ botão fica desativado: o resultado na tela já é desta pesquisa.
       id: 'colunas',
       title: 'O que cada coluna mostra',
       content: `
-As colunas são as mesmas do relatório antigo (UniGUI), na mesma ordem:
+As primeiras 26 colunas são as mesmas do relatório antigo (UniGUI), na mesma
+ordem. Depois delas vêm **10 colunas adicionais**, que começam **ocultas** (veja
+*Colunas adicionais*, abaixo).
 
 | Coluna | O que é |
 |---|---|
@@ -145,9 +147,9 @@ As colunas são as mesmas do relatório antigo (UniGUI), na mesma ordem:
 | **Data ação** | data e hora da ação registrada no pedido (horário de São Paulo) |
 | **Nº parceiro** | identificador do pedido no parceiro (iFood, 99Food); vazio nos pedidos do app e manuais |
 | **Nº conta** | número da conta (check) gerada no Simphony para o pedido |
-| **CPF / Nome / Email / Tel. cliente** | dados do cliente informados no pedido |
+| **CPF / Nome / Email / Tel. cliente** | dados do cliente informados no pedido — CPF, e-mail e telefone podem vir mascarados (veja *Dados pessoais do cliente*) |
 | **Qtd pedidos** | quantos pedidos esse cliente já fez na plataforma |
-| **Rua / Núm. / Referência** | endereço de entrega (na retirada vem *TAKEOUT* / *RETIRADA*) |
+| **Rua / Núm. / Referência** | endereço de entrega (na retirada vem *TAKEOUT* / *RETIRADA*); número e referência podem vir como \`***\` |
 | **Retirada** | *SIM* quando o pedido é retirada na loja; *NÃO* quando é delivery |
 | **Confirmado por / Cancelado por** | usuário que confirmou ou cancelou o pedido |
 | **Origem** | canal: App Coco Bambu, iFood, 99Food ou Pedido manual |
@@ -158,6 +160,28 @@ As colunas são as mesmas do relatório antigo (UniGUI), na mesma ordem:
 | **Desconto total** | soma dos descontos do pedido |
 | **Forma pgto** | formas de pagamento e o valor de cada uma, ex.: *PIX - PRE PAGO (112.92)* |
 | **Descontos** | descrição de cada desconto e o valor, ex.: *Desconto Taxa iFood (3.99)* |
+
+## Colunas adicionais
+
+A API do DW traz mais campos do que o relatório antigo mostrava. Eles ficam no
+fim da tabela, **ocultos** quando a tela abre — para mostrar, use o botão de
+**colunas** da barra da tabela (veja *Buscando, filtrando e escolhendo colunas*):
+
+| Coluna | O que é |
+|---|---|
+| **Tipo de entrega** | como a entrega foi feita, ex.: *Entrega própria*, *Entrega parceiro DiDiFood/99Food*, *Não identificado* |
+| **Entrega pela plataforma** | *Sim* quando a entrega ficou com a plataforma de origem do pedido; *Não* quando ficou com a loja |
+| **Entregue por** | quem fez a entrega, ex.: *LOJA* |
+| **Parceiro** | parceiro do pedido, ex.: *IFOOD*, *99FOOD* |
+| **Taxa de entrega** | taxa de entrega informada pela API (R$) |
+| **Taxa extra do parceiro** | taxa extra cobrada pelo parceiro (R$) |
+| **Incentivo da loja** | parte do incentivo do pedido bancada pela loja (R$) |
+| **Incentivo do parceiro** | parte do incentivo do pedido bancada pelo parceiro (R$) |
+| **Nº da loja** | número da loja no Maestro, ex.: *08* |
+| **Criação (UTC)** | quando o pedido foi criado, no horário **UTC** (3 horas à frente de Brasília) — é a única data da tabela que não está no horário de São Paulo |
+
+Pedido que não tem o campo (por exemplo, pedido do app, que não tem parceiro)
+mostra **—** na tabela e fica com a célula **vazia** no Excel — vazio não é zero.
 
 ## Status do pedido
 
@@ -197,9 +221,23 @@ totais e o Excel passam a ignorar os cancelados.
       content: `
 ## Busca
 
-O campo de busca no topo da tabela procura em **todas as colunas** de uma vez:
-digite o número do pedido, parte do nome do cliente, o CPF ou uma forma de
-pagamento.
+No **celular**, o campo de busca no topo da lista procura em **todas as colunas** de
+uma vez: digite o número do pedido, parte do nome do cliente, o CPF ou uma forma de
+pagamento. No computador não há busca geral: use o **filtro de cada coluna** (veja
+*Filtros e ordenação*).
+
+**Com os dados do cliente mascarados**, a busca por CPF, e-mail ou telefone só
+encontra o que está **à vista** na tela. Exemplos:
+
+- CPF *\\*\\*\\*.456.789-\\*\\** — busque **456.789** (ou **456**, ou **789**), escrito
+  como aparece, com o ponto. O CPF inteiro não encontra nada, porque os 3 primeiros
+  e os 2 últimos dígitos não chegam à tela.
+- E-mail *jo\\*\\*\\*@gmail.com* — busque **jo** ou **@gmail.com**; o resto do nome do
+  e-mail não está na tela.
+- Telefone *(11) \\*\\*\\*\\*\\*-4321* — busque **4321** ou **(11)**.
+
+Para achar o pedido de uma reclamação nesse caso, busque pelo **nome do cliente**
+(que fica sempre à vista), pelo **nº do pedido** ou pela **rua**.
 
 ## Filtros e ordenação
 
@@ -209,13 +247,18 @@ Excel exportado.
 
 ## Colunas visíveis
 
-São 26 colunas. Use o botão de **colunas** da barra da tabela para esconder as que
-você não precisa. A escolha vale até você recarregar a página.
+São 36 colunas: as 26 do relatório antigo aparecem quando a tela abre, e as 10
+**colunas adicionais** (tipo de entrega, parceiro, taxas, incentivos etc.) começam
+ocultas. Use o botão de **colunas** da barra da tabela para mostrar as ocultas ou
+esconder as que você não precisa. A escolha vale até você recarregar a página.
 
 ## No celular
 
 No celular cada pedido vira um **cartão** com número, data, status e total pago;
-toque em **ver mais** para abrir os outros campos. A busca funciona igual.
+toque em **ver mais** para abrir os outros campos. A **busca** fica no topo da lista,
+no lugar dos filtros de coluna. O botão
+de colunas só aparece em telas maiores; para ver as colunas adicionais no celular,
+exporte o Excel.
       `,
     },
     {
@@ -226,10 +269,16 @@ Com a permissão de exportação, o botão **Exportar** da barra da tabela baixa
 arquivo **.xlsx** com:
 
 - **o que está filtrado na tela** — busca e filtros de coluna valem para o arquivo;
-- as **26 colunas** do relatório, mesmo as que você escondeu na tela;
-- valores em R$ e datas como data do Excel (dá para somar e ordenar);
-- uma linha **Total** no fim, que soma só as linhas visíveis se você filtrar no
-  próprio Excel.
+- as **36 colunas**, mesmo as que estão ocultas na tela: primeiro as 26 do
+  relatório antigo, depois as 10 colunas adicionais (de *Tipo de entrega* a
+  *Criação (UTC)*);
+- valores em R$ e datas como data do Excel (dá para somar e ordenar); campo sem
+  valor fica com a célula **vazia**, não com zero;
+- uma linha **Total** no fim, com a soma de cada coluna em R$, que soma só as
+  linhas visíveis se você filtrar no próprio Excel;
+- os **dados do cliente iguais aos da tela**: sem a permissão de ver dados do
+  cliente, CPF, e-mail, telefone, número e referência saem mascarados também no
+  arquivo, e o subtítulo da planilha avisa *dados pessoais do cliente mascarados*.
 
 O nome do arquivo segue o padrão do portal:
 *GIA - Reports Maestro - &lt;loja&gt; - &lt;período&gt;.xlsx*.
@@ -245,9 +294,13 @@ Os pedidos vêm da **API do DW** (\`api-dw.cocobambu.com\`, consulta *Delivery*)
 lê o Maestro. A cada **Pesquisar** o portal busca os dados na hora — não há cópia
 guardada no portal.
 
-A loja é identificada pelo **número no começo do nome** da Empresa no cadastro do
-portal: *01.CB GOIANIA* consulta a loja **01** no Maestro. Por isso só aparecem no
-seletor as lojas cujo nome começa com um número seguido de ponto.
+A loja é identificada pelo **número da loja** no cadastro da Empresa no portal.
+Ele vem do **vínculo da Empresa com a BI do Simphony**, que começa sempre pelo
+número (ex.: *01 CB Go* → loja **01**). Se a Empresa não tiver esse vínculo, vale o
+**número no começo do nome** (ex.: *01.CB GOIANIA* → loja **01**).
+
+Empresa do seu acesso que não tem número em nenhum dos dois **não aparece no
+seletor** — são Empresas de grupos que ainda não têm CNPJ.
 
 O resultado de uma pesquisa fica guardado por **30 minutos**: pesquisar de novo a
 mesma loja e o mesmo período nesse prazo mostra o resultado na hora. Para
@@ -255,6 +308,35 @@ buscar dados atualizados antes disso, recarregue a página (F5) e pesquise de no
 
 O seletor mostra só as lojas do **seu escopo** de Empresas no portal. O servidor
 confere isso de novo a cada pesquisa.
+      `,
+    },
+    {
+      id: 'dados-pessoais',
+      title: 'Dados pessoais do cliente',
+      content: `
+CPF, e-mail, telefone e endereço completos do cliente só aparecem para quem tem a
+permissão **Ver os dados pessoais completos do cliente**
+(\`reports-maestro.ver-dados-cliente\`). Sem ela, esses campos já chegam
+**mascarados** do servidor — na tela e no Excel:
+
+| Campo | Completo | Mascarado |
+|---|---|---|
+| **CPF cliente** | 123.456.789-01 | \\*\\*\\*.456.789-\\*\\* |
+| **Email cliente** | joao.silva@gmail.com | jo\\*\\*\\*@gmail.com |
+| **Tel. cliente** | (11) 98765-4321 | (11) \\*\\*\\*\\*\\*-4321 |
+| **Núm.** e **Referência** | 1466 / Escola Maple Bear | \\*\\*\\* / \\*\\*\\* |
+
+Ficam sempre visíveis o **nome do cliente** e o **nome da rua** — é por eles que
+se acha o pedido de uma reclamação. Campo que o cliente não informou continua
+aparecendo como **—**, não como \\*\\*\\*.
+
+Telefone sem DDD reconhecível (ex.: *0800*) mostra só os 4 últimos dígitos; CPF
+fora do formato de 11 dígitos e e-mail sem *@* aparecem só como \\*\\*\\*.
+
+O mascaramento é feito **no servidor**: sem a permissão, o dado completo não chega
+ao seu navegador — não adianta exportar nem inspecionar a página. Por isso a
+busca da tabela também só encontra os dígitos que ficam à vista (veja *Buscando,
+filtrando e escolhendo colunas → Busca*).
       `,
     },
   ],
@@ -288,7 +370,7 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'Onde estão os totais em R$?',
-          a: 'Clique no botão Totais, no cabeçalho da tabela, ao lado de Exportar. Ele abre, acima da tabela, os cards com a soma de Valor pedido, Valor entrega, Total pago e Desconto total; clique de novo para fechar. Os cards já começam abertos em telas com 700 px de altura ou mais e fechados em telas mais baixas (como celular deitado ou notebook pequeno), e o botão fica desativado até você fazer a primeira pesquisa.',
+          a: 'Clique no botão Totais, no cabeçalho da tabela, ao lado de Exportar. Ele abre, acima da tabela, os cards com a soma de Valor pedido, Valor entrega, Total pago e Desconto total; clique de novo para fechar. Os cards já começam abertos em telas com 700 px de altura ou mais e fechados no celular e em telas mais baixas (como notebook pequeno), e o botão fica desativado até você fazer a primeira pesquisa.',
         },
         {
           q: 'Filtrei a tabela, mas os cards de totais não mudaram. Por quê?',
@@ -311,6 +393,18 @@ confere isso de novo a cada pesquisa.
           a: 'Valor pedido é o subtotal do pedido, sem a taxa de entrega (que fica em "Valor entrega"). Total pago é a soma dos pagamentos do pedido — os mesmos que aparecem, com o valor de cada um, na coluna "Forma pgto".',
         },
         {
+          q: 'Como vejo o tipo de entrega, o parceiro, as taxas e os incentivos?',
+          a: 'Essas são as 10 colunas adicionais, que começam ocultas. Clique no botão de colunas da barra da tabela e marque as que quiser ver (Tipo de entrega, Entrega pela plataforma, Entregue por, Parceiro, Taxa de entrega, Taxa extra do parceiro, Incentivo da loja, Incentivo do parceiro, Nº da loja e Criação (UTC)). No Excel elas vão sempre, no fim, depois das colunas do relatório antigo. No celular o botão de colunas não aparece — exporte o Excel.',
+        },
+        {
+          q: 'Por que algumas células das colunas adicionais estão vazias?',
+          a: 'Porque o pedido não tem aquele dado — por exemplo, pedido do App Coco Bambu não tem parceiro, então Parceiro, Taxa extra do parceiro e os incentivos ficam em branco. Na tabela aparece "—" e no Excel a célula fica vazia: vazio quer dizer "não informado", não R$ 0,00.',
+        },
+        {
+          q: 'Por que a coluna "Criação (UTC)" tem 3 horas a mais que "Data criação"?',
+          a: '"Data criação" está no horário de São Paulo; "Criação (UTC)" é o mesmo momento no horário universal (UTC), que fica 3 horas à frente de Brasília. É a única data da tabela que não está no horário de São Paulo.',
+        },
+        {
           q: 'Mudei as datas, mas a tabela continua igual. Por quê?',
           a: 'A tabela mostra sempre a última pesquisa. Depois de mudar a loja ou as datas, clique em Pesquisar de novo. Se o botão estiver desativado, é porque os filtros são os mesmos da pesquisa na tela.',
         },
@@ -324,8 +418,20 @@ confere isso de novo a cada pesquisa.
           a: 'A exportação exige a permissão `reports-maestro.exportar`. Com apenas `reports-maestro.ler` você consulta os pedidos na tela, mas não baixa a planilha. Peça a permissão ao gestor do seu grupo.',
         },
         {
+          q: 'Por que vejo o CPF, o e-mail e o telefone com asteriscos (***)?',
+          a: 'Porque você não tem a permissão "Ver os dados pessoais completos do cliente" (reports-maestro.ver-dados-cliente). Sem ela, CPF, e-mail, telefone, número e referência do endereço chegam mascarados — na tela e no Excel. O nome do cliente e o nome da rua continuam visíveis. Se o seu trabalho exige os dados completos, peça a permissão ao gestor do seu grupo.',
+        },
+        {
+          q: 'Busquei o CPF (ou o telefone) do cliente e não achei o pedido. Por quê?',
+          a: 'Sem a permissão de ver dados do cliente, a busca só encontra os dígitos que ficam à vista. No CPF "***.456.789-**", busque "456.789" (com o ponto, como aparece na tela); no telefone "(11) *****-4321", busque "4321"; no e-mail "jo***@gmail.com", busque "jo" ou "@gmail.com". O número completo não encontra nada. O jeito mais seguro de achar o pedido é buscar pelo nome do cliente ou pelo número do pedido.',
+        },
+        {
+          q: 'Dá para ver os dados completos do cliente exportando o Excel?',
+          a: 'Não. O mascaramento é feito no servidor, antes de os dados chegarem ao seu navegador: o Excel sai do mesmo dado da tela, mascarado. Nesse caso o subtítulo da planilha avisa "dados pessoais do cliente mascarados".',
+        },
+        {
           q: 'Por que minha loja não aparece no seletor?',
-          a: 'O seletor lista só as lojas do seu escopo de Empresas no portal e, entre elas, só as que têm o número no começo do nome (ex.: "01.CB GOIANIA"). Se a loja é sua e não aparece, peça ao administrador para conferir seu escopo ou o nome da Empresa no cadastro.',
+          a: 'O seletor lista só as lojas do seu escopo de Empresas no portal que têm número de loja no cadastro — no vínculo com a BI do Simphony ou, na falta dele, no começo do nome (ex.: "01.CB GOIANIA"). Empresas sem número são de grupos que ainda não têm CNPJ e ficam de fora. Se a sua loja tem número e mesmo assim não aparece, ela não está no seu escopo — peça ao gestor para conferir.',
         },
       ],
     },
@@ -334,7 +440,7 @@ confere isso de novo a cada pesquisa.
       items: [
         {
           q: 'A tela mostrou "Não foi possível consultar os dados". O que faço?',
-          a: 'Leia a mensagem abaixo do título: ela diz o motivo. "Demorou demais" pede um período menor. "A API de delivery respondeu 5xx" é instabilidade da API do DW; clique em Tentar de novo em alguns minutos. Mensagem de credencial ou integração (403/503) é com o administrador do portal.',
+          a: 'Leia a mensagem abaixo do título: ela diz o motivo. "Demorou demais" pede um período menor. "A API de delivery respondeu 5xx" é instabilidade da API do DW; clique em Tentar de novo em alguns minutos. "Não tem número de loja no cadastro" quer dizer que a Empresa perdeu o número depois que você abriu a tela — o administrador do portal ajusta o cadastro. Mensagem de credencial ou integração (403/503) é com o administrador do portal.',
         },
         {
           q: 'A pesquisa voltou sem nenhum pedido. Está certo?',

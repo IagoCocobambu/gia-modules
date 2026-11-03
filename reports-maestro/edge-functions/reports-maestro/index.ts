@@ -14,7 +14,9 @@ type GiaOperacao = {
   empresaId: number
   tipo?: string
   ativo: boolean
+  rankings: Record<string, string | null>
 }
+type GiaEc = { ec: string; tipo: 'maquineta' | 'link' | 'ecommerce' | null; ativo: boolean }
 type GiaPerfilUsuario = {
   id: string
   email?: string
@@ -29,6 +31,7 @@ type GiaEmpresa = {
   icmsVinho: number
   ativo: boolean
   locRefs: Record<string, string>
+  ecs: GiaEc[]
 }
 type GiaTextoInput = {
   prompt: string
@@ -160,13 +163,16 @@ async function __giaCacheRow(userId: string): Promise<__GiaCacheRow> {
 }
 // ── Operações no escopo (gia.operacoes). `Accept-Profile` seleciona o schema
 // no PostgREST — sem ele a busca cai em `public` e devolve 404.
+// O ranking por área (gia.operacoes_rankings) vem no MESMO embed: sem linha =
+// não classificada (a chave fica de fora), `opcao_id` nulo = não se aplica.
 async function __giaOperacoes(scope: EmpresaScope): Promise<GiaOperacao[]> {
   if (!scope.all && scope.empresaIds.length === 0) return []
   const key = env('SUPABASE_SERVICE_ROLE_KEY')
   const filtro = scope.all ? '' : `&empresa_id=in.(${scope.empresaIds.join(',')})`
   const res = await fetch(
     `${env('SUPABASE_URL')}/rest/v1/operacoes?deleted_at=is.null` +
-      `&select=operacao_id,operacao_ref,nome_operacao,tipo_operacao,empresa_id,ativo${filtro}`,
+      `&select=operacao_id,operacao_ref,nome_operacao,tipo_operacao,empresa_id,ativo,` +
+      `operacoes_rankings(rankings_areas(chave,ativo),rankings_opcoes(nome))${filtro}`,
     { headers: { apikey: key, Authorization: `Bearer ${key}`, 'Accept-Profile': 'gia' } }
   )
   if (!res.ok) throw new HttpError(500, 'falha ao consultar as operações do usuário')
@@ -177,17 +183,30 @@ async function __giaOperacoes(scope: EmpresaScope): Promise<GiaOperacao[]> {
     tipo_operacao: string | null
     empresa_id: number
     ativo: boolean
+    operacoes_rankings?: Array<{
+      rankings_areas: { chave: string; ativo: boolean } | null
+      rankings_opcoes: { nome: string } | null
+    }> | null
   }>
-  return rows.map((o) => ({
-    id: o.operacao_id,
-    ref: o.operacao_ref,
-    nome: o.nome_operacao ?? o.operacao_ref,
-    tipo: o.tipo_operacao ?? undefined,
-    empresaId: o.empresa_id,
-    ativo: o.ativo,
-  }))
+  return rows.map((o) => {
+    const rankings: Record<string, string | null> = {}
+    for (const r of o.operacoes_rankings ?? []) {
+      // Área desativada sai do cadastro — não deixar o valor antigo vazar.
+      if (!r.rankings_areas?.ativo) continue
+      rankings[r.rankings_areas.chave] = r.rankings_opcoes?.nome ?? null
+    }
+    return {
+      id: o.operacao_id,
+      ref: o.operacao_ref,
+      nome: o.nome_operacao ?? o.operacao_ref,
+      tipo: o.tipo_operacao ?? undefined,
+      empresaId: o.empresa_id,
+      ativo: o.ativo,
+      rankings,
+    }
+  })
 }
-// ── Empresas no escopo (gia.empresas + gia.empresas_integracoes) ────────────
+// ── Empresas no escopo (gia.empresas + gia.empresas_integracoes + gia.empresas_ecs)
 // O embed `empresas_integracoes(...)` resolve o de-para de plataforma na MESMA
 // ida ao PostgREST — o FK empresa_id já existe, então não é join manual.
 async function __giaEmpresas(scope: EmpresaScope): Promise<GiaEmpresa[]> {
@@ -197,13 +216,16 @@ async function __giaEmpresas(scope: EmpresaScope): Promise<GiaEmpresa[]> {
   const res = await fetch(
     `${env('SUPABASE_URL')}/rest/v1/empresas?deleted_at=is.null` +
       `&select=empresa_id,cnpj,razao_social,nome_fantasia,icms_vinho,ativo,` +
-      `empresas_integracoes(id,tipo,locref,ativo,deleted_at)` +
+      `empresas_integracoes(id,tipo,locref,ativo,deleted_at),` +
+      // `dados_cielo` fica de fora de propósito: é o cadastro da adquirente, não
+      // a identidade do EC.
+      `empresas_ecs(ec,tipo,ativo,deleted_at)` +
       // Empresa com DUAS integrações do MESMO tipo existe (a 93, de laboratório,
       // tem dois TS2). Sem ordenar, qual delas sobrava no `locRefs` dependia da
       // ordem que o PostgREST devolvesse — e o BFF podia escolher a outra pra
       // mesma empresa. Ordenado por `id`, as duas pontas concordam. Quem precisa
       // da outra passa `locRef` explícito no handler.
-      `&empresas_integracoes.order=id${filtro}`,
+      `&empresas_integracoes.order=id&empresas_ecs.order=id${filtro}`,
     { headers: { apikey: key, Authorization: `Bearer ${key}`, 'Accept-Profile': 'gia' } }
   )
   if (!res.ok) throw new HttpError(500, 'falha ao consultar as empresas do usuário')
@@ -218,6 +240,12 @@ async function __giaEmpresas(scope: EmpresaScope): Promise<GiaEmpresa[]> {
       id: number
       tipo: string
       locref: string
+      ativo: boolean
+      deleted_at: string | null
+    }> | null
+    empresas_ecs?: Array<{
+      ec: string
+      tipo: GiaEc['tipo']
       ativo: boolean
       deleted_at: string | null
     }> | null
@@ -242,6 +270,9 @@ async function __giaEmpresas(scope: EmpresaScope): Promise<GiaEmpresa[]> {
       icmsVinho: e.icms_vinho ?? 0,
       ativo: e.ativo,
       locRefs,
+      ecs: (e.empresas_ecs ?? [])
+        .filter((x) => !x.deleted_at)
+        .map((x) => ({ ec: x.ec, tipo: x.tipo, ativo: x.ativo })),
     }
   })
 }
@@ -570,9 +601,11 @@ const __giaPublicRotas: { handler: string; segmentos: string[]; methods: string[
 // ─── src/server/lojas.ts ────────────────────────────────────────────────
 __giaHandlers["lojas"] = (() => {
 
-  // Lojas que o usuário pode consultar: Empresas do escopo dele cujo nome começa com
-  // o número da loja ("01.CB GOIANIA"). É desse número que sai o `loc_ref` da API de
-  // delivery — mesma regra do legado (ExtrairNumeroLoja sobre o nome_fantasia).
+  // Lojas que o usuário pode consultar: Empresas do escopo dele com número de loja.
+  // É desse número que sai o `loc_ref` da API de delivery. Ele vem primeiro do
+  // vínculo com a BI do Simphony (`locRefs.BIAPI`) e, na falta, do nome da Empresa
+  // ("01.CB GOIANIA"). As que não têm número ficam de fora: são de grupos que ainda
+  // não têm CNPJ.
   //
   // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. `numeroDaLoja`
   // se repete em pedidos.ts de propósito.
@@ -584,13 +617,23 @@ __giaHandlers["lojas"] = (() => {
     ativo: boolean
   }
 
-  /** "01.CB GOIANIA" → "01"; "48. VASTO SUL" → "48". Sem número antes do ponto → null. */
-  function numeroDaLoja(nome: string): string | null {
-    const m = /^\s*(\d{1,4})\s*\./.exec(nome)
+  interface Resposta {
+    lojas: Loja[]
+  }
+
+  /**
+   * Número da loja com 2 dígitos — o `loc_ref` da API. Sai primeiro do vínculo com a
+   * BI do Simphony (`locRefs.BIAPI` começa sempre pelo número: "01 CB Go", "17. CB R",
+   * "13CBMa", "65"); o nome da Empresa ("01.CB GOIANIA") fica de reserva.
+   */
+  function numeroDaLoja(e: { nome: string; locRefs: Record<string, string> }): string | null {
+    const m = /^\s*(\d{1,4})/.exec(e.locRefs?.BIAPI ?? '') ?? /^\s*(\d{1,4})\s*\./.exec(e.nome)
     return m ? String(Number(m[1])).padStart(2, '0') : null
   }
 
-  const __giaHandler = defineHandler<Record<string, never>, Loja[]>(async (ctx) => {
+  const porNome = (a: string, b: string) => a.localeCompare(b, 'pt-BR', { numeric: true })
+
+  const __giaHandler = defineHandler<Record<string, never>, Resposta>(async (ctx) => {
     await ctx.requirePermission('reports-maestro.ler')
     // ctx.empresas() já vem recortado pelo escopo; a checagem explícita deixa o
     // "ONDE" visível aqui e no gia validate.
@@ -598,10 +641,10 @@ __giaHandlers["lojas"] = (() => {
     const lojas: Loja[] = []
     for (const e of await ctx.empresas()) {
       if (!escopo.all && !escopo.empresaIds.includes(e.id)) continue
-      const locRef = numeroDaLoja(e.nome)
+      const locRef = numeroDaLoja(e)
       if (locRef) lojas.push({ empresaId: e.id, nome: e.nome, locRef, ativo: e.ativo })
     }
-    return lojas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { numeric: true }))
+    return { lojas: lojas.sort((a, b) => porNome(a.nome, b.nome)) }
   })
 
 
@@ -615,7 +658,12 @@ __giaHandlers["pedidos"] = (() => {
   // O token vem do hub de Credenciais do portal (ctx.credencial) — nunca do código.
   //
   // A loja chega como `empresaId` (validado contra o escopo); o `loc_ref` da API é o
-  // número da loja tirado do NOME da Empresa no servidor — o body não escolhe loja.
+  // número da loja tirado no servidor do vínculo com a BI do Simphony
+  // (`locRefs.BIAPI`), com o nome da Empresa de reserva — o body não escolhe loja.
+  //
+  // Dados pessoais do cliente (CPF, e-mail, telefone, número e complemento do
+  // endereço) saem MASCARADOS daqui para quem não tem `reports-maestro.ver-dados-cliente`:
+  // o dado completo não chega ao navegador — nem à tela, nem ao Excel.
   //
   // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. As funções de
   // data e `numeroDaLoja` se repetem em outros arquivos de propósito.
@@ -653,6 +701,17 @@ __giaHandlers["pedidos"] = (() => {
     forma_de_pagamentos: string | null
     descontos: string | null
     nome_loja: string | null
+    // Campos da API que o legado não mostrava — nulos quando o pedido não tem.
+    tipo_entrega: string | null
+    entrega_pela_origem: boolean | null
+    entregue_por: string | null
+    parceiro: string | null
+    taxa_entrega: number | null
+    taxa_extra_parceiro: number | null
+    incentivo_loja: number | null
+    incentivo_parceiro: number | null
+    id_loja: string | null
+    data_de_criacao_utc: string | null
   }
 
   /** Id da integração da api-dw.cocobambu.com no hub de Credenciais. */
@@ -689,9 +748,13 @@ __giaHandlers["pedidos"] = (() => {
     return { de, ate }
   }
 
-  /** "01.CB GOIANIA" → "01"; "48. VASTO SUL" → "48". Sem número antes do ponto → null. */
-  function numeroDaLoja(nome: string): string | null {
-    const m = /^\s*(\d{1,4})\s*\./.exec(nome)
+  /**
+   * Número da loja com 2 dígitos — o `loc_ref` da API. Sai primeiro do vínculo com a
+   * BI do Simphony (`locRefs.BIAPI` começa sempre pelo número: "01 CB Go", "17. CB R",
+   * "13CBMa", "65"); o nome da Empresa ("01.CB GOIANIA") fica de reserva.
+   */
+  function numeroDaLoja(e: { nome: string; locRefs: Record<string, string> }): string | null {
+    const m = /^\s*(\d{1,4})/.exec(e.locRefs?.BIAPI ?? '') ?? /^\s*(\d{1,4})\s*\./.exec(e.nome)
     return m ? String(Number(m[1])).padStart(2, '0') : null
   }
 
@@ -704,6 +767,20 @@ __giaHandlers["pedidos"] = (() => {
   function numero(v: unknown): number {
     const n = typeof v === 'number' ? v : Number(v)
     return Number.isFinite(n) ? n : 0
+  }
+
+  /** Como `numero`, mas sem valor fica `null` (pedido sem parceiro não é R$ 0,00). */
+  function numeroOuNulo(v: unknown): number | null {
+    if (v === null || v === undefined || v === '') return null
+    const n = typeof v === 'number' ? v : Number(v)
+    return Number.isFinite(n) ? n : null
+  }
+
+  function booleano(v: unknown): boolean | null {
+    if (typeof v === 'boolean') return v
+    if (v === 1 || v === 'true' || v === '1') return true
+    if (v === 0 || v === 'false' || v === '0') return false
+    return null
   }
 
   function normalizar(raw: Record<string, unknown>): Pedido | null {
@@ -738,6 +815,56 @@ __giaHandlers["pedidos"] = (() => {
       forma_de_pagamentos: texto(raw.forma_de_pagamentos),
       descontos: texto(raw.descontos),
       nome_loja: texto(raw.nome_loja),
+      tipo_entrega: texto(raw.tipo_entrega),
+      entrega_pela_origem: booleano(raw.entrega_pela_origem),
+      entregue_por: texto(raw.entregue_por),
+      parceiro: texto(raw.parceiro),
+      taxa_entrega: numeroOuNulo(raw.taxa_entrega),
+      taxa_extra_parceiro: numeroOuNulo(raw.taxa_extra_parceiro),
+      incentivo_loja: numeroOuNulo(raw.incentivo_loja),
+      incentivo_parceiro: numeroOuNulo(raw.incentivo_parceiro),
+      id_loja: texto(raw.id_loja),
+      data_de_criacao_utc: texto(raw.data_de_criacao_utc),
+    }
+  }
+
+  // ─── Mascaramento (sem `reports-maestro.ver-dados-cliente`) ──────────────────
+
+  const OCULTO = '***'
+
+  /** "12345678901" → "***.456.789-**". Fora do formato de CPF, oculta tudo. */
+  function mascararCpf(v: string): string {
+    const d = v.replace(/\D/g, '')
+    return d.length === 11 ? `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**` : OCULTO
+  }
+
+  /** "joao.silva@gmail.com" → "jo***@gmail.com" (usuário curto: só a 1ª letra). */
+  function mascararEmail(v: string): string {
+    const arroba = v.lastIndexOf('@')
+    if (arroba < 1) return OCULTO
+    return `${v.slice(0, arroba > 2 ? 2 : 1)}***${v.slice(arroba)}`
+  }
+
+  /** "11987654321" → "(11) *****-4321"; sem DDD reconhecível, só os 4 últimos dígitos. */
+  function mascararTelefone(v: string): string {
+    let d = v.replace(/\D/g, '')
+    if (d.length < 8) return OCULTO
+    if (d.startsWith('55') && d.length >= 12) d = d.slice(2)
+    const fim = d.slice(-4)
+    return (d.length === 10 || d.length === 11) && !d.startsWith('0')
+      ? `(${d.slice(0, 2)}) *****-${fim}`
+      : `*****-${fim}`
+  }
+
+  /** Nome do cliente e nome da rua ficam: é por eles que se acha o pedido de uma reclamação. */
+  function mascarar(p: Pedido): Pedido {
+    return {
+      ...p,
+      cpf_cliente: p.cpf_cliente && mascararCpf(p.cpf_cliente),
+      email_cliente: p.email_cliente && mascararEmail(p.email_cliente),
+      telefone_cliente: p.telefone_cliente && mascararTelefone(p.telefone_cliente),
+      street_number: p.street_number && OCULTO,
+      reference: p.reference && OCULTO,
     }
   }
 
@@ -751,18 +878,28 @@ __giaHandlers["pedidos"] = (() => {
     }
   }
 
-  const __giaHandler = defineHandler<Body, { pedidos: Pedido[] }>(async (ctx) => {
+  interface Resposta {
+    pedidos: Pedido[]
+    /** `true` quando CPF, e-mail, telefone e endereço vieram mascarados. */
+    dadosClienteMascarados: boolean
+  }
+
+  const __giaHandler = defineHandler<Body, Resposta>(async (ctx) => {
     await ctx.requirePermission('reports-maestro.ler')
     const empresaId = Number(ctx.body.empresaId)
     if (!Number.isInteger(empresaId)) throw new HttpError(422, 'Informe a loja.')
     await ctx.requireEmpresa(empresaId)
     const { de, ate } = validarPeriodo(ctx.body.de, ctx.body.ate)
+    const verDados = await ctx.hasPermission('reports-maestro.ver-dados-cliente')
 
     const empresa = (await ctx.empresas()).find((e) => e.id === empresaId)
     if (!empresa) throw new HttpError(404, 'Loja não encontrada.')
-    const locRef = numeroDaLoja(empresa.nome)
+    const locRef = numeroDaLoja(empresa)
     if (!locRef) {
-      throw new HttpError(422, `Não há número de loja no nome "${empresa.nome}" (ex.: "01.CB ...").`)
+      throw new HttpError(
+        422,
+        `A loja "${empresa.nome}" não tem número de loja no cadastro (vínculo com a BI do Simphony).`
+      )
     }
 
     const { baseUrl, token } = await ctx.credencial(INTEGRACAO)
@@ -797,11 +934,11 @@ __giaHandlers["pedidos"] = (() => {
     const pedidos: Pedido[] = []
     for (const raw of json.data as Record<string, unknown>[]) {
       const p = raw && typeof raw === 'object' ? normalizar(raw) : null
-      if (p) pedidos.push(p)
+      if (p) pedidos.push(verDados ? p : mascarar(p))
     }
     // Mesma ordem do legado na abertura: pela criação do pedido.
     pedidos.sort((a, b) => (a.data_de_criacao ?? '').localeCompare(b.data_de_criacao ?? ''))
-    return { pedidos }
+    return { pedidos, dadosClienteMascarados: !verDados }
   })
 
 
@@ -842,6 +979,20 @@ function __giaCasaRota(
   return params
 }
 
+// IP do visitante, para limitar abuso. Atrás da Cloudflare, o 1º do `x-forwarded-for` que chega
+// aqui é o da BORDA dela (o Traefik não confia nos IPs da Cloudflare e refaz o cabeçalho): em
+// 27/10/2026, as 2.000 últimas batidas do ponto em prod tinham 71 IPs, todos da Cloudflare. Ela
+// manda o do visitante em `cf-connecting-ip`. Fora da Cloudflare (direto na origem) os dois são
+// forjáveis — por isso o IP NÃO é identidade, só contagem.
+function __giaIpDoVisitante(h: Headers): string | null {
+  return (
+    h.get('cf-connecting-ip')?.trim() ||
+    h.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    h.get('x-real-ip')?.trim() ||
+    null
+  )
+}
+
 function __giaPublicCtx(req: Request, params: Record<string, string>): PublicServerContext {
   const url = new URL(req.url)
   const resposta = (corpo: BodyInit | null, status: number, headers: Record<string, string>) =>
@@ -852,10 +1003,7 @@ function __giaPublicCtx(req: Request, params: Record<string, string>): PublicSer
     url,
     // Cabeçalhos postos pelo proxy. NÃO são identidade: dá para forjar. Servem
     // para limitar abuso, e é só isso que se deve pendurar neles.
-    ip:
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-      req.headers.get('x-real-ip') ??
-      null,
+    ip: __giaIpDoVisitante(req.headers),
     userAgent: req.headers.get('user-agent'),
     body: async <B = unknown>() => {
       try {

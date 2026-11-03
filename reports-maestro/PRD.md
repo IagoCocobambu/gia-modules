@@ -8,10 +8,10 @@
 | **Label visível**      | Reports Maestro                           |
 | **Categoria**          | `operacional`                             |
 | **Autor**              | Iago Pereira (iago.pereira@cocobambu.com) |
-| **Versão do PRD**      | `1.0`                                     |
+| **Versão do PRD**      | `1.1`                                     |
 | **Status**             | `em-dev`                                  |
-| **Última atualização** | 2026-10-29                                |
-| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.66`              |
+| **Última atualização** | 2026-10-30                                |
+| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.67`              |
 
 ---
 
@@ -45,11 +45,15 @@ nome que eram consultadas como loja "00".
 
 ### 2.1 Personas
 
-| Persona                 | Permissões                                        | Frequência de uso | Conhecimento técnico |
-| ----------------------- | ------------------------------------------------- | ----------------- | -------------------- |
-| Gerente de loja         | `reports-maestro.ler`                             | Diário            | Baixo                |
-| Analista de delivery    | `reports-maestro.ler`, `reports-maestro.exportar` | Diário            | Médio                |
-| Financeiro / tesouraria | `reports-maestro.ler`, `reports-maestro.exportar` | Semanal           | Médio                |
+| Persona                 | Permissões                                                                                 | Frequência de uso | Conhecimento técnico |
+| ----------------------- | ------------------------------------------------------------------------------------------ | ----------------- | -------------------- |
+| Gerente de loja         | `reports-maestro.ler`                                                                      | Diário            | Baixo                |
+| Analista de delivery    | `reports-maestro.ler`, `reports-maestro.exportar`, `reports-maestro.ver-dados-cliente` (¹) | Diário            | Médio                |
+| Financeiro / tesouraria | `reports-maestro.ler`, `reports-maestro.exportar`                                          | Semanal           | Médio                |
+
+(¹) Na instalação as três chaves vão só para o grupo **Admin**; os gestores
+distribuem pela tela de Grupos/Papéis. `ver-dados-cliente` é para quem precisa do
+CPF/e-mail/telefone/endereço completos (ex.: atendimento de reclamação).
 
 ### 2.2 Cenários primários
 
@@ -64,7 +68,12 @@ nome que eram consultadas como loja "00".
 
 - Usuário sem `reports-maestro.ler`: tela mostra acesso negado; handlers respondem 403.
 - Loja fora do escopo do usuário (body adulterado): `ctx.requireEmpresa` → 403.
-- Empresa sem número no começo do nome: não aparece no seletor; handler responde 422.
+- Empresa sem número de loja (nem em `locRefs.BIAPI`, nem no nome): não aparece no
+  seletor (são de grupos que ainda não têm CNPJ; a tela não avisa); o handler
+  `pedidos` responde 422.
+- Usuário sem `reports-maestro.ver-dados-cliente`: CPF, e-mail, telefone, número e
+  complemento chegam mascarados do servidor (RN-5); a busca acha só a parte à vista.
+- Campos adicionais nulos (pedido sem parceiro): "—" na tela, célula vazia no Excel.
 - Período > 31 dias, data final < inicial ou data futura: recusado com mensagem.
 - API demora mais de 90 s: 504 com a sugestão de reduzir o período.
 - API fora do ar ou integração não liberada: estado de erro com a mensagem do servidor (403/502/503/504) e "Tentar de novo".
@@ -76,13 +85,14 @@ nome que eram consultadas como loja "00".
 
 ### RF-1: Seleção de loja
 
-**Descrição**: o seletor lista as Empresas do escopo do usuário cujo nome começa
-com o número da loja seguido de ponto ("01.CB GOIANIA"), em ordem alfabética, com
-busca. Mesma origem do legado (`gia.empresas.nome_fantasia` + `user_empresas`).
+**Descrição**: o seletor lista as Empresas do escopo do usuário que têm número de
+loja (RN-1), em ordem alfabética, com busca. As que não têm número ficam fora do
+seletor, sem aviso: são de grupos que ainda não têm CNPJ.
 
 **Critério de pronto**:
 
-- [ ] Empresas sem número no nome não aparecem
+- [ ] Empresa renomeada sem o prefixo, mas com `locRefs.BIAPI`, continua no seletor
+- [ ] Empresas sem número em nenhum dos dois não aparecem
 - [ ] A primeira loja vem pré-selecionada
 
 **Prioridade**: must-have
@@ -101,12 +111,14 @@ busca. Mesma origem do legado (`gia.empresas.nome_fantasia` + `user_empresas`).
 ### RF-3: Leitura dos pedidos (API do DW)
 
 **Descrição**: handler `pedidos` chama `GET /Delivery/?loc_ref=<nº loja>&start_date&end_date`
-com o token do hub de Credenciais (integração `apidw`). O `loc_ref` é derivado do
-nome da Empresa **no servidor** (o body só traz `empresaId`).
+com o token do hub de Credenciais (integração `apidw`). O `loc_ref` é derivado da
+Empresa **no servidor** (RN-1; o body só traz `empresaId`). Sem
+`reports-maestro.ver-dados-cliente`, os dados pessoais saem mascarados (RN-5).
 
 **Critério de pronto**:
 
 - [ ] `requirePermission('reports-maestro.ler')` + `requireEmpresa(empresaId)`
+- [ ] `hasPermission('reports-maestro.ver-dados-cliente')` decide o mascaramento no servidor
 - [ ] Timeout de 90 s (igual ao legado) com mensagem clara
 - [ ] Resposta sem a lista `data` é tratada como erro, não como "zero pedidos"
 
@@ -119,11 +131,15 @@ legado, nos mesmos nomes e ordem**: Loja · ID · Nº pedido · Data criação �
 ação · Nº parceiro · Nº conta · CPF cliente · Nome cliente · Qtd pedidos · Email
 cliente · Tel. cliente · Rua · Núm. · Referência · Retirada · Confirmado por ·
 Cancelado por · Origem · Status pedido · Valor pedido · Valor entrega · Total pago ·
-Desconto total · Forma pgto · Descontos. Busca global, filtro e ordenação por
-coluna e escolha de colunas visíveis. Acima da tabela:
+Desconto total · Forma pgto · Descontos. Depois delas, **10 colunas adicionais** da
+API, **ocultas por padrão** (`initialColumnVisibility`) e visíveis pelo botão de
+colunas: Tipo de entrega · Entrega pela plataforma (Sim/Não) · Entregue por ·
+Parceiro · Taxa de entrega · Taxa extra do parceiro · Incentivo da loja · Incentivo
+do parceiro · Nº da loja · Criação (UTC). Filtro e ordenação por coluna, busca
+global só no celular (cards) e escolha de colunas visíveis. Acima da tabela:
 
 - **4 cards de totais** (acima da tabela, começam abertos se a altura da tela for
-  > = 700 px e fechados abaixo disso; o botão **Totais** no
+  > = 700 px e fechados abaixo disso e no celular; o botão **Totais** no
   > cabeçalho da tabela abre/fecha, com transição de altura + fade; desativado antes da
   > 1ª pesquisa; o estado vale enquanto a tela está aberta) — Valor pedido, Valor
   > entrega, Total pago e Desconto total —
@@ -162,9 +178,12 @@ coluna e escolha de colunas visíveis. Acima da tabela:
 ### RF-5: Exportar Excel
 
 **Descrição**: com `reports-maestro.exportar`, gera `.xlsx` das linhas filtradas
-com as 26 colunas, no **template de exportação do GIA** (título na linha 1,
-subtítulo cinza na 2, cabeçalho `#DBE9FF` na 4, congelado e com autofiltro),
-valores em R$, datas como data e linha **Total** com `SUBTOTAL(109)`. Nome
+com as 36 colunas (as 26 do legado e, no fim, as 10 adicionais, mesmo ocultas na
+tela), no **template de exportação do GIA** (título na linha 1, subtítulo cinza na
+2, cabeçalho `#DBE9FF` na 4, congelado e com autofiltro), valores em R$, datas como
+data e linha **Total** com `SUBTOTAL(109)` em todas as colunas em R$. Valor nulo
+sai como célula vazia, não zero. Os dados pessoais saem como chegaram do servidor
+(mascarados sem a permissão; o subtítulo avisa). Nome
 `GIA - Reports Maestro - <loja> - <período>.xlsx`.
 
 **Prioridade**: must-have
@@ -201,12 +220,14 @@ Não se aplica — o módulo não grava nada.
 
 ### 5.2 Permissões (obrigatório)
 
-| Key                        | Descrição                                | Granularidade     |
-| -------------------------- | ---------------------------------------- | ----------------- |
-| `reports-maestro.ler`      | Consultar os pedidos das lojas do escopo | Leitura           |
-| `reports-maestro.exportar` | Exportar os pedidos em Excel             | Operação especial |
+| Key                                 | Descrição                                                 | Granularidade     |
+| ----------------------------------- | --------------------------------------------------------- | ----------------- |
+| `reports-maestro.ler`               | Consultar os pedidos das lojas do escopo                  | Leitura           |
+| `reports-maestro.exportar`          | Exportar os pedidos em Excel                              | Operação especial |
+| `reports-maestro.ver-dados-cliente` | Ver CPF, e-mail, telefone e endereço completos do cliente | Dado sensível     |
 
-O módulo não tem escrita.
+As três compartilham o `groupPath` `['Reports Maestro']`. Na instalação vão só para
+o grupo Admin. O módulo não tem escrita.
 
 ### 5.3 Integrações externas
 
@@ -230,10 +251,15 @@ Não usa.
 
 ## 6. Regras de negócio (obrigatório)
 
-- **RN-1**: O `loc_ref` da API é o número antes do primeiro ponto no nome da
-  Empresa, com 2 dígitos ("01.CB GOIANIA" → `01`; "48. VASTO SUL" → `48`) — porte
-  do `ExtrairNumeroLoja` do legado. Sem número, a loja não é consultável (o legado
-  consultava "00" e voltava vazio).
+- **RN-1**: O `loc_ref` da API é o número da loja com 2 dígitos. Sai primeiro do
+  vínculo da Empresa com a BI do Simphony — `locRefs.BIAPI`, que começa sempre pelo
+  número (`'01 CB Go'` → `01`, `'17. CB R'` → `17`, `'13CBMa'` → `13`, `'65'` → `65`).
+  Sem o vínculo, vale o número antes do primeiro ponto no nome da Empresa
+  ("01.CB GOIANIA" → `01`; "48. VASTO SUL" → `48`), porte do `ExtrairNumeroLoja` do
+  legado. A mesma função (`numeroDaLoja`) está nos handlers `lojas` e `pedidos`. Sem
+  número, a loja não é consultável (o legado consultava "00" e voltava vazio) e a
+  tela avisa em vez de a loja sumir sem explicação — em produção, 22 Empresas
+  ativas não têm número no nome.
 - **RN-2**: O período é de 1 a 31 dias, sem datas futuras, data final ≥ inicial.
   As datas são interpretadas pela API no fuso America/Sao_Paulo.
 - **RN-3**: Todos os pedidos do período entram, inclusive `CANCELLED` (igual ao
@@ -242,9 +268,24 @@ Não usa.
   Excel soma o que estava na tabela (status + busca + filtros de coluna) ao exportar.
 - **RN-4**: Datas exibidas e exportadas em horário de São Paulo (`data_de_criacao_horario_sp`,
   `data_de_acao_horario_sp`), sem conversão de fuso no navegador.
-- **RN-5**: O módulo mostra dados pessoais do cliente (CPF, nome, email, telefone,
-  endereço), como o legado — acesso restrito a quem tem `reports-maestro.ler` e às
-  lojas do seu escopo.
+- **RN-5**: Dados pessoais do cliente completos só com
+  `reports-maestro.ver-dados-cliente`. Sem ela, o handler `pedidos` devolve os
+  campos **já mascarados** — o dado completo não chega ao navegador, e o Excel sai
+  do mesmo dado:
+  - CPF: `***.456.789-**` (fora de 11 dígitos: `***`);
+  - e-mail: `jo***@gmail.com` (usuário de até 2 letras: só a 1ª);
+  - telefone: `(11) *****-4321` (sem DDD reconhecível: `*****-4321`);
+  - endereço: nome da rua visível; `street_number` e `reference` viram `***`;
+  - nome do cliente visível (é por ele que se acha o pedido de uma reclamação);
+  - campo nulo continua nulo ("—"), não `***`.
+
+  A busca da tabela, sem a permissão, só acha os dígitos à vista (a FAQ explica).
+
+- **RN-7**: Campos adicionais da API (`tipo_entrega`, `entrega_pela_origem`,
+  `entregue_por`, `parceiro`, `taxa_entrega`, `taxa_extra_parceiro`,
+  `incentivo_loja`, `incentivo_parceiro`, `id_loja`, `data_de_criacao_utc`) podem vir
+  nulos (ex.: pedido sem parceiro): nulo é vazio, nunca zero. `data_de_criacao_utc` é
+  a única data em UTC; exibida e exportada como veio, sem converter para São Paulo.
 - **RN-6**: O status do pedido é traduzido por um dicionário único
   (`src/status-pedido.ts`), usado pelo filtro de status (plural: "Cancelados") e
   pela coluna da tabela (singular: "Cancelado"), inclusive na busca e no filtro de
@@ -269,6 +310,9 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 
 - [ ] Usuário executa C1, C2 e C3 do início ao fim
 - [ ] Leitor sem `reports-maestro.exportar` não vê o botão Exportar
+- [ ] Sem `reports-maestro.ver-dados-cliente`, a resposta do handler (DevTools → Rede) já traz CPF/e-mail/telefone/número/referência mascarados; com ela, completos
+- [ ] Colunas adicionais começam ocultas, aparecem pelo botão de colunas e vão no fim do Excel
+- [ ] Empresa sem número não aparece no seletor
 - [ ] Handler recusa (403) empresa fora do escopo
 - [ ] Mesma loja e período trazem os mesmos pedidos que o Reports Maestro legado
 - [ ] Linha Total do Excel bate com a soma das colunas em R$ das linhas exportadas
@@ -276,7 +320,7 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 - [ ] Quantidades de cada filtro de chips somam o "Todos" e não mudam ao marcar chip da própria barra
 - [ ] Marcar origem recalcula as quantidades de status (e vice-versa); chip marcado com 0 continua desmarcável
 - [ ] Coluna Origem mostra badge centralizado
-- [ ] Botão Totais abre/fecha os cards de totais acima da tabela (abertos de início se a altura da tela for >= 700 px, fechados abaixo), em desktop e mobile
+- [ ] Botão Totais abre/fecha os cards de totais acima da tabela (abertos de início se a altura da tela for >= 700 px, fechados abaixo e sempre fechados no celular), em desktop e mobile
 - [ ] Botão Filtros abre o dialog de status/origem; marcar chips não fecha; "Limpar filtros" desmarca tudo; tabela só muda em "Ver N pedidos" (que fecha); X/fora/Esc descartam o marcado; filtros mostram só status/origens com pedidos; fechado com filtro ativo, o botão mostra a quantidade marcada
 - [ ] Clicar em status filtra tabela, totais e export; "Todos" limpa
 - [ ] Mobile (375x667), tablet (768x1024), desktop (1280x720) funcionam; tabela vira cards
@@ -292,8 +336,6 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
   com cadastro de classificações em `gia_relatorios.formas_pagamento`). A regra de
   conciliação vivia num frontend React que não veio com o legado; fica para uma
   próxima entrega.
-- Campos novos da API que o legado não mostrava (`tipo_entrega`, `parceiro`,
-  incentivos, `taxa_entrega`, `entregue_por`).
 - Consulta multi-loja e períodos acima de 31 dias.
 
 ---
@@ -309,11 +351,11 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 
 ## 10. Riscos e mitigações
 
-| Risco                                   | Probabilidade | Impacto | Mitigação                                           |
-| --------------------------------------- | ------------- | ------- | --------------------------------------------------- |
-| Nome da Empresa sem o número da loja    | Médio         | Médio   | Loja some do seletor; FAQ explica; cadastro corrige |
-| API lenta em períodos longos            | Médio         | Médio   | Limite de 31 dias + timeout de 90 s com mensagem    |
-| Exposição de dados pessoais de clientes | Baixo         | Alto    | Permissão + escopo de loja checados no servidor     |
+| Risco                                   | Probabilidade | Impacto | Mitigação                                                                              |
+| --------------------------------------- | ------------- | ------- | -------------------------------------------------------------------------------------- |
+| Empresa sem número de loja no cadastro  | Médio         | Médio   | `locRefs.BIAPI` primeiro, nome de reserva; FAQ explica                                 |
+| API lenta em períodos longos            | Médio         | Médio   | Limite de 31 dias + timeout de 90 s com mensagem                                       |
+| Exposição de dados pessoais de clientes | Baixo         | Alto    | Mascarados no servidor sem `ver-dados-cliente`; permissão + escopo checados no handler |
 
 ---
 
@@ -321,7 +363,7 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 
 ### Outros módulos do GIA
 
-- Cadastro de Empresas (nome com o número da loja).
+- Cadastro de Empresas (vínculo BIAPI com a BI do Simphony, ou nome com o número da loja).
 
 ### Serviços externos
 
@@ -330,6 +372,7 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 ### Decisões pendentes
 
 - [ ] Liberação deste módulo na integração `apidw` do hub de Credenciais — time GIA, na instalação.
+- [ ] Subgrupo **Maestro** em Plataformas (`cardapio`) — time GIA, na instalação.
 
 ---
 
@@ -350,6 +393,11 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 13. Por que minha loja não aparece no seletor?
 14. Mudei as datas e a tabela não mudou — por quê?
 15. A tela mostrou erro. O que faço?
+16. Por que vejo o CPF, o e-mail e o telefone com asteriscos?
+17. Busquei o CPF e não achei o pedido — por quê?
+18. Dá para ver os dados completos exportando o Excel?
+19. Como vejo tipo de entrega, parceiro, taxas e incentivos?
+20. Por que algumas células das colunas adicionais estão vazias?
 
 ---
 
@@ -365,6 +413,24 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 ---
 
 ## 14. Histórico
+
+### 2026-11-03 — v1.2 (pacote 0.2.0)
+
+- Removido o aviso de Empresas sem número de loja: são de grupos que ainda não
+  têm CNPJ; continuam fora do seletor, sem aviso (RN-1).
+- Título do módulo no card de loja e período (`ListHeader`: título à esquerda,
+  formulário à direita); a tabela mostra só a loja e o período pesquisados.
+- Busca geral da tabela só no celular (cards); no desktop, filtro por coluna.
+- Cards de totais começam fechados no celular.
+
+### 2026-10-30 — v1.1 (pacote 0.1.1, devolutiva do time GIA)
+
+- Permissão `reports-maestro.ver-dados-cliente`; sem ela, dados pessoais
+  mascarados no servidor (RN-5).
+- Menu: `navGroup` `cardapio` (Plataformas › Maestro › Reports Maestro).
+- Número da loja do `locRefs.BIAPI`, com o nome de reserva; aviso no seletor para
+  Empresas sem número (RN-1).
+- 10 colunas adicionais da API, ocultas por padrão na tabela e no fim do Excel (RN-7).
 
 ### 2026-10-29 — v1.0 inicial
 

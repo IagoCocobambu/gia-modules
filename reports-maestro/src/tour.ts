@@ -40,7 +40,7 @@ export const tour = defineTour({
       screen: '/reports-maestro',
       target: '[data-tour="reports-maestro-toolbar"]',
       title: 'Busca, colunas e Excel',
-      body: 'Busque por pedido, cliente ou forma de pagamento, escolha as **colunas** visíveis e **exporte** em Excel (com a permissão de exportação).',
+      body: 'Filtre pelo cabeçalho de cada coluna (no celular, busque por pedido, cliente ou forma de pagamento), escolha as **colunas** visíveis e **exporte** em Excel (com a permissão de exportação). Tipo de entrega, parceiro, taxas e incentivos começam **ocultos** — mostre pelo botão de colunas; no Excel eles vão sempre.',
       placement: 'bottom',
     },
     {
@@ -48,7 +48,7 @@ export const tour = defineTour({
       screen: '/reports-maestro',
       target: '[data-tour="reports-maestro-frame"]',
       title: 'Pedidos',
-      body: 'Uma linha por pedido, com cliente, status, valores e formas de pagamento. O Excel exportado traz uma linha **Total** que soma só as linhas exportadas.',
+      body: 'Uma linha por pedido, com cliente, status, valores e formas de pagamento. Sem a permissão de ver dados do cliente, CPF, e-mail, telefone e número do endereço aparecem com **\\*\\*\\*** — a busca encontra só a parte à vista; procure pelo nome do cliente. O Excel exportado traz uma linha **Total** que soma só as linhas exportadas.',
       placement: 'top',
     },
   ],

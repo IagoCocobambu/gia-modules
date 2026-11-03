@@ -1,8 +1,10 @@
 import { defineHandler } from '@gia-cb/sdk/server'
 
-// Lojas que o usuário pode consultar: Empresas do escopo dele cujo nome começa com
-// o número da loja ("01.CB GOIANIA"). É desse número que sai o `loc_ref` da API de
-// delivery — mesma regra do legado (ExtrairNumeroLoja sobre o nome_fantasia).
+// Lojas que o usuário pode consultar: Empresas do escopo dele com número de loja.
+// É desse número que sai o `loc_ref` da API de delivery. Ele vem primeiro do
+// vínculo com a BI do Simphony (`locRefs.BIAPI`) e, na falta, do nome da Empresa
+// ("01.CB GOIANIA"). As que não têm número ficam de fora: são de grupos que ainda
+// não têm CNPJ.
 //
 // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. `numeroDaLoja`
 // se repete em pedidos.ts de propósito.
@@ -14,13 +16,23 @@ interface Loja {
   ativo: boolean
 }
 
-/** "01.CB GOIANIA" → "01"; "48. VASTO SUL" → "48". Sem número antes do ponto → null. */
-function numeroDaLoja(nome: string): string | null {
-  const m = /^\s*(\d{1,4})\s*\./.exec(nome)
+interface Resposta {
+  lojas: Loja[]
+}
+
+/**
+ * Número da loja com 2 dígitos — o `loc_ref` da API. Sai primeiro do vínculo com a
+ * BI do Simphony (`locRefs.BIAPI` começa sempre pelo número: "01 CB Go", "17. CB R",
+ * "13CBMa", "65"); o nome da Empresa ("01.CB GOIANIA") fica de reserva.
+ */
+function numeroDaLoja(e: { nome: string; locRefs: Record<string, string> }): string | null {
+  const m = /^\s*(\d{1,4})/.exec(e.locRefs?.BIAPI ?? '') ?? /^\s*(\d{1,4})\s*\./.exec(e.nome)
   return m ? String(Number(m[1])).padStart(2, '0') : null
 }
 
-export default defineHandler<Record<string, never>, Loja[]>(async (ctx) => {
+const porNome = (a: string, b: string) => a.localeCompare(b, 'pt-BR', { numeric: true })
+
+export default defineHandler<Record<string, never>, Resposta>(async (ctx) => {
   await ctx.requirePermission('reports-maestro.ler')
   // ctx.empresas() já vem recortado pelo escopo; a checagem explícita deixa o
   // "ONDE" visível aqui e no gia validate.
@@ -28,10 +40,10 @@ export default defineHandler<Record<string, never>, Loja[]>(async (ctx) => {
   const lojas: Loja[] = []
   for (const e of await ctx.empresas()) {
     if (!escopo.all && !escopo.empresaIds.includes(e.id)) continue
-    const locRef = numeroDaLoja(e.nome)
+    const locRef = numeroDaLoja(e)
     if (locRef) lojas.push({ empresaId: e.id, nome: e.nome, locRef, ativo: e.ativo })
   }
-  return lojas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { numeric: true }))
+  return { lojas: lojas.sort((a, b) => porNome(a.nome, b.nome)) }
 })
 
 export const config = { secrets: [] }

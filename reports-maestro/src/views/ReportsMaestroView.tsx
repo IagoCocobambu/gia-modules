@@ -27,6 +27,7 @@ import {
   chaveOrigem,
   chaveStatus,
   COLUNAS_EXPORT,
+  COLUNAS_OCULTAS,
   contarPor,
   filtrarPedidos,
   formatBRL,
@@ -34,6 +35,7 @@ import {
   hojeLocal,
   NOME_MODULO,
   periodoArquivo,
+  simNao,
   preencherPlanilha,
   somarDias,
   somarPedidos,
@@ -126,7 +128,11 @@ function useModoCompacto(el: HTMLElement | null): boolean {
   return compacto
 }
 
-async function exportarXlsx(pedidos: PedidoMaestro[], consulta: Consulta) {
+async function exportarXlsx(
+  pedidos: PedidoMaestro[],
+  consulta: Consulta,
+  dadosClienteMascarados: boolean
+) {
   const { Workbook } = await import('exceljs')
   const wb = new Workbook()
   wb.creator = NOME_MODULO
@@ -135,6 +141,7 @@ async function exportarXlsx(pedidos: PedidoMaestro[], consulta: Consulta) {
     de: consulta.de,
     ate: consulta.ate,
     geradoEm: new Date(),
+    dadosClienteMascarados,
   })
   const buffer = await wb.xlsx.writeBuffer()
   const url = URL.createObjectURL(
@@ -157,6 +164,8 @@ async function exportarXlsx(pedidos: PedidoMaestro[], consulta: Consulta) {
 export function ReportsMaestroView() {
   const canView = useCanAccess('reports-maestro.ler')
   const canExport = useCanAccess('reports-maestro.exportar')
+  // Só decide a CHAVE da consulta (refaz se a permissão mudar); quem mascara é o servidor.
+  const canVerDadosCliente = useCanAccess('reports-maestro.ver-dados-cliente')
   const replayTour = useTourReplayTrigger('reports-maestro')
 
   // Como no legado, o período começa em ontem → ontem.
@@ -170,12 +179,13 @@ export function ReportsMaestroView() {
   const compacto = useModoCompacto(area)
 
   const lojasQuery = useLojasReportsMaestro(canView)
-  const lojas = useMemo(() => lojasQuery.data ?? [], [lojasQuery.data])
+  const lojas = useMemo(() => lojasQuery.data?.lojas ?? [], [lojasQuery.data])
   // Sem escolha do usuário, vale a primeira loja da lista (como no legado).
   const empresaIdSelecionada = filtros.empresaId ?? lojas[0]?.empresaId ?? null
 
   const pedidosQuery = usePedidosReportsMaestro(
-    consulta ? { empresaId: consulta.empresaId, de: consulta.de, ate: consulta.ate } : null
+    consulta ? { empresaId: consulta.empresaId, de: consulta.de, ate: consulta.ate } : null,
+    canVerDadosCliente
   )
   const pedidos = useMemo(() => pedidosQuery.data?.pedidos ?? [], [pedidosQuery.data])
   const carregando = pedidosQuery.isFetching
@@ -194,12 +204,16 @@ export function ReportsMaestroView() {
   const [origemRascunho, setOrigemRascunho] = useState<ReadonlySet<string>>(() => new Set())
   // Botões do cabeçalho da tabela: "Totais" abre/fecha os cards de totais em R$
   // acima da tabela (começam abertos em tela com altura >= ALTURA_TOTAIS_ABERTOS e
-  // fechados abaixo disso; a escolha vale até sair da tela);
+  // fechados abaixo disso e no celular; a escolha vale até sair da tela). O celular
+  // vai pela largura da janela: o `compacto` só é medido depois do 1º render;
   // "Filtros" abre o dialog de status/origem (fecha com X, rodapé, clique fora ou
   // Esc). Fechar o de filtros NÃO limpa o marcado — o número no botão avisa que a
   // tabela continua filtrada.
   const [totaisAbertos, setTotaisAbertos] = useState(
-    () => typeof window !== 'undefined' && window.innerHeight >= ALTURA_TOTAIS_ABERTOS
+    () =>
+      typeof window !== 'undefined' &&
+      window.innerWidth >= LARGURA_COMPACTA &&
+      window.innerHeight >= ALTURA_TOTAIS_ABERTOS
   )
   const [filtrosAbertos, setFiltrosAbertos] = useState(false)
   const qtdFiltrosAtivos = statusFiltro.size + origemFiltro.size
@@ -327,9 +341,22 @@ export function ReportsMaestroView() {
             ...base,
             cell: ({ row }) => (
               <span className="whitespace-nowrap tabular-nums">
-                {formatBRL(row.original[col.campo] as number)}
+                {formatBRL(row.original[col.campo] as number | null)}
               </span>
             ),
+          }
+        }
+        if (col.tipo === 'booleano') {
+          // Valor da coluna = "Sim"/"Não", pra busca, filtro e ordenação; sem valor, vazio.
+          return {
+            id: col.campo,
+            header: col.header,
+            meta,
+            accessorFn: (p) => simNao(p[col.campo] as boolean | null) ?? '',
+            cell: ({ getValue }) => {
+              const v = getValue() as string
+              return v ? v : <span className="text-muted-foreground">—</span>
+            },
           }
         }
         if (col.tipo === 'dataHora') {
@@ -365,11 +392,12 @@ export function ReportsMaestroView() {
     )
   }
 
+  // O título do módulo fica no cabeçalho dos filtros; aqui, só o que a tabela mostra.
   const subtitle = consulta
     ? `${consulta.lojaNome} · ${formatDataHora(consulta.de)}${
         consulta.de !== consulta.ate ? ` a ${formatDataHora(consulta.ate)}` : ''
       }`
-    : 'Pedidos de delivery do Maestro por loja e período.'
+    : undefined
 
   let emptyState
   if (erro) {
@@ -434,6 +462,7 @@ export function ReportsMaestroView() {
           onPesquisar={pesquisar}
           semAlteracao={semAlteracao}
           compacto={compacto}
+          tituloExtra={<TourReplayButton onClick={replayTour} />}
         />
 
         {/* Cards de totais acima da tabela, abertos/fechados pelo botão "Totais" do
@@ -454,8 +483,6 @@ export function ReportsMaestroView() {
             compacto ? 'shrink-0' : 'min-h-0 flex-1'
           )}
           fillHeight={!compacto}
-          title={NOME_MODULO}
-          titleExtra={<TourReplayButton onClick={replayTour} />}
           subtitle={subtitle}
           actions={
             <>
@@ -552,15 +579,18 @@ export function ReportsMaestroView() {
           columns={!carregando && (erro || pedidosFiltrados.length === 0) ? SEM_COLUNAS : columns}
           loading={carregando}
           getRowId={(p) => p.id}
-          globalSearch
+          // Busca geral só no celular (cards); no desktop a tabela tem filtro por coluna.
+          globalSearch={compacto}
           searchPlaceholder="Buscar pedido, cliente, forma de pagamento…"
           countNoun="pedidos"
           pageSize={100}
           columnVisibilityToggle={!compacto}
+          initialColumnVisibility={COLUNAS_OCULTAS}
           fullscreenToggle={!compacto}
           onExport={
             canExport && consulta && pedidosQuery.data
-              ? (visiveis) => exportarXlsx(visiveis, consulta)
+              ? (visiveis) =>
+                  exportarXlsx(visiveis, consulta, pedidosQuery.data!.dadosClienteMascarados)
               : undefined
           }
           emptyState={emptyState}

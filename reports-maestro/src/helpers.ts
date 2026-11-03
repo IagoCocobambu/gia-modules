@@ -122,16 +122,21 @@ export function somarPedidos(pedidos: PedidoMaestro[]): TotaisPedidos {
 
 // ─── Exportação (.xlsx) ──────────────────────────────────────────────────────
 
-type TipoColunaExport = 'texto' | 'inteiro' | 'moeda' | 'dataHora'
+type TipoColunaExport = 'texto' | 'inteiro' | 'moeda' | 'dataHora' | 'booleano'
 
 interface ColunaExport {
   header: string
   campo: keyof PedidoMaestro
   tipo: TipoColunaExport
   largura: number
+  /** Nasce oculta na tabela (aparece pelo botão de colunas); no Excel vai sempre. */
+  oculta?: true
 }
 
-/** Colunas da planilha — as mesmas da tabela do legado, na mesma ordem. */
+/**
+ * Colunas da planilha e da tabela: primeiro as do legado, na mesma ordem; depois os
+ * campos da API que o legado não mostrava, ocultos por padrão na tabela.
+ */
 export const COLUNAS_EXPORT: ColunaExport[] = [
   { header: 'Loja', campo: 'nome_loja', tipo: 'texto', largura: 24 },
   { header: 'ID', campo: 'id', tipo: 'texto', largura: 38 },
@@ -159,7 +164,67 @@ export const COLUNAS_EXPORT: ColunaExport[] = [
   { header: 'Desconto total', campo: 'desconto_total', tipo: 'moeda', largura: 14 },
   { header: 'Forma pgto', campo: 'forma_de_pagamentos', tipo: 'texto', largura: 36 },
   { header: 'Descontos', campo: 'descontos', tipo: 'texto', largura: 40 },
+  { header: 'Tipo de entrega', campo: 'tipo_entrega', tipo: 'texto', largura: 30, oculta: true },
+  {
+    header: 'Entrega pela plataforma',
+    campo: 'entrega_pela_origem',
+    tipo: 'booleano',
+    largura: 12,
+    oculta: true,
+  },
+  { header: 'Entregue por', campo: 'entregue_por', tipo: 'texto', largura: 14, oculta: true },
+  { header: 'Parceiro', campo: 'parceiro', tipo: 'texto', largura: 12, oculta: true },
+  { header: 'Taxa de entrega', campo: 'taxa_entrega', tipo: 'moeda', largura: 14, oculta: true },
+  {
+    header: 'Taxa extra do parceiro',
+    campo: 'taxa_extra_parceiro',
+    tipo: 'moeda',
+    largura: 14,
+    oculta: true,
+  },
+  {
+    header: 'Incentivo da loja',
+    campo: 'incentivo_loja',
+    tipo: 'moeda',
+    largura: 14,
+    oculta: true,
+  },
+  {
+    header: 'Incentivo do parceiro',
+    campo: 'incentivo_parceiro',
+    tipo: 'moeda',
+    largura: 14,
+    oculta: true,
+  },
+  { header: 'Nº da loja', campo: 'id_loja', tipo: 'texto', largura: 10, oculta: true },
+  {
+    header: 'Criação (UTC)',
+    campo: 'data_de_criacao_utc',
+    tipo: 'dataHora',
+    largura: 19,
+    oculta: true,
+  },
 ]
+
+/** `initialColumnVisibility` do `DataReport`: as colunas novas nascem desligadas. */
+export const COLUNAS_OCULTAS: Record<string, boolean> = Object.fromEntries(
+  COLUNAS_EXPORT.filter((c) => c.oculta).map((c) => [c.campo, false])
+)
+
+/** `true` → "Sim", `false` → "Não", sem valor → `null` (vazio, não "Não"). */
+export function simNao(valor: boolean | null | undefined): string | null {
+  return valor == null ? null : valor ? 'Sim' : 'Não'
+}
+
+/** Soma de uma coluna em R$, ignorando os pedidos sem valor; arredondada em centavos. */
+function somarColuna(pedidos: PedidoMaestro[], campo: keyof PedidoMaestro): number {
+  let t = 0
+  for (const p of pedidos) {
+    const v = p[campo]
+    if (typeof v === 'number') t += v
+  }
+  return Math.round(t * 100) / 100
+}
 
 // Estilo do template de exportação do GIA (o mesmo da Validação Fiscal).
 const XLSX_LINHA_CABECALHO = 4
@@ -170,6 +235,7 @@ const XLSX_FORMATO: Record<TipoColunaExport, string | undefined> = {
   inteiro: '0',
   moeda: '"R$" #,##0.00;-"R$" #,##0.00',
   dataHora: 'dd/mm/yyyy hh:mm:ss',
+  booleano: undefined,
 }
 
 /**
@@ -200,6 +266,8 @@ export interface CabecalhoExport {
   de: string
   ate: string
   geradoEm: Date
+  /** Os dados pessoais do cliente vieram mascarados — o subtítulo avisa. */
+  dadosClienteMascarados: boolean
 }
 
 /**
@@ -226,7 +294,8 @@ export function preencherPlanilha(
   ws.getCell('A1').font = { bold: true, size: 13 }
   ws.getCell('A2').value =
     `Pedidos de delivery · ${pedidos.length} ${pedidos.length === 1 ? 'pedido' : 'pedidos'}` +
-    ` · gerado em ${gerado}`
+    ` · gerado em ${gerado}` +
+    (cab.dadosClienteMascarados ? ' · dados pessoais do cliente mascarados' : '')
   ws.getCell('A2').font = { color: { argb: XLSX_COR_SUBTITULO } }
 
   COLUNAS_EXPORT.forEach((col, i) => {
@@ -245,15 +314,16 @@ export function preencherPlanilha(
       const bruto = p[col.campo]
       if (bruto === null || bruto === undefined || bruto === '') return
       const cel = row.getCell(i + 1)
-      cel.value =
-        col.tipo === 'dataHora' && typeof bruto === 'string' ? (dataExcel(bruto) ?? bruto) : bruto
+      if (typeof bruto === 'boolean') cel.value = simNao(bruto)
+      else
+        cel.value =
+          col.tipo === 'dataHora' && typeof bruto === 'string' ? (dataExcel(bruto) ?? bruto) : bruto
       const fmt = XLSX_FORMATO[col.tipo]
       if (fmt) cel.numFmt = fmt
     })
   })
 
   const ultima = primeira + pedidos.length - 1
-  const totais = somarPedidos(pedidos)
   const linhaTotal = ws.getRow(ultima + 1)
   COLUNAS_EXPORT.forEach((col, i) => {
     const cel = linhaTotal.getCell(i + 1)
@@ -267,7 +337,7 @@ export function preencherPlanilha(
       pedidos.length > 0
         ? {
             formula: `SUBTOTAL(109,${letra}${primeira}:${letra}${ultima})`,
-            result: totais[col.campo as keyof TotaisPedidos],
+            result: somarColuna(pedidos, col.campo),
           }
         : 0
     cel.numFmt = XLSX_FORMATO.moeda!
