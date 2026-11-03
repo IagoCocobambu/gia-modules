@@ -5,7 +5,7 @@
 - **Módulo**: `fechamento-maestro` — Fechamento Maestro
 - **Versão do pacote**: 0.1.0
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
-- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.66 (fixada)
+- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.67 (fixada)
 
 ## 2. Fontes de dados externas
 

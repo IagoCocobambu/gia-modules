@@ -11,7 +11,7 @@
 | **Versão do PRD**      | `1.0`                                     |
 | **Status**             | `em-dev`                                  |
 | **Última atualização** | 2026-10-30                                |
-| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.66`              |
+| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.67`              |
 
 ---
 
@@ -64,7 +64,7 @@ classificação das formas de pagamento passa a ser uma **regra fixa e documenta
   Adquirentes e Offline para conciliar com o extrato das adquirentes e o caixa.
 - **C2**: Como financeiro, quero ver só os pedidos com divergência e o motivo de
   cada uma para corrigir antes de fechar o mês.
-- **C3**: Como gerente, quero ver os pedidos de um dia específico e o detalhe de
+- **C3**: Como gerente, quero ver o fechamento de um dia específico e o detalhe de
   pagamento de um pedido.
 - **C4**: Como financeiro, quero exportar o fechamento do mês em Excel (por dia e
   por pedido).
@@ -102,18 +102,18 @@ classificação das formas de pagamento passa a ser uma **regra fixa e documenta
   credencial `apidw` e concilia cada pedido no servidor (RN-4 a RN-7).
 - Nenhuma consulta a banco de dados.
 
-### RF-4: Visão Por dia (fechamento)
+### RF-4: Fechamento por dia
 
-- Uma linha por dia (data de criação): Pedidos, Cancelados, Total pago, Online,
-  Adquirentes, Offline, Não classificado, Descontos, Valor pedido, Valor entrega e
-  Divergências; linha **Total** no rodapé.
-- Clicar num dia abre a visão Pedidos filtrada no dia.
+- Na tela, um dia = pesquisar com data inicial = final (a barra de totais
+  mostra o dia). O fechamento dia a dia de um período fica na aba "Fechamento
+  diário" do Excel (RF-8): Pedidos, Cancelados, Total pago, Online, Adquirentes,
+  Offline, Não classificado, Descontos, Valor pedido, Valor entrega, Divergências.
 
-### RF-5: Visão Pedidos (conciliação)
+### RF-5: Tabela de pedidos (conciliação)
 
 - Uma linha por pedido com origem, status, Check pagamentos, Check descontos, os
   valores por grupo, venda concluída, textos originais de pagamento/desconto.
-- Filtro "Só divergências" (com a contagem do período) e filtro de dia removível.
+- Filtro "Só divergências" (com a contagem do período).
 - Linha divergente destacada; clicar abre o detalhe (RF-6).
 
 ### RF-6: Detalhe do pedido
@@ -121,16 +121,48 @@ classificação das formas de pagamento passa a ser uma **regra fixa e documenta
 - Cada forma de pagamento com valor e grupo, cada desconto, os dois checks, os
   totais e as divergências por extenso.
 
-### RF-7: Cards de totais
+### RF-7: Barra de totais
 
-- Total pago, Online, Adquirentes, Offline, Descontos e Pedidos com divergência do
-  período inteiro (sem cancelados). Abre/fecha pelo botão "Totais".
+- Barra de 12 indicadores do período inteiro, nesta ordem. Aberta em telas com
+  altura ≥ 700 px e fechada abaixo (segue o resize, via `matchMedia`); depois que
+  o usuário usa o botão "Totais", vale a escolha dele até recarregar:
+  1. Total pago, Online, Adquirentes, Offline — pedidos não cancelados.
+  2. Cancelado, Cancelado online, Cancelado adquirentes, Cancelado offline —
+     total pago dos pedidos cancelados e a divisão pelos grupos (RN-8).
+  3. Descontos loja, Descontos parceiro (RN-10), Valor sem classificação e
+     Pagamentos sem classificação (quantidade).
+- Cada indicador: ícone num quadradinho tingido + valor em negrito colorido +
+  rótulo em minúsculas embaixo. Grade de largura total com colunas que dividem
+  12 (container query: 2 → 3 → 4 → 6), pra as linhas fecharem cheias. Tooltip
+  com a explicação da conta em cada um.
+- Cores (tokens semânticos): Total pago `success`, Online `info`, Adquirentes
+  `primary`, Offline `warning`; Cancelado `destructive` só se > 0; Sem
+  classificação (valor) `warning` só se ≠ 0; o resto neutro.
+- O indicador "Pagamentos sem classificação" fica vermelho e clicável quando > 0: abre
+  a lista das formas não reconhecidas, agrupadas pelo nome, com valor e pedidos;
+  cada pedido abre o detalhe (RF-6).
+- Conteúdo da tela de referência do legado; os grupos Adquirentes
+  Online/Offline da referência **não** foram adotados (decisão de 2026-10-30:
+  manter os grupos da RN-4).
 
 ### RF-8: Exportar Excel
 
 - Permissão `fechamento-maestro.exportar`. Arquivo `.xlsx` com 3 abas:
   Fechamento diário, Pedidos (sem cancelados) e Cancelados; linhas Total com
-  SUBTOTAL(109). Segue o que está na tabela da visão aberta.
+  SUBTOTAL(109). Segue os pedidos que estão na tabela (filtros incluídos).
+
+### RF-9: Dashboard (vendas por canal)
+
+- Botão "Dashboard" na toolbar abre um dialog com o card **Vendas por canal**:
+  anel (donut SVG) com a fatia de cada `origem` no total pago dos pedidos não
+  cancelados do período inteiro (RN-11); total e nº de pedidos no miolo.
+- Legenda com cor, canal, valor e % (é a versão em tabela do gráfico), do maior
+  para o menor. Hover/foco numa fatia ou linha destaca o canal e troca o miolo
+  pelos números dele; no celular, toque na legenda. Legenda embaixo do anel em
+  larguras pequenas.
+- Cores = as do `BadgeOrigemPedido` (tokens `accent-group`, `accent-exception`,
+  `accent-role`; manual e canais novos em `muted-foreground`). Anel cresce ao
+  abrir (`duration-slow`), sem animação com movimento reduzido.
 
 ---
 
@@ -144,10 +176,11 @@ classificação das formas de pagamento passa a ser uma **regra fixa e documenta
 
 ### 4.2 Fluxos principais
 
-1. **Fechar o dia**: loja + datas → Pesquisar → visão Por dia → linha Total.
-2. **Investigar divergência**: Pedidos → Só divergências → clicar no pedido → detalhe.
-3. **Ver um dia**: Por dia → clicar no dia → Pedidos filtrados → X para tirar o filtro.
+1. **Fechar o dia**: loja + data inicial = final → Pesquisar → barra de totais.
+2. **Investigar divergência**: Só divergências → clicar no pedido → detalhe.
+3. **Forma não classificada**: card Pagamentos sem classificação → lista → pedido → detalhe.
 4. **Exportar**: Exportar → `.xlsx` de 3 abas.
+5. **Ver os canais**: Dashboard → vendas por canal → hover/toque num canal.
 
 ---
 
@@ -202,14 +235,21 @@ Não usa.
   delas = `total_pago`, centavo a centavo.
 - **RN-6**: Check descontos OK ⇔ todos os descontos têm valor e a soma = `desconto_total`.
 - **RN-7**: Venda concluída ⇔ status `DELIVERED` ou `COMPLETED`.
-- **RN-8**: Pedidos `CANCELLED` ficam fora de todos os valores e da contagem de
-  divergências; contam em Pedidos/Cancelados e vão numa aba própria do Excel.
+- **RN-8**: Pedidos `CANCELLED` ficam fora dos valores de venda e da contagem de
+  divergências; o total pago deles aparece nos cards "Cancelado" (dividido pelos
+  grupos da RN-4) e vai numa aba própria do Excel.
 - **RN-9**: O dia do fechamento é a data de criação do pedido (horário de São Paulo).
+- **RN-10**: Descontos parceiro = Σ `incentivo_parceiro`; Descontos loja = Σ
+  (`desconto_total` − `incentivo_parceiro`), só pedidos não cancelados. São os dois
+  únicos campos de desconto que o model do legado repassava ao frontend.
+- **RN-11**: Vendas por canal = Σ `total_pago` dos pedidos não cancelados, agrupado
+  pela `origem` da API (vazia → "Sem origem"). A soma dos canais = Total pago da
+  barra de totais.
 
-> **A validar com o negócio**: RN-4, RN-7, RN-8 e RN-9 foram deduzidas de 3.107
-> pedidos reais (loja 08, maio/2026) porque o frontend do legado, onde a conta
-> ficava, não veio. Na amostra, 100% das formas foram classificadas e Online +
-> Adquirentes + Offline = total pago.
+> **A validar com o negócio**: RN-4, RN-7, RN-8, RN-9 e RN-10 foram deduzidas de
+> 3.107 pedidos reais (loja 08, maio/2026) e do model do legado, porque o frontend
+> do legado, onde a conta ficava, não veio. Na amostra, 100% das formas foram
+> classificadas e Online + Adquirentes + Offline = total pago.
 
 ---
 
@@ -217,9 +257,12 @@ Não usa.
 
 - [ ] Seletor mostra só lojas do escopo com número no nome
 - [ ] Período inválido é recusado com mensagem
-- [ ] Visão Por dia soma por data de criação, sem cancelados, com linha Total
-- [ ] Online + Adquirentes + Offline + Não classificado = Total pago em cada dia
-- [ ] Clicar num dia abre os pedidos do dia; o X tira o filtro
+- [ ] Online + Adquirentes + Offline + Valor sem classificação = Total pago
+- [ ] Cancelado online + adquirentes + offline (+ sem classificação) = Cancelado
+- [ ] Descontos loja + Descontos parceiro = desconto total dos não cancelados
+- [ ] Indicador de pagamentos sem classificação abre a lista quando > 0
+- [ ] Dashboard: soma dos canais = Total pago; % da legenda somam ~100%
+- [ ] Aba Fechamento diário do Excel soma por data de criação, sem cancelados
 - [ ] "Só divergências" mostra só pedidos não cancelados com check divergente
 - [ ] Detalhe do pedido mostra grupo de cada forma e o motivo das divergências
 - [ ] Excel com 3 abas e totais que batem com a tela
@@ -272,7 +315,7 @@ Não usa.
 
 ### Decisões pendentes
 
-- [ ] Validar RN-4, RN-7, RN-8 e RN-9 com o financeiro.
+- [ ] Validar RN-4, RN-7, RN-8, RN-9 e RN-10 com o financeiro.
 - [ ] Liberação deste módulo na integração `apidw` do hub de Credenciais — time GIA, na instalação.
 
 ---
@@ -280,7 +323,7 @@ Não usa.
 ## 12. Insumo pra FAQ (obrigatório)
 
 1. Como monto o fechamento de uma loja?
-2. Qual a diferença entre as visões Por dia e Pedidos?
+2. O que soma cada card de totais (cancelados, descontos loja/parceiro, sem classificação)?
 3. Como uma forma de pagamento vira Online, Adquirentes ou Offline?
 4. O que significa um pedido "Divergente"?
 5. O que faço com valor em "Não classificado"?
@@ -288,13 +331,14 @@ Não usa.
 7. Pedidos cancelados entram no fechamento?
 8. Em que dia cai um pedido entregue depois da meia-noite?
 9. O que é "Venda concluída"?
-10. Como vejo os pedidos de um dia específico?
-11. Por que os cards de totais não mudam com os filtros?
+10. Como vejo o fechamento de um dia específico?
+11. Por que os totais não mudam com os filtros?
 12. Como exporto e o que vai no Excel?
 13. Posso cadastrar a classificação de uma forma de pagamento?
 14. Por que não vejo o botão Exportar?
 15. Por que minha loja não aparece no seletor?
 16. Por que a consulta demora e o período é limitado a 31 dias?
+17. Quanto cada canal vendeu? (Dashboard) E por que o total dele deve bater com o Total pago?
 
 ---
 
@@ -304,8 +348,8 @@ Não usa.
 | --- | ---------- | ------------------------------------------------ | ---------------------- |
 | 1   | Fechamento | `[data-tour="fechamento-maestro-filtros"]`       | Loja e período         |
 | 2   | Fechamento | `[data-tour="fechamento-maestro-pesquisar"]`     | Pesquisar              |
-| 3   | Fechamento | `[data-tour="fechamento-maestro-visao"]`         | Por dia ou por pedido  |
-| 4   | Fechamento | `[data-tour="fechamento-maestro-totais-toggle"]` | Totais do período      |
+| 3   | Fechamento | `[data-tour="fechamento-maestro-totais-toggle"]` | Totais do período      |
+| 4   | Fechamento | `[data-tour="fechamento-maestro-dashboard"]`     | Dashboard              |
 | 5   | Fechamento | `[data-tour="fechamento-maestro-toolbar"]`       | Busca, colunas e Excel |
 | 6   | Fechamento | `[data-tour="fechamento-maestro-frame"]`         | Divergências           |
 
@@ -318,3 +362,7 @@ Não usa.
 - Criado por Iago Pereira a partir do Fechamento Diário Maestro legado (UniGUI,
   `view.relatorios.maestro.fechamentoDiario` + `model.relatorios.maestro.fechamentoMaestro`).
 - Só API (sem banco); classificação de pagamentos como regra fixa (RN-4).
+- A tabela "Por dia" saiu da tela (fica no Excel); a tela ficou com uma tabela só,
+  a de pedidos. Os totais viraram uma barra de 12 indicadores:
+  venda, cancelados por grupo, descontos loja/parceiro (RN-10) e sem classificação.
+- Dashboard em dialog com o gráfico Vendas por canal (RF-9, RN-11).

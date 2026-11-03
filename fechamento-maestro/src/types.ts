@@ -82,6 +82,44 @@ export interface ResumoDia {
   divergentes: number
 }
 
+/** Cards de totais do período. Valores de venda: só pedidos NÃO cancelados. */
+export interface TotaisPeriodo {
+  total_pago: number
+  online: number
+  adquirentes: number
+  offline: number
+  /** Total pago dos pedidos cancelados, e a divisão dele pelos grupos. */
+  cancelado: number
+  cancelado_online: number
+  cancelado_adquirentes: number
+  cancelado_offline: number
+  /** Desconto bancado pela loja: `desconto_total − incentivo_parceiro`. */
+  descontos_loja: number
+  /** Desconto bancado pelo parceiro (iFood etc.): `incentivo_parceiro`. */
+  descontos_parceiro: number
+  /** Valor em formas de pagamento que a regra não reconheceu. */
+  nao_classificado: number
+  /** Quantas formas de pagamento ficaram sem classificação. */
+  pagamentos_sem_classificacao: number
+  /** Pedidos não cancelados com algum check reprovado. */
+  divergentes: number
+}
+
+/** Venda de um canal (origem do pedido) no período: só pedidos NÃO cancelados. */
+export interface VendaCanal {
+  /** `origem` como veio da API; "Sem origem" quando a API não informou. */
+  canal: string
+  /** Soma do total pago. */
+  valor: number
+  pedidos: number
+}
+
+/** Uma forma de pagamento sem classificação e o pedido de onde veio. */
+export interface PagamentoSemClassificacao {
+  pedido: PedidoFechamento
+  pagamento: Pagamento
+}
+
 /** Snapshot do clique em "Pesquisar" — é ele que as tabelas e o export mostram. */
 export interface Consulta {
   empresaId: number

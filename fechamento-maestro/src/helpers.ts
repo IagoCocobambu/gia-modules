@@ -1,5 +1,12 @@
 import type { Worksheet } from 'exceljs'
-import type { PedidoFechamento, ResumoDia, TipoPagamento } from './types'
+import type {
+  PagamentoSemClassificacao,
+  PedidoFechamento,
+  ResumoDia,
+  TipoPagamento,
+  TotaisPeriodo,
+  VendaCanal,
+} from './types'
 
 /** Mesmo `label` do `module.ts` — vai no título e no nome do arquivo exportado. */
 export const NOME_MODULO = 'Fechamento Maestro'
@@ -108,9 +115,69 @@ export function resumirPorDia(pedidos: PedidoFechamento[]): ResumoDia[] {
     .map(([data, lista]) => resumir(data, lista))
 }
 
-/** Total do período — a mesma conta de um dia, sobre todos os pedidos. */
-export function resumirPeriodo(pedidos: PedidoFechamento[]): ResumoDia {
-  return resumir('', pedidos)
+/**
+ * Formas de pagamento sem classificação dos pedidos não cancelados — as mesmas
+ * que entram no "Valor sem classificação" e reprovam o check de pagamentos.
+ */
+export function pagamentosSemClassificacao(
+  pedidos: PedidoFechamento[]
+): PagamentoSemClassificacao[] {
+  return pedidos
+    .filter((p) => !p.cancelado)
+    .flatMap((pedido) =>
+      pedido.pagamentos
+        .filter((pagamento) => pagamento.tipo === 'nao_classificado')
+        .map((pagamento) => ({ pedido, pagamento }))
+    )
+}
+
+/**
+ * Cards de totais do período. Venda (total pago, grupos, descontos, sem
+ * classificação) só dos não cancelados; os cancelados têm os próprios cards.
+ * Descontos: o parceiro banca o `incentivo_parceiro`; o resto do desconto total é
+ * da loja — os dois campos que o legado recebia da API.
+ */
+export function resumirTotais(pedidos: PedidoFechamento[]): TotaisPeriodo {
+  const validos = pedidos.filter((p) => !p.cancelado)
+  const cancelados = pedidos.filter((p) => p.cancelado)
+  return {
+    total_pago: somar(validos, (p) => p.total_pago),
+    online: somar(validos, (p) => p.total_pago_online),
+    adquirentes: somar(validos, (p) => p.total_pago_adquirentes),
+    offline: somar(validos, (p) => p.total_pago_offline),
+    cancelado: somar(cancelados, (p) => p.total_pago),
+    cancelado_online: somar(cancelados, (p) => p.total_pago_online),
+    cancelado_adquirentes: somar(cancelados, (p) => p.total_pago_adquirentes),
+    cancelado_offline: somar(cancelados, (p) => p.total_pago_offline),
+    descontos_loja: somar(validos, (p) => p.desconto_total - p.incentivo_parceiro),
+    descontos_parceiro: somar(validos, (p) => p.incentivo_parceiro),
+    nao_classificado: somar(validos, (p) => p.total_nao_classificado),
+    pagamentos_sem_classificacao: pagamentosSemClassificacao(validos).length,
+    divergentes: validos.filter(divergente).length,
+  }
+}
+
+/**
+ * Dashboard "Vendas por canal": o total pago dos pedidos não cancelados, somado
+ * por origem (App Coco Bambu, iFood, ...), do maior para o menor. A soma dos
+ * canais é o "total pago" da barra de totais.
+ */
+export function vendasPorCanal(pedidos: PedidoFechamento[]): VendaCanal[] {
+  const porCanal = new Map<string, PedidoFechamento[]>()
+  for (const p of pedidos) {
+    if (p.cancelado) continue
+    const canal = p.origem?.trim() || 'Sem origem'
+    const lista = porCanal.get(canal)
+    if (lista) lista.push(p)
+    else porCanal.set(canal, [p])
+  }
+  return [...porCanal.entries()]
+    .map(([canal, lista]) => ({
+      canal,
+      valor: somar(lista, (p) => p.total_pago),
+      pedidos: lista.length,
+    }))
+    .sort((a, b) => b.valor - a.valor || a.canal.localeCompare(b.canal))
 }
 
 // ─── Exportação (.xlsx) ──────────────────────────────────────────────────────

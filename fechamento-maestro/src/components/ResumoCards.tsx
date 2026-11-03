@@ -1,72 +1,265 @@
-import { AlertTriangle, BadgePercent, CreditCard, Globe, HandCoins, Wallet } from 'lucide-react'
-import { Skeleton, StatCard, type StatCardProps } from '@gia-cb/ui'
+import type { ComponentType, SVGProps } from 'react'
+import {
+  AlertTriangle,
+  CircleHelp,
+  CircleX,
+  CreditCard,
+  Globe,
+  HandCoins,
+  Handshake,
+  Store,
+  Wallet,
+} from 'lucide-react'
+import { Skeleton, Tooltip } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
 import { formatBRL } from '../helpers'
-import type { ResumoDia } from '../types'
+import type { TotaisPeriodo } from '../types'
 
-const CARDS: {
-  campo: keyof ResumoDia
-  label: string
-  icon: StatCardProps['icon']
-  iconColor: StatCardProps['iconColor']
-  moeda: boolean
+/** Cor do indicador: tinge o quadradinho do ícone e o valor. */
+type Tom = 'neutro' | 'success' | 'info' | 'primary' | 'warning' | 'destructive'
+
+const TOM_ICONE: Record<Tom, string> = {
+  neutro: 'bg-muted text-muted-foreground',
+  success: 'bg-success/10 text-success',
+  info: 'bg-info/10 text-info',
+  primary: 'bg-primary/10 text-primary',
+  warning: 'bg-warning/10 text-warning',
+  destructive: 'bg-destructive/10 text-destructive',
+}
+
+const TOM_VALOR: Record<Tom, string> = {
+  neutro: 'text-foreground',
+  success: 'text-success',
+  info: 'text-info',
+  primary: 'text-primary',
+  warning: 'text-warning',
+  destructive: 'text-destructive',
+}
+
+type CampoValor = Exclude<keyof TotaisPeriodo, 'pagamentos_sem_classificacao' | 'divergentes'>
+
+/**
+ * Indicadores de valor, na ordem: venda, cancelados, descontos/sem classificação.
+ * `tom` recebe o valor: os de alerta só ganham cor quando há algo a olhar.
+ */
+const INDICADORES: {
+  campo: CampoValor
+  rotulo: string
+  dica: string
+  icone: ComponentType<SVGProps<SVGSVGElement>>
+  tom: (valor: number) => Tom
 }[] = [
-  { campo: 'total_pago', label: 'Total pago', icon: Wallet, iconColor: 'green', moeda: true },
-  { campo: 'online', label: 'Online', icon: Globe, iconColor: 'blue', moeda: true },
+  {
+    campo: 'total_pago',
+    rotulo: 'total pago',
+    dica: 'Total pago dos pedidos não cancelados',
+    icone: Wallet,
+    tom: () => 'success',
+  },
+  {
+    campo: 'online',
+    rotulo: 'online',
+    dica: 'Parte paga online, no app ou no parceiro (PRE PAGO / ONLINE)',
+    icone: Globe,
+    tom: () => 'info',
+  },
   {
     campo: 'adquirentes',
-    label: 'Adquirentes',
-    icon: CreditCard,
-    iconColor: 'indigo',
-    moeda: true,
+    rotulo: 'adquirentes',
+    dica: 'Parte paga com cartão ou voucher na maquininha, na entrega',
+    icone: CreditCard,
+    tom: () => 'primary',
   },
-  { campo: 'offline', label: 'Offline', icon: HandCoins, iconColor: 'amber', moeda: true },
-  { campo: 'descontos', label: 'Descontos', icon: BadgePercent, iconColor: 'slate', moeda: true },
   {
-    campo: 'divergentes',
-    label: 'Pedidos com divergência',
-    icon: AlertTriangle,
-    iconColor: 'rose',
-    moeda: false,
+    campo: 'offline',
+    rotulo: 'offline',
+    dica: 'Parte paga em dinheiro, na entrega',
+    icone: HandCoins,
+    tom: () => 'warning',
+  },
+  {
+    campo: 'cancelado',
+    rotulo: 'cancelado',
+    dica: 'Total pago dos pedidos cancelados (fora do fechamento)',
+    icone: CircleX,
+    tom: (v) => (v > 0 ? 'destructive' : 'neutro'),
+  },
+  {
+    campo: 'cancelado_online',
+    rotulo: 'cancelado online',
+    dica: 'Parte online do valor cancelado',
+    icone: CircleX,
+    tom: () => 'neutro',
+  },
+  {
+    campo: 'cancelado_adquirentes',
+    rotulo: 'cancelado adquirentes',
+    dica: 'Parte em adquirentes do valor cancelado',
+    icone: CircleX,
+    tom: () => 'neutro',
+  },
+  {
+    campo: 'cancelado_offline',
+    rotulo: 'cancelado offline',
+    dica: 'Parte em dinheiro do valor cancelado',
+    icone: CircleX,
+    tom: () => 'neutro',
+  },
+  {
+    campo: 'descontos_loja',
+    rotulo: 'descontos loja',
+    dica: 'Desconto bancado pela loja: desconto total menos o incentivo do parceiro',
+    icone: Store,
+    tom: () => 'neutro',
+  },
+  {
+    campo: 'descontos_parceiro',
+    rotulo: 'descontos parceiro',
+    dica: 'Desconto bancado pelo parceiro (ex.: iFood) — o incentivo parceiro',
+    icone: Handshake,
+    tom: () => 'neutro',
+  },
+  {
+    campo: 'nao_classificado',
+    rotulo: 'sem classificação',
+    dica: 'Valor em formas de pagamento que a regra não reconheceu (o normal é zero)',
+    icone: CircleHelp,
+    tom: (v) => (v !== 0 ? 'warning' : 'neutro'),
   },
 ]
 
+interface IndicadorProps {
+  icone: ComponentType<SVGProps<SVGSVGElement>>
+  tom: Tom
+  valor: string | null
+  rotulo: string
+}
+
+/** Ícone num quadradinho tingido + valor em negrito, com o rótulo discreto embaixo. */
+function Indicador({ icone: Icone, tom, valor, rotulo }: IndicadorProps) {
+  return (
+    <>
+      <span
+        className={cn(
+          'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-colors duration-fast ease-default',
+          TOM_ICONE[tom]
+        )}
+      >
+        <Icone aria-hidden className="h-4 w-4" />
+      </span>
+      <span className="flex min-w-0 flex-col leading-tight">
+        {valor === null ? (
+          <Skeleton className="my-0.5 h-4 w-20" />
+        ) : (
+          <span className={cn('truncate text-base font-semibold tabular-nums', TOM_VALOR[tom])}>
+            {valor}
+          </span>
+        )}
+        <span className="truncate text-xs text-muted-foreground">{rotulo}</span>
+      </span>
+    </>
+  )
+}
+
 interface ResumoCardsProps {
-  /** Total do período (sem cancelados); `null` enquanto não há resultado. */
-  resumo: ResumoDia | null
+  /** Totais do período; `null` enquanto não há resultado. */
+  totais: TotaisPeriodo | null
   carregando: boolean
-  compacto: boolean
+  /** Abre a lista das formas de pagamento sem classificação. */
+  onVerSemClassificacao: () => void
   className?: string
 }
 
+const ITEM = cn(
+  'flex min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-left',
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+)
+
 /**
- * Totais do fechamento do período: o total pago dividido em Online, Adquirentes e
- * Offline, os descontos e quantos pedidos têm divergência. Mesma conta da linha
- * Total da visão por dia — cancelados ficam fora.
+ * Totais do fechamento do período numa barra de indicadores: o que foi pago
+ * (dividido em Online, Adquirentes e Offline), o que foi cancelado (com a mesma
+ * divisão), os descontos da loja e do parceiro e o que ficou sem classificação.
+ *
+ * Grade que ocupa a largura toda, com colunas que sempre dividem 12 (2, 3, 4 ou
+ * 6, pela largura da barra — container query): as linhas fecham cheias, sem
+ * sobra vazia no fim. O tooltip de cada um explica a conta; o de pagamentos sem
+ * classificação, quando > 0, é um botão que abre a lista.
  */
-export function ResumoCards({ resumo, carregando, compacto, className }: ResumoCardsProps) {
+export function ResumoCards({
+  totais,
+  carregando,
+  onVerSemClassificacao,
+  className,
+}: ResumoCardsProps) {
+  const pronto = !carregando && totais !== null
+  const semClassificacao = pronto ? totais.pagamentos_sem_classificacao : 0
+  const clicavel = semClassificacao > 0
+
   return (
-    <div className={cn('grid gap-3', compacto ? 'grid-cols-2' : 'grid-cols-6', className)}>
-      {CARDS.map((c) => (
-        <StatCard
-          key={c.campo}
-          className="sm:p-4"
-          icon={c.icon}
-          iconColor={c.iconColor}
-          label={c.label}
-          value={
-            carregando || !resumo ? (
-              <Skeleton className="my-1 h-5 w-24 sm:h-7 sm:w-28" />
-            ) : (
-              <span className="tabular-nums">
-                {c.moeda
-                  ? formatBRL(resumo[c.campo] as number)
-                  : (resumo[c.campo] as number).toLocaleString('pt-BR')}
-              </span>
-            )
+    <div
+      className={cn(
+        '@container rounded-xl border border-border bg-surface p-1.5 shadow-sm',
+        className
+      )}
+    >
+      <div
+        role="list"
+        aria-label="Totais do período"
+        className="grid grid-cols-2 gap-x-1 gap-y-0.5 @lg:grid-cols-3 @2xl:grid-cols-4 @5xl:grid-cols-6"
+      >
+        {INDICADORES.map((i) => {
+          const valor = pronto ? totais[i.campo] : 0
+          return (
+            <Tooltip key={i.campo} content={i.dica}>
+              <div role="listitem" tabIndex={0} className={ITEM}>
+                <Indicador
+                  icone={i.icone}
+                  tom={pronto ? i.tom(valor) : 'neutro'}
+                  valor={pronto ? formatBRL(valor) : null}
+                  rotulo={i.rotulo}
+                />
+              </div>
+            </Tooltip>
+          )
+        })}
+
+        <Tooltip
+          content={
+            clicavel
+              ? 'Formas de pagamento que a regra não reconheceu — clique para ver a lista'
+              : 'Todas as formas de pagamento foram classificadas'
           }
-        />
-      ))}
+        >
+          {clicavel ? (
+            <button
+              type="button"
+              role="listitem"
+              onClick={onVerSemClassificacao}
+              aria-label={`${semClassificacao} pagamentos sem classificação. Ver a lista`}
+              className={cn(
+                ITEM,
+                'bg-destructive/5 transition-colors duration-fast ease-default hover:bg-destructive/10'
+              )}
+            >
+              <Indicador
+                icone={AlertTriangle}
+                tom="destructive"
+                valor={semClassificacao.toLocaleString('pt-BR')}
+                rotulo="pagamentos sem classificação"
+              />
+            </button>
+          ) : (
+            <div role="listitem" tabIndex={0} className={ITEM}>
+              <Indicador
+                icone={AlertTriangle}
+                tom={pronto ? 'success' : 'neutro'}
+                valor={pronto ? '0' : null}
+                rotulo="pagamentos sem classificação"
+              />
+            </div>
+          )}
+        </Tooltip>
+      </div>
     </div>
   )
 }

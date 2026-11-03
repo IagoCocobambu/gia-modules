@@ -15,46 +15,85 @@ export const faq: ModuleFaq = {
 2. Informe a **Data inicial** e a **Data final** — as duas começam em *ontem*.
 3. Clique em **Pesquisar**.
 
-A tela abre na visão **Por dia**: uma linha por dia do período, com a linha
-**Total** no fim.
+A tela mostra, de cima para baixo:
 
-## As duas visões
+- a **barra de totais** do período inteiro;
+- a **tabela de pedidos**: uma linha por pedido, com quanto dele foi Online,
+  Adquirentes e Offline e o resultado dos dois checks. **Clique num pedido** para
+  abrir o detalhe da conciliação.
 
-Os botões **Por dia** e **Pedidos**, no cabeçalho da tabela, trocam a visão:
-
-- **Por dia** — o fechamento. Cada linha soma os pedidos criados naquele dia.
-  **Clique numa linha** para abrir a visão Pedidos já filtrada naquele dia.
-- **Pedidos** — uma linha por pedido, com quanto dele foi Online, Adquirentes e
-  Offline e o resultado dos dois checks. **Clique num pedido** para abrir o
-  detalhe da conciliação.
-
-Na visão Pedidos, quando um dia está filtrado, aparece um botão com a data e um
-**X**: clique nele para voltar a ver todos os dias.
+Para ver os valores de um dia só, pesquise com a **data inicial e a final iguais**
+àquele dia. O fechamento somado dia a dia de um período está na aba
+**Fechamento diário** do Excel.
 
 ## Só divergências
 
-Na visão Pedidos, o botão **Só divergências** mostra apenas os pedidos (não
+O botão **Só divergências** mostra apenas os pedidos (não
 cancelados) com algum check **Divergente**. O número no botão é quantos pedidos
 do período têm divergência — em vermelho quando há algum. Clique de novo para
 voltar a ver todos. Nas linhas da tabela, pedido com divergência fica com o
 fundo levemente vermelho.
 
-## Cards de totais
+## Totais do período
 
-O botão **Totais** abre e fecha, acima da tabela, os cards do período inteiro:
+O botão **Totais** abre e fecha, acima da tabela, uma **barra de indicadores**
+do período inteiro. Cada indicador tem um ícone, o **valor** em destaque e o
+nome embaixo. Os indicadores ocupam a largura toda, em colunas iguais: 6 por
+linha em telas largas, 4 ou 3 em telas médias e 2 no celular.
 
-| Card | O que soma |
+As cores ajudam a ler de relance: os grupos de pagamento têm cada um a sua cor;
+**Cancelado** fica vermelho quando há valor cancelado e **sem classificação**
+fica amarelo quando há valor — o normal é zero. Passe o mouse sobre um
+indicador (ou chegue nele com Tab) para ver a explicação da conta.
+
+Os indicadores, na ordem:
+
+| Indicador | O que soma |
 |---|---|
 | **Total pago** | total pago dos pedidos não cancelados |
 | **Online** | parte paga online (app, iFood) |
 | **Adquirentes** | parte paga com cartão na maquininha, na entrega |
 | **Offline** | parte paga em dinheiro |
-| **Descontos** | desconto total dos pedidos não cancelados |
-| **Pedidos com divergência** | quantos pedidos não cancelados têm algum check divergente |
+| **Cancelado** | total pago dos pedidos **cancelados** |
+| **Cancelado online / adquirentes / offline** | o valor cancelado dividido pelos mesmos três grupos |
+| **Descontos loja** | parte do desconto bancada pela loja: desconto total menos o incentivo do parceiro |
+| **Descontos parceiro** | parte do desconto bancada pelo parceiro (ex.: iFood) — o *incentivo parceiro* do pedido |
+| **Sem classificação** (valor) | valor em formas de pagamento que a regra não reconheceu (o normal é zero) |
+| **Pagamentos sem classificação** | quantas formas de pagamento ficaram sem classificação |
 
-Os cards começam **abertos** em telas com 700 px de altura ou mais e
-**fechados** em telas mais baixas. Eles mostram sempre o período inteiro — o
-filtro de dia, o *Só divergências* e a busca não mudam os cards.
+Total pago = Online + Adquirentes + Offline + Sem classificação. Descontos loja
++ Descontos parceiro = desconto total dos pedidos não cancelados.
+
+Quando há **pagamento sem classificação**, o último indicador fica **vermelho**:
+clique nele para ver a lista, agrupada pelo nome da forma de pagamento, com o
+valor e os pedidos de cada uma. Clique num pedido da lista para abrir o detalhe.
+Sem nenhum, ele mostra **0** em verde.
+
+A barra fica **aberta** em telas com 700 px de altura ou mais e **fechada** em
+telas mais baixas, para sobrar espaço para a tabela — e acompanha a janela se
+você mudar o tamanho dela. Depois que você clica em **Totais**, vale a sua
+escolha até recarregar a página. A barra mostra sempre o período inteiro — o
+*Só divergências* e a busca não mudam os totais.
+
+## Dashboard — vendas por canal
+
+O botão **Dashboard** abre, numa janela, o gráfico **Vendas por canal**: um anel
+com a fatia de cada **origem** do pedido (App Coco Bambu, iFood, 99Food, Pedido
+manual...) no **total pago** do período. No meio do anel fica o **total** — o
+mesmo *Total pago* da barra de totais — e quantos pedidos entraram nele.
+
+Ao lado (embaixo, no celular) fica a **legenda**: cada canal com a cor, o valor
+pago e a porcentagem do total, do maior para o menor. As cores são as mesmas das
+etiquetas da coluna *Origem* da tabela.
+
+- Passe o mouse sobre uma **fatia** ou uma **linha da legenda** para destacar o
+  canal: o meio do anel passa a mostrar o valor, a porcentagem e os pedidos dele.
+- No celular, **toque** na linha da legenda para destacar; toque de novo para
+  voltar ao total.
+
+Como nos totais, entram só os pedidos **não cancelados**, e o gráfico mostra o
+período inteiro da pesquisa — o *Só divergências* e a busca não mudam o
+dashboard. Pedido sem origem informada pela API aparece como **Sem origem**.
 
 ## Limites do período
 
@@ -118,10 +157,11 @@ normalmente, só não aparecem como concluídos.
 
 ## Pedidos cancelados
 
-Pedidos **cancelados** aparecem na visão Pedidos e contam nas colunas *Pedidos*
-e *Cancelados* da visão por dia, mas ficam **fora de todos os valores** do
-fechamento (total pago, Online, Adquirentes, Offline, descontos) e da contagem
-de divergências. No Excel eles vão numa aba à parte.
+Pedidos **cancelados** aparecem na tabela de pedidos, mas ficam **fora dos
+valores de venda** do fechamento (total pago, Online, Adquirentes, Offline,
+descontos, sem classificação) e da contagem de divergências. O que foi cancelado
+tem indicadores próprios: **Cancelado** e a divisão dele em online, adquirentes e
+offline. No Excel eles vão numa aba à parte.
 
 ## Em que dia o pedido cai
 
@@ -131,26 +171,9 @@ Um pedido criado às 23h50 do dia 10 e entregue no dia 11 entra no dia **10**.
     },
     {
       id: 'colunas',
-      title: 'O que cada coluna mostra',
+      title: 'O que cada campo mostra',
       content: `
-## Visão Por dia
-
-| Coluna | O que é |
-|---|---|
-| **Data** | dia do fechamento (data de criação dos pedidos) |
-| **Pedidos** | quantos pedidos foram criados no dia, inclusive cancelados |
-| **Cancelados** | quantos desses foram cancelados |
-| **Total pago** | soma do total pago dos pedidos não cancelados |
-| **Online / Adquirentes / Offline** | o total pago dividido pelos três grupos |
-| **Não classificado** | valor em formas que a regra não reconheceu (deveria ser zero) |
-| **Descontos** | soma do desconto total |
-| **Valor pedido / Valor entrega** | subtotal dos pedidos (sem entrega) e taxas de entrega |
-| **Divergências** | quantos pedidos do dia têm algum check divergente |
-
-A linha **Total**, no fim da tabela, soma os dias que estão na tabela (se você
-buscar, soma só os dias que sobraram).
-
-## Visão Pedidos
+## Tabela de pedidos
 
 | Coluna | O que é |
 |---|---|
@@ -170,17 +193,17 @@ buscar, soma só os dias que sobraram).
 
 ## Busca, ordenação e colunas
 
-O campo de busca procura em todas as colunas da visão aberta. Clique no
+O campo de busca procura em todas as colunas da tabela de pedidos. Clique no
 cabeçalho de uma coluna para **ordenar**; o funil abre o **filtro** da coluna.
 O botão de **colunas** esconde as que você não precisa (vale até recarregar a
 página).
 
 ## No celular
 
-As duas visões viram **cartões**: o dia mostra data, total pago e divergências;
-o pedido mostra número, data, total pago e o check de pagamentos. Toque em
-**ver mais** para os outros campos, e no cartão para abrir o detalhe (no pedido)
-ou os pedidos do dia (no dia). Todos os botões funcionam igual ao computador.
+Os totais ficam em duas colunas; o indicador de pagamentos sem classificação
+abre a lista com um toque. A tabela de pedidos vira **cartões** com número, data, total pago e o check de
+pagamentos: toque em **ver mais** para os outros campos, e no cartão para abrir
+o detalhe. Todos os botões funcionam igual ao computador.
       `,
     },
     {
@@ -196,12 +219,10 @@ arquivo **.xlsx** com **3 abas**:
 | **Pedidos** | os pedidos **não cancelados**, com a conciliação de cada um e as divergências por extenso |
 | **Cancelados** | os pedidos cancelados, à parte |
 
-O que vai para o arquivo segue a tela:
-
-- na visão **Por dia**, os pedidos dos dias que estão na tabela (se você buscar,
-  só dos dias que sobraram);
-- na visão **Pedidos**, os pedidos que estão na tabela — com o filtro de dia, o
-  *Só divergências*, a busca e os filtros de coluna.
+O que vai para o arquivo segue a tabela: os pedidos que estão nela — com o
+*Só divergências*, a busca e os filtros de coluna. A aba **Fechamento diário**
+soma esses mesmos pedidos por dia; sem nenhum filtro, a soma dela bate com os
+totais do período.
 
 As linhas **Total** usam a fórmula SUBTOTAL: se você filtrar no próprio Excel,
 o total acompanha. O nome do arquivo segue o padrão do portal:
@@ -256,7 +277,15 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'Pedidos cancelados entram no fechamento?',
-          a: 'Não nos valores. Eles contam nas colunas Pedidos e Cancelados da visão por dia e aparecem na visão Pedidos, mas ficam fora do total pago, de Online, Adquirentes, Offline, dos descontos e da contagem de divergências. No Excel vão numa aba Cancelados à parte.',
+          a: 'Não nos valores de venda. Eles aparecem na tabela de pedidos, mas ficam fora do total pago, de Online, Adquirentes, Offline, dos descontos e da contagem de divergências. O valor cancelado aparece nos indicadores Cancelado, Cancelado online, Cancelado adquirentes e Cancelado offline. No Excel vão numa aba Cancelados à parte.',
+        },
+        {
+          q: 'Como os descontos são divididos entre loja e parceiro?',
+          a: 'Cada pedido traz o desconto total e o incentivo do parceiro (a parte que o iFood ou outro parceiro banca). Descontos parceiro soma esse incentivo; Descontos loja é o desconto total menos o incentivo. Os dois juntos dão o desconto total dos pedidos não cancelados.',
+        },
+        {
+          q: 'O indicador "Pagamentos sem classificação" ficou vermelho. O que faço?',
+          a: 'Clique nele para ver as formas de pagamento que a regra não reconheceu, com o valor e os pedidos de cada uma. Anote o nome da forma e avise o time GIA para incluí-la em Online, Adquirentes ou Offline. Até lá, o valor aparece em Valor sem classificação e o pedido fica divergente.',
         },
         {
           q: 'Um pedido entregue depois da meia-noite cai em qual dia?',
@@ -272,12 +301,24 @@ confere isso de novo a cada pesquisa.
       category: 'Operações',
       items: [
         {
-          q: 'Como vejo os pedidos de um dia específico?',
-          a: 'Na visão Por dia, clique na linha do dia (no celular, no cartão). A tela troca para a visão Pedidos já filtrada naquele dia. Para voltar a ver todos os dias, clique no botão com a data e o X, no cabeçalho da tabela.',
+          q: 'Como vejo o fechamento de um dia específico?',
+          a: 'Pesquise com a data inicial e a final iguais àquele dia: os totais passam a mostrar só ele. Para ver todos os dias de um período lado a lado, exporte o Excel e abra a aba Fechamento diário.',
         },
         {
-          q: 'Os cards de totais não mudaram quando filtrei. Está certo?',
-          a: 'Está. Os cards mostram sempre o período inteiro da pesquisa (sem cancelados). O filtro de dia, o Só divergências e a busca mudam só a tabela. Para ver a soma de um recorte, use a linha Total da visão por dia ou exporte o Excel.',
+          q: 'O que significam as cores na barra de totais?',
+          a: 'Total pago fica verde e cada grupo de pagamento (Online, Adquirentes, Offline) tem a sua cor. Os indicadores de alerta só ganham cor quando há algo a olhar: Cancelado fica vermelho quando há valor cancelado, Sem classificação fica amarelo quando há valor e Pagamentos sem classificação fica vermelho (e vira botão) quando há algum. Passe o mouse sobre um indicador para ver a explicação da conta. Para esconder a barra, clique no botão Totais.',
+        },
+        {
+          q: 'Quanto cada canal (iFood, app, 99Food) vendeu no período?',
+          a: 'Clique em Dashboard. O gráfico Vendas por canal mostra a fatia de cada origem no total pago, com o valor e a porcentagem na legenda. Passe o mouse (ou toque, no celular) num canal para ver também quantos pedidos ele teve. Pedidos cancelados não entram.',
+        },
+        {
+          q: 'O total do dashboard é diferente do total pago da barra de totais. Por quê?',
+          a: 'Não deveria ser: os dois somam o total pago dos pedidos não cancelados do período inteiro. Se a pesquisa ainda estiver carregando, espere terminar. Se a diferença continuar, avise o suporte informando a loja e o período.',
+        },
+        {
+          q: 'Os totais não mudaram quando filtrei. Está certo?',
+          a: 'Está. Os totais mostram sempre o período inteiro da pesquisa. O Só divergências e a busca mudam só a tabela de pedidos. Para ver a soma de um recorte, exporte o Excel: a aba Fechamento diário soma só os pedidos que estão na tabela.',
         },
         {
           q: 'Por que a consulta demora?',
