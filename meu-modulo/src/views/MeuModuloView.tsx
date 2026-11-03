@@ -14,11 +14,7 @@ import {
 } from '@gia-cb/ui'
 import { useTourReplayTrigger } from '@gia-cb/sdk/modules'
 import { useCanAccess } from '@gia-cb/sdk/permissions'
-import {
-  useListMeuModuloItems,
-  useListMeuModuloLojas,
-  useUltimaSyncMeuModulo,
-} from '../api/items'
+import { useListMeuModuloItems, useListMeuModuloLojas, useUltimaSyncMeuModulo } from '../api/items'
 import { formatDateTime, sleep } from '../helpers'
 import { HistoryModal } from '../components/HistoryModal'
 import type { MeuModuloItem } from '../types'
@@ -48,7 +44,7 @@ export function MeuModuloView() {
         description: l.apelido,
         leading: <Store className="h-4 w-4 text-muted-foreground" />,
       })),
-    [lojas],
+    [lojas]
   )
 
   const columns = useMemo<ColumnDef<MeuModuloItem, unknown>[]>(
@@ -88,7 +84,7 @@ export function MeuModuloView() {
         cell: ({ row }) => <span className="font-mono">{row.original.ncm ?? '—'}</span>,
       },
     ],
-    [],
+    []
   )
 
   // --- Ações SIMULADAS (template sem backend real) ---

@@ -27,10 +27,9 @@ export function HistoryModal({ open, onOpenChange }: HistoryModalProps) {
               <strong className="text-foreground">Histórico vazio (simulado)</strong>
             </p>
             <p className="max-w-md text-xs">
-              No portal real, este modal lista cada execução de sincronização
-              (job_id, início, fim, duração, status, contadores). No template,
-              cabe ao parceiro implementar a query contra a tabela de jobs do
-              seu domínio.
+              No portal real, este modal lista cada execução de sincronização (job_id, início, fim,
+              duração, status, contadores). No template, cabe ao parceiro implementar a query contra
+              a tabela de jobs do seu domínio.
             </p>
           </div>
         </Modal.Body>

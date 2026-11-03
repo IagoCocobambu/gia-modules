@@ -4,7 +4,7 @@ import type { RouteObject } from 'react-router-dom'
 import { Spinner } from '@gia-cb/ui'
 
 const MeuModuloView = lazy(() =>
-  import('./views/MeuModuloView').then((m) => ({ default: m.MeuModuloView })),
+  import('./views/MeuModuloView').then((m) => ({ default: m.MeuModuloView }))
 )
 
 function LazyMeuModuloView() {

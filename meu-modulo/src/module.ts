@@ -5,8 +5,7 @@ import { meuModuloRoutes } from './routes'
 export const meuModuloModule = defineModule({
   id: 'meu-modulo',
   label: 'Meu Modulo',
-  description:
-    'Meu Modulo — gerencia uma lista de items com filtros, criação, edição e exclusão.',
+  description: 'Meu Modulo — gerencia uma lista de items com filtros, criação, edição e exclusão.',
   icon: 'box',
   defaultNavPath: '/meu-modulo',
   // navGroup agrupa o módulo num grupo do menu lateral. Sem ele, o módulo fica
