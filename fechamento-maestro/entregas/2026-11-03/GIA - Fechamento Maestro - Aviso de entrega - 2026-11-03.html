@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>GIA — Fechamento Maestro — Aviso de entrega</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --accent:   #14577a;
+    --ink:      #16202b;
+    --ink-2:    #3f4a57;
+    --muted:    #5a6874;
+    --amber:    #7a4a12;
+    --amber-bg: #fbf0e0;
+    --rule:     #dae0e6;
+    --rule-2:   #c3ccd5;
+    --chip:     #e4eef4;
+    --box:      #e8f0f5;
+    --roxo:     #4a3a6b;
+    --roxo-bg:  #ece8f4;
+    --verde:    #2f5a3f;
+    --verde-bg: #e4efe7;
+  }
+
+  @page { size: A4; margin: 16mm 16mm 14mm; }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    margin: 0;
+    background: #fff;
+    font-family: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+    font-size: 11.9pt;
+    line-height: 1.594;
+    color: var(--ink-2);
+  }
+
+  /* Na tela (fora da impressão), a folha tem a largura do A4 e fica centrada. */
+  @media screen {
+    body { max-width: 210mm; margin: 0 auto; padding: 16mm; }
+  }
+
+  .sans { font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; }
+
+  /* ── cabeçalho ─────────────────────────────────────────────────────── */
+  .sobrancelha {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.3pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14pt;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 25.2pt;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin: 0 0 8pt;
+  }
+
+  .resumo {
+    font-size: 12.6pt;
+    line-height: 1.45;
+    color: var(--ink-2);
+    margin: 0 0 18pt;
+    max-width: 44em;
+  }
+
+  .regua-forte { border: 0; border-top: 1.5pt solid var(--rule-2); margin: 0 0 14pt; }
+
+  /* ── ficha ─────────────────────────────────────────────────────────── */
+  .meta { display: flex; gap: 0 14pt; margin: 0 0 20pt; }
+  .meta > div { flex: 1 1 0; min-width: 0; }
+  .meta dt {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 4pt;
+  }
+  .meta dd {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 11.1pt;
+    color: var(--ink);
+    margin: 0;
+  }
+  .seta { color: var(--muted); padding: 0 1pt; }
+
+  /* ── seções ────────────────────────────────────────────────────────── */
+  section { border-top: 0.75pt solid var(--rule); padding-top: 14pt; margin-top: 18pt; }
+  section:first-of-type { margin-top: 0; }
+
+  h2 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 9.6pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10pt;
+  }
+
+  p { margin: 0 0 9pt; max-width: 46em; }
+  p:last-child { margin-bottom: 0; }
+  b, strong { font-weight: 600; color: var(--ink); }
+
+  /* ── telas ─────────────────────────────────────────────────────────── */
+  .tela { margin: 0 0 18pt; break-inside: avoid; }
+  .tela:last-child { margin-bottom: 0; }
+  .tela h3 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 12.6pt;
+    color: var(--ink);
+    margin: 0 0 3pt;
+  }
+  .caminho {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.6pt;
+    color: var(--muted);
+    margin: 0 0 8pt;
+  }
+  .caminho b { font-weight: 500; color: var(--ink-2); }
+  .caminho .sep { padding: 0 3pt; color: var(--rule-2); }
+
+  .quem {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 10.4pt;
+    color: var(--muted);
+    margin: 9pt 0 0;
+    display: flex;
+    align-items: center;
+    gap: 5pt;
+    flex-wrap: wrap;
+  }
+
+  /* ── públicos: uma cor por público, a mesma em todo aviso ──────────── */
+  /* A classe de cada público está em references/publicos.md. Público novo
+     ganha a próxima cor livre e entra no registro. */
+  .chip {
+    display: inline-block;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.9pt;
+    letter-spacing: 0.02em;
+    border-radius: 2.5pt;
+    padding: 1.5pt 6pt;
+    margin: 0 3pt 3pt 0;
+    color: var(--accent);
+    background: var(--chip);
+  }
+  .p-diretores   { color: #135779; background: #e3eef4; }
+  .p-auditoria   { color: #3f4a57; background: #e8ecf0; }
+  .p-assistentes { color: #794a12; background: #f6ecde; }
+  .p-padrinhos   { color: #4a3a6a; background: #ece8f3; }
+  .p-fundadores  { color: #2f5a3f; background: #e4efe7; }
+  .p-admin       { color: #6a3a3a; background: #f3e7e7; }
+  .p-gerentes    { color: #3b5a6e; background: #e6eef2; }
+  .p-auxiliarrh  { color: #5a4a2f; background: #f0ebe1; }
+  .p-suporte     { color: #5a3a55; background: #f1e6ef; }
+  .p-cor10       { color: #34584f; background: #e3efeb; }
+
+  /* ── listas ────────────────────────────────────────────────────────── */
+  .resolve { margin: 0; padding: 0; list-style: none; }
+  .resolve li { margin: 0 0 9pt; padding-left: 12pt; position: relative; max-width: 46em; }
+  .resolve li:last-child { margin-bottom: 0; }
+  .resolve li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0.62em;
+    width: 4pt; height: 4pt;
+    border-radius: 50%;
+    background: var(--rule-2);
+  }
+  /* Subtítulo dentro de "O que muda" (ex.: "Pedidos do Davi Nascimento"). */
+  .bloco {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 10.4pt;
+    color: var(--ink);
+    margin: 14pt 0 7pt;
+  }
+  .bloco:first-of-type { margin-top: 0; }
+
+  /* ── tabela de permissões ──────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; margin: 0; }
+  thead th {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 0 8pt 6pt 0;
+    border-bottom: 0.75pt solid var(--rule-2);
+  }
+  thead th:last-child { padding-right: 0; }
+  tbody tr { break-inside: avoid; }
+  tbody td {
+    padding: 8pt 8pt 8pt 0;
+    border-bottom: 0.75pt solid var(--rule);
+    vertical-align: top;
+    font-size: 10.4pt;
+    line-height: 1.4;
+  }
+  tbody td:last-child { padding-right: 0; }
+  tbody tr.grupo td {
+    border-bottom: 0.75pt solid var(--rule-2);
+    padding-top: 12pt;
+    padding-bottom: 5pt;
+  }
+  .grupo-rotulo {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.9pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--roxo);
+    background: var(--roxo-bg);
+    border-radius: 2.5pt;
+    padding: 2pt 6pt;
+    margin-right: 7pt;
+  }
+  .grupo-caminho {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.6pt;
+    color: var(--muted);
+  }
+  code {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 9.8pt;
+    color: var(--ink);
+    word-break: break-word;
+  }
+  .col-chave  { width: 40%; }
+  .col-libera { width: 36%; }
+  .col-para   { width: 24%; }
+  /* Chave que entrou nesta versão. */
+  .nova {
+    display: inline-block;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 7.6pt;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--verde);
+    background: var(--verde-bg);
+    border-radius: 2pt;
+    padding: 0.5pt 4pt;
+    margin-left: 5pt;
+    vertical-align: 1pt;
+  }
+
+  /* ── caixas ────────────────────────────────────────────────────────── */
+  .caixa {
+    background: var(--box);
+    border-left: 2.5pt solid var(--accent);
+    padding: 11pt 13pt;
+    margin: 14pt 0 0;
+    break-inside: avoid;
+  }
+  .caixa p { max-width: none; }
+  .caixa p:last-child { margin-bottom: 0; }
+
+  .atencao {
+    background: var(--amber-bg);
+    border-left: 2.5pt solid var(--amber);
+    padding: 11pt 13pt;
+    margin: 14pt 0 0;
+    color: var(--amber);
+    break-inside: avoid;
+  }
+  .atencao b { color: var(--amber); }
+  .atencao p { max-width: none; }
+  .atencao p:last-child { margin-bottom: 0; }
+
+  /* ── passos ────────────────────────────────────────────────────────── */
+  ol.passos { margin: 0 0 12pt; padding-left: 16pt; break-inside: avoid; }
+  section.junta { break-inside: avoid; }
+  ol.passos li { margin: 0 0 5pt; max-width: 46em; }
+
+  /* ── permissões por perfil (gerado pelo perfis.mjs) ────────────────── */
+  /* O título, a abertura e o primeiro perfil ficam juntos: sem isso, o título caía
+     sozinho no pé da página (aviso do App CB, 23/10/2026). */
+  .perfis-abertura { break-inside: avoid; }
+  .perfil { border-top: 0.75pt solid var(--rule); padding: 10pt 0 4pt; break-inside: avoid; }
+  .perfil:first-of-type { border-top: 0; padding-top: 2pt; }
+  .perfil-cab { display: flex; align-items: center; gap: 8pt; margin: 0 0 7pt; }
+  .perfil-cab .chip { font-size: 10pt; padding: 2pt 8pt; margin: 0; }
+  .perfil-conta {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.2pt;
+    color: var(--muted);
+  }
+  /* Uma coluna por módulo, a mesma em todos os perfis: o módulo sem chave fica "—". */
+  .perfil-modulos {
+    display: grid;
+    grid-template-columns: repeat(var(--colunas, 3), minmax(0, 1fr));
+    gap: 2pt 20pt;
+  }
+  .perfil-rotulo {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--roxo);
+    margin: 0 0 3pt;
+  }
+  .perfil-chaves { list-style: none; margin: 0 0 6pt; padding: 0; }
+  .perfil-chaves li { margin: 0 0 2pt; line-height: 1.35; }
+  .perfil-chaves code { font-size: 9.4pt; }
+  .perfil-nenhuma { color: var(--muted); }
+  /* ── fim das permissões por perfil ── */
+  .perfil-nenhuma { color: var(--muted); }
+  /* ── fim das permissões por perfil ── */
+
+  /* ── rodapé ────────────────────────────────────────────────────────── */
+  footer {
+    border-top: 0.75pt solid var(--rule);
+    margin-top: 20pt;
+    padding-top: 9pt;
+    display: flex;
+    justify-content: space-between;
+    gap: 16pt;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.2pt;
+    color: var(--muted);
+  }
+  footer b { font-weight: 500; color: var(--ink-2); }
+</style>
+</head>
+<body>
+
+<p class="sobrancelha">Aviso de entrega · Portal GIA</p>
+<h1>Fechamento Maestro</h1>
+<p class="resumo">O fechamento diário do delivery do Maestro passa a ser feito no portal, loja a loja: quanto foi pago online, em vale e na entrega, quais pedidos não fecham a conta e por quê, e o Excel com o fechamento dia a dia.</p>
+
+<hr class="regua-forte" />
+
+<dl class="meta">
+  <div>
+    <dt>Entregue em</dt>
+    <dd>03/11/2026</dd>
+  </div>
+  <div>
+    <dt>Onde já está</dt>
+    <dd>Ainda não instalado</dd>
+  </div>
+  <div>
+    <dt>Onde encontrar</dt>
+    <dd>Plataformas <span class="seta">→</span> Maestro</dd>
+  </div>
+  <div>
+    <dt>Responsável</dt>
+    <dd>Iago Pereira</dd>
+  </div>
+</dl>
+
+<section>
+  <h2>O que é</h2>
+  <p>
+    O financeiro e as lojas precisam fechar o caixa do delivery: saber, por dia, quanto dos
+    pedidos do Maestro — App Coco Bambu, iFood, 99Food e pedidos manuais — foi pago online,
+    no app ou no parceiro, quanto entrou em vale-refeição e benefícios e quanto foi pago na
+    entrega, e achar os pedidos cuja conta não fecha. Até agora, isso se fazia na tela
+    <b>Fechamento Diário Maestro</b> do GIA antigo, que buscava os pedidos com um usuário e
+    uma senha fixos no sistema.
+  </p>
+  <p>
+    O módulo traz essa tela para o portal, com a mesma regra de classificação dos
+    pagamentos. Escolhe-se a loja e o período, de 1 a 31 dias, e a tela mostra os 12
+    indicadores do fechamento do período, um pedido por linha com o tipo de cada forma de
+    pagamento e o resultado de dois checks de conferência. Os pedidos são lidos na hora da
+    pesquisa, e a lista de vales vem do mesmo cadastro de formas de pagamento do sistema
+    antigo: o portal não guarda cópia e não altera nada. A edição desse cadastro, que o GIA
+    antigo fazia na própria tela, não faz parte desta entrega. A versão entregue é a 0.1.0.
+  </p>
+</section>
+
+<section>
+  <!-- O título fica dentro da .tela para não cair sozinho no pé da página 1. -->
+  <div class="tela">
+    <h2>Onde fica, e quem usa</h2>
+    <h3>Fechamento Maestro</h3>
+    <p class="caminho">
+      <b>Plataformas</b><span class="sep">›</span><b>Maestro</b><span class="sep">›</span><b>Fechamento Maestro</b>
+    </p>
+    <p>
+      No topo, a <b>Loja</b> (só as do acesso da pessoa), a <b>Data inicial</b> e a
+      <b>Data final</b> — as duas começam em ontem — e o botão <b>Pesquisar</b>. No
+      computador, o botão <b>Totais</b> abre a barra com os 12 indicadores do período:
+      <b>Online</b>, <b>Adquirentes online</b>, <b>Adquirentes offline</b>, <b>Offline</b>,
+      os quatro <b>Cancelado</b>, <b>Descontos loja</b>, <b>Descontos parceiro</b>,
+      <b>Valor sem classificação</b> e <b>Pagamentos sem classificação</b>. Abaixo, a tabela
+      de pedidos, com a coluna <b>Tipo</b> de cada forma de pagamento; um clique no pedido
+      abre o detalhe da conciliação. Na barra da tabela ficam <b>Só divergências</b>,
+      <b>Dashboard</b> (o gráfico <b>Vendas por canal</b>) e <b>Exportar</b>. No celular, a
+      tabela vira cartões e a barra de totais não aparece.
+    </p>
+    <p class="quem">Quem usa: <span class="chip p-diretores">Diretores</span><span class="chip p-gerentes">Gerentes</span><span class="chip p-auditoria">Auditoria</span><span class="chip p-admin">Administração/GIA</span></p>
+  </div>
+
+  <div class="caixa">
+    <p><b>A tela só consulta.</b> Nenhum botão grava ou altera um pedido: o que precisa de
+    correção é corrigido no Maestro. Uma forma de vale nova que ainda não esteja no cadastro
+    de formas de pagamento entra como Online, se for pré-paga, ou Offline — como no GIA
+    antigo —, e a inclusão no cadastro é pedida ao time de TI. O resultado de uma pesquisa
+    fica guardado por 30 minutos; para ver uma mudança antes disso, recarrega-se a página e
+    pesquisa-se de novo.</p>
+  </div>
+</section>
+
+<section>
+  <h2>O que a entrega resolve</h2>
+  <ul class="resolve">
+    <li><b>A conta do fechamento, pronta.</b> Os 12 indicadores do Fechamento Diário do GIA
+    antigo, na mesma regra: o que foi pago online, os vales pagos no app
+    (<b>Adquirentes online</b>) e os passados na entrega (<b>Adquirentes offline</b>), o
+    pago na entrega em dinheiro ou na maquininha, os cancelados à parte e os descontos da
+    loja e do parceiro. Passando o mouse sobre um indicador, a tela explica a conta.</li>
+    <li><b>Os pedidos que não fecham, de uma vez.</b> Cada pedido passa por dois checks — as
+    formas de pagamento somam o <b>Total pago</b>? os descontos somam o <b>Desconto
+    total</b>? —, centavo a centavo. <b>Só divergências</b> mostra apenas os pedidos com
+    problema, com a contagem no botão, e o detalhe do pedido diz o motivo por extenso, com
+    os valores.</li>
+    <li><b>O tipo de cada pagamento, na linha do pedido.</b> A coluna <b>Tipo</b> mostra
+    ONLINE, ONLINE VR, OFFLINE ou SEM CLASSIFICAÇÃO para cada forma do pedido, e o filtro
+    da coluna separa, por exemplo, só os pedidos pagos com vale.</li>
+    <li><b>O pagamento que veio sem nome, com a lista.</b> Quando o Maestro manda uma forma
+    de pagamento sem nome, o indicador <b>Pagamentos sem classificação</b> fica vermelho; um
+    clique nele lista essas formas, com o valor e os pedidos de cada uma.</li>
+    <li><b>Quanto cada canal vendeu.</b> O <b>Dashboard</b> mostra a fatia de cada origem —
+    App Coco Bambu, iFood, 99Food, Pedido manual — no total pago do período, com o valor e a
+    porcentagem.</li>
+    <li><b>O fechamento dia a dia em Excel.</b> O arquivo traz 3 abas: <b>Fechamento
+    diário</b>, uma linha por dia com a linha <b>Total</b>; <b>Pedidos</b>, com a
+    conciliação de cada um e as divergências por extenso; e <b>Cancelados</b>, à parte. O
+    que está filtrado na tela é o que vai no arquivo.</li>
+    <li><b>Os dados do cliente, só para quem precisa.</b> CPF, e-mail, telefone, número e
+    referência do endereço aparecem com asteriscos para quem não tem a chave de dados do
+    cliente — na tela e no Excel. O dado completo nem chega ao computador da pessoa.</li>
+    <li><b>Cada um vê só as próprias lojas.</b> O seletor lista só as lojas do acesso da
+    pessoa no portal, e isso é conferido de novo a cada pesquisa.</li>
+    <li><b>Sem senha fixa.</b> O portal busca os pedidos com a credencial cadastrada e
+    controlada pelo time do Portal GIA.</li>
+    <li><b>Período longo não trava a tela.</b> Um dia sai em 2 a 3 segundos; 31 dias de uma
+    loja movimentada, em 25 a 30 segundos. Se a consulta passar de 90 segundos, a tela avisa
+    e sugere um período menor.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Permissões</h2>
+  <p>
+    Cada chave libera uma coisa só, e as três são de leitura — o módulo não altera nenhum
+    pedido. A coluna da direita é sugestão: o gestor decide conforme a necessidade real de
+    uso.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="col-chave">Chave</th>
+        <th class="col-libera">O que libera</th>
+        <th class="col-para">Sugerido para</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="grupo">
+        <td colspan="3">
+          <span class="grupo-rotulo">Fechamento Maestro</span>
+          <span class="grupo-caminho">Plataformas › Maestro › Fechamento Maestro</span>
+        </td>
+      </tr>
+      <tr>
+        <td><code>fechamento-maestro.ler</code></td>
+        <td>Abrir a tela e consultar o fechamento, os pedidos e a conciliação das próprias lojas, com os dados pessoais do cliente mascarados</td>
+        <td><span class="chip p-diretores">Diretores</span><span class="chip p-gerentes">Gerentes</span><span class="chip p-auditoria">Auditoria</span><span class="chip p-admin">Administração/GIA</span></td>
+      </tr>
+      <tr>
+        <td><code>fechamento-maestro.exportar</code></td>
+        <td>Baixar o Excel com o fechamento dia a dia, os pedidos e os cancelados, do jeito que estão filtrados na tela</td>
+        <td><span class="chip p-diretores">Diretores</span><span class="chip p-gerentes">Gerentes</span><span class="chip p-auditoria">Auditoria</span><span class="chip p-admin">Administração/GIA</span></td>
+      </tr>
+      <tr>
+        <td><code>fechamento-maestro.ver-dados-cliente</code></td>
+        <td>Ver completos o CPF, o e-mail, o telefone e o número e a referência do endereço do cliente, na tela e no Excel</td>
+        <td><span class="chip p-diretores">Diretores</span><span class="chip p-admin">Administração/GIA</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="atencao">
+    <p><b>A chave <code>fechamento-maestro.ver-dados-cliente</code> abre dado pessoal.</b>
+    Sem ela, CPF, e-mail, telefone, número e referência do endereço aparecem com asteriscos,
+    na tela e no Excel; o nome do cliente e o nome da rua aparecem sempre. O fechamento não
+    precisa desses dados — a chave é para quem atende o cliente ou confere o pedido com ele.
+    No Reports Maestro é diferente: lá a chave de leitura já mostra os dados completos.</p>
+  </div>
+
+  <div class="atencao">
+    <p><b><code>fechamento-maestro.exportar</code> e
+    <code>fechamento-maestro.ver-dados-cliente</code> só valem junto de
+    <code>fechamento-maestro.ler</code>.</b> Sozinhas, elas não abrem a tela: a pessoa vê o
+    aviso de acesso negado. Com a de leitura e sem a de exportação, a pessoa consulta na
+    tela, mas o botão <b>Exportar</b> não aparece.</p>
+  </div>
+
+  <div class="atencao">
+    <p><b>O que conferir no ambiente.</b> Sem estes pontos, a tela abre e a pesquisa falha.</p>
+    <p>O módulo precisa estar liberado na integração <code>apidw</code> do hub de Credenciais
+    — a mesma que o Reports Maestro e a Validação Fiscal já usam. Sem isso, a pesquisa
+    responde “Não foi possível consultar os dados”, com uma mensagem de credencial ou de
+    integração.</p>
+    <p>A função do módulo precisa do secret <code>GIA_SERVER_DATABASE_URL</code>, apontando
+    para o banco do Maestro, com um usuário só de leitura na tabela
+    <code>gia_relatorios.formas_pagamento</code> — o cadastro de formas de pagamento, de onde
+    vem a lista de vales. Sem ele, toda pesquisa responde “Não foi possível ler o cadastro de
+    formas de pagamento do Maestro”.</p>
+    <p>A loja só é consultada se o nome da Empresa no cadastro começar pelo número da loja
+    seguido de ponto (“01.CB GOIANIA”). A Empresa sem número não aparece no seletor, e a
+    correção é no cadastro de Empresas.</p>
+  </div>
+</section>
+
+<!-- PERFIS:INICIO — gerado pelo perfis.mjs a partir da tabela de permissões; não edite à mão -->
+<section class="perfis" style="--colunas: 1">
+  <div class="perfis-abertura">
+  <h2>Permissões por perfil</h2>
+  <p>A mesma tabela, vista ao contrário: cada perfil com todas as chaves que deve receber. É a lista para marcar no grupo de cada um no portal.</p>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-diretores">Diretores</span><span class="perfil-conta">3 chaves</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>fechamento-maestro.ler</code></li>
+            <li><code>fechamento-maestro.exportar</code></li>
+            <li><code>fechamento-maestro.ver-dados-cliente</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-gerentes">Gerentes</span><span class="perfil-conta">2 chaves</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>fechamento-maestro.ler</code></li>
+            <li><code>fechamento-maestro.exportar</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-auditoria">Auditoria</span><span class="perfil-conta">2 chaves</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>fechamento-maestro.ler</code></li>
+            <li><code>fechamento-maestro.exportar</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-admin">Administração/GIA</span><span class="perfil-conta">3 chaves</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>fechamento-maestro.ler</code></li>
+            <li><code>fechamento-maestro.exportar</code></li>
+            <li><code>fechamento-maestro.ver-dados-cliente</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+</section>
+<!-- PERFIS:FIM -->
+
+<section class="junta">
+  <h2>Como atribuir</h2>
+  <ol class="passos">
+    <li>Portal <span class="seta">→</span> Cadastros › Grupos (ou Papéis, para função que atravessa departamentos).</li>
+    <li>Abra o grupo que vai receber o acesso — Diretores, Gerentes, Auditoria, Administração/GIA…</li>
+    <li>Na aba de permissões, procure por <code>fechamento-maestro</code> e marque as chaves.</li>
+    <li>Salve. Quem já estiver logado enxerga a mudança sem precisar sair e entrar.</li>
+  </ol>
+  <p>
+    O acesso continua limitado às lojas que a pessoa já enxerga no portal, sem exceção: o
+    seletor só lista essas lojas, e cada pesquisa é conferida de novo. Quem confere lojas da
+    rede inteira — a Auditoria — precisa ter essas lojas no próprio acesso.
+  </p>
+</section>
+
+<footer>
+  <span>Dúvidas sobre o módulo: <b>time do Portal GIA</b></span>
+  <span>Ajuda dentro da tela: <b>botão ? no topo</b></span>
+</footer>
+
+</body>
+</html>

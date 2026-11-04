@@ -1,6 +1,6 @@
 {
   "name": "@modules/fechamento-maestro",
-  "version": "0.2.1",
+  "version": "0.1.0",
   "description": "Fechamento Maestro — conciliação dos pagamentos dos pedidos de delivery do Maestro por loja e período (módulo GIA)",
   "private": true,
   "type": "module",
