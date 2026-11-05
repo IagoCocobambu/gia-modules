@@ -7,7 +7,7 @@
 // O `loc_ref` da API de delivery é o número da loja. Sai primeiro do vínculo com a
 // BI do Simphony (`locRefs.BIAPI`, ex.: '01 CB Go' → "01") e, na falta, do `label`,
 // que faz o papel do nome da Empresa no portal ("01.CB GOIANIA" → "01"). Empresa sem
-// nenhum dos dois (ex.: o Escritório) fica fora do seletor, com um aviso.
+// nenhum dos dois (ex.: o Escritório) fica fora do seletor.
 //
 // Personas: só o Admin ('*') e "Dados do cliente" veem CPF, e-mail, telefone e
 // endereço completos; Leitor e Exportador recebem esses campos mascarados.

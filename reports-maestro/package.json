@@ -1,6 +1,6 @@
 {
   "name": "@modules/reports-maestro",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Reports Maestro — pedidos de delivery do Maestro por loja e período (módulo GIA)",
   "private": true,
   "type": "module",

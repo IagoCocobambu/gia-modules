@@ -1,0 +1,368 @@
+<title>Quem Cancelou — Propostas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: uma coluna de painéis no estilo do portal; cada painel = gráfico + prós/contras. Dark-first, como o portal. */
+:root {
+  --bg: #0b121a; --surface: #111a24; --surface-2: #16212d; --border: #223040; --grid: #1c2734;
+  --fg: #e6edf3; --muted: #8b98a8; --track: #1f2b38;
+  --c-cliente: #4f8ff7; --c-loja: #f2557a; --c-ambos: #f5b544; --c-outro: #6b7a8c;
+  --alerta: #f5b544;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #f0f3f7; --border: #dce2ea; --grid: #e9edf2;
+  --fg: #0f1720; --muted: #5b6878; --track: #e3e8ee;
+  --c-cliente: #2563eb; --c-loja: #d6335c; --c-ambos: #b7791f; --c-outro: #8a96a6;
+  --alerta: #b7791f; color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #f0f3f7; --border: #dce2ea; --grid: #e9edf2;
+  --fg: #0f1720; --muted: #5b6878; --track: #e3e8ee;
+  --c-cliente: #2563eb; --c-loja: #d6335c; --c-ambos: #b7791f; --c-outro: #8a96a6;
+  --alerta: #b7791f; color-scheme: light; }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+header h1 { font-size: 26px; font-weight: 600; margin: 0 0 6px; text-wrap: balance; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--muted); max-width: 70ch; }
+.base { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+.base > span { font-size: 12px; color: var(--muted); }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 3px; flex-wrap: wrap; }
+.seg button { font: inherit; font-size: 12.5px; color: var(--muted); background: transparent; border: 0; border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: background 150ms ease, color 150ms ease; }
+.seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--fg); font-weight: 500; }
+.seg button:focus-visible { outline: 2px solid var(--c-cliente); outline-offset: 1px; }
+
+.painel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.painel-topo { display: flex; gap: 14px; align-items: baseline; padding: 18px 20px 4px; flex-wrap: wrap; }
+.letra { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--bg); background: var(--fg); border-radius: 5px; padding: 1px 7px; }
+.painel h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.tag { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--alerta); border: 1px solid color-mix(in srgb, var(--alerta) 45%, transparent); border-radius: 999px; padding: 1px 8px; }
+.ideia { padding: 0 20px; margin: 4px 0 0; color: var(--muted); max-width: 72ch; }
+
+.card { margin: 16px 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.card h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.card .sub { margin: 2px 0 14px; color: var(--muted); font-size: 12.5px; }
+.grafico { position: relative; min-width: 0; }
+.grafico svg { display: block; overflow: visible; }
+
+.avaliacao { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); }
+.avaliacao > div { padding: 14px 20px 16px; min-width: 0; }
+.avaliacao > div + div { border-left: 1px solid var(--border); }
+.avaliacao h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.avaliacao ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.custo { grid-column: 1 / -1; border-top: 1px solid var(--border); border-left: 0 !important; font-size: 13px; color: var(--muted); }
+.custo b { color: var(--fg); font-weight: 500; }
+
+.sq { display: inline-block; width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.num { font-variant-numeric: tabular-nums; }
+.mut { color: var(--muted); }
+
+/* A — barra de participação */
+.a-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.a-topo .grande { font-size: 20px; font-weight: 600; }
+.trilho { display: flex; gap: 2px; height: 6px; border-radius: 999px; overflow: hidden; }
+.trilho span { min-width: 3px; border-radius: 1px; height: 100%; }
+.anima .trilho { animation: revelar 640ms cubic-bezier(.4,0,.2,1) both; }
+@keyframes revelar { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.a-lista { display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px 14px; align-items: center; margin-top: 14px; font-size: 13px; }
+.a-lista .rot { min-width: 0; }
+.a-lista .rot small { display: block; color: var(--muted); font-size: 11.5px; }
+.a-lista .pct { color: var(--muted); text-align: right; min-width: 3.5em; }
+.a-lista .n { text-align: right; font-weight: 600; }
+
+/* B — cartões */
+.cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.cartao { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--surface); min-width: 0; }
+.cartao .nome { font-weight: 600; font-size: 13.5px; display: flex; align-items: center; gap: 7px; }
+.cartao .grande { font-size: 28px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.cartao .rot { font-size: 11.5px; color: var(--muted); }
+.cartao .mini { height: 6px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.cartao .mini span { display: block; height: 100%; border-radius: 999px; }
+.cartao dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0; font-size: 12.5px; }
+.cartao dt { color: var(--muted); }
+.cartao dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* C — rosca */
+.rosca { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.rosca svg { flex-shrink: 0; }
+.rosca ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 200px; font-size: 13px; }
+.rosca li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+.fatia { transition: opacity 150ms ease; cursor: default; }
+.rosca:hover .fatia { opacity: .45; }
+.rosca .fatia:hover { opacity: 1; }
+
+/* E — tabela */
+.tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabela th { text-align: left; font-weight: 500; color: var(--muted); font-size: 11.5px; letter-spacing: .03em; text-transform: uppercase; padding: 0 10px 8px; border-bottom: 1px solid var(--border); }
+.tabela td { padding: 10px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+.tabela tr:last-child td { border-bottom: 0; }
+.tabela .r { text-align: right; font-variant-numeric: tabular-nums; }
+.tabela .barra { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.tabela .barra i { display: block; height: 8px; border-radius: 2px; }
+.tabela .quem { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+@media (max-width: 600px) {
+  .tabela thead { display: none; }
+  .tabela, .tabela tbody, .tabela tr, .tabela td { display: block; width: 100%; }
+  .tabela tr { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; background: var(--surface); }
+  .tabela td { border: 0; padding: 3px 0; display: flex; justify-content: space-between; gap: 12px; text-align: right; }
+  .tabela td::before { content: attr(data-rot); color: var(--muted); text-align: left; }
+  .tabela td.quem-td::before { content: none; }
+  .tabela .barra { flex: 1; justify-content: flex-end; }
+}
+
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+
+.t { fill: var(--fg); font-family: var(--font); font-size: 12px; }
+.t-sm { fill: var(--muted); font-family: var(--font); font-size: 11px; }
+.t-grande { fill: var(--fg); font-family: var(--font); font-size: 26px; font-weight: 600; }
+.ponto { transition: r 120ms ease; }
+
+.dica { position: fixed; z-index: 20; pointer-events: none; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; min-width: 180px; box-shadow: 0 8px 24px rgb(0 0 0 / 0.25); opacity: 0; transition: opacity 120ms ease; }
+.dica.on { opacity: 1; }
+.dica .h { font-weight: 600; }
+.dica .l { display: flex; justify-content: space-between; gap: 18px; font-variant-numeric: tabular-nums; }
+.dica .l span:first-child { color: var(--muted); }
+
+footer { color: var(--muted); font-size: 12.5px; max-width: 72ch; }
+@media (max-width: 560px) {
+  .avaliacao { grid-template-columns: 1fr; }
+  .avaliacao > div + div { border-left: 0; border-top: 1px solid var(--border); }
+  .card { margin: 14px 12px; padding: 12px; }
+  .painel-topo, .ideia, .avaliacao > div { padding-left: 14px; padding-right: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .anima .trilho { animation: none; } .dica, .fatia, .seg button { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Quem cancelou: cinco formas de mostrar</h1>
+    <p>Com 4 cancelamentos, como no seu print, quase qualquer gráfico fica vazio. Troque a base abaixo para ver cada proposta também num mês movimentado. Passe o mouse ou toque nos elementos para ver o detalhe.</p>
+    <div class="base">
+      <span>Base:</span>
+      <div class="seg" role="group" aria-label="Base de dados">
+        <button type="button" id="b-print" aria-pressed="true">Seu print (4 cancelamentos)</button>
+        <button type="button" id="b-mes" aria-pressed="false">Mês movimentado (exemplo)</button>
+      </div>
+    </div>
+    <p style="margin-top:10px;font-size:12.5px">As contagens do print são as reais. Tempos até cancelar, valores e total de pedidos são de exemplo nas duas bases.</p>
+  </header>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">A</span><h2>Barra de participação</h2></div>
+    <p class="ideia">A mesma barra fina em pedaços dos cartões de etapa (estilo da barra de contexto do Claude), com uma lista embaixo: quem, quantos, que parte do total e em quanto tempo cancelou.</p>
+    <div class="card">
+      <h3>Quem cancelou</h3>
+      <p class="sub">Pelo registro do cancelamento no Maestro.</p>
+      <div class="grafico" id="gA"></div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Mesma linguagem visual do Tempo por etapa: o dashboard fica coeso.</li><li>Compacto: some o espaço vazio do card atual.</li><li>Funciona igual no celular.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Com 1 ou 2 cancelamentos a barra diz pouco (mas a lista segura).</li><li>Comparar dois pedaços pequenos na barra é difícil.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> baixo. Reaproveita a barra do <code>CartoesEtapas</code> e os dados que já existem.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">B</span><h2>Um cartão por quem cancelou</h2></div>
+    <p class="ideia">O mesmo formato escolhido no Tempo por etapa: número grande de cancelamentos, a parte do total, o valor perdido e a mediana até cancelar.</p>
+    <div class="card">
+      <h3>Quem cancelou</h3>
+      <p class="sub">Pelo registro do cancelamento no Maestro.</p>
+      <div class="cartoes" id="gB"></div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Igual aos cartões de etapa: o usuário já sabe ler.</li><li>Cabe o valor perdido (R$), que hoje não aparece.</li><li>Ótimo no celular.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Ocupa mais altura que a barra.</li><li>Com "Não identificado" ficam 4 cartões, um deles quase vazio.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> baixo a médio. Somar o valor por grupo em <code>cancelamentosPorQuem</code>.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">C</span><h2>Rosca com o total no meio</h2></div>
+    <p class="ideia">O total de cancelamentos no centro e cada grupo como uma fatia. A legenda ao lado carrega os números.</p>
+    <div class="card">
+      <h3>Quem cancelou</h3>
+      <p class="sub">Pelo registro do cancelamento no Maestro.</p>
+      <div class="grafico" id="gC"></div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Leitura instantânea de "parte do todo".</li><li>O total fica em destaque.</li><li>Familiar para gestores.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Ângulos são mais difíceis de comparar que comprimentos.</li><li>Introduz um tipo de gráfico que não existe no resto do dashboard.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> médio. SVG novo (arcos), dados já existem.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">D</span><h2>Quando cada um cancela</h2><span class="tag">Tempos de exemplo</span></div>
+    <p class="ideia">Cada cancelamento é um ponto na linha do tempo, de quando o pedido chegou até quando foi cancelado. Mostra se a loja cancela logo no aceite ou depois de começar o preparo.</p>
+    <div class="card">
+      <h3>Quem cancelou e quando</h3>
+      <p class="sub">Minutos entre o pedido chegar e ser cancelado. O traço é a mediana do grupo.</p>
+      <div class="grafico" id="gD"></div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Responde uma pergunta nova e útil: cancelamento tardio custa insumo e preparo.</li><li>Mostra cada caso, não só a soma.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Mais complexo de ler; precisa de FAQ.</li><li>Com muitos pedidos os pontos se sobrepõem.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> médio. Os minutos de cada cancelamento já vêm do handler (<code>cancelamento.minutos</code>).</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">E</span><h2>Tabela com barra embutida</h2></div>
+    <p class="ideia">Uma tabela curta com tudo na mesma linha: quantos, parte do total, parte dos pedidos, valor e mediana até cancelar. No celular cada linha vira um card.</p>
+    <div class="card">
+      <h3>Quem cancelou</h3>
+      <p class="sub">Pelo registro do cancelamento no Maestro.</p>
+      <div class="grafico" id="gE"></div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Mais informação no menor espaço.</li><li>Ordena e compara com precisão.</li><li>Já vira card no celular.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Menos visual; parece relatório.</li><li>Repete a tabela que já abre pela tela cheia.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> baixo. Somar valor por grupo.</div>
+    </div>
+  </section>
+
+  <footer>Combinações possíveis: A no lugar do gráfico atual com D na tela cheia, ou B com a mediana até cancelar puxando para D.</footer>
+</div>
+<div class="dica" id="dica" role="tooltip"></div>
+
+<script>
+const GRUPOS = [
+  { chave: 'cliente', rot: 'Cliente ou plataforma', cor: 'var(--c-cliente)' },
+  { chave: 'loja', rot: 'Loja', cor: 'var(--c-loja)' },
+  { chave: 'ambos', rot: 'Cliente e loja', cor: 'var(--c-ambos)' },
+  { chave: 'outro', rot: 'Não identificado', cor: 'var(--c-outro)' },
+];
+function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function gerar(n, mediana, r) { return Array.from({ length: n }, () => { const z = Math.sqrt(-2 * Math.log(r() + 1e-9)) * Math.cos(2 * Math.PI * r()); return { min: Math.max(0.3, mediana * Math.exp(0.75 * z)), valor: Math.max(25, 118 + 45 * z * 0.8 + (r() - 0.5) * 40) }; }); }
+const BASES = {
+  print: { totalPedidos: 180, casos: { cliente: [{ min: 3.2, valor: 89.9 }, { min: 9.5, valor: 142.5 }], loja: [{ min: 18, valor: 210 }], ambos: [{ min: 7, valor: 64 }], outro: [] } },
+  mes: (() => { const r = rng(7); return { totalPedidos: 2743, casos: { cliente: gerar(86, 6, r), loja: gerar(31, 22, r), ambos: gerar(9, 14, r), outro: gerar(4, 10, r) } }; })(),
+};
+let base = 'print';
+
+const mediana = (xs) => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b), m = s.length / 2; return s.length % 2 ? s[Math.floor(m)] : (s[m - 1] + s[m]) / 2; };
+const fInt = (v) => v.toLocaleString('pt-BR');
+const fPct = (v) => (v * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+const fBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fDur = (v) => { if (v == null) return '—'; const t = Math.round(v * 60); return `${Math.floor(t / 3600)}h ${Math.floor((t % 3600) / 60)}m ${t % 60}s`; };
+
+function resumo() {
+  const B = BASES[base];
+  const linhas = GRUPOS.map((g) => { const c = B.casos[g.chave]; return { ...g, casos: c, n: c.length, med: mediana(c.map((x) => x.min)), valor: c.reduce((s, x) => s + x.valor, 0) }; }).filter((l) => l.n > 0).sort((a, b) => b.n - a.n);
+  const total = linhas.reduce((s, l) => s + l.n, 0);
+  linhas.forEach((l) => (l.parte = l.n / total));
+  return { linhas, total, totalPedidos: B.totalPedidos, valor: linhas.reduce((s, l) => s + l.valor, 0) };
+}
+const plural = (n, a, b) => `${fInt(n)} ${n === 1 ? a : b}`;
+
+function desenhaA(el, R) {
+  el.innerHTML = `<div class="a-topo"><span><span class="grande num">${plural(R.total, 'cancelamento', 'cancelamentos')}</span></span><span class="mut num">${fPct(R.total / R.totalPedidos)} dos ${fInt(R.totalPedidos)} pedidos · ${fBRL(R.valor)}</span></div>
+  <div class="trilho" aria-hidden="true">${R.linhas.map((l) => `<span style="flex:${l.parte} 1 0;background:${l.cor}"></span>`).join('')}</div>
+  <div class="a-lista">${R.linhas.map((l) => `<span class="sq" style="background:${l.cor}"></span><span class="rot">${l.rot}<small>mediana até cancelar ${fDur(l.med)}</small></span><span class="n num">${fInt(l.n)}</span><span class="pct num">${fPct(l.parte)}</span>`).join('')}</div>`;
+}
+
+function desenhaB(el, R) {
+  el.innerHTML = R.linhas.map((l) => `<article class="cartao">
+    <div class="nome"><span class="sq" style="background:${l.cor}"></span>${l.rot}</div>
+    <div><div class="grande">${fInt(l.n)}</div><div class="rot">${l.n === 1 ? 'cancelamento' : 'cancelamentos'} · ${fPct(l.parte)} do total</div></div>
+    <div class="mini" aria-hidden="true"><span style="width:${l.parte * 100}%;background:${l.cor}"></span></div>
+    <dl><dt>Valor</dt><dd>${fBRL(l.valor)}</dd><dt>Mediana até cancelar</dt><dd>${fDur(l.med)}</dd></dl>
+  </article>`).join('');
+}
+
+function arco(cx, cy, r0, r1, a0, a1) {
+  const p = (r, a) => [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+  const g = a1 - a0 > Math.PI ? 1 : 0;
+  const [x0, y0] = p(r1, a0), [x1, y1] = p(r1, a1), [x2, y2] = p(r0, a1), [x3, y3] = p(r0, a0);
+  return `M${x0} ${y0} A${r1} ${r1} 0 ${g} 1 ${x1} ${y1} L${x2} ${y2} A${r0} ${r0} 0 ${g} 0 ${x3} ${y3} Z`;
+}
+function desenhaC(el, R) {
+  const S = 168, c = S / 2, r1 = 80, r0 = 56, fresta = R.linhas.length > 1 ? 0.035 : 0;
+  let a = 0, s = '';
+  if (R.linhas.length === 1) s += `<circle cx="${c}" cy="${c}" r="${(r0 + r1) / 2}" fill="none" stroke="${R.linhas[0].cor}" stroke-width="${r1 - r0}"/>`;
+  else R.linhas.forEach((l, i) => { const b = a + l.parte * 2 * Math.PI; s += `<path class="fatia" data-i="${i}" d="${arco(c, c, r0, r1, a + fresta / 2, b - fresta / 2)}" fill="${l.cor}"/>`; a = b; });
+  s += `<text class="t-grande" x="${c}" y="${c + 4}" text-anchor="middle">${fInt(R.total)}</text><text class="t-sm" x="${c}" y="${c + 22}" text-anchor="middle">${R.total === 1 ? 'cancelamento' : 'cancelamentos'}</text>`;
+  el.innerHTML = `<div class="rosca"><svg width="${S}" height="${S}" role="img" aria-label="Cancelamentos por quem cancelou">${s}</svg>
+  <ul>${R.linhas.map((l) => `<li><span class="sq" style="background:${l.cor}"></span><span>${l.rot}<br><span class="mut" style="font-size:11.5px">${fBRL(l.valor)} · mediana ${fDur(l.med)}</span></span><span class="num" style="text-align:right"><b>${fInt(l.n)}</b><br><span class="mut" style="font-size:11.5px">${fPct(l.parte)}</span></span></li>`).join('')}</ul></div>`;
+  el.querySelectorAll('.fatia').forEach((f) => (f.dataset.tip = JSON.stringify(tipLinha(R.linhas[+f.dataset.i]))));
+}
+const tipLinha = (l) => ({ h: l.rot, l: [['Cancelamentos', fInt(l.n)], ['Parte do total', fPct(l.parte)], ['Valor', fBRL(l.valor)], ['Mediana até cancelar', fDur(l.med)]] });
+
+function desenhaD(el, R) {
+  const w = el.clientWidth, estreito = w < 520, x0 = estreito ? 4 : 150, x1 = w - 30, teto = 60;
+  const px = (v) => x0 + (Math.min(v, teto) / teto) * (x1 - x0);
+  const rowH = estreito ? 62 : 46, H = rowH * R.linhas.length;
+  let s = '';
+  [0, 15, 30, 45, 60].forEach((t) => {
+    s += `<line x1="${px(t)}" x2="${px(t)}" y1="0" y2="${H}" stroke="var(--grid)"/>`;
+    s += `<text class="t-sm" x="${px(t)}" y="${H + 16}" text-anchor="middle">${t === 60 ? '60+ min' : t}</text>`;
+  });
+  const r = rng(3);
+  R.linhas.forEach((l, i) => {
+    const y = i * rowH, yc = y + (estreito ? 40 : rowH / 2);
+    if (estreito) s += `<text class="t" x="${x0}" y="${y + 16}" font-weight="600">${l.rot}<tspan class="t-sm" font-weight="400"> · ${fInt(l.n)} · mediana ${fDur(l.med)}</tspan></text>`;
+    else { s += `<text class="t" x="0" y="${yc - 2}">${l.rot}</text><text class="t-sm" x="0" y="${yc + 13}">${fInt(l.n)} · mediana ${fDur(l.med)}</text>`; }
+    const jit = l.n > 1 ? 9 : 0;
+    l.casos.forEach((c) => {
+      const tip = JSON.stringify({ h: l.rot, l: [['Cancelado após', fDur(c.min)], ['Valor do pedido', fBRL(c.valor)]] }).replace(/"/g, '&quot;');
+      s += `<circle class="ponto" cx="${px(c.min)}" cy="${yc + (r() - 0.5) * 2 * jit}" r="${l.n > 40 ? 3.5 : 5}" fill="${l.cor}" fill-opacity="0.72" stroke="var(--bg)" stroke-width="1" data-tip="${tip}"/>`;
+    });
+    if (l.med != null) s += `<line x1="${px(l.med)}" x2="${px(l.med)}" y1="${yc - 15}" y2="${yc + 15}" stroke="var(--fg)" stroke-width="2.5" stroke-linecap="round" pointer-events="none"/>`;
+  });
+  el.innerHTML = `<svg width="${w}" height="${H + 22}" role="img" aria-label="Minutos até cada cancelamento, por quem cancelou">${s}</svg>`;
+}
+
+function desenhaE(el, R) {
+  const maior = Math.max(...R.linhas.map((l) => l.n));
+  el.innerHTML = `<table class="tabela"><thead><tr><th>Quem</th><th>Cancelamentos</th><th class="r">Do total</th><th class="r">Dos pedidos</th><th class="r">Valor</th><th class="r">Mediana até cancelar</th></tr></thead><tbody>
+  ${R.linhas.map((l) => `<tr><td class="quem-td"><span class="quem"><span class="sq" style="background:${l.cor}"></span><b style="font-weight:600">${l.rot}</b></span></td>
+    <td data-rot="Cancelamentos"><span class="barra"><i style="width:${(l.n / maior) * 90}px;background:${l.cor}"></i><span class="num">${fInt(l.n)}</span></span></td>
+    <td class="r" data-rot="Do total">${fPct(l.parte)}</td><td class="r" data-rot="Dos pedidos">${fPct(l.n / R.totalPedidos)}</td>
+    <td class="r" data-rot="Valor">${fBRL(l.valor)}</td><td class="r" data-rot="Mediana até cancelar">${fDur(l.med)}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+function tudo(animar) {
+  const R = resumo();
+  const gA = document.getElementById('gA');
+  desenhaA(gA, R);
+  if (animar) { gA.classList.remove('anima'); void gA.offsetWidth; gA.classList.add('anima'); }
+  desenhaB(document.getElementById('gB'), R);
+  desenhaC(document.getElementById('gC'), R);
+  desenhaD(document.getElementById('gD'), R);
+  desenhaE(document.getElementById('gE'), R);
+}
+tudo(true);
+let raf; new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => desenhaD(document.getElementById('gD'), resumo())); }).observe(document.querySelector('.wrap'));
+for (const [id, b] of [['b-print', 'print'], ['b-mes', 'mes']]) {
+  document.getElementById(id).addEventListener('click', () => {
+    base = b;
+    document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', String(x.id === id)));
+    tudo(true);
+  });
+}
+
+const dica = document.getElementById('dica');
+function mostra(ev) {
+  const t = ev.target.closest && ev.target.closest('[data-tip]');
+  if (!t) { dica.classList.remove('on'); return; }
+  const d = JSON.parse(t.dataset.tip);
+  dica.innerHTML = `<div class="h">${d.h}</div>${d.l.map(([a, b]) => `<div class="l"><span>${a}</span><b>${b}</b></div>`).join('')}`;
+  const r = dica.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 14;
+  dica.style.left = Math.max(8, x) + 'px'; dica.style.top = Math.max(8, y) + 'px';
+  dica.classList.add('on');
+}
+document.addEventListener('pointermove', mostra);
+document.addEventListener('pointerdown', mostra);
+document.addEventListener('scroll', () => dica.classList.remove('on'), { passive: true });
+</script>

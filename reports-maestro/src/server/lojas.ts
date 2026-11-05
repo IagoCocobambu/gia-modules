@@ -1,10 +1,13 @@
 import { defineHandler } from '@gia-cb/sdk/server'
 
-// Lojas que o usuário pode consultar: Empresas do escopo dele com número de loja.
-// É desse número que sai o `loc_ref` da API de delivery. Ele vem primeiro do
-// vínculo com a BI do Simphony (`locRefs.BIAPI`) e, na falta, do nome da Empresa
-// ("01.CB GOIANIA"). As que não têm número ficam de fora: são de grupos que ainda
-// não têm CNPJ.
+// Lojas que o usuário pode consultar: todas as Empresas do escopo dele com
+// `tipoRegistro === 'empresa'` (a loja, com CNPJ). Propriedades (escritório,
+// centro de distribuição — sem CNPJ próprio) ficam de fora.
+//
+// O número da loja (`loc_ref` da API de delivery) vem primeiro do vínculo com a
+// BI do Simphony (`locRefs.BIAPI`) e, na falta, do nome da Empresa
+// ("01.CB GOIANIA"). Loja sem número aparece mesmo assim, com `locRef: null` —
+// a pesquisa dela devolve um aviso claro (ver pedidos.ts).
 //
 // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. `numeroDaLoja`
 // se repete em pedidos.ts de propósito.
@@ -12,7 +15,7 @@ import { defineHandler } from '@gia-cb/sdk/server'
 interface Loja {
   empresaId: number
   nome: string
-  locRef: string
+  locRef: string | null
   ativo: boolean
 }
 
@@ -40,8 +43,8 @@ export default defineHandler<Record<string, never>, Resposta>(async (ctx) => {
   const lojas: Loja[] = []
   for (const e of await ctx.empresas()) {
     if (!escopo.all && !escopo.empresaIds.includes(e.id)) continue
-    const locRef = numeroDaLoja(e)
-    if (locRef) lojas.push({ empresaId: e.id, nome: e.nome, locRef, ativo: e.ativo })
+    if (e.tipoRegistro !== 'empresa') continue
+    lojas.push({ empresaId: e.id, nome: e.nome, locRef: numeroDaLoja(e), ativo: e.ativo })
   }
   return { lojas: lojas.sort((a, b) => porNome(a.nome, b.nome)) }
 })

@@ -1,0 +1,421 @@
+<title>Tempo por Etapa — Propostas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: uma coluna de painéis no estilo do portal; cada painel = gráfico + prós/contras. Dark-first, como o portal. */
+:root {
+  --bg: #0b121a; --surface: #111a24; --surface-2: #16212d; --border: #223040; --grid: #1c2734;
+  --fg: #e6edf3; --muted: #8b98a8;
+  --mediana: #4f8ff7; --media: #f9731a; --faixa: #22b8a6; --alerta: #f5b544;
+  --s1: #7cc4f8; --s2: #4f8ff7; --s3: #8b7cf6;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #f0f3f7; --border: #dce2ea; --grid: #e9edf2;
+  --fg: #0f1720; --muted: #5b6878;
+  --mediana: #2563eb; --media: #e0570a; --faixa: #0d9488; --alerta: #b7791f;
+  --s1: #38a3e8; --s2: #2563eb; --s3: #6d5ce0; color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #f0f3f7; --border: #dce2ea; --grid: #e9edf2;
+  --fg: #0f1720; --muted: #5b6878;
+  --mediana: #2563eb; --media: #e0570a; --faixa: #0d9488; --alerta: #b7791f;
+  --s1: #38a3e8; --s2: #2563eb; --s3: #6d5ce0; color-scheme: light; }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+header h1 { font-size: 26px; font-weight: 600; margin: 0 0 6px; text-wrap: balance; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--muted); max-width: 68ch; }
+.dados { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.dados span { font-family: var(--mono); font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+.dados b { color: var(--fg); font-weight: 500; }
+
+.painel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.painel-topo { display: flex; gap: 14px; align-items: baseline; padding: 18px 20px 4px; flex-wrap: wrap; }
+.letra { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--bg); background: var(--fg); border-radius: 5px; padding: 1px 7px; }
+.painel h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.tag { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--alerta); border: 1px solid color-mix(in srgb, var(--alerta) 45%, transparent); border-radius: 999px; padding: 1px 8px; }
+.ideia { padding: 0 20px; margin: 4px 0 0; color: var(--muted); max-width: 72ch; }
+
+/* O "card" simulado do portal */
+.card { margin: 16px 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.card h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.card .sub { margin: 2px 0 14px; color: var(--muted); font-size: 12.5px; }
+.grafico { position: relative; min-width: 0; }
+.grafico svg { display: block; overflow: visible; }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.legenda i { display: inline-block; vertical-align: middle; margin-right: 6px; }
+.lg-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--mediana); }
+.lg-tick { width: 3px; height: 12px; border-radius: 1px; background: var(--media); }
+.lg-faixa { width: 18px; height: 2px; background: var(--faixa); }
+.lg-box { width: 16px; height: 10px; border-radius: 2px; background: color-mix(in srgb, var(--mediana) 30%, transparent); border: 1.5px solid var(--mediana); }
+.lg-out { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--muted); }
+.lg-sq { width: 10px; height: 10px; border-radius: 2px; }
+
+.avaliacao { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 1px solid var(--border); }
+.avaliacao > div { padding: 14px 20px 16px; min-width: 0; }
+.avaliacao > div + div { border-left: 1px solid var(--border); }
+.avaliacao h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.avaliacao ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.custo { grid-column: 1 / -1; border-top: 1px solid var(--border); border-left: 0 !important; font-size: 13px; color: var(--muted); }
+.custo b { color: var(--fg); font-weight: 500; }
+
+/* svg text */
+.t { fill: var(--fg); font-family: var(--font); font-size: 12px; }
+.t-sm { fill: var(--muted); font-family: var(--font); font-size: 11px; }
+.t-num { fill: var(--fg); font-family: var(--font); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.t-alerta { fill: var(--alerta); font-family: var(--font); font-size: 11px; font-weight: 500; }
+.t-in { fill: #fff; font-family: var(--font); font-size: 11.5px; font-weight: 600; }
+.hit { fill: transparent; cursor: default; }
+.hit:hover { fill: var(--surface-2); }
+
+/* Cartões (D) */
+.cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.cartao { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--surface); }
+.cartao .nome { font-weight: 600; font-size: 13.5px; }
+.cartao .de { color: var(--muted); font-size: 11.5px; }
+.cartao .grande { font-size: 28px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.cartao .grande small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 3px; }
+.cartao .rot { font-size: 11.5px; color: var(--muted); }
+.cartao dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0; font-size: 12.5px; }
+.cartao dt { color: var(--muted); }
+.cartao dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.selo { font-size: 11.5px; border-radius: 6px; padding: 4px 8px; line-height: 1.35; }
+.selo.ok { color: var(--muted); background: var(--surface-2); }
+.selo.atencao { color: var(--alerta); background: color-mix(in srgb, var(--alerta) 12%, transparent); }
+
+/* Jornada (C) */
+.composicao { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+.composicao div { font-size: 12.5px; display: flex; flex-direction: column; gap: 1px; }
+.composicao b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.composicao span { color: var(--muted); font-size: 11.5px; }
+
+.dica { position: fixed; z-index: 20; pointer-events: none; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; min-width: 190px; box-shadow: 0 8px 24px rgb(0 0 0 / 0.25); opacity: 0; transition: opacity 120ms ease; }
+.dica.on { opacity: 1; }
+.dica .h { font-weight: 600; }
+.dica .d { color: var(--muted); font-size: 11.5px; margin-bottom: 6px; }
+.dica .l { display: flex; justify-content: space-between; gap: 18px; font-variant-numeric: tabular-nums; }
+.dica .l span:first-child { color: var(--muted); }
+
+footer { color: var(--muted); font-size: 12.5px; max-width: 72ch; }
+@media (max-width: 560px) {
+  .avaliacao { grid-template-columns: 1fr; }
+  .avaliacao > div + div { border-left: 0; border-top: 1px solid var(--border); }
+  .card { margin: 14px 12px; padding: 12px; }
+  .painel-topo, .ideia { padding-left: 14px; padding-right: 14px; }
+  .avaliacao > div { padding-left: 14px; padding-right: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .dica { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Tempo por etapa: cinco formas de mostrar</h1>
+    <p>Todas as propostas usam os números do seu print (18 entregas medidas). Passe o mouse ou toque nas linhas para ver o detalhe. Redimensione a janela para ver como cada uma fica no celular.</p>
+    <div class="dados">
+      <span>Aceite <b>med 0,3</b> · méd 0,5 · 0,1–1,8</span>
+      <span>Preparo <b>med 15</b> · méd 17 · 1,9–40</span>
+      <span>Expedição <b>med 0,6</b> · méd 3,3 · 0,1–18</span>
+    </div>
+  </header>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">A</span><h2>Escala logarítmica</h2></div>
+    <p class="ideia">As mesmas marcas de hoje (barra até a mediana vira ponto, traço da média, faixa mín–máx), mas numa régua em que cada marca é 10× a anterior. Aceite de 0,3 min e preparo de 40 min cabem juntos, sem seta de "fora da régua".</p>
+    <div class="card">
+      <h3>Tempo por etapa</h3>
+      <p class="sub">Mínimo, média, mediana e máximo de cada etapa, nas 18 entregas medidas.</p>
+      <div class="grafico" id="gA"></div>
+      <div class="legenda"><span><i class="lg-dot"></i>Mediana</span><span><i class="lg-tick"></i>Média</span><span><i class="lg-faixa"></i>Mínimo a máximo</span></div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Nenhum valor fica cortado; some a seta.</li><li>As etapas curtas deixam de ser um risco no canto esquerdo.</li><li>Mantém a gramática visual atual.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Distância na tela não é proporcional ao tempo; usuário leigo pode ler errado.</li><li>Comparar "quanto maior" entre etapas fica menos intuitivo.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> baixo. Trocar <code>escala()</code> por uma escala log no <code>BarrasEtapas.tsx</code> e desenhar os ticks.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">B</span><h2>Mediana × média (onde há pedido travando)</h2></div>
+    <p class="ideia">Mostra só o que separa a mediana da média. Quanto mais longe a média, mais pedidos muito lentos puxam a conta. A razão aparece escrita e a etapa com distorção alta ganha um aviso.</p>
+    <div class="card">
+      <h3>Tempo por etapa</h3>
+      <p class="sub">Mediana e média de cada etapa, nas 18 entregas medidas.</p>
+      <div class="grafico" id="gB"></div>
+      <div class="legenda"><span><i class="lg-dot"></i>Mediana (pedido típico)</span><span><i class="lg-tick"></i>Média</span></div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Conta uma história clara: a expedição tem poucos pedidos muito lentos.</li><li>Gráfico simples, lê em segundos.</li><li>Leva a uma ação (investigar os pedidos lentos).</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Esconde mínimo e máximo do gráfico (ficam só na dica).</li><li>O limite de "distorção alta" (2×) é uma regra a definir com a operação.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> baixo. Usa os mesmos dados; precisa decidir o limite do aviso.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">C</span><h2>Jornada do pedido</h2></div>
+    <p class="ideia">Uma barra única, da recepção ao despacho, dividida pelas etapas. Responde "para onde vai o tempo do pedido?" em vez de comparar estatísticas.</p>
+    <div class="card">
+      <h3>Tempo na loja, por etapa</h3>
+      <p class="sub">Soma das etapas, nas 18 entregas medidas.</p>
+      <div class="grafico" id="gC"></div>
+      <div class="composicao" id="cC"></div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Mostra de imediato que o preparo é quase todo o tempo.</li><li>Funciona igual no celular: é uma barra só.</li><li>Fácil para quem não conhece estatística.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Soma de medianas não é a mediana do total; precisa de nota.</li><li>Perde mínimo e máximo.</li><li>Etapas curtas viram fatias finas (é verdade, mas some o detalhe).</li></ul></div>
+      <div class="custo"><b>Esforço:</b> baixo a médio. Novo componente; os dados já existem.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">D</span><h2>Um cartão por etapa</h2></div>
+    <p class="ideia">Número grande da mediana, média e extremos escritos, e uma régua pequena com escala própria em cada cartão. É o formato que já vira card no celular.</p>
+    <div class="card">
+      <h3>Tempo por etapa</h3>
+      <p class="sub">Nas 18 entregas medidas. Cada cartão tem a sua régua.</p>
+      <div class="cartoes" id="gD"></div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Melhor leitura no celular e para usuário leigo.</li><li>Cada etapa usa a própria régua; nada fica espremido.</li><li>Espaço natural para o aviso de distorção.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Não compara etapas visualmente entre si (réguas diferentes).</li><li>Ocupa mais altura com 4 etapas (com rota).</li></ul></div>
+      <div class="custo"><b>Esforço:</b> baixo. HTML com componentes do <code>@gia-cb/ui</code>, pouco SVG.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">E</span><h2>Box plot com percentis</h2><span class="tag">Percentis ilustrativos</span></div>
+    <p class="ideia">Caixa do P25 ao P75 (metade central dos pedidos), bigodes do P10 ao P90 e o máximo como ponto solto. Cada linha tem a sua régua. É a forma mais completa, mas exige calcular percentis novos.</p>
+    <div class="card">
+      <h3>Tempo por etapa</h3>
+      <p class="sub">Distribuição de cada etapa, nas 18 entregas medidas.</p>
+      <div class="grafico" id="gE"></div>
+      <div class="legenda"><span><i class="lg-box"></i>Metade central (P25–P75) e mediana</span><span><i class="lg-faixa"></i>P10–P90</span><span><i class="lg-tick"></i>Média</span><span><i class="lg-out"></i>Máximo</span></div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Mostra a forma real da distribuição, não só quatro números.</li><li>O máximo vira "ponto fora", sem distorcer a régua.</li><li>P90 é uma boa meta operacional ("9 em 10 pedidos em até…").</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Box plot exige explicação na FAQ.</li><li>Com 18 pedidos os percentis oscilam bastante.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> médio. Adicionar P10/P25/P75/P90 em <code>estatisticasDasEtapas</code> (a função <code>quantil</code> já existe).</div>
+    </div>
+  </section>
+
+  <footer>Dá para combinar: por exemplo, D no celular e A ou E no desktop, ou B como um aviso acima de qualquer uma das outras.</footer>
+</div>
+<div class="dica" id="dica" role="tooltip"></div>
+
+<script>
+const ETAPAS = [
+  { rotulo: 'Aceite', desc: 'Recebido → Confirmado', min: 0.1, media: 0.5, mediana: 0.3, max: 1.8, p10: 0.1, p25: 0.2, p75: 0.6, p90: 1.2 },
+  { rotulo: 'Preparo', desc: 'Confirmado → Embalado', min: 1.9, media: 17, mediana: 15, max: 40, p10: 6, p25: 11, p75: 21, p90: 30 },
+  { rotulo: 'Expedição', desc: 'Embalado → Despachado', min: 0.1, media: 3.3, mediana: 0.6, max: 18, p10: 0.2, p25: 0.4, p75: 2.5, p90: 9 },
+];
+const N = 18;
+const f1 = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmt = (v) => (v >= 10 ? Math.round(v).toLocaleString('pt-BR') : f1(v)) + ' min';
+const fx = (v) => f1(v) + '×';
+
+function layout(w) {
+  const estreito = w < 520;
+  const x0 = estreito ? 4 : Math.min(96, Math.round(w * 0.2));
+  const dir = estreito ? 4 : Math.min(170, Math.round(w * 0.3));
+  return { estreito, x0, x1: w - dir };
+}
+const hit = (i, v, y, w, h) => `<rect class="hit" rx="6" x="0" y="${y}" width="${w}" height="${h}" data-i="${i}" data-v="${v}"/>`;
+const svgWrap = (w, h, inner, label) => `<svg width="${w}" height="${h}" role="img" aria-label="${label}">${inner}</svg>`;
+
+/* A — escala log */
+function desenhaA(el) {
+  const w = el.clientWidth, L = layout(w);
+  const lo = 0.1, hi = 60, k = (L.x1 - L.x0) / (Math.log10(hi) - Math.log10(lo));
+  const px = (v) => L.x0 + (Math.log10(Math.max(v, lo)) - Math.log10(lo)) * k;
+  const rowH = L.estreito ? 64 : 46, yBar = L.estreito ? 44 : 23;
+  let s = '';
+  const ticks = L.estreito ? [0.1, 1, 10, 60] : [0.1, 0.5, 1, 5, 10, 30, 60];
+  const H = rowH * ETAPAS.length;
+  ticks.forEach((t) => {
+    s += `<line x1="${px(t)}" x2="${px(t)}" y1="0" y2="${H}" stroke="var(--grid)"/>`;
+    s += `<text class="t-sm" x="${px(t)}" y="${H + 16}" text-anchor="middle">${t.toLocaleString('pt-BR')}${t === 60 ? ' min' : ''}</text>`;
+  });
+  ETAPAS.forEach((e, i) => {
+    const y = i * rowH, yc = y + yBar;
+    s += hit(i, 'A', y + 2, w, rowH - 4);
+    s += `<g pointer-events="none">`;
+    if (L.estreito) {
+      s += `<text class="t" x="${L.x0}" y="${y + 18}" font-weight="600">${e.rotulo}</text>`;
+      s += `<text class="t-sm" x="${w - 4}" y="${y + 18}" text-anchor="end"><tspan class="t-num">${fmt(e.mediana)}</tspan> · média ${fmt(e.media)}</text>`;
+    } else {
+      s += `<text class="t" x="0" y="${yc + 4}">${e.rotulo}</text>`;
+      s += `<text class="t-num" x="${w}" y="${yc - 3}" text-anchor="end">${fmt(e.mediana)}<tspan class="t-sm" font-weight="400"> · média ${fmt(e.media)}</tspan></text>`;
+      s += `<text class="t-sm" x="${w}" y="${yc + 12}" text-anchor="end">mín ${fmt(e.min)} · máx ${fmt(e.max)}</text>`;
+    }
+    s += `<line x1="${px(e.min)}" x2="${px(e.max)}" y1="${yc}" y2="${yc}" stroke="var(--faixa)" stroke-width="2"/>`;
+    s += `<circle cx="${px(e.min)}" cy="${yc}" r="3" fill="var(--faixa)"/><circle cx="${px(e.max)}" cy="${yc}" r="3" fill="var(--faixa)"/>`;
+    s += `<rect x="${px(e.media) - 1.5}" y="${yc - 9}" width="3" height="18" rx="1" fill="var(--media)"/>`;
+    s += `<circle cx="${px(e.mediana)}" cy="${yc}" r="7" fill="var(--mediana)" stroke="var(--bg)" stroke-width="2"/>`;
+    s += `</g>`;
+  });
+  el.innerHTML = svgWrap(w, H + 22, s, 'Tempo por etapa em escala logarítmica');
+}
+
+/* B — mediana × média */
+function desenhaB(el) {
+  const w = el.clientWidth, L = layout(w);
+  const teto = 20, px = (v) => L.x0 + (v / teto) * (L.x1 - L.x0);
+  const rowH = L.estreito ? 66 : 48, yBar = L.estreito ? 46 : 24;
+  const H = rowH * ETAPAS.length;
+  let s = '';
+  [0, 5, 10, 15, 20].forEach((t) => {
+    s += `<line x1="${px(t)}" x2="${px(t)}" y1="0" y2="${H}" stroke="var(--grid)"/>`;
+    s += `<text class="t-sm" x="${px(t)}" y="${H + 16}" text-anchor="middle">${t}${t === 20 ? ' min' : ''}</text>`;
+  });
+  ETAPAS.forEach((e, i) => {
+    const y = i * rowH, yc = y + yBar, r = e.media / e.mediana, alto = r >= 2;
+    s += hit(i, 'B', y + 2, w, rowH - 4);
+    s += `<g pointer-events="none">`;
+    const aviso = alto ? `média ${fx(r)} a mediana · pedidos travando` : `média ${fx(r)} a mediana`;
+    if (L.estreito) {
+      s += `<text class="t" x="${L.x0}" y="${y + 18}" font-weight="600">${e.rotulo}</text>`;
+      s += `<text class="${alto ? 't-alerta' : 't-sm'}" x="${w - 4}" y="${y + 18}" text-anchor="end">${alto ? 'média ' + fx(r) + ' a mediana' : fx(r)}</text>`;
+    } else {
+      s += `<text class="t" x="0" y="${yc + 4}">${e.rotulo}</text>`;
+      s += `<text class="t-num" x="${w}" y="${yc - 3}" text-anchor="end">${fmt(e.mediana)}<tspan class="t-sm" font-weight="400"> → ${fmt(e.media)}</tspan></text>`;
+      s += `<text class="${alto ? 't-alerta' : 't-sm'}" x="${w}" y="${yc + 12}" text-anchor="end">${aviso}</text>`;
+    }
+    const a = px(e.mediana), b = px(e.media);
+    s += `<rect x="${a}" y="${yc - 4}" width="${Math.max(b - a, 0)}" height="8" rx="4" fill="${alto ? 'var(--alerta)' : 'var(--border)'}" opacity="${alto ? 0.35 : 1}"/>`;
+    s += `<rect x="${b - 1.5}" y="${yc - 10}" width="3" height="20" rx="1" fill="var(--media)"/>`;
+    s += `<circle cx="${a}" cy="${yc}" r="7" fill="var(--mediana)" stroke="var(--bg)" stroke-width="2"/>`;
+    s += `</g>`;
+  });
+  el.innerHTML = svgWrap(w, H + 22, s, 'Mediana e média por etapa');
+}
+
+/* C — jornada empilhada */
+function desenhaC(el, comp) {
+  const w = el.clientWidth, cores = ['var(--s1)', 'var(--s2)', 'var(--s3)'];
+  const linhas = [
+    { rot: 'Pedido típico', sub: 'soma das medianas', k: 'mediana' },
+    { rot: 'Média', sub: 'soma das médias', k: 'media' },
+  ];
+  const totais = linhas.map((l) => ETAPAS.reduce((s, e) => s + e[l.k], 0));
+  const teto = Math.max(...totais) * 1.02;
+  const estreito = w < 520, x0 = estreito ? 0 : 118, x1 = w - (estreito ? 0 : 70);
+  const px = (v) => (v / teto) * (x1 - x0);
+  const rowH = estreito ? 62 : 46, barH = 24;
+  let s = '';
+  linhas.forEach((l, li) => {
+    const y = li * rowH, yb = estreito ? y + 24 : y + 8;
+    if (estreito) {
+      s += `<text class="t" x="0" y="${y + 14}" font-weight="600">${l.rot}<tspan class="t-sm" font-weight="400"> · ${l.sub}</tspan></text>`;
+      s += `<text class="t-num" x="${w}" y="${y + 14}" text-anchor="end">${fmt(totais[li])}</text>`;
+    } else {
+      s += `<text class="t" x="0" y="${yb + 10}" font-weight="600">${l.rot}</text>`;
+      s += `<text class="t-sm" x="0" y="${yb + 24}">${l.sub}</text>`;
+      s += `<text class="t-num" x="${w}" y="${yb + 17}" text-anchor="end">${fmt(totais[li])}</text>`;
+    }
+    let x = x0;
+    ETAPAS.forEach((e, i) => {
+      const ww = px(e[l.k]);
+      s += `<rect x="${x}" y="${yb}" width="${Math.max(ww - 1.5, 1.5)}" height="${barH}" rx="3" fill="${cores[i]}"/>`;
+      if (ww > 64) s += `<text class="t-in" x="${x + 8}" y="${yb + 16}">${e.rotulo} ${fmt(e[l.k])}</text>`;
+      x += ww;
+    });
+  });
+  el.innerHTML = svgWrap(w, rowH * 2, s, 'Composição do tempo na loja por etapa');
+  const tot = totais[0];
+  comp.innerHTML = ETAPAS.map((e, i) => `<div><span><i class="lg-sq" style="display:inline-block;margin-right:6px;background:${cores[i]}"></i>${e.rotulo}</span><b>${Math.round((e.mediana / tot) * 100)}%</b><span>${fmt(e.mediana)} típico · ${fmt(e.media)} média</span></div>`).join('')
+    + `<div><span>Nota</span><span style="color:var(--fg)">A soma das medianas não é a mediana do pedido inteiro.</span></div>`;
+}
+
+/* D — cartões */
+function desenhaD(el) {
+  el.innerHTML = ETAPAS.map((e) => {
+    const r = e.media / e.mediana, alto = r >= 2;
+    const teto = e.max, p = (v) => (v / teto) * 100;
+    const selo = alto
+      ? `<div class="selo atencao">Média ${fx(r)} a mediana: alguns pedidos ficam travados nesta etapa.</div>`
+      : `<div class="selo ok">Média próxima da mediana: tempo estável.</div>`;
+    return `<article class="cartao">
+      <div><div class="nome">${e.rotulo}</div><div class="de">${e.desc}</div></div>
+      <div><div class="grande">${f1(e.mediana).replace(/,0$/, '')}<small>min</small></div><div class="rot">mediana · metade dos pedidos leva menos</div></div>
+      <svg viewBox="0 0 100 14" preserveAspectRatio="none" width="100%" height="14" aria-hidden="true">
+        <line x1="${p(e.min)}" x2="100" y1="7" y2="7" stroke="var(--faixa)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+        <rect x="0" y="4" width="${p(e.mediana)}" height="6" rx="1" fill="var(--mediana)"/>
+        <rect x="${p(e.media) - 0.6}" y="0" width="1.2" height="14" fill="var(--media)"/>
+      </svg>
+      <dl><dt>Média</dt><dd>${fmt(e.media)}</dd><dt>Mínimo</dt><dd>${fmt(e.min)}</dd><dt>Máximo</dt><dd>${fmt(e.max)}</dd></dl>
+      ${selo}
+    </article>`;
+  }).join('');
+}
+
+/* E — box plot, régua por linha */
+function nice(v) { const c = [1, 2, 5, 10, 20, 30, 40, 50, 60]; return c.find((x) => x >= v) || Math.ceil(v / 10) * 10; }
+function desenhaE(el) {
+  const w = el.clientWidth, L = layout(w);
+  const rowH = L.estreito ? 84 : 66;
+  const H = rowH * ETAPAS.length;
+  let s = '';
+  ETAPAS.forEach((e, i) => {
+    const y = i * rowH, yc = y + (L.estreito ? 42 : 26), teto = nice(e.max);
+    const px = (v) => L.x0 + (v / teto) * (L.x1 - L.x0);
+    s += hit(i, 'E', y + 2, w, rowH - 4);
+    s += `<g pointer-events="none">`;
+    [0, teto / 2, teto].forEach((t) => {
+      s += `<line x1="${px(t)}" x2="${px(t)}" y1="${yc - 14}" y2="${yc + 14}" stroke="var(--grid)"/>`;
+      s += `<text class="t-sm" x="${px(t)}" y="${yc + 28}" text-anchor="middle" font-size="10">${t.toLocaleString('pt-BR')}</text>`;
+    });
+    if (L.estreito) {
+      s += `<text class="t" x="${L.x0}" y="${y + 16}" font-weight="600">${e.rotulo}</text>`;
+      s += `<text class="t-sm" x="${w - 4}" y="${y + 16}" text-anchor="end"><tspan class="t-num">${fmt(e.mediana)}</tspan> · P90 ${fmt(e.p90)}</text>`;
+    } else {
+      s += `<text class="t" x="0" y="${yc + 4}">${e.rotulo}</text>`;
+      s += `<text class="t-num" x="${w}" y="${yc - 3}" text-anchor="end">${fmt(e.mediana)}<tspan class="t-sm" font-weight="400"> · P90 ${fmt(e.p90)}</tspan></text>`;
+      s += `<text class="t-sm" x="${w}" y="${yc + 12}" text-anchor="end">metade entre ${fmt(e.p25)} e ${fmt(e.p75)}</text>`;
+    }
+    s += `<line x1="${px(e.p10)}" x2="${px(e.p90)}" y1="${yc}" y2="${yc}" stroke="var(--faixa)" stroke-width="2"/>`;
+    s += `<line x1="${px(e.p10)}" x2="${px(e.p10)}" y1="${yc - 5}" y2="${yc + 5}" stroke="var(--faixa)" stroke-width="2"/>`;
+    s += `<line x1="${px(e.p90)}" x2="${px(e.p90)}" y1="${yc - 5}" y2="${yc + 5}" stroke="var(--faixa)" stroke-width="2"/>`;
+    s += `<rect x="${px(e.p25)}" y="${yc - 9}" width="${Math.max(px(e.p75) - px(e.p25), 3)}" height="18" rx="3" fill="color-mix(in srgb, var(--mediana) 28%, var(--bg))" stroke="var(--mediana)" stroke-width="1.5"/>`;
+    s += `<line x1="${px(e.mediana)}" x2="${px(e.mediana)}" y1="${yc - 9}" y2="${yc + 9}" stroke="var(--mediana)" stroke-width="3"/>`;
+    s += `<rect x="${px(e.media) - 1.5}" y="${yc - 13}" width="3" height="6" rx="1" fill="var(--media)"/>`;
+    s += `<circle cx="${px(e.max)}" cy="${yc}" r="4" fill="var(--bg)" stroke="var(--muted)" stroke-width="1.5"/>`;
+    s += `</g>`;
+  });
+  el.innerHTML = svgWrap(w, H, s, 'Distribuição do tempo por etapa em box plot');
+}
+
+function tudo() {
+  desenhaA(document.getElementById('gA'));
+  desenhaB(document.getElementById('gB'));
+  desenhaC(document.getElementById('gC'), document.getElementById('cC'));
+  desenhaD(document.getElementById('gD'));
+  desenhaE(document.getElementById('gE'));
+}
+tudo();
+let raf; new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(tudo); }).observe(document.querySelector('.wrap'));
+
+const dica = document.getElementById('dica');
+function mostra(ev) {
+  const t = ev.target.closest && ev.target.closest('.hit');
+  if (!t) { dica.classList.remove('on'); return; }
+  const e = ETAPAS[+t.dataset.i], v = t.dataset.v;
+  const L = (a, b) => `<div class="l"><span>${a}</span><b>${b}</b></div>`;
+  let corpo = v === 'E'
+    ? L('P10', fmt(e.p10)) + L('P25', fmt(e.p25)) + L('Mediana', fmt(e.mediana)) + L('Média', fmt(e.media)) + L('P75', fmt(e.p75)) + L('P90', fmt(e.p90)) + L('Máximo', fmt(e.max))
+    : L('Mínimo', fmt(e.min)) + L('Mediana', fmt(e.mediana)) + L('Média', fmt(e.media)) + L('Máximo', fmt(e.max)) + L('Média ÷ mediana', fx(e.media / e.mediana));
+  dica.innerHTML = `<div class="h">${e.rotulo}</div><div class="d">${e.desc} · ${N} pedidos</div>${corpo}`;
+  const r = dica.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 14;
+  dica.style.left = Math.max(8, x) + 'px'; dica.style.top = Math.max(8, y) + 'px';
+  dica.classList.add('on');
+}
+document.addEventListener('pointermove', mostra);
+document.addEventListener('pointerdown', mostra);
+document.addEventListener('scroll', () => dica.classList.remove('on'), { passive: true });
+</script>

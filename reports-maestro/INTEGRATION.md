@@ -3,18 +3,18 @@
 ## 1. Identificação
 
 - **Módulo**: `reports-maestro` — Reports Maestro
-- **Versão do pacote**: 0.2.0
+- **Versão do pacote**: 0.3.0
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
-- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.67 (fixada)
+- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.68 (fixada)
 
 ## 2. Fontes de dados externas
 
 Módulo **read-only** — não cria tabela nem migration no portal.
 
-| Handler (`src/server/`) | Fonte                                                                  | Acesso                    |
-| ----------------------- | ---------------------------------------------------------------------- | ------------------------- |
-| `lojas.ts`              | `ctx.empresas()` (nº da loja do `locRefs.BIAPI`, nome de reserva)      | —                         |
-| `pedidos.ts`            | `api-dw.cocobambu.com/Delivery/?loc_ref=<nº loja>&start_date&end_date` | `ctx.credencial('apidw')` |
+| Handler (`src/server/`) | Fonte                                                                                                                                                                    | Acesso                    |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
+| `lojas.ts`              | `ctx.empresas()` (nº da loja do `locRefs.BIAPI`, nome de reserva)                                                                                                        | —                         |
+| `pedidos.ts`            | `api-dw.cocobambu.com/Delivery/?loc_ref=<nº loja>&start_date&end_date&incluir_historico=true` — a lista de pedidos **e** o resumo do dashboard Operacional, numa chamada | `ctx.credencial('apidw')` |
 
 ### 2.1 Credenciais / integrações
 
@@ -50,9 +50,9 @@ Módulo **read-only** — não cria tabela nem migration no portal.
 - **Número da loja**: sai primeiro do vínculo da Empresa com a BI do Simphony
   (`locRefs.BIAPI`, que começa sempre pelo número: `'01 CB Go'`, `'17. CB R'`,
   `'13CBMa'`, `'65'`); o nome da Empresa (`"01.CB GOIANIA"`) fica de reserva. A mesma
-  função `numeroDaLoja` está nos dois handlers. Empresa do escopo sem número em
-  nenhum dos dois fica fora do seletor, sem aviso (são de grupos que ainda não têm
-  CNPJ).
+  função `numeroDaLoja` está no handler `pedidos`. O seletor lista
+  todas as Empresas do escopo com `tipoRegistro = 'empresa'` (com CNPJ); loja sem
+  número aparece, e a pesquisa responde 422 avisando que falta o número no cadastro.
 - **Dados pessoais**: sem `reports-maestro.ver-dados-cliente`, o handler `pedidos`
   devolve CPF (`***.456.789-**`), e-mail (`jo***@gmail.com`), telefone
   (`(11) *****-4321`), número e complemento do endereço (`***`) já **mascarados** —
@@ -65,5 +65,13 @@ Módulo **read-only** — não cria tabela nem migration no portal.
   (botão de colunas); no Excel vão no fim, depois das 26 colunas do legado. Nulo
   sai vazio, não zero.
 - **Volume/latência**: uma loja × até 31 dias. Medido em 2026-10-29: 1 dia ≈ 2 s;
-  31 dias da loja 01 ≈ 25 s / 2,8 MB / 2.578 pedidos. Acima de ~2 min a borda da API
-  devolve 524 — por isso o limite de 31 dias e o timeout de 90 s no handler.
+  31 dias da loja 01 ≈ 25 s / 2,8 MB / 2.578 pedidos sem o histórico — com ele
+  (desde a 0.3.0, ver abaixo), ~42 s / 5,3 MB no pior caso medido. Acima de ~2 min a
+  borda da API devolve 524 — por isso o limite de 31 dias e o timeout de 90 s no handler.
+- **Dashboard Operacional** (0.3.0): aba ao lado de Pedidos, mesma loja e período.
+  Não há handler próprio: o `pedidos` busca com `incluir_historico=true` (medido:
+  loja 08, maio/26, 3.107 pedidos, ~42 s / 5,3 MB da API) e devolve, além da lista,
+  um resumo por pedido (~700 KB), **sem dado pessoal do cliente**. Uma chamada só
+  serve às duas abas: trocar de aba não busca de novo. Os gráficos são SVG com
+  tokens do tema (base copiada do Dashboard do Plano de Contas); nenhuma
+  dependência nova.

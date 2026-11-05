@@ -1,0 +1,364 @@
+<title>Dia × Hora — Propostas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: uma coluna de painéis no estilo do portal; controles globais no topo (base e métrica). Dark-first, como o portal. */
+:root {
+  --bg: #0b121a; --surface: #111a24; --surface-2: #16212d; --border: #223040; --grid: #1c2734;
+  --fg: #e6edf3; --muted: #8b98a8; --vazio: #18222d;
+  --seq: #3b82f6; --barra: #5b6b80; --linha: #f97316; --alerta: #f5b544;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #f0f3f7; --border: #dce2ea; --grid: #e9edf2;
+  --fg: #0f1720; --muted: #5b6878; --vazio: #eef1f5;
+  --seq: #2563eb; --barra: #a9b4c2; --linha: #e0570a; --alerta: #b7791f; color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #f4f6f9; --surface: #ffffff; --surface-2: #f0f3f7; --border: #dce2ea; --grid: #e9edf2;
+  --fg: #0f1720; --muted: #5b6878; --vazio: #eef1f5;
+  --seq: #2563eb; --barra: #a9b4c2; --linha: #e0570a; --alerta: #b7791f; color-scheme: light; }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+header h1 { font-size: 26px; font-weight: 600; margin: 0 0 6px; text-wrap: balance; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--muted); max-width: 72ch; }
+.controles { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 14px; align-items: center; }
+.controles label { font-size: 12px; color: var(--muted); margin-right: 6px; }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 3px; flex-wrap: wrap; }
+.seg button { font: inherit; font-size: 12.5px; color: var(--muted); background: transparent; border: 0; border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: background 150ms ease, color 150ms ease; }
+.seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--fg); font-weight: 500; }
+.seg button:focus-visible { outline: 2px solid var(--seq); outline-offset: 1px; }
+.sticky { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--border); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+
+.painel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.painel-topo { display: flex; gap: 14px; align-items: baseline; padding: 18px 20px 4px; flex-wrap: wrap; }
+.letra { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--bg); background: var(--fg); border-radius: 5px; padding: 1px 7px; }
+.painel h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.tag { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--alerta); border: 1px solid color-mix(in srgb, var(--alerta) 45%, transparent); border-radius: 999px; padding: 1px 8px; }
+.ideia { padding: 0 20px; margin: 4px 0 0; color: var(--muted); max-width: 74ch; }
+.card { margin: 16px 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.card h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.card .sub { margin: 2px 0 14px; color: var(--muted); font-size: 12.5px; }
+.grafico { position: relative; min-width: 0; overflow-x: auto; }
+.grafico svg { display: block; overflow: visible; }
+
+.avaliacao { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); }
+.avaliacao > div { padding: 14px 20px 16px; min-width: 0; }
+.avaliacao > div + div { border-left: 1px solid var(--border); }
+.avaliacao h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.avaliacao ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.custo { grid-column: 1 / -1; border-top: 1px solid var(--border); border-left: 0 !important; font-size: 13px; color: var(--muted); }
+.custo b { color: var(--fg); font-weight: 500; }
+
+.t { fill: var(--fg); font-family: var(--font); font-size: 12px; }
+.t-sm { fill: var(--muted); font-family: var(--font); font-size: 11px; }
+.t-cel { font-family: var(--font); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; pointer-events: none; }
+.cel { transition: opacity 150ms ease; }
+.cel:hover { stroke: var(--fg); stroke-width: 1.5; }
+
+.legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.legenda .escala { display: inline-flex; align-items: center; gap: 6px; }
+.legenda .escala i { display: inline-block; width: 22px; height: 10px; }
+.legenda .escala i:first-of-type { border-radius: 3px 0 0 3px; }
+.legenda .escala i:last-of-type { border-radius: 0 3px 3px 0; }
+.legenda .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+.hachura { background: repeating-linear-gradient(135deg, var(--vazio) 0 3px, var(--grid) 3px 6px); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+
+.dica { position: fixed; z-index: 20; pointer-events: none; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; min-width: 180px; box-shadow: 0 8px 24px rgb(0 0 0 / 0.25); opacity: 0; transition: opacity 120ms ease; }
+.dica.on { opacity: 1; }
+.dica .h { font-weight: 600; margin-bottom: 4px; }
+.dica .l { display: flex; justify-content: space-between; gap: 18px; font-variant-numeric: tabular-nums; }
+.dica .l span:first-child { color: var(--muted); }
+
+footer { color: var(--muted); font-size: 12.5px; max-width: 74ch; }
+@media (max-width: 560px) {
+  .avaliacao { grid-template-columns: 1fr; }
+  .avaliacao > div + div { border-left: 0; border-top: 1px solid var(--border); }
+  .card { margin: 14px 12px; padding: 12px; }
+  .painel-topo, .ideia, .avaliacao > div { padding-left: 14px; padding-right: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .dica, .cel, .seg button { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Dia da semana × hora: cinco formas de mostrar</h1>
+    <p>A base "Seu print" reproduz o que aparece na imagem: só quarta-feira, com a maioria das horas abaixo de 5 entregas medidas. A base "Mês" mostra cada proposta com a semana inteira. Os dois controles valem para todas as propostas.</p>
+  </header>
+  <div class="controles sticky">
+    <span><label>Base</label><span class="seg" role="group" aria-label="Base de dados"><button type="button" data-base="print" aria-pressed="false">Seu print (1 dia)</button><button type="button" data-base="mes" aria-pressed="true">Mês (exemplo)</button></span></span>
+    <span><label>Métrica</label><span class="seg" role="group" aria-label="Métrica"><button type="button" data-met="naLoja" aria-pressed="true">Tempo na loja</button><button type="button" data-met="preparo" aria-pressed="false">Preparo</button><button type="button" data-met="pedidos" aria-pressed="false">Pedidos</button></span></span>
+  </div>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">A</span><h2>Número dentro da célula</h2></div>
+    <p class="ideia">O mapa de hoje com o valor escrito em cada célula, e a pior hora contornada. Horas com poucas entregas ficam listradas, para não serem confundidas com "tempo baixo". No celular o mapa gira: horas nas linhas, dias nas colunas.</p>
+    <div class="card"><h3 id="tA">Dia da semana × hora do pedido</h3><p class="sub">Cor mais forte = mais tempo. O contorno marca a pior hora.</p><div class="grafico" id="gA"></div><div class="legenda" id="lA"></div></div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Lê o número sem passar o mouse: funciona no toque.</li><li>A pior hora salta aos olhos.</li><li>Listrado diferencia "sem dado" de "rápido".</li><li>Cabe no celular girando o mapa.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Com "Por dia" (30 linhas) os números ficam pequenos; lá vale esconder o número.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> baixo. Ajustes no <code>MapaDeCalor.tsx</code> atual.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">B</span><h2>Mapa com totais nas bordas</h2></div>
+    <p class="ideia">O mapa ganha uma barra de pedidos em cima de cada hora e ao lado de cada dia. Você vê o tempo (cor) e o movimento (barras) juntos, e entende se a hora lenta é também a hora cheia.</p>
+    <div class="card"><h3>Dia da semana × hora do pedido</h3><p class="sub">Cor = métrica escolhida. Barras = pedidos da hora (em cima) e do dia (à direita).</p><div class="grafico" id="gB"></div><div class="legenda" id="lB"></div></div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Responde "é lento porque está cheio?" sem trocar de métrica.</li><li>Mostra o pico de almoço e jantar de relance.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Mais elementos; no celular as barras laterais apertam.</li><li>Com a métrica "Pedidos" as barras repetem a cor.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> médio. Duas barras novas em volta do mapa atual.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">C</span><h2>Bolhas: tamanho = pedidos, cor = tempo</h2></div>
+    <p class="ideia">Cada célula vira uma bolha. O tamanho mostra quantos pedidos e a cor mostra o tempo. Uma hora com poucos pedidos é uma bolha pequena, e o olho a ignora sozinho.</p>
+    <div class="card"><h3>Dia da semana × hora do pedido</h3><p class="sub">Bolha maior = mais pedidos. Cor mais forte = mais tempo.</p><div class="grafico" id="gC"></div><div class="legenda" id="lC"></div></div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Duas medidas num gráfico só; a métrica "Pedidos" deixa de ser necessária.</li><li>Dispensa a regra de "menos de 5 fica cinza": a bolha pequena já diz isso.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Área de círculo é difícil de comparar com precisão.</li><li>Bolha pequena tem cor difícil de ler.</li></ul></div>
+      <div class="custo"><b>Esforço:</b> médio. Componente novo; os dados já existem.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">D</span><h2>Uma linha por dia da semana</h2></div>
+    <p class="ideia">Horas no eixo horizontal, a métrica no vertical e uma linha por dia. Passe o mouse num dia para destacá-lo. A linha grossa é a mediana de todos os dias.</p>
+    <div class="card"><h3>Hora do pedido, por dia da semana</h3><p class="sub">Passe o mouse ou toque no nome do dia para destacá-lo.</p><div class="chips" id="chD"></div><div class="grafico" id="gD"></div></div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>Mostra a forma do dia: subida no almoço, vale da tarde, pico do jantar.</li><li>Valores exatos no eixo, sem depender de cor.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Sete linhas se embaralham; precisa do destaque.</li><li>Não serve para a leitura "Por dia" (30 linhas).</li></ul></div>
+      <div class="custo"><b>Esforço:</b> médio. Gráfico de linha novo.</div>
+    </div>
+  </section>
+
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">E</span><h2>Volume × tempo por hora</h2></div>
+    <p class="ideia">Barras com os pedidos de cada hora e uma linha com o tempo mediano por cima. Escolha um dia ou veja todos. Mostra se a operação desacelera quando o movimento aperta.</p>
+    <div class="card"><h3>Pedidos e tempo por hora</h3><p class="sub">Barras = pedidos (eixo da esquerda). Linha = métrica de tempo (eixo da direita).</p><div class="chips" id="chE"></div><div class="grafico" id="gE"></div><div class="legenda"><span><span class="sw" style="background:var(--barra)"></span>Pedidos</span><span><span class="sw" style="background:var(--linha);height:3px;border-radius:2px"></span><span id="lE">Tempo na loja (mediana)</span></span></div></div>
+    <div class="avaliacao">
+      <div><h4>A favor</h4><ul><li>A relação volume → tempo fica explícita.</li><li>Bom no celular: um gráfico só, sem grade de cores.</li></ul></div>
+      <div><h4>Contra</h4><ul><li>Dois eixos verticais confundem leigos.</li><li>Perde a visão da semana inteira de uma vez (um dia por vez).</li></ul></div>
+      <div class="custo"><b>Esforço:</b> médio. Gráfico combinado novo.</div>
+    </div>
+  </section>
+
+  <footer>Combinação possível: A como padrão, com B na tela cheia; ou E no celular e A no desktop.</footer>
+</div>
+<div class="dica" id="dica" role="tooltip"></div>
+
+<script>
+const DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const BASES = {
+  print: (() => {
+    const horas = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
+    const d = { 11: [3], 12: [4], 13: [3], 14: [2], 15: [0], 16: [0], 17: [3], 18: [9, 33, 24], 19: [7, 26, 19], 20: [8, 25, 18], 21: [6, 21, 15] };
+    const c = {};
+    horas.forEach((h) => { const [p, n, pr] = d[h]; c['Qua|' + h] = { pedidos: p, medidos: p, naLoja: n ?? (p ? 18 + p : null), preparo: pr ?? (p ? 12 + p : null) }; });
+    return { linhas: ['Qua'], horas, c, piso: 5 };
+  })(),
+  mes: (() => {
+    const r = rng(11), horas = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
+    const perfil = { 11: 14, 12: 40, 13: 46, 14: 28, 15: 10, 16: 7, 17: 12, 18: 34, 19: 62, 20: 70, 21: 52, 22: 26, 23: 9 };
+    const fator = { Seg: 0.7, Ter: 0.75, Qua: 0.8, Qui: 0.9, Sex: 1.25, 'Sáb': 1.45, Dom: 1.35 };
+    const c = {};
+    DIAS.forEach((dia) => horas.forEach((h) => {
+      const p = Math.max(0, Math.round(perfil[h] * fator[dia] * (0.8 + r() * 0.4)));
+      const carga = p / 100;
+      const naLoja = 15 + 22 * carga + (r() - 0.5) * 5;
+      c[dia + '|' + h] = { pedidos: p, medidos: Math.round(p * 0.88), naLoja, preparo: naLoja * (0.68 + r() * 0.06) };
+    }));
+    return { linhas: DIAS, horas, c, piso: 5 };
+  })(),
+};
+let base = 'mes', met = 'naLoja';
+const NOME = { naLoja: 'Tempo na loja (mediana)', preparo: 'Preparo (mediana)', pedidos: 'Pedidos' };
+const fDur = (v) => { if (v == null) return '—'; const t = Math.round(v * 60); return `${Math.floor(t / 3600)}h ${Math.floor((t % 3600) / 60)}m ${t % 60}s`; };
+const fCurto = (v) => (v == null ? '—' : met === 'pedidos' ? String(v) : String(Math.round(v)));
+const fMet = (v) => (met === 'pedidos' ? (v ?? 0).toLocaleString('pt-BR') : fDur(v));
+
+function cel(l, h) { const B = BASES[base], x = B.c[l + '|' + h]; if (!x || x.pedidos === 0) return null; return x; }
+function valor(x) { if (!x) return null; if (met === 'pedidos') return x.pedidos; return x.medidos >= BASES[base].piso ? x[met] : null; }
+function faixa() { const vs = []; const B = BASES[base]; B.linhas.forEach((l) => B.horas.forEach((h) => { const v = valor(cel(l, h)); if (v != null) vs.push(v); })); return vs.length ? [Math.min(...vs), Math.max(...vs)] : [0, 1]; }
+const cor = (t) => `color-mix(in oklab, var(--seq) ${Math.round(14 + t * 82)}%, var(--surface))`;
+function tip(l, h, x) {
+  return JSON.stringify({ h: `${l} · ${h}h`, l: x ? [['Pedidos', x.pedidos.toLocaleString('pt-BR')], ['Entregas medidas', x.medidos.toLocaleString('pt-BR')], ['Tempo na loja', x.medidos >= BASES[base].piso ? fDur(x.naLoja) : 'poucos pedidos'], ['Preparo', x.medidos >= BASES[base].piso ? fDur(x.preparo) : 'poucos pedidos']] : [['Pedidos', '0']] }).replace(/"/g, '&quot;');
+}
+function legendaEscala(el, [lo, hi]) {
+  const un = met === 'pedidos' ? '' : ' min';
+  el.innerHTML = `<span class="escala">${Math.round(lo)}${un} ${[0, .25, .5, .75, 1].map((t) => `<i style="background:${cor(t)}"></i>`).join('')} ${Math.round(hi)}${un}</span>` + (met === 'pedidos' ? '' : `<span><span class="sw hachura"></span>Menos de ${BASES[base].piso} entregas medidas</span>`) + `<span><span class="sw" style="background:transparent;border:1px dashed var(--border)"></span>Sem pedidos</span>`;
+}
+
+/* A */
+function desenhaA(el) {
+  const B = BASES[base], w = el.clientWidth, [lo, hi] = faixa();
+  const girar = w < 560 && B.linhas.length > 1;
+  const linhas = girar ? B.horas.map((h) => h + 'h') : B.linhas, colunas = girar ? B.linhas : B.horas.map((h) => h + 'h');
+  const rotW = girar ? 34 : 40, topo = 20, gap = 3;
+  const cw = Math.max(26, (w - rotW - gap * colunas.length) / colunas.length), ch = girar ? 30 : 34;
+  let pior = null;
+  B.linhas.forEach((l) => B.horas.forEach((h) => { const v = met === 'pedidos' ? null : valor(cel(l, h)); if (v != null && (!pior || v > pior.v)) pior = { l, h, v }; }));
+  let s = `<defs><pattern id="hach" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--vazio)"/><rect width="3" height="6" fill="var(--grid)"/></pattern></defs>`;
+  colunas.forEach((c, j) => (s += `<text class="t-sm" x="${rotW + j * (cw + gap) + cw / 2}" y="12" text-anchor="middle">${c}</text>`));
+  linhas.forEach((r, i) => {
+    const y = topo + i * (ch + gap);
+    s += `<text class="t-sm" x="0" y="${y + ch / 2 + 4}">${r}</text>`;
+    colunas.forEach((c, j) => {
+      const l = girar ? c : r, h = parseInt(girar ? r : c), x = cel(l, h), v = valor(x), X = rotW + j * (cw + gap);
+      const t = v == null ? 0 : (v - lo) / (hi - lo || 1);
+      const fill = !x ? 'transparent' : v == null ? 'url(#hach)' : cor(t);
+      const borda = !x ? `stroke="var(--border)" stroke-dasharray="3 3"` : '';
+      s += `<rect class="cel" x="${X}" y="${y}" width="${cw}" height="${ch}" rx="4" fill="${fill}" ${borda} data-tip="${tip(l, h, x)}"/>`;
+      if (v != null && cw >= 24) s += `<text class="t-cel" x="${X + cw / 2}" y="${y + ch / 2 + 4}" text-anchor="middle" fill="${t > 0.5 ? '#fff' : 'var(--fg)'}">${fCurto(v)}</text>`;
+      if (pior && pior.l === l && pior.h === h) s += `<rect x="${X - 1.5}" y="${y - 1.5}" width="${cw + 3}" height="${ch + 3}" rx="5" fill="none" stroke="var(--fg)" stroke-width="2" pointer-events="none"/>`;
+    });
+  });
+  const W = rotW + colunas.length * (cw + gap), H = topo + linhas.length * (ch + gap);
+  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Mapa de calor com valores">${s}</svg>`;
+  document.getElementById('tA').textContent = girar ? 'Hora do pedido × dia da semana' : 'Dia da semana × hora do pedido';
+  legendaEscala(document.getElementById('lA'), [lo, hi]);
+  if (pior) document.getElementById('lA').insertAdjacentHTML('beforeend', `<span><span class="sw" style="border:2px solid var(--fg)"></span>Pior hora: ${pior.l} ${pior.h}h, ${fDur(pior.v)}</span>`);
+}
+
+/* B */
+function desenhaB(el) {
+  const B = BASES[base], w = Math.max(el.clientWidth, 420), [lo, hi] = faixa();
+  const rotW = 40, topoB = 44, dirW = 70, gap = 3, ch = 30;
+  const cw = (w - rotW - dirW - gap * B.horas.length) / B.horas.length;
+  const porHora = B.horas.map((h) => B.linhas.reduce((s, l) => s + (cel(l, h)?.pedidos ?? 0), 0));
+  const porDia = B.linhas.map((l) => B.horas.reduce((s, h) => s + (cel(l, h)?.pedidos ?? 0), 0));
+  const mh = Math.max(...porHora, 1), md = Math.max(...porDia, 1);
+  let s = '';
+  B.horas.forEach((h, j) => {
+    const X = rotW + j * (cw + gap), bh = (porHora[j] / mh) * 30;
+    s += `<rect x="${X + 2}" y="${36 - bh}" width="${cw - 4}" height="${bh}" rx="2" fill="var(--barra)"/>`;
+    s += `<text class="t-sm" x="${X + cw / 2}" y="${topoB + B.linhas.length * (ch + gap) + 14}" text-anchor="middle">${h}h</text>`;
+  });
+  B.linhas.forEach((l, i) => {
+    const y = topoB + i * (ch + gap);
+    s += `<text class="t-sm" x="0" y="${y + ch / 2 + 4}">${l}</text>`;
+    B.horas.forEach((h, j) => {
+      const x = cel(l, h), v = valor(x), X = rotW + j * (cw + gap), t = v == null ? 0 : (v - lo) / (hi - lo || 1);
+      s += `<rect class="cel" x="${X}" y="${y}" width="${cw}" height="${ch}" rx="4" fill="${!x ? 'transparent' : v == null ? 'var(--vazio)' : cor(t)}" ${!x ? 'stroke="var(--border)" stroke-dasharray="3 3"' : ''} data-tip="${tip(l, h, x)}"/>`;
+    });
+    const X0 = rotW + B.horas.length * (cw + gap) + 6, bw = (porDia[i] / md) * (dirW - 34);
+    s += `<rect x="${X0}" y="${y + 6}" width="${bw}" height="${ch - 12}" rx="2" fill="var(--barra)"/><text class="t-sm" x="${X0 + bw + 4}" y="${y + ch / 2 + 4}">${porDia[i]}</text>`;
+  });
+  s += `<text class="t-sm" x="0" y="20">pedidos</text>`;
+  el.innerHTML = `<svg width="${w}" height="${topoB + B.linhas.length * (ch + gap) + 20}" role="img" aria-label="Mapa de calor com totais">${s}</svg>`;
+  legendaEscala(document.getElementById('lB'), [lo, hi]);
+  document.getElementById('lB').insertAdjacentHTML('beforeend', `<span><span class="sw" style="background:var(--barra)"></span>Pedidos da hora / do dia</span>`);
+}
+
+/* C */
+function desenhaC(el) {
+  const B = BASES[base], w = Math.max(el.clientWidth, 380), rotW = 40, topo = 18;
+  const passo = Math.min(56, (w - rotW) / B.horas.length), ch = Math.min(46, passo + 6);
+  const vs = []; B.linhas.forEach((l) => B.horas.forEach((h) => { const x = cel(l, h); if (x && x.medidos >= B.piso) vs.push(x[met === 'pedidos' ? 'naLoja' : met]); }));
+  const lo = Math.min(...vs, 0), hi = Math.max(...vs, 1);
+  const mp = Math.max(...B.linhas.flatMap((l) => B.horas.map((h) => cel(l, h)?.pedidos ?? 0)), 1);
+  const rMax = Math.min(passo, ch) / 2 - 2;
+  let s = '';
+  B.horas.forEach((h, j) => (s += `<text class="t-sm" x="${rotW + j * passo + passo / 2}" y="11" text-anchor="middle">${h}h</text>`));
+  B.linhas.forEach((l, i) => {
+    const cy = topo + i * ch + ch / 2;
+    s += `<text class="t-sm" x="0" y="${cy + 4}">${l}</text><line x1="${rotW}" x2="${rotW + B.horas.length * passo}" y1="${cy}" y2="${cy}" stroke="var(--grid)"/>`;
+    B.horas.forEach((h, j) => {
+      const x = cel(l, h); if (!x) return;
+      const r = Math.max(2.5, Math.sqrt(x.pedidos / mp) * rMax);
+      const k = met === 'pedidos' ? 'naLoja' : met, ok = x.medidos >= B.piso;
+      const fill = ok ? cor((x[k] - lo) / (hi - lo || 1)) : 'var(--muted)';
+      s += `<circle class="cel" cx="${rotW + j * passo + passo / 2}" cy="${cy}" r="${r}" fill="${fill}" ${ok ? '' : 'fill-opacity="0.35"'} data-tip="${tip(l, h, x)}"/>`;
+    });
+  });
+  el.innerHTML = `<svg width="${rotW + B.horas.length * passo}" height="${topo + B.linhas.length * ch}" role="img" aria-label="Bolhas por dia e hora">${s}</svg>`;
+  const un = ' min';
+  document.getElementById('lC').innerHTML = `<span class="escala">${Math.round(lo)}${un} ${[0, .25, .5, .75, 1].map((t) => `<i style="background:${cor(t)}"></i>`).join('')} ${Math.round(hi)}${un}</span><span>${NOME[met === 'pedidos' ? 'naLoja' : met]}</span><span><svg width="34" height="14" aria-hidden="true"><circle cx="5" cy="7" r="2.5" fill="var(--muted)"/><circle cx="22" cy="7" r="7" fill="var(--muted)"/></svg> poucos → muitos pedidos</span>`;
+}
+
+/* D */
+let diaD = null;
+function serie(l) { return BASES[base].horas.map((h) => valor(cel(l, h))); }
+function desenhaD(el) {
+  const B = BASES[base], w = Math.max(el.clientWidth, 320), H = 220, x0 = 44, x1 = w - 10, y0 = 10, y1 = H - 24;
+  const series = B.linhas.map((l) => ({ l, v: serie(l) }));
+  const todas = series.flatMap((s) => s.v).filter((v) => v != null);
+  const hi = Math.max(...todas, 1) * 1.08, lo = met === 'pedidos' ? 0 : Math.max(0, Math.min(...todas) * 0.85);
+  const px = (j) => x0 + (j / (B.horas.length - 1)) * (x1 - x0), py = (v) => y1 - ((v - lo) / (hi - lo)) * (y1 - y0);
+  let s = '';
+  for (let k = 0; k <= 4; k++) { const v = lo + ((hi - lo) * k) / 4; s += `<line x1="${x0}" x2="${x1}" y1="${py(v)}" y2="${py(v)}" stroke="var(--grid)"/><text class="t-sm" x="${x0 - 6}" y="${py(v) + 4}" text-anchor="end">${Math.round(v)}</text>`; }
+  B.horas.forEach((h, j) => (s += `<text class="t-sm" x="${px(j)}" y="${H - 6}" text-anchor="middle">${h}h</text>`));
+  const caminho = (v) => { let d = '', pen = false; v.forEach((y, j) => { if (y == null) { pen = false; return; } d += `${pen ? 'L' : 'M'}${px(j)} ${py(y)} `; pen = true; }); return d; };
+  series.forEach((sr) => { const on = diaD === sr.l; s += `<path d="${caminho(sr.v)}" fill="none" stroke="${on ? 'var(--seq)' : 'var(--barra)'}" stroke-width="${on ? 2.5 : 1.2}" opacity="${diaD && !on ? 0.35 : 0.9}"/>`; });
+  if (B.linhas.length > 1) {
+    const med = B.horas.map((h, j) => { const xs = series.map((s) => s.v[j]).filter((v) => v != null).sort((a, b) => a - b); return xs.length ? xs[Math.floor(xs.length / 2)] : null; });
+    s += `<path d="${caminho(med)}" fill="none" stroke="var(--fg)" stroke-width="3" opacity="${diaD ? 0.25 : 0.95}"/>`;
+  }
+  if (diaD) series.find((x) => x.l === diaD).v.forEach((v, j) => { if (v != null) s += `<circle cx="${px(j)}" cy="${py(v)}" r="3.5" fill="var(--seq)" data-tip="${tip(diaD, B.horas[j], cel(diaD, B.horas[j]))}"/>`; });
+  s += `<text class="t-sm" x="${x0}" y="${y0 - 0}" dy="-2">${met === 'pedidos' ? 'pedidos' : 'min'}</text>`;
+  el.innerHTML = `<svg width="${w}" height="${H}" role="img" aria-label="Linhas por dia da semana">${s}</svg>`;
+  document.getElementById('chD').innerHTML = `<span class="seg">${['Todos', ...B.linhas].map((l) => `<button type="button" data-dia="${l}" aria-pressed="${(diaD ?? 'Todos') === l}">${l}</button>`).join('')}</span>`;
+  document.querySelectorAll('#chD button').forEach((b) => { const set = () => { diaD = b.dataset.dia === 'Todos' ? null : b.dataset.dia; desenhaD(el); }; b.addEventListener('click', set); b.addEventListener('pointerenter', set); });
+}
+
+/* E */
+let diaE = 'Todos';
+function desenhaE(el) {
+  const B = BASES[base], w = Math.max(el.clientWidth, 320), H = 230, x0 = 40, x1 = w - 44, y0 = 12, y1 = H - 24;
+  const sel = diaE === 'Todos' ? B.linhas : [diaE];
+  const ped = B.horas.map((h) => sel.reduce((s, l) => s + (cel(l, h)?.pedidos ?? 0), 0));
+  const k = met === 'pedidos' ? 'naLoja' : met;
+  const tempo = B.horas.map((h) => { const xs = sel.map((l) => cel(l, h)).filter((x) => x && x.medidos >= B.piso); if (!xs.length) return null; const tot = xs.reduce((s, x) => s + x.medidos, 0); return xs.reduce((s, x) => s + x[k] * x.medidos, 0) / tot; });
+  const mp = Math.max(...ped, 1) * 1.1, tv = tempo.filter((v) => v != null), mt = Math.max(...tv, 1) * 1.15;
+  const bw = (x1 - x0) / B.horas.length, py = (v) => y1 - (v / mp) * (y1 - y0), pt = (v) => y1 - (v / mt) * (y1 - y0);
+  let s = '';
+  for (let i = 0; i <= 4; i++) { const v = (mp * i) / 4, y = py(v); s += `<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text class="t-sm" x="${x0 - 6}" y="${y + 4}" text-anchor="end">${Math.round(v)}</text><text class="t-sm" x="${x1 + 6}" y="${y + 4}" fill="var(--linha)" style="fill:var(--linha)">${Math.round((mt * i) / 4)}</text>`; }
+  B.horas.forEach((h, j) => { const X = x0 + j * bw; s += `<rect class="cel" x="${X + bw * 0.15}" y="${py(ped[j])}" width="${bw * 0.7}" height="${y1 - py(ped[j])}" rx="3" fill="var(--barra)" data-tip="${JSON.stringify({ h: `${diaE === 'Todos' ? 'Todos os dias' : diaE} · ${h}h`, l: [['Pedidos', String(ped[j])], [NOME[k], fDur(tempo[j])]] }).replace(/"/g, '&quot;')}"/><text class="t-sm" x="${X + bw / 2}" y="${H - 6}" text-anchor="middle">${h}h</text>`; });
+  let d = '', pen = false; tempo.forEach((v, j) => { if (v == null) { pen = false; return; } d += `${pen ? 'L' : 'M'}${x0 + j * bw + bw / 2} ${pt(v)} `; pen = true; });
+  s += `<path d="${d}" fill="none" stroke="var(--linha)" stroke-width="2.5" stroke-linejoin="round" pointer-events="none"/>`;
+  tempo.forEach((v, j) => { if (v != null) s += `<circle cx="${x0 + j * bw + bw / 2}" cy="${pt(v)}" r="3.5" fill="var(--linha)" stroke="var(--bg)" stroke-width="1.5" pointer-events="none"/>`; });
+  s += `<text class="t-sm" x="${x0}" y="6">pedidos</text><text class="t-sm" x="${x1 + 6}" y="6" style="fill:var(--linha)">min</text>`;
+  el.innerHTML = `<svg width="${w}" height="${H}" role="img" aria-label="Pedidos e tempo por hora">${s}</svg>`;
+  document.getElementById('chE').innerHTML = `<span class="seg">${['Todos', ...B.linhas].map((l) => `<button type="button" data-dia="${l}" aria-pressed="${diaE === l}">${l}</button>`).join('')}</span>`;
+  document.querySelectorAll('#chE button').forEach((b) => b.addEventListener('click', () => { diaE = b.dataset.dia; desenhaE(el); }));
+  document.getElementById('lE').textContent = NOME[k];
+}
+
+function tudo() {
+  if (!BASES[base].linhas.includes(diaE)) diaE = 'Todos';
+  if (diaD && !BASES[base].linhas.includes(diaD)) diaD = null;
+  desenhaA(document.getElementById('gA')); desenhaB(document.getElementById('gB')); desenhaC(document.getElementById('gC'));
+  desenhaD(document.getElementById('gD')); desenhaE(document.getElementById('gE'));
+}
+document.querySelectorAll('[data-base]').forEach((b) => b.addEventListener('click', () => { base = b.dataset.base; document.querySelectorAll('[data-base]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); tudo(); }));
+document.querySelectorAll('[data-met]').forEach((b) => b.addEventListener('click', () => { met = b.dataset.met; document.querySelectorAll('[data-met]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); tudo(); }));
+tudo();
+let raf, larg = 0; new ResizeObserver(() => { const w = document.querySelector('.wrap').clientWidth; if (w === larg) return; larg = w; cancelAnimationFrame(raf); raf = requestAnimationFrame(tudo); }).observe(document.querySelector('.wrap'));
+
+const dica = document.getElementById('dica');
+function mostra(ev) {
+  const t = ev.target.closest && ev.target.closest('[data-tip]');
+  if (!t) { dica.classList.remove('on'); return; }
+  const d = JSON.parse(t.dataset.tip);
+  dica.innerHTML = `<div class="h">${d.h}</div>${d.l.map(([a, b]) => `<div class="l"><span>${a}</span><b>${b}</b></div>`).join('')}`;
+  const r = dica.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 14;
+  dica.style.left = Math.max(8, x) + 'px'; dica.style.top = Math.max(8, y) + 'px';
+  dica.classList.add('on');
+}
+document.addEventListener('pointermove', mostra);
+document.addEventListener('pointerdown', mostra);
+document.addEventListener('scroll', () => dica.classList.remove('on'), { passive: true });
+</script>

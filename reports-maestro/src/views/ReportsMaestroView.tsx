@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import { AlertTriangle, Bike, ChartPie, RefreshCw, SlidersHorizontal } from 'lucide-react'
 import {
   Button,
@@ -12,9 +13,17 @@ import {
   type ColumnDef,
 } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
-import { useTourReplayTrigger } from '@gia-cb/sdk/modules'
+import { fadeIn } from '@gia-cb/ui/motion'
+import {
+  getPendingStepsForScreen,
+  useTourProgress,
+  useTourReplayTrigger,
+} from '@gia-cb/sdk/modules'
 import { useCanAccess } from '@gia-cb/sdk/permissions'
 import { useLojasReportsMaestro, usePedidosReportsMaestro } from '../api/reports-maestro'
+import { AbasDoReports } from '../components/AbasDoReports'
+import { tour } from '../tour'
+import { AbaOperacional } from '../components/operacional/AbaOperacional'
 import { BadgeOrigemPedido } from '../components/BadgeOrigemPedido'
 import { BadgeStatusPedido } from '../components/BadgeStatusPedido'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
@@ -41,6 +50,7 @@ import {
   somarPedidos,
   validarPeriodo,
 } from '../helpers'
+import type { AbaReports } from '../operacional'
 import { statusPedido } from '../status-pedido'
 import type { Consulta, PedidoMaestro } from '../types'
 
@@ -175,6 +185,30 @@ export function ReportsMaestroView() {
   // troca a tabela nem o nome do Excel.
   const [consulta, setConsulta] = useState<Consulta | null>(null)
 
+  // A aba aberta. As duas leem o MESMO resultado da pesquisa (uma chamada só à
+  // API); trocar de aba não busca de novo — ver api/reports-maestro.ts.
+  //
+  // A tela abre no OPERACIONAL (pedido do usuário em 05/11/2026). Exceção: na
+  // primeira visita o tour guiado ainda tem passos pendentes, e eles apontam para
+  // a lista de pedidos (filtros, totais, colunas) — o tour do portal some quando
+  // o alvo não está na tela. Então, com tour pendente, abre em Pedidos; depois de
+  // concluído ou pulado, sempre no Operacional. A decisão é tomada UMA vez, quando
+  // o progresso do tour chega: terminar o tour não troca a aba no meio do uso.
+  const [aba, setAba] = useState<AbaReports>('operacional')
+  const progressoDoTour = useTourProgress('reports-maestro')
+  const [abaDecidida, setAbaDecidida] = useState(false)
+  // Ajuste de estado durante a renderização (padrão do React para estado que
+  // deriva de um dado que chega depois), e não num efeito: sem render a mais.
+  if (!abaDecidida && progressoDoTour.data) {
+    setAbaDecidida(true)
+    const pendentes = getPendingStepsForScreen(tour.steps, progressoDoTour.data, '/reports-maestro')
+    if (pendentes.length > 0) setAba('pedidos')
+  }
+  function trocarAba(nova: AbaReports) {
+    setAbaDecidida(true)
+    setAba(nova)
+  }
+
   const [area, setArea] = useState<HTMLDivElement | null>(null)
   const compacto = useModoCompacto(area)
 
@@ -183,13 +217,15 @@ export function ReportsMaestroView() {
   // Sem escolha do usuário, vale a primeira loja da lista (como no legado).
   const empresaIdSelecionada = filtros.empresaId ?? lojas[0]?.empresaId ?? null
 
-  const pedidosQuery = usePedidosReportsMaestro(
-    consulta ? { empresaId: consulta.empresaId, de: consulta.de, ate: consulta.ate } : null,
-    canVerDadosCliente
+  const periodoConsultado = useMemo(
+    () => (consulta ? { empresaId: consulta.empresaId, de: consulta.de, ate: consulta.ate } : null),
+    [consulta]
   )
+  const pedidosQuery = usePedidosReportsMaestro(periodoConsultado, canVerDadosCliente)
   const pedidos = useMemo(() => pedidosQuery.data?.pedidos ?? [], [pedidosQuery.data])
   const carregando = pedidosQuery.isFetching
   const erro = pedidosQuery.error ?? lojasQuery.error
+  const pesquisando = carregando
 
   // Filtros de chips (vazio = todos). Os APLICADOS (`statusFiltro`/`origemFiltro`)
   // filtram a tabela, os totais em R$ e o export. No dialog o usuário mexe num
@@ -458,144 +494,189 @@ export function ReportsMaestroView() {
           onValueChange={setFiltros}
           lojas={lojas}
           lojasLoading={lojasQuery.isLoading}
-          pesquisando={carregando}
+          pesquisando={pesquisando}
           onPesquisar={pesquisar}
           semAlteracao={semAlteracao}
           compacto={compacto}
-          tituloExtra={<TourReplayButton onClick={replayTour} />}
+          tituloExtra={
+            <TourReplayButton
+              onClick={() => {
+                // Os passos do tour apontam para a lista de pedidos.
+                trocarAba('pedidos')
+                replayTour()
+              }}
+            />
+          }
         />
 
-        {/* Cards de totais acima da tabela, abertos/fechados pelo botão "Totais" do
-            cabeçalho. Recolhido, o `Recolhivel` cancela o próprio gap do container. */}
-        <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos}>
-          <TotaisCards totais={totais} carregando={carregando} compacto={compacto} />
-        </Recolhivel>
+        <AbasDoReports ativa={aba} onChange={trocarAba} />
 
-        {/* Célula da tabela nunca quebra linha (a coluna alarga e a tabela rola na
+        {aba === 'operacional' ? (
+          <motion.div
+            key="operacional"
+            variants={fadeIn}
+            initial="hidden"
+            animate="visible"
+            className={cn('flex flex-col', compacto ? 'shrink-0' : 'min-h-0 flex-1')}
+          >
+            <AbaOperacional
+              consulta={consulta}
+              pedidos={pedidosQuery.data?.operacional ?? null}
+              carregando={carregando}
+              erro={pedidosQuery.error ?? lojasQuery.error}
+              onTentarDeNovo={() => {
+                if (lojasQuery.isError) void lojasQuery.refetch()
+                if (pedidosQuery.isError) void pedidosQuery.refetch()
+              }}
+              compacto={compacto}
+              className={compacto ? undefined : 'min-h-0 flex-1'}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="pedidos"
+            variants={fadeIn}
+            initial="hidden"
+            animate="visible"
+            className={cn('flex flex-col gap-3', compacto ? 'shrink-0' : 'min-h-0 flex-1')}
+          >
+            {/* Cards de totais acima da tabela, abertos/fechados pelo botão "Totais" do
+            cabeçalho. Recolhido, o `Recolhivel` cancela o próprio gap do container. */}
+            <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos}>
+              <TotaisCards totais={totais} carregando={carregando} />
+            </Recolhivel>
+
+            {/* Célula da tabela nunca quebra linha (a coluna alarga e a tabela rola na
             horizontal). Vai por seletor porque o DataReport não aceita classe por
             célula; o card do celular não usa <td>, então segue quebrando normal. */}
-        <DataReport
-          className={cn(
-            '[&_td]:whitespace-nowrap',
-            // Toolbar ao lado do título (@lg+): se ainda assim quebrar em 2 linhas, a
-            // de baixo encosta à direita, alinhada com a de cima.
-            '@lg:[&_[data-tour=reports-maestro-toolbar]]:justify-end',
-            compacto ? 'shrink-0' : 'min-h-0 flex-1'
-          )}
-          fillHeight={!compacto}
-          subtitle={subtitle}
-          actions={
-            <>
-              <PainelDialog
-                aberto={painelDisponivel && filtrosAbertos}
-                onAbertoChange={abrirFecharFiltros}
-                titulo="Filtros de status e origem"
-                descricao="Marque os botões e clique em Ver pedidos para filtrar a tabela, os totais e o Excel. Dá para marcar mais de um em cada lista."
-                tooltip={
-                  qtdFiltrosAtivos > 0
-                    ? `Abrir os filtros de status e origem (${qtdFiltrosAtivos} marcado${qtdFiltrosAtivos === 1 ? '' : 's'})`
-                    : 'Abrir os filtros de status e origem'
-                }
-                gatilho={
-                  <Button
-                    variant="outline"
-                    className={BOTAO_TOOLBAR}
-                    aria-label={
-                      qtdFiltrosAtivos > 0 ? `Filtros (${qtdFiltrosAtivos} marcados)` : 'Filtros'
+            <DataReport
+              className={cn(
+                '[&_td]:whitespace-nowrap',
+                // Toolbar ao lado do título (@lg+): se ainda assim quebrar em 2 linhas, a
+                // de baixo encosta à direita, alinhada com a de cima.
+                '@lg:[&_[data-tour=reports-maestro-toolbar]]:justify-end',
+                compacto ? 'shrink-0' : 'min-h-0 flex-1'
+              )}
+              fillHeight={!compacto}
+              subtitle={subtitle}
+              actions={
+                <>
+                  <PainelDialog
+                    aberto={painelDisponivel && filtrosAbertos}
+                    onAbertoChange={abrirFecharFiltros}
+                    titulo="Filtros de status e origem"
+                    descricao="Marque os botões e clique em Ver pedidos para filtrar a tabela, os totais e o Excel. Dá para marcar mais de um em cada lista."
+                    tooltip={
+                      qtdFiltrosAtivos > 0
+                        ? `Abrir os filtros de status e origem (${qtdFiltrosAtivos} marcado${qtdFiltrosAtivos === 1 ? '' : 's'})`
+                        : 'Abrir os filtros de status e origem'
                     }
-                    disabled={!painelDisponivel}
-                    data-tour="reports-maestro-filtros-toggle"
+                    gatilho={
+                      <Button
+                        variant="outline"
+                        className={BOTAO_TOOLBAR}
+                        aria-label={
+                          qtdFiltrosAtivos > 0
+                            ? `Filtros (${qtdFiltrosAtivos} marcados)`
+                            : 'Filtros'
+                        }
+                        disabled={!painelDisponivel}
+                        data-tour="reports-maestro-filtros-toggle"
+                      >
+                        <SlidersHorizontal className="h-4 w-4" />
+                        <span className={ROTULO_TOOLBAR}>Filtros</span>
+                        {/* Com o dialog fechado, o número avisa que a tabela está filtrada. */}
+                        {qtdFiltrosAtivos > 0 && (
+                          <span className="rounded-full bg-primary px-1.5 text-xs tabular-nums text-primary-foreground">
+                            {qtdFiltrosAtivos}
+                          </span>
+                        )}
+                      </Button>
+                    }
+                    rodape={
+                      <>
+                        <Button
+                          variant="outline"
+                          disabled={qtdRascunho === 0}
+                          onClick={() => {
+                            setStatusRascunho(new Set())
+                            setOrigemRascunho(new Set())
+                          }}
+                        >
+                          Limpar filtros
+                        </Button>
+                        <Button onClick={aplicarFiltros}>
+                          Ver {qtdPrevia.toLocaleString('pt-BR')}{' '}
+                          {qtdPrevia === 1 ? 'pedido' : 'pedidos'}
+                        </Button>
+                      </>
+                    }
                   >
-                    <SlidersHorizontal className="h-4 w-4" />
-                    <span className={ROTULO_TOOLBAR}>Filtros</span>
-                    {/* Com o dialog fechado, o número avisa que a tabela está filtrada. */}
-                    {qtdFiltrosAtivos > 0 && (
-                      <span className="rounded-full bg-primary px-1.5 text-xs tabular-nums text-primary-foreground">
-                        {qtdFiltrosAtivos}
-                      </span>
-                    )}
-                  </Button>
-                }
-                rodape={
-                  <>
-                    <Button
-                      variant="outline"
-                      disabled={qtdRascunho === 0}
-                      onClick={() => {
-                        setStatusRascunho(new Set())
-                        setOrigemRascunho(new Set())
-                      }}
-                    >
-                      Limpar filtros
-                    </Button>
-                    <Button onClick={aplicarFiltros}>
-                      Ver {qtdPrevia.toLocaleString('pt-BR')}{' '}
-                      {qtdPrevia === 1 ? 'pedido' : 'pedidos'}
-                    </Button>
-                  </>
-                }
-              >
-                {/* Status e Origem lado a lado no desktop (cada um uma lista de largura
+                    {/* Status e Origem lado a lado no desktop (cada um uma lista de largura
                     cheia); no celular o dialog é tela cheia e eles empilham. */}
-                <div className="grid gap-6 md:grid-cols-2">
-                  <StatusFiltro
-                    contagem={contagemStatus}
-                    selecionados={statusRascunho}
-                    onSelecionar={setStatusRascunho}
-                    carregando={carregando}
-                    compacto={compacto}
-                  />
-                  <OrigemFiltro
-                    contagem={contagemOrigem}
-                    selecionados={origemRascunho}
-                    onSelecionar={setOrigemRascunho}
-                    carregando={carregando}
-                    compacto={compacto}
-                  />
-                </div>
-              </PainelDialog>
-              <Tooltip
-                content={totaisAbertos ? 'Ocultar os totais em R$' : 'Mostrar os totais em R$'}
-              >
-                <Button
-                  variant={totaisAbertos ? 'default' : 'outline'}
-                  className={BOTAO_TOOLBAR}
-                  aria-label="Totais"
-                  aria-pressed={totaisAbertos}
-                  disabled={!painelDisponivel}
-                  onClick={() => setTotaisAbertos((v) => !v)}
-                  data-tour="reports-maestro-totais-toggle"
-                >
-                  <ChartPie className="h-4 w-4" />
-                  <span className={ROTULO_TOOLBAR}>Totais</span>
-                </Button>
-              </Tooltip>
-            </>
-          }
-          data={erro ? [] : pedidosFiltrados}
-          // Só tira as colunas com a lista VAZIA (sem pesquisa, erro, nenhum pedido):
-          // com linhas, a busca precisa delas mesmo se não sobrar nenhuma. Carregando,
-          // o esqueleto também precisa das colunas.
-          columns={!carregando && (erro || pedidosFiltrados.length === 0) ? SEM_COLUNAS : columns}
-          loading={carregando}
-          getRowId={(p) => p.id}
-          // Busca geral só no celular (cards); no desktop a tabela tem filtro por coluna.
-          globalSearch={compacto}
-          searchPlaceholder="Buscar pedido, cliente, forma de pagamento…"
-          countNoun="pedidos"
-          pageSize={100}
-          columnVisibilityToggle={!compacto}
-          initialColumnVisibility={COLUNAS_OCULTAS}
-          fullscreenToggle={!compacto}
-          onExport={
-            canExport && consulta && pedidosQuery.data
-              ? (visiveis) =>
-                  exportarXlsx(visiveis, consulta, pedidosQuery.data!.dadosClienteMascarados)
-              : undefined
-          }
-          emptyState={emptyState}
-          toolbarTourId="reports-maestro-toolbar"
-        />
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <StatusFiltro
+                        contagem={contagemStatus}
+                        selecionados={statusRascunho}
+                        onSelecionar={setStatusRascunho}
+                        carregando={carregando}
+                        compacto={compacto}
+                      />
+                      <OrigemFiltro
+                        contagem={contagemOrigem}
+                        selecionados={origemRascunho}
+                        onSelecionar={setOrigemRascunho}
+                        carregando={carregando}
+                        compacto={compacto}
+                      />
+                    </div>
+                  </PainelDialog>
+                  <Tooltip
+                    content={totaisAbertos ? 'Ocultar os totais em R$' : 'Mostrar os totais em R$'}
+                  >
+                    <Button
+                      variant={totaisAbertos ? 'default' : 'outline'}
+                      className={BOTAO_TOOLBAR}
+                      aria-label="Totais"
+                      aria-pressed={totaisAbertos}
+                      disabled={!painelDisponivel}
+                      onClick={() => setTotaisAbertos((v) => !v)}
+                      data-tour="reports-maestro-totais-toggle"
+                    >
+                      <ChartPie className="h-4 w-4" />
+                      <span className={ROTULO_TOOLBAR}>Totais</span>
+                    </Button>
+                  </Tooltip>
+                </>
+              }
+              data={erro ? [] : pedidosFiltrados}
+              // Só tira as colunas com a lista VAZIA (sem pesquisa, erro, nenhum pedido):
+              // com linhas, a busca precisa delas mesmo se não sobrar nenhuma. Carregando,
+              // o esqueleto também precisa das colunas.
+              columns={
+                !carregando && (erro || pedidosFiltrados.length === 0) ? SEM_COLUNAS : columns
+              }
+              loading={carregando}
+              getRowId={(p) => p.id}
+              // Busca geral só no celular (cards); no desktop a tabela tem filtro por coluna.
+              globalSearch={compacto}
+              searchPlaceholder="Buscar pedido, cliente, forma de pagamento…"
+              countNoun="pedidos"
+              pageSize={100}
+              columnVisibilityToggle={!compacto}
+              initialColumnVisibility={COLUNAS_OCULTAS}
+              fullscreenToggle={!compacto}
+              onExport={
+                canExport && consulta && pedidosQuery.data
+                  ? (visiveis) =>
+                      exportarXlsx(visiveis, consulta, pedidosQuery.data!.dadosClienteMascarados)
+                  : undefined
+              }
+              emptyState={emptyState}
+              toolbarTourId="reports-maestro-toolbar"
+            />
+          </motion.div>
+        )}
       </div>
     </WidthFrame>
   )

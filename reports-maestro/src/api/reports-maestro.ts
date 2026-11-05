@@ -23,9 +23,15 @@ export function useLojasReportsMaestro(enabled: boolean) {
 }
 
 /**
- * Pedidos de delivery da loja no período. É uma FOTO do clique em "Pesquisar": a
- * consulta é lenta (até ~25 s para 31 dias), então não rebusca sozinha ao voltar
- * o foco nem ao reconectar — só pelo botão. O resultado fica 30 min em cache.
+ * A pesquisa: os pedidos de delivery da loja no período E o resumo do dashboard
+ * Operacional, numa chamada só à API — as duas abas leem o MESMO resultado, e
+ * trocar de aba não busca de novo (pedido do usuário em 05/11/2026). Sai assim que
+ * há uma pesquisa, qualquer que seja a aba aberta.
+ *
+ * É uma FOTO do clique em "Pesquisar": a consulta é lenta (até ~45 s para 31 dias
+ * de uma loja movimentada, por causa do histórico de status), então não rebusca
+ * sozinha ao voltar o foco nem ao reconectar — só pelo botão. O resultado fica
+ * 30 min em cache.
  *
  * `verDadosCliente` entra na chave porque o servidor mascara os dados pessoais
  * conforme essa permissão: se ela mudar (ex.: troca de persona), o resultado em

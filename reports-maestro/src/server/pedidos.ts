@@ -11,6 +11,30 @@ import { defineHandler, HttpError } from '@gia-cb/sdk/server'
 // endereço) saem MASCARADOS daqui para quem não tem `reports-maestro.ver-dados-cliente`:
 // o dado completo não chega ao navegador — nem à tela, nem ao Excel.
 //
+// ── UMA CONSULTA PARA AS DUAS ABAS ──────────────────────────────────────────
+//
+// A API é chamada UMA vez, com o histórico de status (`incluir_historico=true`),
+// e a resposta serve às duas abas: `pedidos` (a lista, com o mascaramento) e
+// `operacional` (o resumo por pedido do dashboard, com o tempo de cada etapa).
+// Antes eram dois handlers e duas chamadas à mesma API — trocar de aba depois de
+// pesquisar buscava tudo de novo (pedido do usuário em 05/11/2026). O histórico
+// bruto não desce para o navegador: só o resumo.
+//
+// ── COMO CADA NÚMERO DO OPERACIONAL É CALCULADO ─────────────────────────────
+//
+// - Etapas (minutos): do PRIMEIRO evento de um status ao PRIMEIRO do seguinte.
+//   Aceite = Recebido → Confirmado; Preparo = Confirmado → Embalado; Expedição =
+//   Embalado → Despachado; Rota = Despachado → Entregue; Total = Recebido →
+//   Entregue.
+// - Desfecho, pelo histórico e não pelo status atual: o `status_do_pedido` é só
+//   o ÚLTIMO evento registrado, e a loja que registra "despachado" depois de o
+//   app de entrega marcar "entregue" deixa um pedido entregue com status
+//   Despachado.
+// - Quem cancelou: a `origem` do evento CANCELLED — CONSUMER (cliente ou
+//   plataforma) ou STORE (loja).
+//
+// Ver docs/gargalos-operacionais-delivery.md.
+//
 // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. As funções de
 // data e `numeroDaLoja` se repetem em outros arquivos de propósito.
 
@@ -60,13 +84,47 @@ interface Pedido {
   data_de_criacao_utc: string | null
 }
 
+type Desfecho =
+  'entregue' | 'entregue-cancelado' | 'cancelado' | 'sem-entrega' | 'retirada' | 'antes-de-sair'
+
+type QuemCancelou = 'cliente' | 'loja' | 'ambos' | 'outro'
+
+interface PedidoOperacional {
+  origem: string
+  retirada: boolean
+  /** `YYYY-MM-DD HH:mm:ss`, hora de São Paulo. */
+  criadoEm: string
+  valor: number
+  desfecho: Desfecho
+  aceite: number | null
+  preparo: number | null
+  expedicao: number | null
+  rota: number | null
+  total: number | null
+  baixaForaDeOrdem: boolean
+  cancelamento: {
+    por: QuemCancelou
+    minutos: number | null
+  } | null
+}
+
+interface Evento {
+  status: string
+  t: number
+  origem: string | null
+}
+
 /** Id da integração da api-dw.cocobambu.com no hub de Credenciais. */
 const INTEGRACAO = 'apidw'
-/** A API aceita até 6 meses, mas 31 dias de uma loja já levam ~25 s para responder. */
+/**
+ * A API aceita até 6 meses, mas 31 dias de uma loja movimentada, com o histórico,
+ * levam ~45 s para responder.
+ */
 const MAX_DIAS_PERIODO = 31
 /** Mesmo teto do legado (90 s); acima disso a borda da API devolve 524. */
 const TIMEOUT_MS = 90_000
 const DATA_RE = /^\d{4}-\d{2}-\d{2}$/
+const DATA_HORA_RE = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/
 
 function diasEntre(de: string, ate: string): number {
   return Math.round((Date.parse(`${ate}T00:00:00Z`) - Date.parse(`${de}T00:00:00Z`)) / 86_400_000)
@@ -174,6 +232,119 @@ function normalizar(raw: Record<string, unknown>): Pedido | null {
   }
 }
 
+// ─── Resumo do Operacional ──────────────────────────────────────────────────
+
+/**
+ * `YYYY-MM-DD HH:mm:ss` (hora de São Paulo, sem fuso) → milissegundos. Lê como
+ * UTC de propósito: só a DIFERENÇA entre dois horários importa, e os dois estão
+ * no mesmo fuso.
+ */
+function instante(v: unknown): number | null {
+  const m = typeof v === 'string' ? DATA_HORA_RE.exec(v) : null
+  if (!m) return null
+  return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] ?? 0))
+}
+
+/** Os eventos do histórico, em ordem de horário. Evento sem horário é descartado. */
+function eventos(raw: unknown): Evento[] {
+  if (!Array.isArray(raw)) return []
+  const saida: Evento[] = []
+  for (const e of raw) {
+    if (!e || typeof e !== 'object') continue
+    const o = e as Record<string, unknown>
+    const status = texto(o.status)
+    const t = instante(o.data_horario_sp)
+    if (status && t !== null) saida.push({ status, t, origem: texto(o.origem) })
+  }
+  return saida.sort((a, b) => a.t - b.t)
+}
+
+function primeiro(evs: Evento[], status: string): Evento | undefined {
+  return evs.find((e) => e.status === status)
+}
+
+/** Minutos entre os primeiros eventos de dois status, com uma casa; `null` se faltar um. */
+function minutos(evs: Evento[], de: string, ate: string): number | null {
+  const a = primeiro(evs, de)
+  const b = primeiro(evs, ate)
+  if (!a || !b) return null
+  return Math.round((b.t - a.t) / 6_000) / 10
+}
+
+function quemCancelou(evs: Evento[]): QuemCancelou {
+  const origens = new Set(evs.filter((e) => e.status === 'CANCELLED').map((e) => e.origem))
+  const cliente = origens.has('CONSUMER')
+  const loja = origens.has('STORE')
+  if (cliente && loja) return 'ambos'
+  if (cliente) return 'cliente'
+  if (loja) return 'loja'
+  return 'outro'
+}
+
+function resumir(raw: Record<string, unknown>): PedidoOperacional | null {
+  const criadoEm = texto(raw.data_de_criacao_horario_sp)
+  if (!texto(raw.id) || !criadoEm) return null
+  const evs = eventos(raw.historico_status)
+  // Pedido sem histórico ainda tem o status atual: ele entra como um evento sem
+  // horário, só para o desfecho — os tempos ficam vazios.
+  const status = new Set(evs.map((e) => e.status))
+  const atual = texto(raw.status_do_pedido)
+  if (atual) status.add(atual)
+
+  const retirada = texto(raw.retirada)?.toUpperCase() === 'SIM'
+  const entregue = primeiro(evs, 'DELIVERED')
+  const cancelado = primeiro(evs, 'CANCELLED')
+
+  let desfecho: Desfecho
+  if (status.has('CANCELLED')) {
+    desfecho =
+      entregue && cancelado && entregue.t < cancelado.t ? 'entregue-cancelado' : 'cancelado'
+  } else if (status.has('DELIVERED') || status.has('COMPLETED')) {
+    desfecho = 'entregue'
+  } else if (retirada) {
+    desfecho = 'retirada'
+  } else if (status.has('DISPATCHED') || status.has('ON_ROUTE')) {
+    desfecho = 'sem-entrega'
+  } else {
+    desfecho = 'antes-de-sair'
+  }
+
+  // A loja registrou embalado/despachado DEPOIS de o app de entrega já ter
+  // pegado o pedido (a caminho) ou marcado a entrega.
+  const appPegou = Math.min(
+    primeiro(evs, 'GOING_TO_DESTINATION')?.t ?? Infinity,
+    entregue?.t ?? Infinity
+  )
+  const lojaDepois = Math.max(
+    primeiro(evs, 'PACKED')?.t ?? -Infinity,
+    primeiro(evs, 'DISPATCHED')?.t ?? -Infinity
+  )
+  const baixaForaDeOrdem = Number.isFinite(appPegou) && lojaDepois > appPegou
+
+  let cancelamento: PedidoOperacional['cancelamento'] = null
+  if (desfecho === 'cancelado' || desfecho === 'entregue-cancelado') {
+    cancelamento = {
+      por: quemCancelou(evs),
+      minutos: minutos(evs, 'RECEIVED', 'CANCELLED'),
+    }
+  }
+
+  return {
+    origem: texto(raw.origem) ?? 'Sem origem',
+    retirada,
+    criadoEm,
+    valor: numero(raw.valor_do_pedido),
+    desfecho,
+    aceite: minutos(evs, 'RECEIVED', 'CONFIRMED'),
+    preparo: minutos(evs, 'CONFIRMED', 'PACKED'),
+    expedicao: minutos(evs, 'PACKED', 'DISPATCHED'),
+    rota: minutos(evs, 'DISPATCHED', 'DELIVERED'),
+    total: minutos(evs, 'RECEIVED', 'DELIVERED'),
+    baixaForaDeOrdem,
+    cancelamento,
+  }
+}
+
 // ─── Mascaramento (sem `reports-maestro.ver-dados-cliente`) ──────────────────
 
 const OCULTO = '***'
@@ -228,6 +399,8 @@ interface Resposta {
   pedidos: Pedido[]
   /** `true` quando CPF, e-mail, telefone e endereço vieram mascarados. */
   dadosClienteMascarados: boolean
+  /** O resumo por pedido do dashboard Operacional — sem dado nenhum do cliente. */
+  operacional: PedidoOperacional[]
 }
 
 export default defineHandler<Body, Resposta>(async (ctx) => {
@@ -250,7 +423,12 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
 
   const { baseUrl, token } = await ctx.credencial(INTEGRACAO)
   const base = baseUrl.replace(/\/+$/, '')
-  const qs = new URLSearchParams({ loc_ref: locRef, start_date: de, end_date: ate })
+  const qs = new URLSearchParams({
+    loc_ref: locRef,
+    start_date: de,
+    end_date: ate,
+    incluir_historico: 'true',
+  })
 
   let r: Response
   try {
@@ -278,13 +456,18 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
   }
 
   const pedidos: Pedido[] = []
+  const operacional: PedidoOperacional[] = []
   for (const raw of json.data as Record<string, unknown>[]) {
-    const p = raw && typeof raw === 'object' ? normalizar(raw) : null
+    if (!raw || typeof raw !== 'object') continue
+    const p = normalizar(raw)
     if (p) pedidos.push(verDados ? p : mascarar(p))
+    const o = resumir(raw)
+    if (o) operacional.push(o)
   }
   // Mesma ordem do legado na abertura: pela criação do pedido.
   pedidos.sort((a, b) => (a.data_de_criacao ?? '').localeCompare(b.data_de_criacao ?? ''))
-  return { pedidos, dadosClienteMascarados: !verDados }
+  operacional.sort((a, b) => a.criadoEm.localeCompare(b.criadoEm))
+  return { pedidos, dadosClienteMascarados: !verDados, operacional }
 })
 
 export const config = { integracoes: ['apidw'], secrets: [] }

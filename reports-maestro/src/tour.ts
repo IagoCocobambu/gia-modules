@@ -16,7 +16,15 @@ export const tour = defineTour({
       screen: '/reports-maestro',
       target: '[data-tour="reports-maestro-pesquisar"]',
       title: 'Pesquisar',
-      body: 'Busca os pedidos de delivery da loja no Maestro. Períodos longos levam alguns segundos — até ~30 s para 31 dias. Ao terminar, a tabela mostra os pedidos e os botões **Filtros** e **Totais** do cabeçalho da tabela passam a funcionar.',
+      body: 'Busca os pedidos de delivery da loja no Maestro. Períodos longos levam alguns segundos — até ~45 s para 31 dias. Ao terminar, a tabela mostra os pedidos e os botões **Filtros** e **Totais** do cabeçalho da tabela passam a funcionar.',
+      placement: 'bottom',
+    },
+    {
+      id: 'abas',
+      screen: '/reports-maestro',
+      target: '[data-tour="reports-maestro-abas"]',
+      title: 'Operacional e Pedidos',
+      body: '**Operacional** é a aba em que a tela abre: o dashboard da loja e do período — quanto tempo o pedido leva dentro da loja (aceite, preparo, expedição), em que dias e horários trava e quem cancela. **Pedidos** é a lista, pedido a pedido; os próximos passos mostram essa lista. As duas abas usam a mesma busca: trocar de aba não pesquisa de novo (31 dias levam até ~45 s).',
       placement: 'bottom',
     },
     {
@@ -32,7 +40,7 @@ export const tour = defineTour({
       screen: '/reports-maestro',
       target: '[data-tour="reports-maestro-totais-toggle"]',
       title: 'Totais em R$',
-      body: 'Depois de pesquisar, clique em **Totais** para abrir, acima da tabela, os cards com a soma de Valor pedido, Valor entrega, Total pago e Desconto total. Clique de novo para fechar. Os totais seguem os filtros de status e de origem.',
+      body: 'Depois de pesquisar, clique em **Totais** para abrir, acima da tabela, a barra com a soma de Valor pedido, Valor entrega, Total pago e Desconto total (passe o mouse num total para ver a conta). Clique de novo para fechar. Os totais seguem os filtros de status e de origem.',
       placement: 'bottom',
     },
     {

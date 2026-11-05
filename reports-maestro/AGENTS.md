@@ -98,3 +98,20 @@ Antes de considerar o módulo pronto:
 - [ ] `faq.ts` e `tour.ts` reais e ricos (não os placeholders)
 - [ ] Testei todas as ações em **mobile** no dev-shell
 - [ ] `gia validate` passa **sem erros**
+
+## 4. Documentos Markdown pedidos pelo usuário
+
+Toda vez que o usuário pedir um documento em Markdown (análise, relatório,
+levantamento, proposta...):
+
+- **Nome:** `<ano><mes><dia><hora><minuto><segundo>-<modulo>-<tema>.md`
+  - data e hora do momento em que o arquivo é criado, no horário local, com dois
+    dígitos em cada parte (hora de 00 a 23);
+  - `<modulo>` é o id do módulo (`reports-maestro`);
+  - `<tema>` em kebab-case, sem acento.
+  - Ex.: `20261104153012-reports-maestro-gargalos-operacionais-delivery.md`.
+- **Pasta:** `docs/`, a não ser que o usuário indique outra.
+- **Nunca sobrescreva** um documento existente, nem um do mesmo tema. Uma nova
+  versão ou atualização vira **arquivo novo**, com a data e a hora do momento.
+- Não vale para os arquivos de nome fixo do módulo (`PRD.md`, `README.md`,
+  `AGENTS.md`, `INTEGRATION.md`), que continuam sendo editados no lugar.

@@ -5,9 +5,9 @@ import { reportsMaestroRoutes } from './routes'
 export const reportsMaestroModule = defineModule({
   id: 'reports-maestro',
   label: 'Reports Maestro',
-  version: '0.2.0',
+  version: '0.3.0',
   description:
-    'Lista os pedidos de delivery do Maestro (app, iFood, 99Food, manual) de uma loja num período, com cliente, valores e formas de pagamento.',
+    'Lista os pedidos de delivery do Maestro (app, iFood, 99Food, manual) de uma loja num período, com cliente, valores e formas de pagamento, e um dashboard operacional com o tempo de cada etapa e os gargalos do delivery.',
   icon: 'Bike',
   defaultNavPath: '/reports-maestro',
   // navGroup agrupa o módulo num grupo do menu lateral. Sem ele, o módulo fica
