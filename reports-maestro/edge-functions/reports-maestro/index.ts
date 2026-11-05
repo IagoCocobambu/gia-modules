@@ -17,6 +17,7 @@ type GiaOperacao = {
   rankings: Record<string, string | null>
 }
 type GiaEc = { ec: string; tipo: 'maquineta' | 'link' | 'ecommerce' | null; ativo: boolean }
+type GiaEcAlterado = GiaEc & { empresaId: number; alterado: boolean }
 type GiaPerfilUsuario = {
   id: string
   email?: string
@@ -89,6 +90,7 @@ type ServerContext<B> = {
   legacyUserId: () => Promise<string | null>
   operacoes: () => Promise<GiaOperacao[]>
   requireOperacao: (ref: string, opcoes?: OpcoesDeOperacao) => Promise<GiaOperacao>
+  definirTipoEc: (ec: string, tipo: GiaEc['tipo']) => Promise<GiaEcAlterado>
 }
 /**
  * Modo da checagem de loja.
@@ -492,6 +494,69 @@ async function __giaEnviarEmail(
   }
   return (payload ?? {}) as { enviadoPara: string }
 }
+// ── Tipo do EC (gia.ec_definir_tipo) ───────────────────────────────────────
+// Escrita no cadastro de ECs SEM `empresas.editar`. Quem decide é o banco: a
+// função exige que ESTE módulo esteja na lista do portal
+// (gia.empresas_ecs_modulos_autorizados), que o usuário tenha
+// `<moduleId>.ecs-tipo` e que o EC seja de uma loja do escopo dele.
+//
+// Vai com o JWT do usuário, e não com a service role, por dois motivos: a
+// permissão e o escopo conferidos são os dele, e a auditoria registra quem
+// alterou. O `p_modulo` é o `__MODULE_ID` deste arquivo — o handler não escolhe.
+async function __giaDefinirTipoEc(
+  ec: string,
+  tipo: GiaEc['tipo'],
+  req: Request
+): Promise<GiaEcAlterado> {
+  const auth = req.headers.get('authorization') ?? req.headers.get('Authorization')
+  if (!auth) throw new HttpError(401, 'requisição sem Authorization')
+
+  let res: Response
+  try {
+    res = await fetch(`${env('SUPABASE_URL')}/rest/v1/rpc/ec_definir_tipo`, {
+      method: 'POST',
+      headers: {
+        Authorization: auth,
+        apikey: env('SUPABASE_ANON_KEY'),
+        'Content-Type': 'application/json',
+        'Content-Profile': 'gia',
+      },
+      body: JSON.stringify({ p_modulo: __MODULE_ID, p_ec: String(ec ?? ''), p_tipo: tipo ?? null }),
+    })
+  } catch (e) {
+    throw new HttpError(502, `cadastro de ECs indisponível (${String(e)})`)
+  }
+
+  const texto = await res.text()
+  let payload: unknown = null
+  try {
+    payload = texto ? JSON.parse(texto) : null
+  } catch {
+    payload = null
+  }
+  if (!res.ok) {
+    const p = (payload ?? {}) as { code?: string; message?: string }
+    // O código do Postgres diz o que houve; o status HTTP do PostgREST não
+    // distingue "sem permissão" de "EC inexistente" com a precisão necessária.
+    const status =
+      p.code === '42501' ? 403 : p.code === 'P0002' ? 404 : p.code === '22023' ? 400 : res.status
+    throw new HttpError(status, p.message ?? `falha ao alterar o tipo do EC: HTTP ${res.status}`)
+  }
+  const d = (payload ?? {}) as {
+    ec?: string
+    tipo?: GiaEc['tipo']
+    ativo?: boolean
+    empresaId?: number
+    alterado?: boolean
+  }
+  return {
+    ec: d.ec ?? String(ec),
+    tipo: d.tipo ?? null,
+    ativo: d.ativo ?? true,
+    empresaId: Number(d.empresaId ?? 0),
+    alterado: !!d.alterado,
+  }
+}
 // ── Cadastro do usuário (public.usuarios) ───────────────────────────────────
 // O `user()` sai do JWT e não tem nome nem o id legado. Uma ida ao PostgREST,
 // memoizada por request pelo __giaBuildContext.
@@ -539,6 +604,12 @@ function __giaBuildContext(body: unknown, req: Request, user: GiaUser): ServerCo
   const operacoes = () => (ops ??= empresaScope().then(__giaOperacoes))
   let emps: Promise<GiaEmpresa[]> | null = null
   const empresas = () => (emps ??= empresaScope().then(__giaEmpresas))
+  const definirTipoEc = async (ec: string, tipo: GiaEc['tipo']) => {
+    const r = await __giaDefinirTipoEc(ec, tipo, req)
+    // A lista memoizada ficou velha: a próxima leitura busca de novo.
+    emps = null
+    return r
+  }
   let perfil: Promise<GiaPerfilUsuario> | null = null
   const perfilUsuario = () => (perfil ??= __giaPerfilUsuario(user))
   const legacyUserId = () => perfilUsuario().then((p) => p.legacyUserId)
@@ -550,6 +621,7 @@ function __giaBuildContext(body: unknown, req: Request, user: GiaUser): ServerCo
       __giaCredencial(integracao, opts, req),
     gerarTexto: (input: GiaTextoInput) => __giaGerarTexto(input, req),
     empresas,
+    definirTipoEc,
     callModule: <R>(moduleId: string, handler: string, b?: unknown) =>
       __giaCallModule(moduleId, handler, b, req) as Promise<R>,
     perfilUsuario,

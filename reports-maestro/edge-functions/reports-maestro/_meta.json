@@ -13,6 +13,10 @@
     "permissao": "reports-maestro.ler-rede",
     "handlers": []
   },
+  "escrita_ecs": {
+    "permissao": "reports-maestro.ecs-tipo",
+    "handlers": []
+  },
   "verify_jwt": true,
   "auth_enforced_by": "generated-wrapper (GoTrue /auth/v1/user)",
   "generated_by": "gia pack (server-codegen)",
