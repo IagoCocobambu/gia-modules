@@ -1,0 +1,21 @@
+Fechamento Maestro 0.1.1 - correção de 05/11/2026
+
+- Seletor de lojas: mostra só as lojas com CNPJ (cadastradas como empresa); operações sem CNPJ (escritório, centro de distribuição) ficam de fora. Mesma regra do Reports Maestro.
+- Pesquisa: o servidor recusa operação sem CNPJ ("Loja não encontrada") mesmo se o pedido chegar direto, sem passar pelo seletor.
+- Mantida a regra de identificar a loja pelo número no começo do nome (ex.: "01.CB GOIANIA").
+- FAQ "De onde vêm os dados" atualizada com a nova regra do seletor.
+- Descrição do módulo conforme a devolutiva da entrega: Adquirentes online/offline, para quem é (financeiro e lojas) e que substitui a tela Fechamento Diário Maestro do GIA antigo.
+- Dev-shell: incluídas duas operações sem CNPJ nas lojas simuladas (Escritório e 99.CD GOIANIA) para testar o filtro.
+- Validação 58/58, sem erros.
+
+Testes no dev-shell (desktop 1440px e celular iPhone 13)
+- Seletor de lojas: 95 lojas, sem nenhuma operação; buscar "99", "CD GOIANIA" ou "Escrit" mostra "Nenhuma loja disponível".
+- Pesquisa direta da operação 99.CD GOIANIA no servidor: recusada com "Loja não encontrada".
+- Busca e escolha de loja (17.CB RECIFE) e botão Pesquisar funcionam no celular, sem rolagem lateral.
+- Resultado da pesquisa não verificado: o banco do Maestro (data-warehouse-pg.cocobambu.com) não respondeu desta máquina (timeout de conexão, acontece também sem a correção).
+
+Arquivos alterados
+- src/server/lojas.ts
+- src/server/fechamento.ts
+- src/faq.ts
+- gia.config.ts (só dev-shell)

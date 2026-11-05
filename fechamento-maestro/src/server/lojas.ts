@@ -1,8 +1,9 @@
 import { defineHandler } from '@gia-cb/sdk/server'
 
-// Lojas que o usuário pode consultar: Empresas do escopo dele cujo nome começa com
-// o número da loja ("01.CB GOIANIA"). É desse número que sai o `loc_ref` da API de
-// delivery — mesma regra do legado (ExtrairNumeroLoja sobre o nome_fantasia).
+// Lojas que o usuário pode consultar: Empresas do escopo dele com
+// `tipoRegistro === 'empresa'` (a loja, com CNPJ) cujo nome começa com o número
+// da loja ("01.CB GOIANIA"). Propriedades/operações (sem CNPJ próprio) ficam de
+// fora. É desse número que sai o `loc_ref` da API de delivery — mesma regra do legado (ExtrairNumeroLoja sobre o nome_fantasia).
 //
 // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. `numeroDaLoja`
 // se repete em fechamento.ts de propósito.
@@ -28,6 +29,7 @@ export default defineHandler<Record<string, never>, Loja[]>(async (ctx) => {
   const lojas: Loja[] = []
   for (const e of await ctx.empresas()) {
     if (!escopo.all && !escopo.empresaIds.includes(e.id)) continue
+    if (e.tipoRegistro !== 'empresa') continue
     const locRef = numeroDaLoja(e.nome)
     if (locRef) lojas.push({ empresaId: e.id, nome: e.nome, locRef, ativo: e.ativo })
   }

@@ -6,7 +6,8 @@
 //
 // O `label` faz o papel do nome da Empresa no portal (nome_fantasia): o número no
 // começo dele ("01.CB GOIANIA" → "01") é o `loc_ref` da API de delivery, como no
-// legado. Empresa sem número (ex.: o Escritório) não aparece no seletor.
+// legado. Só aparecem no seletor as Empresas com CNPJ (tipoRegistro 'empresa')
+// e com número no nome.
 
 export default {
   moduleId: 'fechamento-maestro',
@@ -124,7 +125,10 @@ export default {
     { id: 96, label: '96. CB Campinas Shopping' },
     { id: 97, label: '97. CB Tijuca Shopping' },
     { id: 98, label: '98. CB Joinville' },
-    { id: 9000, label: 'Escritório' },
+    // Operações sem CNPJ (tipoRegistro 'propriedade') não aparecem no seletor,
+    // mesmo com número no nome.
+    { id: 9000, label: 'Escritório', tipoRegistro: 'propriedade' },
+    { id: 9001, label: '99.CD GOIANIA', tipoRegistro: 'propriedade' },
   ],
 
   fixtures: {},

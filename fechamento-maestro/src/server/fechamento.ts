@@ -447,7 +447,9 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
   const verDados = await ctx.hasPermission('fechamento-maestro.ver-dados-cliente')
 
   const empresa = (await ctx.empresas()).find((e) => e.id === empresaId)
-  if (!empresa) throw new HttpError(404, 'Loja não encontrada.')
+  // Só a loja com CNPJ (`tipoRegistro === 'empresa'`) — mesma regra de lojas.ts.
+  if (!empresa || empresa.tipoRegistro !== 'empresa')
+    throw new HttpError(404, 'Loja não encontrada.')
   const locRef = numeroDaLoja(empresa.nome)
   if (!locRef) {
     throw new HttpError(422, `Não há número de loja no nome "${empresa.nome}" (ex.: "01.CB ...").`)

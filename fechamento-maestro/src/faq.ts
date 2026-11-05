@@ -314,7 +314,9 @@ O resultado de uma pesquisa fica guardado por **30 minutos**: pesquisar de novo 
 mesma loja e o mesmo período nesse prazo mostra o resultado na hora. Para buscar
 dados atualizados antes disso, recarregue a página (F5) e pesquise de novo.
 
-O seletor mostra só as lojas do **seu escopo** de Empresas no portal. O servidor
+O seletor mostra só as lojas do **seu escopo** de Empresas no portal, e só as
+cadastradas como **empresa** (com CNPJ) — operações/propriedades sem CNPJ
+próprio, como escritório e centro de distribuição, ficam de fora. O servidor
 confere isso de novo a cada pesquisa.
       `,
     },
