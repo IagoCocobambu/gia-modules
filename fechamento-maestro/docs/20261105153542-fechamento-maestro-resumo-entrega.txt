@@ -6,7 +6,8 @@ Fechamento Maestro 0.1.1 - correção de 05/11/2026
 - FAQ "De onde vêm os dados" atualizada com a nova regra do seletor.
 - Descrição do módulo conforme a devolutiva da entrega: Adquirentes online/offline, para quem é (financeiro e lojas) e que substitui a tela Fechamento Diário Maestro do GIA antigo.
 - Dev-shell: incluídas duas operações sem CNPJ nas lojas simuladas (Escritório e 99.CD GOIANIA) para testar o filtro.
-- Validação 58/58, sem erros.
+- Versão 0.1.1 (package.json, module.ts e INTEGRATION).
+- Validação 58/58, pacote 0.1.1 gerado (modules-fechamento-maestro-0.1.1.tgz), commit 0d48d81 e push no branch feat/reports-maestro-0.3.0.
 
 Testes no dev-shell (desktop 1440px e celular iPhone 13)
 - Seletor de lojas: 95 lojas, sem nenhuma operação; buscar "99", "CD GOIANIA" ou "Escrit" mostra "Nenhuma loja disponível".
