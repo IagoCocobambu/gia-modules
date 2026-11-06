@@ -1,0 +1,82 @@
+Fechamento Maestro 0.2.1 - ajustes da devolutiva da 0.1.0 e totais como filtro - 06/11/2026
+
+Entrega
+- Versão: 0.2.1 (package.json, module.ts, INTEGRATION e CHANGELOG). Junta a 0.2.0 (devolutiva e totais como filtro) e a 0.2.1 (Online líquido em centavos no Excel). O pacote a entregar é o 0.2.1; o 0.2.0 deve ser descartado.
+- Pacote: modules-fechamento-maestro-0.2.1.tgz (79,5 kB). O modules-fechamento-maestro-0.2.0.tgz que está na pasta foi gerado de novo depois da correção e não deve ser entregue.
+- Validação: gia validate 58/58, 0 erros, 0 avisos.
+- Commits com push no branch feat/reports-maestro-0.3.0: eafa5cb (v0.2.0), cf72f8c (AGENTS.md do workspace) e 4b42248 (Online líquido em centavos).
+- Versão 0.2.1 (versão, CHANGELOG e este resumo): commit com push no mesmo branch, logo depois dos três acima.
+- SDK @gia-cb/* 0.1.0-alpha.70.
+- Sem mudança de banco (nenhuma migration) e sem mudança de permissões (.ler, .exportar e .ver-dados-cliente).
+
+Devolutiva da 0.1.0 - bloqueantes
+- 1. Cadastro ONLINE VR no portal: NÃO aplicado, por decisão do responsável. O módulo é só leitura e continua lendo gia_relatorios.formas_pagamento no banco do Maestro. A gestão desse cadastro no legado foi descontinuada. Na instalação, o secret GIA_SERVER_DATABASE_URL precisa apontar para o banco do Maestro (só leitura), e a Edge Function precisa alcançar esse banco pela rede.
+- 2. Loja: o número da loja vem primeiro do vínculo da Empresa com a BI do Simphony (locRefs.BIAPI) e, na falta dele, do nome. É a mesma função numeroDaLoja do Reports Maestro. Loja com CNPJ sem número aparece no seletor, e a pesquisa responde com a mensagem "A loja ... não tem número de loja no cadastro (vínculo com a BI do Simphony)". Propriedade (sem CNPJ) continua fora do seletor.
+
+Devolutiva da 0.1.0 - ajustes
+- 3. Menu: Plataformas > Maestro, ao lado do Reports (navGroup 'maestro').
+- 4. FAQ e tour sem menções ao sistema antigo (14 trechos reescritos).
+- 5. FAQ "Erros comuns" com 3 perguntas (nova: "A loja não tem número de loja no cadastro").
+- 6. Excel: a aba Pedidos usa o Online líquido; a aba Fechamento diário traz Descontos loja e Descontos parceiro com a regra dos cards. O Total de cada aba bate com os cards.
+- 7. Formas de pagamento: a vírgula só separa itens depois do parêntese do valor. Em 20.765 pedidos reais de outubro (6 lojas), o resultado é igual ao de antes.
+- 8. Celular: o botão Totais abre o Dashboard na aba Totais (12 indicadores, um por linha). Os filtros usam o ListHeader, recolhem pela seta e se recolhem sozinhos ao pesquisar.
+- 9. Toque: os botões da barra mostram o nome em tela de toque. O tooltip só aparece em aparelho com mouse (no celular ele abria sozinho e cobria o indicador vizinho).
+- 10. Legenda do Dashboard: o toque liga e desliga o destaque do canal; o hover vale só para o mouse.
+
+Devolutiva da 0.1.0 - sugestões
+- Aplicadas:
+  - data inexistente (ex.: 30/02) é recusada;
+  - "gerado em" do Excel e "hoje" no fuso de São Paulo;
+  - o passo "Divergências" do tour aponta para o botão;
+  - linhas da lista com altura mínima para toque;
+  - o Excel filtrado avisa no subtítulo de cada aba ("filtrado (...): X de Y pedidos").
+- Não aplicada:
+  - Online negativo: mantido, porque é a regra do legado (o incentivo do parceiro sai inteiro do Online). Em outubro (6 lojas), foram 11 casos em cerca de 20,7 mil pedidos, com excesso típico de R$ 6,99. Com a coluna Online (líquido), esses pedidos aparecem negativos na aba Pedidos do Excel (ex.: loja 82, pedido 8294 de 24/10/2026: -R$ 6,99).
+- Pendente:
+  - Valor ausente: continua aparecendo como R$ 0,00 quando a API não manda valor. Nos pedidos de outubro não apareceu nenhum item sem valor.
+
+Novo
+- Totais como filtro: clicar num dos 12 indicadores filtra a tabela pelos pedidos que entram naquela conta, com a mesma regra da soma do card. Um botão com o nome do indicador na barra da tabela tira o filtro.
+  - Os valores da barra de totais não mudam com o filtro.
+  - Indicador zerado não filtra.
+  - Combina com "Só divergências" e vale para o Exportar.
+  - No celular, o toque na aba Totais filtra a tabela e fecha o Dashboard.
+  - "Pagamentos sem classificação" também filtra; a janela com a lista agrupada foi removida.
+- 0.2.1: o Online líquido é calculado em centavos (antes deixava -6.990000000000002 na célula do Excel).
+- CHANGELOG.md incluído no pacote.
+- AGENTS.md na raiz de modules-gia com dois padrões de tela para todos os módulos: no celular, a pesquisa recolhe a barra de filtros; tooltip e hover só em aparelho com mouse. O AGENTS.md de cada módulo aponta para ele.
+
+Testes no dev-shell (computador 1440 px e celular 390 px com toque, dados reais da loja 82 em 24/10/2026, 191 pedidos)
+- Lojas:
+  - "CB RECIFE" (vínculo BIAPI 17) trouxe 115 pedidos da loja certa.
+  - "CB LOJA NOVA" (sem número) respondeu com a mensagem nova.
+  - Escritório e 99.CD GOIANIA fora do seletor.
+- Totais: Online R$ 31.606,72 e Descontos parceiro R$ 40,00, iguais à conta feita direto na API.
+- Filtro pelos totais (Online, Adquirentes online, Offline, Cancelado online, Descontos loja e Descontos parceiro): a quantidade de pedidos e a soma deles batem centavo a centavo com o card.
+- Tirar o filtro, indicador zerado e combinação com Só divergências: ok.
+- Excel sem filtro: as 3 abas com os totais iguais aos cards.
+- Excel com filtro: subtítulo "filtrado (Descontos parceiro): 3 de 191 pedidos". Nenhuma célula com mais de 2 casas decimais.
+- Celular:
+  - filtros recolhem ao pesquisar e ficam abertos se a pesquisa for recusada;
+  - botões com o nome visível;
+  - Totais abre na aba Totais;
+  - o toque num indicador filtra a tabela;
+  - nenhum tooltip aparece em 7 toques diferentes;
+  - a legenda liga, desliga e troca de canal no toque.
+- Computador: tooltip aparece ao passar o mouse e some no clique; o hover da legenda funciona.
+- Console sem erros em todos os fluxos.
+- Ressalva: a bateria completa no navegador rodou antes da correção do Online líquido em centavos. Depois dela, rodaram de novo o teste do Excel e o gia validate. A 0.2.1 só muda a versão e o CHANGELOG em relação ao código testado.
+
+Arquivos alterados
+- fechamento-maestro/src/server/lojas.ts e src/server/fechamento.ts
+- fechamento-maestro/src/helpers.ts, src/types.ts, src/module.ts
+- fechamento-maestro/src/views/FechamentoMaestroView.tsx
+- fechamento-maestro/src/components/FiltrosBar.tsx, ResumoCards.tsx, DashboardDialog.tsx, VendasPorCanal.tsx
+- fechamento-maestro/src/components/Dica.tsx (novo)
+- fechamento-maestro/src/components/SemClassificacaoDialog.tsx (removido)
+- fechamento-maestro/src/faq.ts e src/tour.ts
+- fechamento-maestro/PRD.md, INTEGRATION.md, README.md, CHANGELOG.md (novo)
+- fechamento-maestro/package.json e package-lock.json
+- fechamento-maestro/edge-functions/fechamento-maestro/index.ts (gerado pelo gia pack)
+- fechamento-maestro/gia.config.ts (só dev-shell)
+- AGENTS.md (novo, raiz) e AGENTS.md de fechamento-maestro, reports-maestro, validacao-fiscal, teste e meu-modulo

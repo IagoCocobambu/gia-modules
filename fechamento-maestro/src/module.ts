@@ -5,7 +5,7 @@ import { fechamentoMaestroRoutes } from './routes'
 export const fechamentoMaestroModule = defineModule({
   id: 'fechamento-maestro',
   label: 'Fechamento Maestro',
-  version: '0.2.0',
+  version: '0.2.1',
   description:
     'Fechamento diário dos pedidos de delivery do Maestro: concilia as formas de pagamento de cada pedido (Online, Adquirentes online/offline, Offline) e aponta as divergências, por loja e período. Para o financeiro e as lojas fecharem o caixa do delivery. Substitui a tela Fechamento Diário Maestro do GIA antigo.',
   icon: 'ReceiptText',

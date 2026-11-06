@@ -1,5 +1,12 @@
 # Changelog — Fechamento Maestro
 
+## 0.2.1 — 06/11/2026
+
+- **Excel:** o Online líquido (coluna Online (líquido) e o Online do
+  Fechamento diário) passa a ser calculado em centavos inteiros. Antes, a
+  subtração em reais deixava lixo de ponto flutuante na célula
+  (-6.990000000000002 em vez de -6,99). Os totais não mudam.
+
 ## 0.2.0 — 06/11/2026
 
 Ajustes da devolutiva da 0.1.0 e novos recursos. Sem mudança de banco nem de
