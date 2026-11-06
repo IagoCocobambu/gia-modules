@@ -31,7 +31,9 @@ permissões (continua `.ler`, `.exportar` e `.ver-dados-cliente`).
 - **Sugestões:** data inexistente recusada; "gerado em" e "hoje" no fuso de São
   Paulo; passo "Divergências" do tour aponta para o botão.
 - **Online negativo:** mantido — é a regra do legado (o incentivo do parceiro
-  sai inteiro do Online).
+  sai inteiro do Online). Com a coluna Online (líquido), o pedido em que o
+  incentivo passa da parte online aparece negativo na aba Pedidos do Excel
+  (ex.: loja 82, pedido 8294 de 24/10/2026: −R$ 6,99).
 
 ### Novo
 

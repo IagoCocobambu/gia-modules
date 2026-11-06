@@ -110,9 +110,13 @@ export function divergente(p: PedidoFechamento): boolean {
   return !p.cancelado && (!p.check_pagamentos || !p.check_descontos)
 }
 
-/** Online do pedido sem o incentivo que foi para Descontos parceiro (regra do legado). */
+/**
+ * Online do pedido sem o incentivo que foi para Descontos parceiro (regra do legado).
+ * A conta é em centavos: subtrair em reais deixava lixo de ponto flutuante na célula
+ * do Excel (-6.990000000000002 em vez de -6,99).
+ */
 function onlineLiquido(p: PedidoFechamento): number {
-  return p.total_pago_online - p.abatimento_online
+  return (Math.round(p.total_pago_online * 100) - Math.round(p.abatimento_online * 100)) / 100
 }
 
 /**
