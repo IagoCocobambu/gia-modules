@@ -11,6 +11,13 @@ convenções do portal e validar o resultado. Assuma essa responsabilidade:
 não invente APIs, não pule regras, e não diga que terminou enquanto o
 `gia validate` não passar sem erros.
 
+## 0. Padrões do workspace — leia também `../AGENTS.md`
+
+Além deste arquivo, siga o **`../AGENTS.md`** (na pasta `modules-gia`, acima
+deste módulo): ele traz os padrões de tela combinados para **todos** os módulos
+daqui (ex.: no celular, a pesquisa recolhe a barra de filtros; tooltip só em
+aparelho com mouse). Leia antes de criar ou alterar telas.
+
 ## 1. LEIA A DOCUMENTAÇÃO ANTES DE ESCREVER CÓDIGO (obrigatório)
 
 A documentação completa do SDK fica dentro do próprio pacote (aparece após
@@ -97,6 +104,7 @@ Antes de considerar o módulo pronto:
 - [ ] Preenchi o `PRD.md` com o domínio real (perguntei ao usuário o que faltava)
 - [ ] `faq.ts` e `tour.ts` reais e ricos (não os placeholders)
 - [ ] Testei todas as ações em **mobile** no dev-shell
+- [ ] Segui os padrões do `../AGENTS.md` (workspace)
 - [ ] `gia validate` passa **sem erros**
 
 ## 4. Documentos Markdown pedidos pelo usuário
