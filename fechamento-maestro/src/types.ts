@@ -3,12 +3,16 @@
 // Os nomes dos campos seguem o JSON da API e os do legado (Fechamento Diário
 // Maestro, UniGUI), pra que a tela e o export batam com ele.
 
-/** Loja que o usuário pode consultar: Empresa do escopo com número de loja no nome. */
+/** Loja que o usuário pode consultar: Empresa com CNPJ do escopo do usuário. */
 export interface FechamentoLoja {
   empresaId: number
   nome: string
-  /** Número da loja com 2 dígitos ("01"), o `loc_ref` da API de delivery. */
-  locRef: string
+  /**
+   * Número da loja com 2 dígitos ("01"), o `loc_ref` da API de delivery. Vem do
+   * vínculo com a BI do Simphony (`locRefs.BIAPI`) ou, na falta, do nome. `null`
+   * quando não há nenhum dos dois: a loja aparece e a pesquisa avisa que falta o número.
+   */
+  locRef: string | null
   ativo: boolean
 }
 
@@ -110,7 +114,10 @@ export interface ResumoDia {
   adquirentes_offline: number
   offline: number
   nao_classificado: number
-  descontos: number
+  /** Desconto total dos pedidos com venda concluída (como o card Descontos loja). */
+  descontos_loja: number
+  /** Incentivo do parceiro dos não cancelados (como o card Descontos parceiro). */
+  descontos_parceiro: number
   /** Pedidos não cancelados com algum check reprovado. */
   divergentes: number
 }
@@ -119,6 +126,9 @@ export interface ResumoDia {
  * Os 12 indicadores do legado. Valores de venda: só pedidos NÃO cancelados; os
  * cancelados têm os seus.
  */
+/** Indicador da barra de totais que serve de filtro da tabela (todos menos divergentes). */
+export type FiltroTotal = Exclude<keyof TotaisPeriodo, 'divergentes'>
+
 export interface TotaisPeriodo {
   /** Online menos o incentivo que foi para Descontos parceiro. */
   online: number

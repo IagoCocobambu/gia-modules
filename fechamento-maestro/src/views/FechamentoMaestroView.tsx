@@ -6,6 +6,7 @@ import {
   ListFilter,
   ReceiptText,
   RefreshCw,
+  X,
 } from 'lucide-react'
 import {
   Button,
@@ -15,7 +16,6 @@ import {
   WidthFrame,
   nomeArquivoExport,
   toast,
-  Tooltip,
   type ColumnDef,
 } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
@@ -26,12 +26,12 @@ import { BadgeCheck } from '../components/BadgeCheck'
 import { BadgeOrigemPedido } from '../components/BadgeOrigemPedido'
 import { BadgeStatusPedido } from '../components/BadgeStatusPedido'
 import { BadgeTipoPagamento } from '../components/BadgeTipoPagamento'
-import { DashboardDialog } from '../components/DashboardDialog'
+import { DashboardDialog, type AbaDashboard } from '../components/DashboardDialog'
 import { DetalhePedidoDialog } from '../components/DetalhePedidoDialog'
+import { Dica } from '../components/Dica'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
 import { Recolhivel } from '../components/Recolhivel'
 import { ResumoCards } from '../components/ResumoCards'
-import { SemClassificacaoDialog } from '../components/SemClassificacaoDialog'
 import {
   COLUNAS_DIA,
   COLUNAS_PEDIDO,
@@ -40,7 +40,8 @@ import {
   formatDataHora,
   hojeLocal,
   NOME_MODULO,
-  pagamentosSemClassificacao,
+  NOME_DO_TOTAL,
+  pedidosDoTotal,
   periodoArquivo,
   preencherPlanilha,
   resumirPorDia,
@@ -51,7 +52,7 @@ import {
   validarPeriodo,
 } from '../helpers'
 import { statusPedido } from '../status-pedido'
-import type { Consulta, PedidoFechamento } from '../types'
+import type { Consulta, FiltroTotal, PedidoFechamento } from '../types'
 
 /** Abaixo desta largura (px) a tela usa o layout de celular — o mesmo corte do
  *  `DataReport` (`@3xl` = 48rem), que vira lista de cards nesse ponto. */
@@ -88,9 +89,11 @@ const SEM_COLUNAS_PEDIDO: ColumnDef<PedidoFechamento, unknown>[] = []
  * Botões da toolbar do `DataReport` (que é `@container`). De @lg a @5xl a toolbar
  * fica AO LADO do título e não cabe com rótulos: os botões viram só ícone (o
  * tooltip e o `aria-label` dizem o nome). Abaixo de @lg e a partir de @5xl: rótulo.
+ * Em tela de toque (`hover: none`) o rótulo fica sempre visível — lá o tooltip não
+ * abre, e só o ícone não diria o que o botão faz.
  */
-const BOTAO_TOOLBAR = 'px-2.5 @max-lg:px-4 @5xl:px-4'
-const ROTULO_TOOLBAR = '@lg:hidden @5xl:inline'
+const BOTAO_TOOLBAR = 'px-2.5 @max-lg:px-4 @5xl:px-4 [@media(hover:none)]:px-4'
+const ROTULO_TOOLBAR = '@lg:hidden @5xl:inline [@media(hover:none)]:inline'
 
 /** Campos que formam a face do card no celular; o resto fica em "ver mais". */
 const CAMPOS_CARD_PEDIDO = new Set<string>(['n_pedido', 'data_de_criacao', 'total_pago', 'tipo'])
@@ -194,7 +197,13 @@ const vazio = <span className="text-muted-foreground">—</span>
  * que entram nele e os cancelados à parte — assim o Total de cada aba bate com os
  * cards de totais e por dia (que deixam os cancelados de fora).
  */
-async function exportarXlsx(pedidos: PedidoFechamento[], consulta: Consulta) {
+async function exportarXlsx(
+  pedidos: PedidoFechamento[],
+  consulta: Consulta,
+  totalPesquisa: number,
+  /** Nome do indicador de totais que filtra a tabela, se houver. */
+  filtroTotal: string | null
+) {
   const { Workbook } = await import('exceljs')
   const wb = new Workbook()
   wb.creator = NOME_MODULO
@@ -209,27 +218,33 @@ async function exportarXlsx(pedidos: PedidoFechamento[], consulta: Consulta) {
   const plural = (n: number, um: string, varios: string) =>
     `${n.toLocaleString('pt-BR')} ${n === 1 ? um : varios}`
   const dias = resumirPorDia(pedidos)
+  // Exporta o que está na tela: com filtro de totais, "Só divergências" ou filtro
+  // de coluna, avisa em cada aba que os totais são do recorte, não do fechamento.
+  const filtro =
+    pedidos.length < totalPesquisa
+      ? ` · filtrado${filtroTotal ? ` (${filtroTotal})` : ''}: ${pedidos.length.toLocaleString('pt-BR')} de ${plural(totalPesquisa, 'pedido', 'pedidos')}`
+      : ''
 
   preencherPlanilha(
     wb.addWorksheet('Fechamento diário'),
     dias,
     COLUNAS_DIA,
     cab,
-    `Fechamento diário · ${plural(dias.length, 'dia', 'dias')} · cancelados fora dos valores`
+    `Fechamento diário · ${plural(dias.length, 'dia', 'dias')} · cancelados fora dos valores${filtro}`
   )
   preencherPlanilha(
     wb.addWorksheet('Pedidos'),
     validos,
     COLUNAS_PEDIDO,
     cab,
-    `Pedidos do fechamento · ${plural(validos.length, 'pedido', 'pedidos')} (sem cancelados)`
+    `Pedidos do fechamento · ${plural(validos.length, 'pedido', 'pedidos')} (sem cancelados)${filtro}`
   )
   preencherPlanilha(
     wb.addWorksheet('Cancelados'),
     cancelados,
     COLUNAS_PEDIDO,
     cab,
-    `Pedidos cancelados · ${plural(cancelados.length, 'pedido', 'pedidos')} (fora do fechamento)`
+    `Pedidos cancelados · ${plural(cancelados.length, 'pedido', 'pedidos')} (fora do fechamento)${filtro}`
   )
 
   const buffer = await wb.xlsx.writeBuffer()
@@ -281,8 +296,14 @@ export function FechamentoMaestroView() {
   // "Só divergências" mostra só os pedidos com algum check reprovado.
   const [soDivergencias, setSoDivergencias] = useState(false)
   const [pedidoAberto, setPedidoAberto] = useState<PedidoFechamento | null>(null)
-  const [semClassificacaoAberto, setSemClassificacaoAberto] = useState(false)
+  // Indicador da barra de totais que filtra a tabela (clique no indicador).
+  const [filtroTotal, setFiltroTotal] = useState<FiltroTotal | null>(null)
   const [dashboardAberto, setDashboardAberto] = useState(false)
+  const [dashboardAba, setDashboardAba] = useState<AbaDashboard>('canais')
+  const abrirDashboard = (aba: AbaDashboard) => {
+    setDashboardAba(aba)
+    setDashboardAberto(true)
+  }
   // Barra de totais: segue a altura da tela até o usuário clicar em "Totais";
   // daí em diante vale a escolha dele.
   const telaAlta = useTelaAlta()
@@ -293,11 +314,12 @@ export function FechamentoMaestroView() {
     () => (fechamentoQuery.data ? resumirTotais(pedidos) : null),
     [fechamentoQuery.data, pedidos]
   )
-  const semClassificacao = useMemo(() => pagamentosSemClassificacao(pedidos), [pedidos])
-  const pedidosVisao = useMemo(
-    () => (soDivergencias ? pedidos.filter(divergente) : pedidos),
-    [pedidos, soDivergencias]
-  )
+  // A tabela: os pedidos do indicador escolhido (se houver) e, com "Só
+  // divergências", só os divergentes entre eles. Os totais seguem do período todo.
+  const pedidosVisao = useMemo(() => {
+    const doTotal = filtroTotal ? pedidosDoTotal(pedidos, filtroTotal) : pedidos
+    return soDivergencias ? doTotal.filter(divergente) : doTotal
+  }, [pedidos, filtroTotal, soDivergencias])
 
   const semAlteracao =
     consulta !== null &&
@@ -305,25 +327,28 @@ export function FechamentoMaestroView() {
     consulta.de === filtros.de &&
     consulta.ate === filtros.ate
 
-  function pesquisar() {
-    if (semAlteracao) return
+  /** Dispara a pesquisa. Devolve `false` quando ela foi recusada (filtro inválido). */
+  function pesquisar(): boolean {
+    if (semAlteracao) return false
     const msg = validarPeriodo(filtros.de, filtros.ate)
     if (msg) {
       toast.error(msg)
-      return
+      return false
     }
     const loja = lojas.find((l) => l.empresaId === empresaIdSelecionada)
     if (!loja) {
       toast.error('Informe uma loja.')
-      return
+      return false
     }
     setSoDivergencias(false)
+    setFiltroTotal(null)
     setConsulta({
       empresaId: loja.empresaId,
       lojaNome: loja.nome,
       de: filtros.de,
       ate: filtros.ate,
     })
+    return true
   }
 
   // Ordem do `ALL_COLUMNS` do legado: as calculadas primeiro, depois os campos da
@@ -513,7 +538,11 @@ export function FechamentoMaestroView() {
       <EmptyState
         icon={ReceiptText}
         title="Nenhum pedido neste filtro"
-        description="Nenhum pedido com divergência — os pagamentos e descontos conferem."
+        description={
+          filtroTotal
+            ? `Nenhum pedido de ${NOME_DO_TOTAL[filtroTotal]} com divergência.`
+            : 'Nenhum pedido com divergência — os pagamentos e descontos conferem.'
+        }
       />
     )
   } else {
@@ -530,7 +559,21 @@ export function FechamentoMaestroView() {
 
   const acoes = (
     <>
-      <Tooltip
+      {/* Filtro ligado por um indicador de totais: mostra qual e tira com um toque. */}
+      {filtroTotal && (
+        <Dica content="Tirar o filtro e voltar a ver todos os pedidos">
+          <Button
+            variant="default"
+            className="max-w-full"
+            aria-label={`Filtro: ${NOME_DO_TOTAL[filtroTotal]}. Tirar o filtro`}
+            onClick={() => setFiltroTotal(null)}
+          >
+            <span className="truncate">{NOME_DO_TOTAL[filtroTotal]}</span>
+            <X className="h-4 w-4 shrink-0" />
+          </Button>
+        </Dica>
+      )}
+      <Dica
         content={
           soDivergencias
             ? 'Mostrar todos os pedidos'
@@ -561,39 +604,46 @@ export function FechamentoMaestroView() {
             {qtdDivergentes.toLocaleString('pt-BR')}
           </span>
         </Button>
-      </Tooltip>
-      {/* A barra de totais só existe no desktop; no celular, nem o botão. */}
-      {!compacto && (
-        <Tooltip
-          content={totaisAbertos ? 'Ocultar os totais do período' : 'Mostrar os totais do período'}
+      </Dica>
+      {/* No computador, Totais abre e fecha a barra acima da tabela. No celular a
+          barra não cabe: o mesmo botão abre o Dashboard direto na aba Totais. */}
+      <Dica
+        content={
+          compacto
+            ? 'Ver os totais do período'
+            : totaisAbertos
+              ? 'Ocultar os totais do período'
+              : 'Mostrar os totais do período'
+        }
+      >
+        <Button
+          variant={!compacto && totaisAbertos ? 'default' : 'outline'}
+          className={BOTAO_TOOLBAR}
+          aria-label="Totais"
+          aria-pressed={compacto ? undefined : totaisAbertos}
+          disabled={!painelDisponivel}
+          onClick={() =>
+            compacto ? abrirDashboard('totais') : setTotaisEscolhidos(!totaisAbertos)
+          }
+          data-tour="fechamento-maestro-totais-toggle"
         >
-          <Button
-            variant={totaisAbertos ? 'default' : 'outline'}
-            className={BOTAO_TOOLBAR}
-            aria-label="Totais"
-            aria-pressed={totaisAbertos}
-            disabled={!painelDisponivel}
-            onClick={() => setTotaisEscolhidos(!totaisAbertos)}
-            data-tour="fechamento-maestro-totais-toggle"
-          >
-            <ChartPie className="h-4 w-4" />
-            <span className={ROTULO_TOOLBAR}>Totais</span>
-          </Button>
-        </Tooltip>
-      )}
-      <Tooltip content="Abrir o dashboard do período (vendas por canal)">
+          <ChartPie className="h-4 w-4" />
+          <span className={ROTULO_TOOLBAR}>Totais</span>
+        </Button>
+      </Dica>
+      <Dica content="Abrir o dashboard do período (vendas por canal e totais)">
         <Button
           variant="outline"
           className={BOTAO_TOOLBAR}
           aria-label="Dashboard"
           disabled={!painelDisponivel}
-          onClick={() => setDashboardAberto(true)}
+          onClick={() => abrirDashboard('canais')}
           data-tour="fechamento-maestro-dashboard"
         >
           <LayoutDashboard className="h-4 w-4" />
           <span className={ROTULO_TOOLBAR}>Dashboard</span>
         </Button>
-      </Tooltip>
+      </Dica>
     </>
   )
 
@@ -623,19 +673,15 @@ export function FechamentoMaestroView() {
           onPesquisar={pesquisar}
           semAlteracao={semAlteracao}
           compacto={compacto}
-          titulo={
-            <>
-              <h1 className="truncate text-lg font-semibold text-foreground">{NOME_MODULO}</h1>
-              <TourReplayButton onClick={replayTour} />
-            </>
-          }
+          tituloExtra={<TourReplayButton onClick={replayTour} />}
         />
 
         <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos && !compacto}>
           <ResumoCards
             totais={totais}
             carregando={carregando}
-            onVerSemClassificacao={() => setSemClassificacaoAberto(true)}
+            filtro={filtroTotal}
+            onFiltroChange={setFiltroTotal}
           />
         </Recolhivel>
 
@@ -670,26 +716,31 @@ export function FechamentoMaestroView() {
           rowClassName={(p) => (divergente(p) ? 'bg-destructive/5' : undefined)}
           onExport={
             canExport && consulta && fechamentoQuery.data
-              ? (visiveis) => exportarXlsx(visiveis, consulta)
+              ? (visiveis) =>
+                  exportarXlsx(
+                    visiveis,
+                    consulta,
+                    pedidos.length,
+                    filtroTotal ? NOME_DO_TOTAL[filtroTotal] : null
+                  )
               : undefined
           }
         />
       </div>
 
-      <SemClassificacaoDialog
-        aberto={semClassificacaoAberto}
-        itens={semClassificacao}
-        onFechar={() => setSemClassificacaoAberto(false)}
-        onAbrirPedido={(p) => {
-          setSemClassificacaoAberto(false)
-          setPedidoAberto(p)
-        }}
-      />
       <DashboardDialog
         aberto={dashboardAberto}
+        aba={dashboardAba}
+        onAbaChange={setDashboardAba}
         pedidos={pedidos}
+        totais={totais}
         carregando={carregando}
         descricao={subtitle}
+        filtro={filtroTotal}
+        onFiltroChange={(f) => {
+          setFiltroTotal(f)
+          setDashboardAberto(false)
+        }}
         onFechar={() => setDashboardAberto(false)}
       />
       <DetalhePedidoDialog pedido={pedidoAberto} onFechar={() => setPedidoAberto(null)} />

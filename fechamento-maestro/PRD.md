@@ -73,7 +73,9 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 
 - Usuário sem `fechamento-maestro.ler`: tela mostra acesso negado; handlers respondem 403.
 - Loja fora do escopo do usuário (body adulterado): `ctx.requireEmpresa` → 403.
-- Empresa sem número no começo do nome: não aparece no seletor; handler responde 422.
+- Empresa com CNPJ sem número (nem no vínculo BIAPI, nem no nome): aparece no seletor;
+  a pesquisa responde 422 "não tem número de loja no cadastro".
+- Propriedade (sem CNPJ): não aparece no seletor; a pesquisa responde 404.
 - Período > 31 dias, data final < inicial ou data futura: recusado com mensagem.
 - API demora mais de 90 s: 504 com a sugestão de reduzir o período.
 - API fora do ar ou integração não liberada: estado de erro com a mensagem e "Tentar de novo".
@@ -89,8 +91,9 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 
 ### RF-1: Seleção de loja
 
-- Lista as Empresas do escopo do usuário cujo nome começa com o número da loja
-  (`"01.CB GOIANIA"`), em ordem natural. A primeira vem selecionada.
+- Lista as Empresas com CNPJ (`tipoRegistro === 'empresa'`) do escopo do usuário, em
+  ordem natural. Propriedades ficam de fora. A primeira vem selecionada. O número da
+  loja (RN-1) é resolvido na pesquisa.
 - Lojas inativas aparecem com a marca "Inativa".
 
 ### RF-2: Filtro de período
@@ -111,7 +114,10 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
   mostra o dia). O fechamento dia a dia de um período fica na aba "Fechamento
   diário" do Excel (RF-8): Pedidos, Cancelados, Valor pedido, Valor entrega, Total
   pago, Online (já sem o abatimento da RN-10), Adquirentes online, Adquirentes
-  offline, Offline, Não classificado, Descontos, Divergências.
+  offline, Offline, Não classificado, Descontos loja, Descontos parceiro (os dois
+  com a regra dos cards, RN-10), Divergências. Na aba "Pedidos", a coluna Online é
+  a líquida (RN-10). Sem filtro, o Total de cada aba bate com os cards; com filtro,
+  o subtítulo da aba diz "filtrado: X de Y pedidos".
 
 ### RF-5: Tabela de pedidos (conciliação)
 
@@ -155,8 +161,10 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 
 ### RF-7: Barra de totais
 
-- **Só no desktop**: no celular a barra e o botão "Totais" não aparecem
-  (decisão de 2026-11-03).
+- **Desktop**: barra acima da tabela, aberta e fechada pelo botão "Totais".
+  **Celular** (modo compacto): a barra não cabe; o botão "Totais" abre o
+  Dashboard (RF-9) direto na aba **Totais**, com os mesmos indicadores
+  (devolutiva 0.1.0, ajuste 8 — revoga a decisão de 2026-11-03).
 - Os 12 indicadores do Fechamento Diário do legado em produção, nesta ordem.
   Aberta em telas com altura ≥ 700 px e fechada abaixo (segue o resize, via
   `matchMedia`); depois que o usuário usa o botão "Totais", vale a escolha dele
@@ -169,14 +177,22 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
      Pagamentos sem classificação (quantidade).
 - Cada indicador: ícone num quadradinho tingido + valor em negrito colorido +
   rótulo em minúsculas embaixo. Grade de largura total com colunas que dividem
-  12 (container query: 2 → 3 → 4 → 6), pra as linhas fecharem cheias. Tooltip
-  com a explicação da conta em cada um.
+  12 (container query: 1 → 2 → 3 → 4 → 6; 1 no celular), pra as linhas fecharem
+  cheias. Tooltip com a explicação da conta no hover (fecha no clique).
+- **Cada indicador é um filtro da tabela** (pedido de 2026-11-06): o clique mostra
+  só os pedidos que somaram nele (`pedidosDoTotal`, mesma regra de
+  `resumirTotais`, valor ≠ 0 no grupo); o indicador fica marcado (`aria-pressed`)
+  e a toolbar ganha um botão com o nome dele, que tira o filtro. Clicar de novo
+  também tira; nova pesquisa zera. Os totais seguem do período inteiro.
+  Indicador zerado não filtra. Combina com "Só divergências" (E) e vale para o
+  Exportar (subtítulo "filtrado (Indicador): X de Y pedidos"). No celular, o
+  toque na aba Totais do Dashboard filtra e fecha o dialog.
 - Cores (tokens semânticos): Online `info`, Adquirentes online/offline `primary`,
   Offline `warning`; cancelados `destructive` só se > 0; Sem classificação
   (valor) `warning` só se ≠ 0; o resto neutro.
-- O indicador "Pagamentos sem classificação" fica vermelho e clicável quando > 0: abre
-  a lista das formas não reconhecidas, agrupadas pelo nome, com valor e pedidos;
-  cada pedido abre o detalhe (RF-6).
+- O indicador "Pagamentos sem classificação" fica vermelho quando > 0 e filtra a
+  tabela pelos pedidos com forma não reconhecida, como os outros (substitui a
+  janela com a lista agrupada).
 - Conferido contra o print do legado em produção (loja 01, 02/11/2026): os 12
   valores batem centavo a centavo. Revoga a decisão de 2026-10-30 de não adotar
   Adquirentes Online/Offline.
@@ -189,12 +205,14 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 
 ### RF-9: Dashboard (vendas por canal)
 
-- Botão "Dashboard" na toolbar abre um dialog com o card **Vendas por canal**:
+- Botão "Dashboard" na toolbar abre um dialog com duas abas: **Vendas por canal**
+  e **Totais** (os indicadores da RF-7). Vendas por canal:
   anel (donut SVG) com a fatia de cada `origem` no total pago dos pedidos não
   cancelados do período inteiro (RN-11); total e nº de pedidos no miolo.
 - Legenda com cor, canal, valor e % (é a versão em tabela do gráfico), do maior
   para o menor. Hover/foco numa fatia ou linha destaca o canal e troca o miolo
-  pelos números dele; no celular, toque na legenda. Legenda embaixo do anel em
+  pelos números dele; no toque, a legenda alterna o destaque (hover só com mouse,
+  via `pointerType`). Legenda embaixo do anel em
   larguras pequenas.
 - Cores = as do `BadgeOrigemPedido` (tokens `accent-group`, `accent-exception`,
   `accent-role`; manual e canais novos em `muted-foreground`). Anel cresce ao
@@ -264,8 +282,13 @@ Não usa.
 
 ## 6. Regras de negócio (obrigatório)
 
-- **RN-1**: O `loc_ref` da API é o número antes do primeiro ponto no nome da Empresa,
-  com 2 dígitos (`"01.CB GOIANIA"` → `01`) — porte do `ExtrairNumeroLoja` do legado.
+- **RN-1**: O `loc_ref` da API é o número da loja com 2 dígitos. Sai primeiro do
+  vínculo da Empresa com a BI do Simphony — `locRefs.BIAPI`, que começa sempre pelo
+  número (`'01 CB Go'` → `01`, `'17. CB R'` → `17`, `'13CBMa'` → `13`, `'65'` → `65`).
+  Sem o vínculo, vale o número antes do primeiro ponto no nome da Empresa
+  ("01.CB GOIANIA" → `01`; "48. VASTO SUL" → `48`), porte do `ExtrairNumeroLoja` do
+  legado. A mesma função (`numeroDaLoja`) está nos handlers `lojas` e `fechamento`.
+  Sem número, a loja não é consultável e a pesquisa responde 422 com o motivo.
 - **RN-2**: Período de 1 a 31 dias, sem datas futuras, data final ≥ inicial.
 - **RN-3**: Pedidos da API do DW; a lista de formas `ONLINE VR` do cadastro
   `gia_relatorios.formas_pagamento` do banco do Maestro, como no legado (decisão de
@@ -327,13 +350,20 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 
 ## 7. Critérios de aceite (obrigatório)
 
-- [ ] Seletor mostra só lojas do escopo com número no nome
+- [ ] Seletor mostra só lojas com CNPJ do escopo; Propriedade não aparece
+- [ ] Loja sem número (nem BIAPI, nem no nome) mostra "não tem número de loja no cadastro"
+- [ ] Loja renomeada sem número, com vínculo BIAPI, consulta a loja certa
 - [ ] Período inválido é recusado com mensagem
 - [ ] Mesma loja e dia: os 12 indicadores iguais aos do Fechamento Diário do legado
 - [ ] Online + Adquirentes online + Adquirentes offline + Offline + Valor sem classificação = total pago − incentivo abatido do Online (RN-10)
-- [ ] Barra de totais e botão Totais não aparecem no celular
+- [ ] No celular, o botão Totais abre o Dashboard na aba Totais com os 12 indicadores
+- [ ] Clicar num indicador filtra a tabela pelos pedidos dele; clicar de novo (ou no botão do filtro) tira o filtro
+- [ ] Com o filtro, a soma da coluna do grupo na tabela bate com o valor do indicador
+- [ ] No celular, os filtros recolhem pelo chevron do cabeçalho (ListHeader) e recolhem sozinhos quando a pesquisa começa (recusada: ficam abertos)
+- [ ] Em tela de toque, os botões da barra mostram o nome (não só o ícone)
+- [ ] Tocar numa linha da legenda do Dashboard destaca o canal; tocar de novo volta ao total
 - [ ] Busca genérica só no celular; título do módulo à esquerda e filtros à direita
-- [ ] Indicador de pagamentos sem classificação abre a lista quando > 0
+- [ ] Indicador de pagamentos sem classificação filtra os pedidos com forma sem nome quando > 0
 - [ ] Dashboard: soma dos canais = Total pago; % da legenda somam ~100%
 - [ ] Aba Fechamento diário do Excel soma por data de criação, sem cancelados
 - [ ] "Só divergências" mostra só pedidos não cancelados com check divergente
@@ -385,7 +415,7 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 
 ### Outros módulos do GIA
 
-- Cadastro de Empresas (nome com o número da loja).
+- Cadastro de Empresas (vínculo BIAPI com a BI do Simphony, ou nome com o número da loja).
 
 ### Serviços externos
 
@@ -421,6 +451,8 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 15. Por que minha loja não aparece no seletor?
 16. Por que a consulta demora e o período é limitado a 31 dias?
 17. Quanto cada canal vendeu? (Dashboard) E por que o total dele deve bater com o Total pago?
+18. Apareceu "A loja não tem número de loja no cadastro". O que faço? (Erros comuns)
+19. Como vejo quais pedidos formam um total? (clique no indicador filtra a tabela)
 
 ---
 

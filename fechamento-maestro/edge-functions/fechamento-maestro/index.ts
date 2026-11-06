@@ -35,6 +35,14 @@ type GiaEmpresa = {
   locRefs: Record<string, string>
   ecs: GiaEc[]
 }
+type GiaArmazem = {
+  id: number
+  nome: string
+  codigo: string
+  localEstoque: { id: number; nome: string }
+  empresaOdoo: { id: number; nome: string }
+  empresaId: number
+}
 type GiaTextoInput = {
   prompt: string
   instrucoes?: string
@@ -70,10 +78,11 @@ type PublicServerHandler = (ctx: PublicServerContext) => Response | Promise<Resp
 type GiaCredencial = {
   baseUrl: string
   token: string
-  expiresAt: string
+  expiresAt: string | null
   escopo: string
+  parametros: Record<string, string>
 }
-type ServerContext<B> = {
+type ServerContext<B = unknown> = {
   body: B
   headers: Headers
   enviarEmail: (input: GiaEmailInput) => Promise<{ enviadoPara: string }>
@@ -91,6 +100,9 @@ type ServerContext<B> = {
   operacoes: () => Promise<GiaOperacao[]>
   requireOperacao: (ref: string, opcoes?: OpcoesDeOperacao) => Promise<GiaOperacao>
   definirTipoEc: (ec: string, tipo: GiaEc['tipo']) => Promise<GiaEcAlterado>
+  armazens: () => Promise<GiaArmazem[]>
+  requireArmazem: (armazemId: number) => Promise<GiaArmazem>
+  requireDestino: (localEstoqueId: number) => Promise<GiaArmazem>
 }
 /**
  * Modo da checagem de loja.
@@ -444,17 +456,33 @@ async function __giaCredencial(
     throw new HttpError(res.status, msg ?? `falha ao obter credencial: HTTP ${res.status}`)
   }
 
-  const d = (payload ?? {}) as { base_url?: string; token?: string; expires_at?: string; escopo?: string }
-  if (!d.base_url || !d.token || !d.expires_at) {
+  const d = (payload ?? {}) as {
+    base_url?: string
+    token?: string
+    expires_at?: string | null
+    escopo?: string
+    parametros?: Record<string, unknown> | null
+  }
+  if (!d.base_url || !d.token) {
     throw new HttpError(502, 'hub de credenciais devolveu resposta incompleta')
+  }
+  // `parametros`: o que a chamada precisa além do token, nas credenciais de chave
+  // de API (no Odoo, `db` e `usuario` = uid do usuário de serviço). Tudo vira texto.
+  const parametros: Record<string, string> = {}
+  for (const [k, v] of Object.entries(d.parametros ?? {})) {
+    if (v !== null && v !== undefined) parametros[k] = String(v)
   }
   const valor: GiaCredencial = {
     baseUrl: d.base_url.replace(/\/+$/, ''),
     token: d.token,
-    expiresAt: d.expires_at,
+    expiresAt: d.expires_at ?? null,
     escopo: d.escopo ?? escopo,
+    parametros,
   }
-  __giaCredCache.set(chave, { valor, expiraEm: Date.parse(d.expires_at) })
+  // Chave de API não vence (`expires_at` nulo): guarda por 5 minutos, para que
+  // uma chave trocada no hub chegue aos módulos sem reiniciar a função.
+  const expiraEm = d.expires_at ? Date.parse(d.expires_at) : Date.now() + 5 * 60_000
+  __giaCredCache.set(chave, { valor, expiraEm })
   return valor
 }
 async function __giaEnviarEmail(
@@ -557,6 +585,48 @@ async function __giaDefinirTipoEc(
     alterado: !!d.alterado,
   }
 }
+// ── Armazéns do Odoo (odoo.armazens_do_usuario) ────────────────────────────
+// O escopo EFETIVO: concedido ao usuário ∩ permitido pelo escopo de lojas atual
+// ∩ ativo no Odoo. Quem calcula é o banco; aqui só se lê. Service role com o id
+// verificado do usuário — o mesmo caminho do cache de permissões. `Content-Profile`
+// seleciona o schema no POST de RPC do PostgREST.
+async function __giaArmazens(userId: string): Promise<GiaArmazem[]> {
+  const key = env('SUPABASE_SERVICE_ROLE_KEY')
+  let res: Response
+  try {
+    res = await fetch(`${env('SUPABASE_URL')}/rest/v1/rpc/armazens_do_usuario`, {
+      method: 'POST',
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'Content-Profile': 'odoo',
+      },
+      body: JSON.stringify({ p_usuario: userId }),
+    })
+  } catch (e) {
+    throw new HttpError(502, `escopo de armazéns indisponível (${String(e)})`)
+  }
+  if (!res.ok) throw new HttpError(500, 'falha ao consultar os armazéns do usuário')
+  const rows = (await res.json()) as Array<{
+    armazem_id: number
+    nome: string | null
+    codigo: string | null
+    local_estoque_id: number | null
+    local_estoque_nome: string | null
+    empresa_odoo_id: number | null
+    empresa_odoo_nome: string | null
+    empresa_id: number
+  }>
+  return rows.map((r) => ({
+    id: Number(r.armazem_id),
+    nome: r.nome ?? '',
+    codigo: r.codigo ?? '',
+    localEstoque: { id: Number(r.local_estoque_id ?? 0), nome: r.local_estoque_nome ?? '' },
+    empresaOdoo: { id: Number(r.empresa_odoo_id ?? 0), nome: r.empresa_odoo_nome ?? '' },
+    empresaId: Number(r.empresa_id),
+  }))
+}
 // ── Cadastro do usuário (public.usuarios) ───────────────────────────────────
 // O `user()` sai do JWT e não tem nome nem o id legado. Uma ida ao PostgREST,
 // memoizada por request pelo __giaBuildContext.
@@ -610,6 +680,24 @@ function __giaBuildContext(body: unknown, req: Request, user: GiaUser): ServerCo
     emps = null
     return r
   }
+  let arms: Promise<GiaArmazem[]> | null = null
+  const armazens = () => (arms ??= __giaArmazens(user.id))
+  // 403 nos dois casos, com a mesma mensagem para inexistente e fora do escopo:
+  // quem sonda não descobre quais ids existem no Odoo.
+  const requireArmazem = async (armazemId: number) => {
+    const id = Number(armazemId)
+    const achado = Number.isFinite(id) ? (await armazens()).find((a) => a.id === id) : undefined
+    if (!achado) throw new HttpError(403, `armazém "${armazemId}" fora do seu escopo de acesso`)
+    return achado
+  }
+  const requireDestino = async (localEstoqueId: number) => {
+    const id = Number(localEstoqueId)
+    const achado = Number.isFinite(id)
+      ? (await armazens()).find((a) => a.localEstoque.id === id)
+      : undefined
+    if (!achado) throw new HttpError(403, `destino "${localEstoqueId}" fora do seu escopo de acesso`)
+    return achado
+  }
   let perfil: Promise<GiaPerfilUsuario> | null = null
   const perfilUsuario = () => (perfil ??= __giaPerfilUsuario(user))
   const legacyUserId = () => perfilUsuario().then((p) => p.legacyUserId)
@@ -622,6 +710,9 @@ function __giaBuildContext(body: unknown, req: Request, user: GiaUser): ServerCo
     gerarTexto: (input: GiaTextoInput) => __giaGerarTexto(input, req),
     empresas,
     definirTipoEc,
+    armazens,
+    requireArmazem,
+    requireDestino,
     callModule: <R>(moduleId: string, handler: string, b?: unknown) =>
       __giaCallModule(moduleId, handler, b, req) as Promise<R>,
     perfilUsuario,
@@ -817,7 +908,12 @@ __giaHandlers["fechamento"] = (() => {
     ) {
       throw new HttpError(422, 'Informe o período no formato AAAA-MM-DD.')
     }
-    if (Number.isNaN(Date.parse(de)) || Number.isNaN(Date.parse(ate))) {
+    // Date.parse aceita "2026-02-30" (vira 02/03); a volta para texto tem que bater.
+    const existe = (d: string) => {
+      const t = Date.parse(`${d}T00:00:00Z`)
+      return !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === d
+    }
+    if (!existe(de) || !existe(ate)) {
       throw new HttpError(422, 'Data inválida.')
     }
     if (de > ate) throw new HttpError(422, 'A data final não pode ser menor que a data inicial.')
@@ -830,9 +926,13 @@ __giaHandlers["fechamento"] = (() => {
     return { de, ate }
   }
 
-  /** "01.CB GOIANIA" → "01"; "48. VASTO SUL" → "48". Sem número antes do ponto → null. */
-  function numeroDaLoja(nome: string): string | null {
-    const m = /^\s*(\d{1,4})\s*\./.exec(nome)
+  /**
+   * Número da loja com 2 dígitos — o `loc_ref` da API. Sai primeiro do vínculo com a
+   * BI do Simphony (`locRefs.BIAPI` começa sempre pelo número: "01 CB Go", "17. CB R",
+   * "13CBMa", "65"); o nome da Empresa ("01.CB GOIANIA") fica de reserva.
+   */
+  function numeroDaLoja(e: { nome: string; locRefs: Record<string, string> }): string | null {
+    const m = /^\s*(\d{1,4})/.exec(e.locRefs?.BIAPI ?? '') ?? /^\s*(\d{1,4})\s*\./.exec(e.nome)
     return m ? String(Number(m[1])).padStart(2, '0') : null
   }
 
@@ -863,13 +963,13 @@ __giaHandlers["fechamento"] = (() => {
 
   /**
    * `"PIX ONLINE PIX - PRE PAGO (144.9), BENEFICIO IFOOD ENTREGA - PRE PAGO (4.31)"`
-   * → `[{ descricao, valor }]`. A vírgula só separa itens quando o próximo trecho
-   * ainda tem um valor entre parênteses — descrição com vírgula não quebra.
+   * → `[{ descricao, valor }]`. A vírgula só separa itens logo depois do parêntese do
+   * valor — descrição com vírgula ("VALE, REFEICAO (10)") não quebra.
    */
   function separarItens(bruto: string | null): { descricao: string; valor: number | null }[] {
     if (!bruto) return []
     return bruto
-      .split(/,\s*(?=[^()]*\()/)
+      .split(/(?<=\))\s*,\s*/)
       .map((parte) => parte.trim())
       .filter(Boolean)
       .map((parte) => {
@@ -1139,9 +1239,12 @@ __giaHandlers["fechamento"] = (() => {
     // Só a loja com CNPJ (`tipoRegistro === 'empresa'`) — mesma regra de lojas.ts.
     if (!empresa || empresa.tipoRegistro !== 'empresa')
       throw new HttpError(404, 'Loja não encontrada.')
-    const locRef = numeroDaLoja(empresa.nome)
+    const locRef = numeroDaLoja(empresa)
     if (!locRef) {
-      throw new HttpError(422, `Não há número de loja no nome "${empresa.nome}" (ex.: "01.CB ...").`)
+      throw new HttpError(
+        422,
+        `A loja "${empresa.nome}" não tem número de loja no cadastro (vínculo com a BI do Simphony).`
+      )
     }
 
     // O cadastro carrega enquanto a API (bem mais lenta) responde.
@@ -1195,10 +1298,14 @@ __giaHandlers["fechamento"] = (() => {
 // ─── src/server/lojas.ts ────────────────────────────────────────────────
 __giaHandlers["lojas"] = (() => {
 
-  // Lojas que o usuário pode consultar: Empresas do escopo dele com
-  // `tipoRegistro === 'empresa'` (a loja, com CNPJ) cujo nome começa com o número
-  // da loja ("01.CB GOIANIA"). Propriedades/operações (sem CNPJ próprio) ficam de
-  // fora. É desse número que sai o `loc_ref` da API de delivery — mesma regra do legado (ExtrairNumeroLoja sobre o nome_fantasia).
+  // Lojas que o usuário pode consultar: todas as Empresas do escopo dele com
+  // `tipoRegistro === 'empresa'` (a loja, com CNPJ). Propriedades (escritório,
+  // centro de distribuição — sem CNPJ próprio) ficam de fora.
+  //
+  // O número da loja (`loc_ref` da API de delivery) vem primeiro do vínculo com a
+  // BI do Simphony (`locRefs.BIAPI`) e, na falta, do nome da Empresa
+  // ("01.CB GOIANIA"). Loja sem número aparece mesmo assim, com `locRef: null` —
+  // a pesquisa dela devolve um aviso claro (ver fechamento.ts).
   //
   // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. `numeroDaLoja`
   // se repete em fechamento.ts de propósito.
@@ -1206,13 +1313,17 @@ __giaHandlers["lojas"] = (() => {
   interface Loja {
     empresaId: number
     nome: string
-    locRef: string
+    locRef: string | null
     ativo: boolean
   }
 
-  /** "01.CB GOIANIA" → "01"; "48. VASTO SUL" → "48". Sem número antes do ponto → null. */
-  function numeroDaLoja(nome: string): string | null {
-    const m = /^\s*(\d{1,4})\s*\./.exec(nome)
+  /**
+   * Número da loja com 2 dígitos — o `loc_ref` da API. Sai primeiro do vínculo com a
+   * BI do Simphony (`locRefs.BIAPI` começa sempre pelo número: "01 CB Go", "17. CB R",
+   * "13CBMa", "65"); o nome da Empresa ("01.CB GOIANIA") fica de reserva.
+   */
+  function numeroDaLoja(e: { nome: string; locRefs: Record<string, string> }): string | null {
+    const m = /^\s*(\d{1,4})/.exec(e.locRefs?.BIAPI ?? '') ?? /^\s*(\d{1,4})\s*\./.exec(e.nome)
     return m ? String(Number(m[1])).padStart(2, '0') : null
   }
 
@@ -1225,8 +1336,7 @@ __giaHandlers["lojas"] = (() => {
     for (const e of await ctx.empresas()) {
       if (!escopo.all && !escopo.empresaIds.includes(e.id)) continue
       if (e.tipoRegistro !== 'empresa') continue
-      const locRef = numeroDaLoja(e.nome)
-      if (locRef) lojas.push({ empresaId: e.id, nome: e.nome, locRef, ativo: e.ativo })
+      lojas.push({ empresaId: e.id, nome: e.nome, locRef: numeroDaLoja(e), ativo: e.ativo })
     }
     return lojas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { numeric: true }))
   })

@@ -3,9 +3,9 @@
 ## 1. Identificação
 
 - **Módulo**: `fechamento-maestro` — Fechamento Maestro
-- **Versão do pacote**: 0.1.1
+- **Versão do pacote**: 0.2.0
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
-- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.69 (fixada)
+- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.70 (fixada)
 
 ## 2. Fontes de dados externas
 
@@ -13,7 +13,7 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
 
 | Handler (`src/server/`) | Fonte                                                                  | Acesso                            |
 | ----------------------- | ---------------------------------------------------------------------- | --------------------------------- |
-| `lojas.ts`              | `ctx.empresas()` (Empresas do escopo com o nº da loja no nome)         | —                                 |
+| `lojas.ts`              | `ctx.empresas()` (Empresas com CNPJ do escopo; nº da loja via BIAPI)   | —                                 |
 | `fechamento.ts`         | `api-dw.cocobambu.com/Delivery/?loc_ref=<nº loja>&start_date&end_date` | `ctx.credencial('apidw')`         |
 | `fechamento.ts`         | banco do Maestro: `SELECT` em `gia_relatorios.formas_pagamento`        | `sql` (`GIA_SERVER_DATABASE_URL`) |
 
@@ -29,7 +29,9 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
 
 ## 3. Posição no menu
 
-- **Grupo sugerido**: `relatorios`
+- **Grupo**: `cardapio` (Plataformas) › subgrupo **Maestro** › Fechamento Maestro,
+  ao lado do Reports Maestro (`navGroup: 'maestro'`).
+- [ ] O subgrupo **Maestro** é criado pelo time GIA na instalação (o mesmo do Reports Maestro).
 
 | Tela      | path                  | label              | ícone (lucide) | permissão                | faqId                |
 | --------- | --------------------- | ------------------ | -------------- | ------------------------ | -------------------- |
@@ -50,5 +52,9 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
   (ONLINE / ONLINE VR / OFFLINE) segue a regra do legado (PRD RN-4), com a lista
   ONLINE VR lida de `gia_relatorios.formas_pagamento` a cada pesquisa. A tela de
   edição do cadastro (Admin/TI) não foi portada; o cadastro é mantido no banco.
-- **Número da loja**: vem do nome da Empresa (`"01.CB GOIANIA"` → `loc_ref=01`).
+- **Número da loja**: sai primeiro do vínculo da Empresa com a BI do Simphony
+  (`locRefs.BIAPI`, que começa sempre pelo número: `'01 CB Go'`, `'17. CB R'`,
+  `'13CBMa'`, `'65'`); o nome da Empresa (`"01.CB GOIANIA"`) fica de reserva. A mesma
+  função `numeroDaLoja` está nos handlers `lojas` e `fechamento`. O seletor lista
+  todas as lojas com CNPJ; a que não tem número recebe 422 na pesquisa.
 - **Volume/latência**: uma loja × até 31 dias (≈ 25 s / 3 MB no pior caso medido).

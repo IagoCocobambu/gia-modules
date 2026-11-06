@@ -128,7 +128,12 @@ function validarPeriodo(de: unknown, ate: unknown): { de: string; ate: string } 
   ) {
     throw new HttpError(422, 'Informe o período no formato AAAA-MM-DD.')
   }
-  if (Number.isNaN(Date.parse(de)) || Number.isNaN(Date.parse(ate))) {
+  // Date.parse aceita "2026-02-30" (vira 02/03); a volta para texto tem que bater.
+  const existe = (d: string) => {
+    const t = Date.parse(`${d}T00:00:00Z`)
+    return !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === d
+  }
+  if (!existe(de) || !existe(ate)) {
     throw new HttpError(422, 'Data inválida.')
   }
   if (de > ate) throw new HttpError(422, 'A data final não pode ser menor que a data inicial.')
@@ -141,9 +146,13 @@ function validarPeriodo(de: unknown, ate: unknown): { de: string; ate: string } 
   return { de, ate }
 }
 
-/** "01.CB GOIANIA" → "01"; "48. VASTO SUL" → "48". Sem número antes do ponto → null. */
-function numeroDaLoja(nome: string): string | null {
-  const m = /^\s*(\d{1,4})\s*\./.exec(nome)
+/**
+ * Número da loja com 2 dígitos — o `loc_ref` da API. Sai primeiro do vínculo com a
+ * BI do Simphony (`locRefs.BIAPI` começa sempre pelo número: "01 CB Go", "17. CB R",
+ * "13CBMa", "65"); o nome da Empresa ("01.CB GOIANIA") fica de reserva.
+ */
+function numeroDaLoja(e: { nome: string; locRefs: Record<string, string> }): string | null {
+  const m = /^\s*(\d{1,4})/.exec(e.locRefs?.BIAPI ?? '') ?? /^\s*(\d{1,4})\s*\./.exec(e.nome)
   return m ? String(Number(m[1])).padStart(2, '0') : null
 }
 
@@ -174,13 +183,13 @@ function brl(c: number): string {
 
 /**
  * `"PIX ONLINE PIX - PRE PAGO (144.9), BENEFICIO IFOOD ENTREGA - PRE PAGO (4.31)"`
- * → `[{ descricao, valor }]`. A vírgula só separa itens quando o próximo trecho
- * ainda tem um valor entre parênteses — descrição com vírgula não quebra.
+ * → `[{ descricao, valor }]`. A vírgula só separa itens logo depois do parêntese do
+ * valor — descrição com vírgula ("VALE, REFEICAO (10)") não quebra.
  */
 function separarItens(bruto: string | null): { descricao: string; valor: number | null }[] {
   if (!bruto) return []
   return bruto
-    .split(/,\s*(?=[^()]*\()/)
+    .split(/(?<=\))\s*,\s*/)
     .map((parte) => parte.trim())
     .filter(Boolean)
     .map((parte) => {
@@ -450,9 +459,12 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
   // Só a loja com CNPJ (`tipoRegistro === 'empresa'`) — mesma regra de lojas.ts.
   if (!empresa || empresa.tipoRegistro !== 'empresa')
     throw new HttpError(404, 'Loja não encontrada.')
-  const locRef = numeroDaLoja(empresa.nome)
+  const locRef = numeroDaLoja(empresa)
   if (!locRef) {
-    throw new HttpError(422, `Não há número de loja no nome "${empresa.nome}" (ex.: "01.CB ...").`)
+    throw new HttpError(
+      422,
+      `A loja "${empresa.nome}" não tem número de loja no cadastro (vínculo com a BI do Simphony).`
+    )
   }
 
   // O cadastro carrega enquanto a API (bem mais lenta) responde.

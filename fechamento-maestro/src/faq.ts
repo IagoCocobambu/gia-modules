@@ -16,11 +16,12 @@ export const faq: ModuleFaq = {
 3. Clique em **Pesquisar**.
 
 No alto da tela fica o título do módulo, à esquerda, e a loja e as datas, à
-direita. Depois de pesquisar, a tela mostra, de cima para baixo:
+direita (no celular, embaixo do título, recolhíveis). Depois de pesquisar, a
+tela mostra, de cima para baixo:
 
-- a **barra de totais** do período inteiro (só no computador);
-- a **tabela de pedidos**: uma linha por pedido, com as colunas do sistema
-  antigo — número, cliente, origem, status, total pago, forma de pagamento e o
+- a **barra de totais** do período inteiro (no celular, os totais ficam no
+  botão **Totais**);
+- a **tabela de pedidos**: uma linha por pedido, com número, cliente, origem, status, total pago, forma de pagamento e o
   **Tipo** de cada forma (ONLINE, ONLINE VR, OFFLINE). Outras colunas (valores
   por grupo, checks, endereço...) se ligam no botão de colunas. **Clique num
   pedido** para abrir o detalhe da conciliação, com os valores e os checks.
@@ -40,16 +41,30 @@ fundo levemente vermelho.
 ## Totais do período
 
 No computador, o botão **Totais** abre e fecha, acima da tabela, uma **barra
-com os 12 indicadores** do Fechamento Diário do sistema antigo, do período
-inteiro. Cada indicador tem um ícone, o **valor** em destaque e o nome embaixo.
-Os indicadores ocupam a largura toda, em colunas iguais: 6 por linha em telas
-largas, 4 ou 3 em telas médias. **No celular a barra não aparece**, nem o botão
-Totais — lá a tela fica só com a tabela de pedidos.
+com os 12 indicadores** do fechamento, do período inteiro. Cada indicador tem
+um ícone, o **valor** em destaque e o nome embaixo. Os indicadores ocupam a
+largura toda, em colunas iguais: 6 por linha em telas largas, 4 ou 3 em telas
+médias. **No celular** a barra não cabe acima da tabela: o botão **Totais** abre
+o **Dashboard** direto na aba **Totais**, com os mesmos 12 indicadores, um
+por linha. A aba Totais também está no Dashboard do computador.
 
 As cores ajudam a ler de relance: os grupos de pagamento têm cada um a sua cor;
 os **cancelados** ficam vermelhos quando há valor e **sem classificação** fica
-amarelo quando há valor — o normal é zero. Passe o mouse sobre um indicador (ou
-chegue nele com Tab) para ver a explicação da conta.
+amarelo quando há valor — o normal é zero. No computador, **passe o mouse** sobre
+um indicador para ver a explicação da conta (a tabela abaixo traz a mesma
+explicação de cada um).
+
+**Cada indicador é um filtro da tabela.** Clique (ou toque) num indicador e a
+tabela passa a mostrar **só os pedidos que entram naquela conta** — por exemplo,
+em **Adquirentes online**, só os pedidos não cancelados com vale pago antes; em
+**Cancelado offline**, só os cancelados com parte paga na entrega. O indicador
+fica marcado e aparece, na barra da tabela, um botão com o nome dele: clique nele
+(ou no indicador de novo) para voltar a ver todos os pedidos. Pesquisar de novo
+também tira o filtro. Os valores da barra de totais **não mudam** com o filtro —
+continuam sendo do período inteiro. Indicador zerado não tem pedido para mostrar
+e não filtra. O filtro combina com **Só divergências** (mostra os divergentes
+dentro do indicador) e vale para o **Exportar**: o Excel sai com os pedidos
+filtrados e o subtítulo de cada aba diz qual filtro estava ligado.
 
 Os indicadores, na ordem:
 
@@ -65,7 +80,7 @@ Os indicadores, na ordem:
 | **Valor sem classificação** | valor em formas de pagamento que vieram sem nome (o normal é zero) |
 | **Pagamentos sem classificação** | quantas formas de pagamento ficaram sem classificação |
 
-Como no sistema antigo, o incentivo que entra em **Descontos parceiro** sai do
+O incentivo que entra em **Descontos parceiro** sai do
 **Online** quando o pedido tem parte online: ele foi pago pelo parceiro, não
 pelo cliente. Por isso Online + Adquirentes online + Adquirentes offline +
 Offline + Sem classificação pode ficar abaixo do total pago, pela diferença do
@@ -73,9 +88,8 @@ que foi para Descontos parceiro. O incentivo do 99Food não entra em Descontos
 parceiro.
 
 Quando há **pagamento sem classificação**, o último indicador fica **vermelho**:
-clique nele para ver a lista, agrupada pelo nome da forma de pagamento, com o
-valor e os pedidos de cada uma. Clique num pedido da lista para abrir o detalhe.
-Sem nenhum, ele mostra **0** em verde.
+clique nele para ver na tabela os pedidos com forma de pagamento sem nome, e num
+pedido para abrir o detalhe com cada forma. Sem nenhum, ele mostra **0** em verde.
 
 A barra fica **aberta** em telas com 700 px de altura ou mais e **fechada** em
 telas mais baixas, para sobrar espaço para a tabela — e acompanha a janela se
@@ -85,7 +99,8 @@ escolha até recarregar a página. A barra mostra sempre o período inteiro — 
 
 ## Dashboard — vendas por canal
 
-O botão **Dashboard** abre, numa janela, o gráfico **Vendas por canal**: um anel
+O botão **Dashboard** abre uma janela com duas abas: **Vendas por canal** e
+**Totais** (os 12 indicadores, como na barra). A aba **Vendas por canal** é um anel
 com a fatia de cada **origem** do pedido (App Coco Bambu, iFood, 99Food, Pedido
 manual...) no **total pago** do período. No meio do anel fica o **total pago**
 dos pedidos não cancelados e quantos pedidos entraram nele.
@@ -126,9 +141,8 @@ botão fica desativado.
 
 Cada pedido traz as formas de pagamento num texto como
 *PIX ONLINE PIX - PRE PAGO (144.9), BENEFICIO IFOOD ENTREGA - PRE PAGO (4.31)*.
-O módulo separa cada forma com o seu valor e dá a ela um **tipo** — a mesma
-regra do Fechamento Diário do sistema antigo —, nesta ordem (a primeira que
-servir vale):
+O módulo separa cada forma com o seu valor e dá a ela um **tipo**, por estas
+regras, nesta ordem (a primeira que servir vale):
 
 | Tipo | Soma em | Quando | Exemplos |
 |---|---|---|---|
@@ -145,7 +159,7 @@ Os benefícios do iFood (*BENEFICIO IFOOD...*) contam como **ONLINE**: são pago
 pelo iFood, não pelo cliente na entrega.
 
 A lista do que é ONLINE VR vem do **cadastro de formas de pagamento** do Maestro,
-o mesmo do sistema antigo, lido a cada pesquisa. Uma forma nova de vale que não
+lido a cada pesquisa. Uma forma nova de vale que não
 esteja no cadastro entra como ONLINE (se for pré-paga) ou OFFLINE — peça ao time
 de TI para incluí-la no cadastro.
 
@@ -191,7 +205,7 @@ Um pedido criado às 23h50 do dia 10 e entregue no dia 11 entra no dia **10**.
       content: `
 ## Tabela de pedidos
 
-A tabela segue o Fechamento Diário do sistema antigo. De cara aparecem: **Nº
+De cara, a tabela mostra: **Nº
 pedido, Data criação, Nº parceiro, Nº conta, Nome cliente, Origem, Status do
 pedido, Total pago, Desconto total, Forma de pagamento e Tipo**. As outras
 colunas começam **desligadas**: ligue-as no botão de **colunas** da barra da
@@ -263,9 +277,15 @@ servidor: sem a permissão, o dado completo nem chega ao seu navegador.
 
 ## No celular
 
-No celular a **barra de totais não aparece** — para ver os totais e a lista de
-pagamentos sem classificação, use o computador. O título fica em cima, com a
-loja e as datas embaixo. A tabela de pedidos vira **cartões** com número, data,
+No celular, os **totais** ficam no botão **Totais**, que abre o Dashboard na aba
+**Totais** com os 12 indicadores: toque num indicador para filtrar a tabela pelos
+pedidos dele (a janela fecha e a tabela já aparece filtrada). A explicação de
+cada indicador está em *Totais do período*, nesta ajuda.
+O título fica em cima, com a loja e as datas embaixo. Ao tocar em **Pesquisar**,
+a loja e as datas **se recolhem** para a tela ficar com o resultado; toque na
+**seta** ao lado do título para abri-las de novo e fazer outra pesquisa. Se a
+pesquisa for recusada (por exemplo, data final antes da inicial), elas ficam
+abertas para você corrigir. Os botões da barra da tabela mostram sempre o nome, não só o ícone. A tabela de pedidos vira **cartões** com número, data,
 total pago e tipo: toque em **ver mais** para os outros campos ligados, e no
 cartão para abrir o detalhe. Use o **campo de busca** para achar um pedido. O
 botão de **colunas** também funciona no celular: as colunas que você ligar
@@ -288,8 +308,12 @@ arquivo **.xlsx** com **3 abas**:
 
 O que vai para o arquivo segue a tabela: os pedidos que estão nela — com o
 *Só divergências*, a busca e os filtros de coluna. A aba **Fechamento diário**
-soma esses mesmos pedidos por dia; sem nenhum filtro, a soma dela bate com os
-totais do período.
+soma esses mesmos pedidos por dia; sem nenhum filtro, a linha **Total** de cada
+aba bate com os totais do período. Por isso a coluna **Online** do arquivo é o
+Online **líquido** (sem o incentivo que foi para Descontos parceiro), e os
+descontos saem em duas colunas, **Descontos loja** e **Descontos parceiro**, com
+a mesma regra dos cards. Com algum filtro ligado, o subtítulo de cada aba avisa
+quantos pedidos entraram (ex.: *filtrado: 12 de 340 pedidos*).
 
 As linhas **Total** usam a fórmula SUBTOTAL: se você filtrar no próprio Excel,
 o total acompanha. O nome do arquivo segue o padrão do portal:
@@ -302,13 +326,13 @@ o total acompanha. O nome do arquivo segue o padrão do portal:
       content: `
 Os pedidos vêm da **API do DW** (\`api-dw.cocobambu.com\`, consulta *Delivery*),
 que lê o Maestro — a mesma fonte do **Reports Maestro**. A lista de formas
-**ONLINE VR** vem do **cadastro de formas de pagamento** do Maestro, o mesmo do
-sistema antigo. A cada **Pesquisar** o portal busca os dois na hora e faz a
+**ONLINE VR** vem do **cadastro de formas de pagamento** do Maestro. A cada **Pesquisar** o portal busca os dois na hora e faz a
 conciliação; nada é gravado no portal.
 
-A loja é identificada pelo **número no começo do nome** da Empresa no cadastro do
-portal: *01.CB GOIANIA* consulta a loja **01** no Maestro. Por isso só aparecem no
-seletor as lojas cujo nome começa com um número seguido de ponto.
+A loja é identificada pelo **número da loja** no cadastro da Empresa no portal.
+Ele vem do **vínculo da Empresa com a BI do Simphony**, que começa sempre pelo
+número (ex.: *01 CB Go* → loja **01**). Se a Empresa não tiver esse vínculo, vale o
+**número no começo do nome** (ex.: *01.CB GOIANIA* → loja **01**).
 
 O resultado de uma pesquisa fica guardado por **30 minutos**: pesquisar de novo a
 mesma loja e o mesmo período nesse prazo mostra o resultado na hora. Para buscar
@@ -317,7 +341,8 @@ dados atualizados antes disso, recarregue a página (F5) e pesquise de novo.
 O seletor mostra só as lojas do **seu escopo** de Empresas no portal, e só as
 cadastradas como **empresa** (com CNPJ) — operações/propriedades sem CNPJ
 próprio, como escritório e centro de distribuição, ficam de fora. O servidor
-confere isso de novo a cada pesquisa.
+confere isso de novo a cada pesquisa. Se uma loja do seletor não tiver número em
+nenhum dos dois lugares, a pesquisa avisa que falta o número no cadastro.
       `,
     },
   ],
@@ -331,7 +356,7 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'O que significa a coluna Tipo?',
-          a: 'É o tipo de cada forma de pagamento do pedido, como no Fechamento Diário do sistema antigo: ONLINE (pago antes, no app ou no parceiro), ONLINE VR (vale-refeição e benefícios, que somam em Adquirentes), OFFLINE (pago na entrega) e SEM CLASSIFICAÇÃO. Um pedido pago de duas formas mostra os dois tipos, separados por ponto e vírgula. Use o filtro da coluna para ver só um tipo.',
+          a: 'É o tipo de cada forma de pagamento do pedido: ONLINE (pago antes, no app ou no parceiro), ONLINE VR (vale-refeição e benefícios, que somam em Adquirentes), OFFLINE (pago na entrega) e SEM CLASSIFICAÇÃO. Um pedido pago de duas formas mostra os dois tipos, separados por ponto e vírgula. Use o filtro da coluna para ver só um tipo.',
         },
         {
           q: 'Apareceu valor em "Sem classificação". O que faço?',
@@ -347,15 +372,15 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'Qual a diferença entre Adquirentes online e Adquirentes offline?',
-          a: 'Os dois são vales ONLINE VR. Adquirentes online é o vale pago antes, no app ou no parceiro — o nome termina em PRE PAGO (ex.: MEAL_VOUCHER ONLINE ALELO - PRE PAGO, PLUXEE - PRE PAGO). Adquirentes offline é o vale passado na entrega, sem PRE PAGO (ex.: VR Refeição, Alelo Refeição, Ticket Refeição). É a mesma divisão do sistema antigo.',
+          a: 'Os dois são vales ONLINE VR. Adquirentes online é o vale pago antes, no app ou no parceiro — o nome termina em PRE PAGO (ex.: MEAL_VOUCHER ONLINE ALELO - PRE PAGO, PLUXEE - PRE PAGO). Adquirentes offline é o vale passado na entrega, sem PRE PAGO (ex.: VR Refeição, Alelo Refeição, Ticket Refeição).',
         },
         {
           q: 'Um vale-refeição entrou em Online ou Offline em vez de Adquirentes. Por quê?',
-          a: 'Porque o nome dele não está no cadastro de formas de pagamento do Maestro como ONLINE VR (para a origem do pedido ou para todas). Sem isso, a forma pré-paga entra como ONLINE e a não pré-paga como OFFLINE — igual ao sistema antigo. Peça ao time de TI para incluir a forma no cadastro; a mudança vale na próxima pesquisa.',
+          a: 'Porque o nome dele não está no cadastro de formas de pagamento do Maestro como ONLINE VR (para a origem do pedido ou para todas). Sem isso, a forma pré-paga entra como ONLINE e a não pré-paga como OFFLINE. Peça ao time de TI para incluir a forma no cadastro; a mudança vale na próxima pesquisa.',
         },
         {
           q: 'Posso cadastrar ou mudar a classificação de uma forma de pagamento?',
-          a: 'Não por esta tela. A lista ONLINE VR vem do cadastro de formas de pagamento do Maestro, o mesmo do sistema antigo. Para incluir ou mudar uma forma, peça ao time de TI; a mudança vale para todas as lojas a partir da próxima pesquisa.',
+          a: 'Não por esta tela. A lista ONLINE VR vem do cadastro de formas de pagamento do Maestro. Para incluir ou mudar uma forma, peça ao time de TI; a mudança vale para todas as lojas a partir da próxima pesquisa.',
         },
         {
           q: 'Pedidos cancelados entram no fechamento?',
@@ -363,15 +388,15 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'Como são calculados Descontos loja e Descontos parceiro?',
-          a: 'Igual ao sistema antigo. Descontos loja soma o desconto total dos pedidos despachados ou entregues (status Despachado ou Entregue); pedido só Concluído (prato pronto) ou cancelado fica de fora. Descontos parceiro soma o incentivo do parceiro dos pedidos que não são do 99Food e têm alguma forma ONLINE VR ou OFFLINE. Esse incentivo sai do Online quando o pedido tem parte online, porque foi o parceiro, não o cliente, que pagou.',
+          a: 'Descontos loja soma o desconto total dos pedidos despachados ou entregues (status Despachado ou Entregue); pedido só Concluído (prato pronto) ou cancelado fica de fora. Descontos parceiro soma o incentivo do parceiro dos pedidos que não são do 99Food e têm alguma forma ONLINE VR ou OFFLINE. Esse incentivo sai do Online quando o pedido tem parte online, porque foi o parceiro, não o cliente, que pagou.',
         },
         {
           q: 'Por que Online + Adquirentes + Offline não dá o total pago?',
-          a: 'Porque o incentivo que vai para Descontos parceiro sai do Online (regra do sistema antigo). Some de volta o valor de Descontos parceiro dos pedidos com parte online e a conta fecha com o total pago dos pedidos não cancelados — o mesmo total do meio do anel do Dashboard.',
+          a: 'Porque o incentivo que vai para Descontos parceiro sai do Online. Some de volta o valor de Descontos parceiro dos pedidos com parte online e a conta fecha com o total pago dos pedidos não cancelados — o mesmo total do meio do anel do Dashboard.',
         },
         {
           q: 'O indicador "Pagamentos sem classificação" ficou vermelho. O que faço?',
-          a: 'Clique nele (no computador; no celular a barra de totais não aparece) para ver as formas de pagamento que vieram sem nome ou como DESCONHECIDO, com o valor e os pedidos de cada uma. Clique num pedido para abrir o detalhe e confira-o no Maestro. O valor aparece em Valor sem classificação e o pedido fica divergente.',
+          a: 'Clique ou toque nele (no celular, ele está no botão Totais): a tabela passa a mostrar só os pedidos com forma de pagamento sem nome ou DESCONHECIDO. Clique num pedido para abrir o detalhe, veja qual forma ficou sem classificação e confira-o no Maestro. O valor aparece em Valor sem classificação e o pedido fica divergente.',
         },
         {
           q: 'Um pedido entregue depois da meia-noite cai em qual dia?',
@@ -392,11 +417,15 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'O que significam as cores na barra de totais?',
-          a: 'Cada grupo de pagamento (Online, Adquirentes online e offline, Offline) tem a sua cor. Os indicadores de alerta só ganham cor quando há algo a olhar: os cancelados ficam vermelhos quando há valor, Valor sem classificação fica amarelo quando há valor e Pagamentos sem classificação fica vermelho (e vira botão) quando há algum. Passe o mouse sobre um indicador para ver a explicação da conta. Para esconder a barra, clique no botão Totais.',
+          a: 'Cada grupo de pagamento (Online, Adquirentes online e offline, Offline) tem a sua cor. Os indicadores de alerta só ganham cor quando há algo a olhar: os cancelados ficam vermelhos quando há valor, Valor sem classificação fica amarelo quando há valor e Pagamentos sem classificação fica vermelho quando há algum. Passe o mouse num indicador para ver a explicação da conta; clique nele para filtrar a tabela pelos pedidos dele. Para esconder a barra, clique no botão Totais.',
         },
         {
-          q: 'Por que não vejo os totais no celular?',
-          a: 'A barra de totais só aparece no computador; no celular a tela fica com a tabela de pedidos. Para os totais, o Dashboard (total pago por canal) funciona no celular, e o Excel traz o fechamento dia a dia.',
+          q: 'Como vejo quais pedidos formam um total?',
+          a: 'Clique (ou toque) no indicador na barra de totais: a tabela mostra só os pedidos que entram naquela conta — em Descontos parceiro, por exemplo, só os pedidos com incentivo do parceiro. Um botão com o nome do indicador aparece na barra da tabela; clique nele (ou no indicador de novo) para voltar a ver todos. Os totais não mudam com o filtro, e o Exportar sai com os pedidos filtrados.',
+        },
+        {
+          q: 'Onde vejo os totais no celular?',
+          a: 'No botão Totais, na barra da tabela. No celular a barra de totais não cabe acima da tabela, então o botão abre o Dashboard direto na aba Totais, com os mesmos 12 indicadores. Toque num indicador para filtrar a tabela pelos pedidos dele. O fechamento dia a dia está na aba Fechamento diário do Excel.',
         },
         {
           q: 'Quanto cada canal (iFood, app, 99Food) vendeu no período?',
@@ -433,7 +462,7 @@ confere isso de novo a cada pesquisa.
         },
         {
           q: 'Por que minha loja não aparece no seletor?',
-          a: 'O seletor lista só as lojas do seu escopo de Empresas no portal e, entre elas, só as que têm o número no começo do nome (ex.: "01.CB GOIANIA"). Se a loja é sua e não aparece, peça ao administrador para conferir seu escopo ou o nome da Empresa no cadastro.',
+          a: 'O seletor lista todas as lojas com CNPJ do seu escopo de Empresas no portal. Escritórios, centros de distribuição e outros lugares sem CNPJ próprio ficam de fora. Se a sua loja tem CNPJ e mesmo assim não aparece, ela não está no seu escopo — peça ao gestor para conferir.',
         },
       ],
     },
@@ -447,6 +476,10 @@ confere isso de novo a cada pesquisa.
         {
           q: 'A pesquisa voltou sem nenhum pedido. Está certo?',
           a: 'Pode estar: a loja pode não ter tido delivery no período. Se você esperava pedidos, confira as datas e a loja. Se mesmo assim nada aparecer, avise o suporte informando loja e período.',
+        },
+        {
+          q: 'Apareceu "A loja não tem número de loja no cadastro". O que faço?',
+          a: 'A API de delivery identifica a loja pelo número (ex.: "01"). Ele vem do vínculo da Empresa com a BI do Simphony ou, na falta, do começo do nome (ex.: "01.CB GOIANIA"). Se a Empresa não tem nenhum dos dois, não há como buscar os pedidos dela — peça ao time do Portal GIA para completar o cadastro.',
         },
       ],
     },

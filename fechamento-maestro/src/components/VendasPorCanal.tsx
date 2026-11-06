@@ -78,6 +78,19 @@ interface VendasPorCanalProps {
 export function VendasPorCanal({ canais, carregando, className }: VendasPorCanalProps) {
   const reduzido = usePrefersReducedMotion()
   const [ativo, setAtivo] = useState<string | null>(null)
+  // Destaque ao passar por cima só em aparelho com hover de verdade. No toque o
+  // navegador emula eventos de mouse (até com pointerType "mouse", quando o
+  // painel aparece sob o dedo) e ligava/desligava o destaque sozinho; lá vale só
+  // o toque (onClick).
+  const [comHover] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches
+  )
+  const entrar = (canal: string) => (e: { pointerType: string }) => {
+    if (comHover && e.pointerType === 'mouse') setAtivo(canal)
+  }
+  const sair = (e: { pointerType: string }) => {
+    if (comHover && e.pointerType === 'mouse') setAtivo(null)
+  }
 
   // O anel "cresce" ao abrir: começa vazio e vai ao valor no frame seguinte.
   const [cheio, setCheio] = useState(reduzido)
@@ -132,7 +145,7 @@ export function VendasPorCanal({ canais, carregando, className }: VendasPorCanal
       ) : (
         <div
           className="flex flex-col items-center gap-4 @md:flex-row @md:items-start"
-          onMouseLeave={() => setAtivo(null)}
+          onPointerLeave={sair}
         >
           <div className="relative h-52 w-52 shrink-0">
             <svg
@@ -163,7 +176,8 @@ export function VendasPorCanal({ canais, carregando, className }: VendasPorCanal
                       strokeDasharray: `${cheio ? f.tamanho : 0} 100`,
                       strokeDashoffset: cheio ? -f.inicio : 0,
                     }}
-                    onMouseEnter={() => setAtivo(f.canal)}
+                    onPointerEnter={entrar(f.canal)}
+                    onClick={() => setAtivo((a) => (a === f.canal ? null : f.canal))}
                   />
                 ) : null
               )}
@@ -204,9 +218,8 @@ export function VendasPorCanal({ canais, carregando, className }: VendasPorCanal
                 <button
                   type="button"
                   aria-pressed={ativo === f.canal}
-                  onMouseEnter={() => setAtivo(f.canal)}
-                  onFocus={() => setAtivo(f.canal)}
-                  onBlur={() => setAtivo(null)}
+                  onPointerEnter={entrar(f.canal)}
+                  onPointerLeave={sair}
                   onClick={() => setAtivo((a) => (a === f.canal ? null : f.canal))}
                   className={cn(
                     'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm',

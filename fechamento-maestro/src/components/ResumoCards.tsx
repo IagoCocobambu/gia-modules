@@ -9,10 +9,11 @@ import {
   Handshake,
   Store,
 } from 'lucide-react'
-import { Skeleton, Tooltip } from '@gia-cb/ui'
+import { Skeleton } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
 import { formatBRL } from '../helpers'
-import type { TotaisPeriodo } from '../types'
+import type { FiltroTotal, TotaisPeriodo } from '../types'
+import { Dica } from './Dica'
 
 /** Cor do indicador: tinge o quadradinho do ícone e o valor. */
 type Tom = 'neutro' | 'success' | 'info' | 'primary' | 'warning' | 'destructive'
@@ -165,15 +166,20 @@ interface ResumoCardsProps {
   /** Totais do período; `null` enquanto não há resultado. */
   totais: TotaisPeriodo | null
   carregando: boolean
-  /** Abre a lista das formas de pagamento sem classificação. */
-  onVerSemClassificacao: () => void
+  /** Indicador que está filtrando a tabela (`null` = sem filtro). */
+  filtro: FiltroTotal | null
+  /** Clique num indicador: filtra a tabela por ele; clicar de novo tira o filtro. */
+  onFiltroChange: (filtro: FiltroTotal | null) => void
   className?: string
 }
 
 const ITEM = cn(
-  'flex min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-left',
+  'flex min-h-11 min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-left',
+  'transition-colors duration-fast ease-default',
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 )
+
+const DICA_FILTRO = 'Clique para ver na tabela só os pedidos que entram nesta conta.'
 
 /**
  * Totais do fechamento do período numa barra com os 12 indicadores do legado: o
@@ -181,20 +187,59 @@ const ITEM = cn(
  * (com a mesma divisão), os descontos da loja e do parceiro e o que ficou sem
  * classificação.
  *
- * Grade que ocupa a largura toda, com colunas que sempre dividem 12 (2, 3, 4 ou
- * 6, pela largura da barra — container query): as linhas fecham cheias, sem
- * sobra vazia no fim. O tooltip de cada um explica a conta; o de pagamentos sem
- * classificação, quando > 0, é um botão que abre a lista.
+ * Grade que ocupa a largura toda, com colunas que sempre dividem 12 (1, 2, 3, 4
+ * ou 6, pela largura — container query; 1 no celular, para valor e nome
+ * inteiros): as linhas fecham cheias, sem sobra vazia no fim.
+ *
+ * Cada indicador é um FILTRO da tabela: o clique mostra só os pedidos que somaram
+ * nele (`pedidosDoTotal`) e o indicador fica marcado; clicar de novo tira o
+ * filtro. O tooltip explica a conta ao passar o mouse e fecha no clique. Indicador
+ * zerado não tem pedido para mostrar: fica sem ação.
  */
 export function ResumoCards({
   totais,
   carregando,
-  onVerSemClassificacao,
+  filtro,
+  onFiltroChange,
   className,
 }: ResumoCardsProps) {
   const pronto = !carregando && totais !== null
   const semClassificacao = pronto ? totais.pagamentos_sem_classificacao : 0
-  const clicavel = semClassificacao > 0
+
+  const itens: {
+    campo: FiltroTotal
+    rotulo: string
+    dica: string
+    icone: ComponentType<SVGProps<SVGSVGElement>>
+    tom: Tom
+    valor: string | null
+    zerado: boolean
+  }[] = [
+    ...INDICADORES.map((i) => {
+      const v = pronto ? totais[i.campo] : 0
+      return {
+        campo: i.campo,
+        rotulo: i.rotulo,
+        dica: i.dica,
+        icone: i.icone,
+        tom: pronto ? i.tom(v) : ('neutro' as Tom),
+        valor: pronto ? formatBRL(v) : null,
+        zerado: v === 0,
+      }
+    }),
+    {
+      campo: 'pagamentos_sem_classificacao',
+      rotulo: 'pagamentos sem classificação',
+      dica:
+        semClassificacao > 0
+          ? 'Formas de pagamento que a regra não reconheceu (vazia ou DESCONHECIDO)'
+          : 'Todas as formas de pagamento foram classificadas',
+      icone: AlertTriangle,
+      tom: !pronto ? 'neutro' : semClassificacao > 0 ? 'destructive' : 'success',
+      valor: pronto ? semClassificacao.toLocaleString('pt-BR') : null,
+      zerado: semClassificacao === 0,
+    },
+  ]
 
   return (
     <div
@@ -204,62 +249,37 @@ export function ResumoCards({
       )}
     >
       <div
-        role="list"
-        aria-label="Totais do período"
-        className="grid grid-cols-2 gap-x-1 gap-y-0.5 @lg:grid-cols-3 @2xl:grid-cols-4 @5xl:grid-cols-6"
+        role="group"
+        aria-label="Totais do período — clique num indicador para filtrar a tabela"
+        className="grid grid-cols-1 gap-x-1 gap-y-0.5 @sm:grid-cols-2 @lg:grid-cols-3 @2xl:grid-cols-4 @5xl:grid-cols-6"
       >
-        {INDICADORES.map((i) => {
-          const valor = pronto ? totais[i.campo] : 0
+        {itens.map((i) => {
+          const ativo = filtro === i.campo
+          const semAcao = !pronto || (i.zerado && !ativo)
           return (
-            <Tooltip key={i.campo} content={i.dica}>
-              <div role="listitem" tabIndex={0} className={ITEM}>
-                <Indicador
-                  icone={i.icone}
-                  tom={pronto ? i.tom(valor) : 'neutro'}
-                  valor={pronto ? formatBRL(valor) : null}
-                  rotulo={i.rotulo}
-                />
-              </div>
-            </Tooltip>
+            <Dica key={i.campo} content={semAcao ? i.dica : `${i.dica}. ${DICA_FILTRO}`}>
+              <button
+                type="button"
+                aria-pressed={ativo}
+                aria-disabled={semAcao}
+                aria-label={`${i.rotulo}: ${i.valor ?? 'carregando'}`}
+                onClick={() => !semAcao && onFiltroChange(ativo ? null : i.campo)}
+                className={cn(
+                  ITEM,
+                  semAcao ? 'cursor-default' : 'hover:bg-muted/60',
+                  ativo && 'bg-primary/10 ring-1 ring-inset ring-primary/40 hover:bg-primary/15',
+                  i.campo === 'pagamentos_sem_classificacao' &&
+                    pronto &&
+                    !i.zerado &&
+                    !ativo &&
+                    'bg-destructive/5 hover:bg-destructive/10'
+                )}
+              >
+                <Indicador icone={i.icone} tom={i.tom} valor={i.valor} rotulo={i.rotulo} />
+              </button>
+            </Dica>
           )
         })}
-
-        <Tooltip
-          content={
-            clicavel
-              ? 'Formas de pagamento que a regra não reconheceu — clique para ver a lista'
-              : 'Todas as formas de pagamento foram classificadas'
-          }
-        >
-          {clicavel ? (
-            <button
-              type="button"
-              role="listitem"
-              onClick={onVerSemClassificacao}
-              aria-label={`${semClassificacao} pagamentos sem classificação. Ver a lista`}
-              className={cn(
-                ITEM,
-                'bg-destructive/5 transition-colors duration-fast ease-default hover:bg-destructive/10'
-              )}
-            >
-              <Indicador
-                icone={AlertTriangle}
-                tom="destructive"
-                valor={semClassificacao.toLocaleString('pt-BR')}
-                rotulo="pagamentos sem classificação"
-              />
-            </button>
-          ) : (
-            <div role="listitem" tabIndex={0} className={ITEM}>
-              <Indicador
-                icone={AlertTriangle}
-                tom={pronto ? 'success' : 'neutro'}
-                valor={pronto ? '0' : null}
-                rotulo="pagamentos sem classificação"
-              />
-            </div>
-          )}
-        </Tooltip>
       </div>
     </div>
   )

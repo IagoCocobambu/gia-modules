@@ -4,10 +4,11 @@
 // api-dw.cocobambu.com/Delivery/ com a credencial GIA_DEV_CRED_APIDW_* do `.env`.
 // Por isso não há fixtures — só personas e as Empresas simuladas.
 //
-// O `label` faz o papel do nome da Empresa no portal (nome_fantasia): o número no
-// começo dele ("01.CB GOIANIA" → "01") é o `loc_ref` da API de delivery, como no
-// legado. Só aparecem no seletor as Empresas com CNPJ (tipoRegistro 'empresa')
-// e com número no nome.
+// O `loc_ref` da API de delivery é o número da loja. Sai primeiro do vínculo com a
+// BI do Simphony (`locRefs.BIAPI`, ex.: '01 CB Go' → "01") e, na falta, do `label`,
+// que faz o papel do nome da Empresa no portal ("01.CB GOIANIA" → "01"). Só aparecem
+// no seletor as Empresas com CNPJ (tipoRegistro 'empresa'); a que não tem número em
+// nenhum dos dois aparece e a pesquisa avisa que falta o número.
 
 export default {
   moduleId: 'fechamento-maestro',
@@ -29,7 +30,7 @@ export default {
 
   // Lojas com o mesmo nome da lista de lojas do legado (gia.empresas.nome_fantasia).
   empresas: [
-    { id: 1, label: '01.CB GOIANIA' },
+    { id: 1, label: '01.CB GOIANIA', locRefs: { BIAPI: '01 CB Go' } },
     { id: 2, label: '02.CB ANALIA FRANCO' },
     { id: 3, label: '03.CB JK' },
     { id: 4, label: '04.CB SAO LUIS' },
@@ -41,11 +42,12 @@ export default {
     { id: 10, label: '10.CB MEIRELES' },
     { id: 11, label: '11.CB DOM PASTEL' },
     { id: 12, label: '12.CB BEIRA MAR' },
-    { id: 13, label: '13.CB MARKET PLACE' },
+    { id: 13, label: '13.CB MARKET PLACE', locRefs: { BIAPI: '13CBMa' } },
     { id: 14, label: '14.CB CAMPINAS' },
     { id: 15, label: '15.CB CRYSTAL' },
     { id: 16, label: '16.CB VILA VELHA' },
-    { id: 17, label: '17.CB RECIFE' },
+    // Renomeada sem o prefixo: o número sai do vínculo BIAPI.
+    { id: 17, label: 'CB RECIFE', locRefs: { BIAPI: '17. CB R' } },
     { id: 18, label: '18.VASTO BSB' },
     { id: 19, label: '19.CB PORTO ALEGRE' },
     { id: 20, label: '20.CB ANHEMBI' },
@@ -129,6 +131,9 @@ export default {
     // mesmo com número no nome.
     { id: 9000, label: 'Escritório', tipoRegistro: 'propriedade' },
     { id: 9001, label: '99.CD GOIANIA', tipoRegistro: 'propriedade' },
+    // Loja com CNPJ sem número no nome nem vínculo BIAPI: aparece no seletor e a
+    // pesquisa responde "não tem número de loja no cadastro".
+    { id: 9002, label: 'CB LOJA NOVA' },
   ],
 
   fixtures: {},

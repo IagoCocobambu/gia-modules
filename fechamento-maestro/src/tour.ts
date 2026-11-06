@@ -24,7 +24,7 @@ export const tour = defineTour({
       screen: '/fechamento-maestro',
       target: '[data-tour="fechamento-maestro-totais-toggle"]',
       title: 'Totais do período',
-      body: 'Abre e fecha a barra de totais do período (só no computador), com os 12 indicadores do sistema antigo: **Online**, **Adquirentes online**, **Adquirentes offline** e **Offline**, o que foi **cancelado** (com a mesma divisão), os descontos da **loja** e do **parceiro** e o que ficou **sem classificação**. Passe o mouse num indicador para ver a conta; se o de pagamentos sem classificação ficar vermelho, clique nele para ver a lista.',
+      body: 'Mostra os totais do período — no computador, numa barra acima da tabela; no celular, na aba Totais do Dashboard —, com os 12 indicadores do fechamento: **Online**, **Adquirentes online**, **Adquirentes offline** e **Offline**, o que foi **cancelado** (com a mesma divisão), os descontos da **loja** e do **parceiro** e o que ficou **sem classificação**. Passe o mouse num indicador para ver a conta e **clique nele para filtrar a tabela** só pelos pedidos que entram naquele total; clique de novo (ou no botão com o nome dele) para ver todos.',
       placement: 'bottom',
     },
     {
@@ -32,7 +32,7 @@ export const tour = defineTour({
       screen: '/fechamento-maestro',
       target: '[data-tour="fechamento-maestro-dashboard"]',
       title: 'Dashboard',
-      body: 'Abre o gráfico de **vendas por canal**: quanto do total pago veio de cada origem (App Coco Bambu, iFood, 99Food...), em valor e em porcentagem. Passe o mouse num canal para ver os números dele.',
+      body: 'Abre o gráfico de **vendas por canal**: quanto do total pago veio de cada origem (App Coco Bambu, iFood, 99Food...), em valor e em porcentagem. Passe o mouse ou toque num canal para ver os números dele. A aba **Totais** traz os 12 indicadores.',
       placement: 'bottom',
     },
     {
@@ -46,10 +46,10 @@ export const tour = defineTour({
     {
       id: 'frame',
       screen: '/fechamento-maestro',
-      target: '[data-tour="fechamento-maestro-frame"]',
+      target: '[data-tour="fechamento-maestro-divergencias"]',
       title: 'Divergências',
       body: 'Na tabela de pedidos, linhas com fundo vermelho têm divergência. Use **Só divergências** para ver só elas e clique num pedido para ver cada forma de pagamento, o grupo em que caiu e o motivo da divergência.',
-      placement: 'top',
+      placement: 'bottom',
     },
   ],
 })

@@ -1,6 +1,6 @@
 # Fechamento Maestro
 
-Módulo GIA — categoria: operacional. Monta o **fechamento diário dos pedidos de
+Módulo GIA — menu: Plataformas › Maestro, ao lado do Reports Maestro. Monta o **fechamento diário dos pedidos de
 delivery do Maestro** (App Coco Bambu, iFood, 99Food, manual) de uma loja num
 período: divide o total pago em **Online**, **Adquirentes** e **Offline**, confere
 pagamentos e descontos de cada pedido e aponta as divergências. Exporta em Excel.

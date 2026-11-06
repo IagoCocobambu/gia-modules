@@ -1,5 +1,6 @@
 import type { Worksheet } from 'exceljs'
 import type {
+  FiltroTotal,
   PagamentoSemClassificacao,
   PedidoFechamento,
   ResumoDia,
@@ -19,12 +20,30 @@ export function somarDias(data: string, dias: number): string {
   return new Date(Date.parse(`${data}T00:00:00Z`) + dias * DIA_MS).toISOString().slice(0, 10)
 }
 
-/** Hoje no fuso do navegador. */
+/** Fuso das lojas e da API (datas `_horario_sp`) — não o do navegador. */
+const FUSO_SP = 'America/Sao_Paulo'
+
+/** Hoje em São Paulo, `AAAA-MM-DD` (o locale en-CA já formata assim). */
 export function hojeLocal(): string {
-  const d = new Date()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${mm}-${dd}`
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: FUSO_SP,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+}
+
+/** Data e hora de São Paulo, `DD/MM/AAAA, HH:MM`. */
+export function dataHoraSp(d: Date): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: FUSO_SP,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(d)
 }
 
 export function diasEntre(de: string, ate: string): number {
@@ -96,6 +115,51 @@ function onlineLiquido(p: PedidoFechamento): number {
   return p.total_pago_online - p.abatimento_online
 }
 
+/**
+ * Pedidos que entram na conta de cada indicador da barra de totais — a MESMA regra
+ * de `resumirTotais`: clicar num indicador filtra a tabela para exatamente os
+ * pedidos que somaram nele (com valor diferente de zero naquele grupo).
+ */
+const PEDIDO_DO_TOTAL: Record<FiltroTotal, (p: PedidoFechamento) => boolean> = {
+  online: (p) => !p.cancelado && onlineLiquido(p) !== 0,
+  adquirentes_online: (p) => !p.cancelado && p.total_pago_adquirentes_online !== 0,
+  adquirentes_offline: (p) => !p.cancelado && p.total_pago_adquirentes_offline !== 0,
+  offline: (p) => !p.cancelado && p.total_pago_offline !== 0,
+  cancelado_online: (p) => p.cancelado && onlineLiquido(p) !== 0,
+  cancelado_adquirentes_online: (p) => p.cancelado && p.total_pago_adquirentes_online !== 0,
+  cancelado_adquirentes_offline: (p) => p.cancelado && p.total_pago_adquirentes_offline !== 0,
+  cancelado_offline: (p) => p.cancelado && p.total_pago_offline !== 0,
+  descontos_loja: (p) => p.venda_concluida && p.desconto_total !== 0,
+  descontos_parceiro: (p) => !p.cancelado && p.desconto_parceiro !== 0,
+  nao_classificado: (p) => !p.cancelado && p.total_nao_classificado !== 0,
+  pagamentos_sem_classificacao: (p) =>
+    !p.cancelado && p.pagamentos.some((pg) => pg.tipo === 'nao_classificado'),
+}
+
+/** Os pedidos que somaram no indicador `filtro`. */
+export function pedidosDoTotal(
+  pedidos: PedidoFechamento[],
+  filtro: FiltroTotal
+): PedidoFechamento[] {
+  return pedidos.filter(PEDIDO_DO_TOTAL[filtro])
+}
+
+/** Nome do indicador, como na barra — para o aviso do filtro e o subtítulo do Excel. */
+export const NOME_DO_TOTAL: Record<FiltroTotal, string> = {
+  online: 'Online',
+  adquirentes_online: 'Adquirentes online',
+  adquirentes_offline: 'Adquirentes offline',
+  offline: 'Offline',
+  cancelado_online: 'Cancelado online',
+  cancelado_adquirentes_online: 'Cancelado adquirentes online',
+  cancelado_adquirentes_offline: 'Cancelado adquirentes offline',
+  cancelado_offline: 'Cancelado offline',
+  descontos_loja: 'Descontos loja',
+  descontos_parceiro: 'Descontos parceiro',
+  nao_classificado: 'Sem classificação',
+  pagamentos_sem_classificacao: 'Pagamentos sem classificação',
+}
+
 /** Soma em centavos e devolve em reais — sem acumular erro de ponto flutuante. */
 function somar(pedidos: PedidoFechamento[], campo: (p: PedidoFechamento) => number): number {
   return pedidos.reduce((acc, p) => acc + Math.round(campo(p) * 100), 0) / 100
@@ -115,7 +179,12 @@ function resumir(data: string, pedidos: PedidoFechamento[]): ResumoDia {
     adquirentes_offline: somar(validos, (p) => p.total_pago_adquirentes_offline),
     offline: somar(validos, (p) => p.total_pago_offline),
     nao_classificado: somar(validos, (p) => p.total_nao_classificado),
-    descontos: somar(validos, (p) => p.desconto_total),
+    // Mesma regra dos cards (resumirTotais) — o Total da aba bate com eles.
+    descontos_loja: somar(
+      pedidos.filter((p) => p.venda_concluida),
+      (p) => p.desconto_total
+    ),
+    descontos_parceiro: somar(validos, (p) => p.desconto_parceiro),
     divergentes: validos.filter(divergente).length,
   }
 }
@@ -262,7 +331,20 @@ export const COLUNAS_DIA: ColunaExport<ResumoDia>[] = [
     largura: 15,
     total: true,
   },
-  { header: 'Descontos', valor: (d) => d.descontos, tipo: 'moeda', largura: 15, total: true },
+  {
+    header: 'Descontos loja',
+    valor: (d) => d.descontos_loja,
+    tipo: 'moeda',
+    largura: 15,
+    total: true,
+  },
+  {
+    header: 'Descontos parceiro',
+    valor: (d) => d.descontos_parceiro,
+    tipo: 'moeda',
+    largura: 15,
+    total: true,
+  },
   {
     header: 'Divergências',
     valor: (d) => d.divergentes,
@@ -301,7 +383,15 @@ export const COLUNAS_PEDIDO: ColunaExport<PedidoFechamento>[] = [
     total: true,
   },
   { header: 'Total pago', valor: (p) => p.total_pago, tipo: 'moeda', largura: 14, total: true },
-  { header: 'Online', valor: (p) => p.total_pago_online, tipo: 'moeda', largura: 14, total: true },
+  // Líquido do incentivo que foi para Descontos parceiro — como o card e a aba
+  // Fechamento diário. O bruto continua nas formas de pagamento do pedido.
+  {
+    header: 'Online (líquido)',
+    valor: onlineLiquido,
+    tipo: 'moeda',
+    largura: 14,
+    total: true,
+  },
   {
     header: 'Adquirentes online',
     valor: (p) => p.total_pago_adquirentes_online,
@@ -417,11 +507,7 @@ export function preencherPlanilha<T>(
 ): void {
   const ultimaCol = letraColuna(colunas.length)
   const periodo = cab.de === cab.ate ? dataBr(cab.de) : `${dataBr(cab.de)} a ${dataBr(cab.ate)}`
-  const g = cab.geradoEm
-  const dois = (n: number) => String(n).padStart(2, '0')
-  const gerado = `${dois(g.getDate())}/${dois(g.getMonth() + 1)}/${g.getFullYear()}, ${dois(
-    g.getHours()
-  )}:${dois(g.getMinutes())}`
+  const gerado = dataHoraSp(cab.geradoEm)
 
   ws.getCell('A1').value = `${NOME_MODULO} · ${cab.lojaNome} · ${periodo}`
   ws.getCell('A1').font = { bold: true, size: 13 }
