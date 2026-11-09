@@ -1,0 +1,91 @@
+Pagamento eCheck 0.1.1 - migração do Relatório de Pagamentos eCheck do GIA legado - 09/11/2026
+
+Entrega
+- Versão: 0.1.1 (package.json, package-lock.json, module.ts, INTEGRATION e CHANGELOG). Junta a 0.1.0 (migração) e a 0.1.1 (FAQ sem menções ao sistema antigo). O pacote a entregar é o 0.1.1; o 0.1.0 deve ser descartado.
+- Pacote: modules-pagamento-echeck-0.1.1.tgz (53,7 kB). O modules-pagamento-echeck-0.1.0.tgz que está na pasta tem a FAQ antiga e não deve ser entregue. Conferido: sem o .env e sem o token de dev.
+- Validação: gia pack 57/57, 0 erros, 0 avisos.
+- Commits com push no branch feat/pagamento-echeck-0.1.0 (criado a partir de feat/reports-maestro-0.3.0):
+  - 16357f2: módulo v0.1.0 e o padrão 3 (cards de totais) no AGENTS.md do workspace;
+  - 4ff1446: Edge Function gerada pelo gia pack;
+  - versão 0.1.1 (FAQ, versão, CHANGELOG e este resumo): commit com push no mesmo branch, logo depois dos dois acima.
+- PR: ainda não aberto (o gh não está instalado na máquina). Contra a main, o PR leva junto os 8 commits de feat/reports-maestro-0.3.0.
+- SDK @gia-cb/* 0.1.0-alpha.70 (fixado).
+- Sem banco (nenhuma migration; módulo só de leitura).
+- Permissões: pagamento-echeck.ler (consultar) e pagamento-echeck.exportar (Excel).
+- Menu: grupo Relatórios (navGroup 'relatorios'), rota /pagamento-echeck, ícone CreditCard.
+- Credencial: integração apidw do hub de Credenciais (a mesma do Fechamento Maestro, Reports Maestro e Validação Fiscal). Falta liberar este módulo nela. Nenhum secret de Edge Function.
+
+Origem (legado)
+- Tela: TfrmRelECheckPayments (view.relatorios.echeck.payments) + TDmRelEcheckPay (model.relatorios.echeck.payment) + frontend React echeck-report-ok num UniHTMLFrame.
+- O legado chamava a api-dw.cocobambu.com/payments/ direto do navegador, com o token escrito no código Delphi.
+- A pasta FECHAMENTO_IFOOD que veio junto não faz parte desta tela e não foi portada.
+
+O que o módulo faz
+- Filtros: loja, data inicial e final (até 31 dias, sem datas futuras) e hora inicial e final.
+  - Padrão: ontem, das 08:00 às 23:59, com a primeira loja selecionada (como no legado).
+  - Faixa de horário com a regra do legado: a hora inicial vale para a data inicial e a final para a data final (não é um horário dentro de cada dia). A hora final 23 vai até 23:59:59.
+- Lojas: Empresas com CNPJ do escopo do usuário que têm o código da loja na API (locRefs.BIAPI e, na falta, TS2). Loja inativa aparece marcada "Inativa"; loja sem código e propriedade ficam fora.
+- Barra de totais (padrão 3 do workspace): valor total, transações (com quantas aprovadas) e ticket médio, do legado e só informativos; aprovadas e não aprovadas, que filtram a tabela ao clique. Dica com a conta só com mouse. O botão Totais abre e fecha a barra.
+- Tabela: as 17 colunas do legado, 6 visíveis de início, mais recentes primeiro; filtro por coluna (desktop), busca geral (celular), menu de colunas e ordenação. Cabeçalho no padrão dos outros módulos, sem linha Total.
+- Gráficos (botão Gráficos): volume de vendas por hora e métodos de pagamento (rosca por modalidade com legenda numérica).
+- Excel: as 17 colunas, as linhas filtradas na tela, linha Total (SUBTOTAL), data e moeda tipadas. O subtítulo diz qual filtro estava ligado.
+- Barra de filtros: uma linha a partir de ~1280 px, duas linhas alinhadas abaixo disso, empilhada no celular, todos os campos com 42 px de altura.
+- Celular: a pesquisa recolhe os filtros (padrão 1); sem tooltip e com o nome visível nos botões (padrão 2); a barra de totais começa fechada.
+
+Mudanças em relação ao legado
+- Token da API fora do navegador: a chamada é feita no servidor (handler pagamentos), com a credencial apidw do hub.
+- Período máximo de 6 meses para 31 dias. A API responde 500 com 6 meses; 3 meses levam ~60 s. Com 31 dias, uma loja movimentada leva ~10 s.
+- Paginação em paralelo (a API aceita no máximo 500 por página), com uma nova tentativa em erro 5xx, como no legado. Teto de 30 mil transações por pesquisa.
+- O slider de horário virou dois seletores de hora (mesma regra).
+- Os gráficos saíram da página para o diálogo Gráficos.
+- Excel com todas as 17 colunas (o legado exportava só as visíveis).
+- Novos na barra de totais: aprovadas e não aprovadas como filtro.
+- Não portados: o papel VIEW/EDIT/AUDIT (calculado e não usado pela tela) e os tours concluídos por usuário (o portal tem tour próprio).
+
+Decisões tomadas na revisão
+- Cabeçalho da tabela: retirada a linha Total, para seguir o padrão dos outros módulos.
+- Totais: refeitos no padrão de barra de indicadores do Fechamento iFood Diário; padrão registrado no AGENTS.md do workspace (padrão 3).
+- Indicadores por Tipo (lio, todo_cartoes, cb_app, outras origens): retirados por enquanto. O significado de cada valor de Tipo não está confirmado e outras lojas podem usar outras maquinetas. A coluna Tipo continua na tabela com o valor cru da API.
+  - Levantamento de out/2026 em 6 lojas (01, 13, 17, 27, 54, 71): lio em ~98% das transações (com Terminal e Cod_Ciel); também aparecem todo_cartoes, cb_app, unknown, individual_check e wallet.
+- Barra de filtros: refeita para não quebrar a linha (o botão Pesquisar caía sozinho para baixo).
+- 0.1.1: FAQ sem menções ao sistema antigo ("GIA antigo"), em 6 trechos; o tour não tinha nenhuma. Sem mudança de comportamento. PRD, INTEGRATION e este resumo continuam citando o legado, porque são documentos para o time GIA.
+
+Testes (dev-shell com a API real; credencial de dev)
+- Cálculos (15/15), conferidos contra a API direta: loja 17 em out/2026, 6.808 transações e R$ 1.569.064,75. Valor total, transações, ticket médio, aprovadas + não aprovadas e as somas dos dois gráficos batem com a API.
+- Servidor (17/17):
+  - lojas: 7 do escopo, respeita escopo limitado, 403 sem permissão;
+  - pagamentos: outubro inteiro igual à API (6.808, sem duplicatas, ~10 s); faixa 10-18h corta em 18:00:00; a resposta não traz o token;
+  - recusas: sem permissão e loja fora do escopo (403); loja sem código, 32 dias, data inexistente, data final menor, hora final igual e hora 24 (422); propriedade (404).
+- Tela (67/67), loja 01 em 08/11/2026 (487 transações, R$ 134.036,64):
+  - barra de totais igual à API; dica no mouse; clique em aprovadas filtra; botão do filtro e segundo clique tiram o filtro; indicador zerado e os informativos não filtram; Totais abre e fecha;
+  - validações no cliente (>31 dias, data final menor) sem chamar o servidor;
+  - cabeçalho com as 6 colunas, sem linha Total; filtro de coluna, menu de colunas e ordenação;
+  - gráficos com o miolo da rosca igual ao valor total;
+  - barra de filtros: uma linha em 1920, 1366 e 1280 px; duas linhas em 1024 px; 42 px em todos os campos;
+  - personas: Leitor sem Exportar; sem .ler, aviso de permissão;
+  - celular (390 px, toque): padrões 1, 2 e 3 do workspace, busca geral, toque nos gráficos;
+  - tema escuro ok; nenhum erro no console.
+- Excel com o filtro Aprovadas (5/5): 17 colunas, só PAGO, Total igual à soma, subtítulo "filtrado (Aprovadas)", data e moeda tipadas.
+- API fora do ar (token inválido): tela "Não foi possível consultar os dados" com "Tentar de novo". Testado antes das últimas mudanças de layout; o código dessa parte não mudou.
+
+Pendências
+- Liberar o módulo na integração apidw do hub de Credenciais (time GIA).
+- Confirmar com o time GIA que o vínculo BIAPI das Empresas tem o mesmo código que a integração TS2 do legado. Os códigos BIAPI de 6 lojas foram conferidos na API.
+- Confirmar o teto de 31 dias com o financeiro.
+- Confirmar o significado de cada valor de Tipo antes de voltar com indicadores por tipo.
+- Segurança: o view.relatorios.echeck.payments.pas do legado tem um token da API do DW escrito no código, com usuário e senha legíveis no payload. Trocar a senha desse usuário e remover o token do legado.
+- Abrir o PR (descrição já redigida).
+
+Arquivos
+- pagamento-echeck/src/module.ts, permissions.ts, routes.tsx, index.ts, types.ts, helpers.ts, graficos.ts
+- pagamento-echeck/src/server/lojas.ts e src/server/pagamentos.ts
+- pagamento-echeck/src/api/pagamento-echeck.ts
+- pagamento-echeck/src/views/PagamentoEcheckView.tsx
+- pagamento-echeck/src/components/FiltrosBar.tsx, ResumoCards.tsx, GraficosDialog.tsx, VolumePorHora.tsx, RoscaModalidades.tsx, Dica.tsx, Recolhivel.tsx
+- pagamento-echeck/src/faq.ts e src/tour.ts
+- pagamento-echeck/PRD.md, INTEGRATION.md, README.md, CHANGELOG.md, .env.example
+- pagamento-echeck/package.json, package-lock.json, tsconfig.json, vite.config.ts
+- pagamento-echeck/docs/20261109093653-pagamento-echeck-resumo-entrega.txt (este resumo)
+- pagamento-echeck/edge-functions/pagamento-echeck/index.ts e _meta.json (gerados pelo gia pack)
+- pagamento-echeck/gia.config.ts (só dev-shell)
+- AGENTS.md (raiz): padrão 3, cards de totais

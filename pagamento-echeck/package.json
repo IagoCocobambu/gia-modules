@@ -1,6 +1,6 @@
 {
   "name": "@modules/pagamento-echeck",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Relatório dos pagamentos eCheck (maquineta LIO, Todo Cartões e app) de uma loja num período e faixa de horário: valor total, transações, ticket médio, gráficos por hora e por modalidade e a lista detalhada com exportação em Excel. Substitui a tela Relatório de Pagamentos eCheck do GIA antigo.",
   "private": true,
   "type": "module",
