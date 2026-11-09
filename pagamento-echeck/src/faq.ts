@@ -30,8 +30,7 @@ novo.
 A faixa de horário vale para o **período inteiro**, não para cada dia: a hora
 inicial vale para a **data inicial** e a hora final, para a **data final**. Por
 exemplo, de 01/10 a 03/10, das 08:00 às 23:59, a pesquisa traz tudo **de 01/10 às
-08:00 até 03/10 às 23:59** — inclusive a madrugada de 02/10 e de 03/10. É a mesma
-regra do GIA antigo.
+08:00 até 03/10 às 23:59** — inclusive a madrugada de 02/10 e de 03/10.
 
 A hora final **23** vale até **23:59:59**; as outras valem até a hora cheia (hora
 final 18 = até 18:00:00). A hora final precisa ser maior que a inicial.
@@ -43,7 +42,7 @@ final 18 = até 18:00:00). A hora final precisa ser maior que a inicial.
 | Período de no máximo **31 dias** | Acima disso a API de pagamentos fica lenta demais ou falha |
 | Datas **não podem ser futuras** | Não há transação no futuro |
 | Data final **não pode ser menor** que a inicial | O período ficaria vazio |
-| Hora final **maior** que a inicial | Mesma regra do GIA antigo |
+| Hora final **maior** que a inicial | A faixa de horário não pode ficar vazia |
 | No máximo **30 mil transações** | Mais do que isso não cabe na tela; escolha um período menor |
 
 Uma pesquisa de 31 dias de uma loja movimentada leva cerca de **10 segundos**.
@@ -70,7 +69,7 @@ No computador, **passe o mouse** sobre um indicador para ver a explicação da c
 | **Não aprovadas** | Valor das transações com outro status — o normal é zero; fica vermelho quando não é |
 
 O valor total e o ticket médio somam **todas** as transações, inclusive as que
-não estão com status PAGO — como no GIA antigo.
+não estão com status PAGO.
 
 ## Filtrar a tabela por um indicador
 
@@ -218,8 +217,8 @@ Este módulo é **só de consulta**: não altera nenhum dado.
           a: 'Porque a faixa de horário vale para o período inteiro: começa na data inicial às 08:00 e termina na data final às 18:00. Tudo o que está entre esses dois momentos entra, inclusive a noite de 01/10 e a madrugada de 02/10. Para ver só um horário de um dia, pesquise com a data inicial e a final iguais.',
         },
         {
-          q: 'Por que o período é de no máximo 31 dias, se o GIA antigo aceitava 6 meses?',
-          a: 'Porque a API de pagamentos não consegue responder períodos tão longos: em testes, 6 meses de uma loja dava erro na API e 3 meses levava mais de um minuto. Com 31 dias a pesquisa leva cerca de 10 segundos. Para períodos maiores, pesquise mês a mês e exporte cada um.',
+          q: 'Por que o período é de no máximo 31 dias?',
+          a: 'Porque a API de pagamentos não aguenta períodos longos: em testes, 6 meses de uma loja dava erro na API e 3 meses levava mais de um minuto. Com 31 dias a pesquisa leva cerca de 10 segundos. Para períodos maiores, pesquise mês a mês e exporte cada um.',
         },
         {
           q: 'A pesquisa disse que há transações demais. O que faço?',
@@ -248,7 +247,7 @@ Este módulo é **só de consulta**: não altera nenhum dado.
       items: [
         {
           q: 'O Valor total inclui transações que não estão com status PAGO?',
-          a: 'Sim. O Valor total e o Ticket médio somam todas as transações da pesquisa, como no GIA antigo. O cartão Transações mostra embaixo quantas estão aprovadas (PAGO). O valor só das aprovadas está no indicador Aprovadas, na barra de totais; clique nele para ver na tabela só essas transações.',
+          a: 'Sim. O Valor total e o Ticket médio somam todas as transações da pesquisa, de qualquer status. O indicador Transações mostra ao lado quantas estão aprovadas (PAGO). O valor só das aprovadas está no indicador Aprovadas, na barra de totais; clique nele para ver na tabela só essas transações.',
         },
         {
           q: 'Filtrei a tabela, mas a barra de totais e os gráficos não mudaram. Por quê?',
@@ -256,7 +255,7 @@ Este módulo é **só de consulta**: não altera nenhum dado.
         },
         {
           q: 'Por que aparecem modalidades parecidas separadas, como "CREDITO A VISTA" e "CREDITO AVISTA"?',
-          a: 'Porque a modalidade aparece como veio da API, só com o sublinhado trocado por espaço. Origens diferentes (campo Tipo) escrevem a mesma modalidade de jeitos diferentes, e o módulo não junta os nomes — igual ao GIA antigo.',
+          a: 'Porque a modalidade aparece como veio da API, só com o sublinhado trocado por espaço. Origens diferentes (campo Tipo) escrevem a mesma modalidade de jeitos diferentes, e o módulo não junta os nomes.',
         },
         {
           q: 'O que é a coluna Tipo?',

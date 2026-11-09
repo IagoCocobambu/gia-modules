@@ -1,5 +1,10 @@
 # Changelog — Pagamento eCheck
 
+## 0.1.1 — 2026-11-09
+
+- FAQ sem menções ao sistema antigo (6 trechos reescritos). Sem mudança de
+  comportamento.
+
 ## 0.1.0 — 2026-11-06
 
 - Primeira versão, migrada do Relatório de Pagamentos eCheck do GIA legado.
