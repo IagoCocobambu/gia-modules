@@ -1,0 +1,93 @@
+Fechamento iFood Diário 0.1.0 - primeira entrega, migrado do GIA legado - 09/11/2026
+
+Entrega
+- Módulo: fechamento-ifood-diario ("Fechamento iFood Diário"), categoria vendas, menu Plataformas (navGroup 'cardapio'; subgrupo a definir pelo time GIA).
+- Versão: 0.1.0 (package.json, package-lock.json, module.ts, INTEGRATION e CHANGELOG).
+- Pacote: modules-fechamento-ifood-diario-0.1.0.tgz (72,5 kB). Conferido: sem .env, sem token e sem client secret do iFood dentro.
+- Validação: gia pack / gia validate 56/56, 0 erros, 0 avisos.
+- Commit e0b4ddd no branch feat/fechamento-ifood-diario-0.1.0, com push. O branch sai de feat/pagamento-echeck-0.1.0 (1 commit à frente dele; 11 à frente do main).
+- PR: a abrir pelo link do GitHub (o gh não está instalado na máquina). Base sugerida: feat/pagamento-echeck-0.1.0, para a PR mostrar só este módulo.
+- SDK @gia-cb/* 0.1.0-alpha.70 (fixado).
+- Sem banco próprio (nenhuma migration) e só leitura. Permissões: fechamento-ifood-diario.ler e fechamento-ifood-diario.exportar.
+- Origem: pacote legacy-gia/entrega-ifood (model.ifood.fechamentoDiario.pas, view.ifood.fechamentoDiario.pas e o front REACT/fechamento-ifood-diario).
+
+O que o módulo faz
+- Fechamento dos pedidos iFood de uma loja num dia.
+- Busca os pedidos de delivery do DW (api-dw /Delivery/) e as vendas do dia na API financeira do iFood (financial/v3.0/merchants/{merchant}/sales, paginada de 20 em 20).
+- Cruza as duas pelo n_parceiro do DW = shortId do iFood (MergeIfoodData do legado).
+- Classifica cada forma de pagamento em ONLINE, ONLINE VR ou OFFLINE com o cadastro gia_relatorios.formas_pagamento do Maestro (só leitura).
+- Mostra os 9 cards do legado e a tabela com as colunas da grade antiga; exporta em Excel.
+
+Regras de cálculo (iguais ao legado)
+- Total do pedido = taxa de entrega + valor dos itens - incentivo da loja.
+- Desconto copart = incentivo do iFood - taxa de serviço (pode dar negativo, ex.: -R$ 3,99, como no legado).
+- iFood reembolsa? = N/A (incentivo da loja 0), SIM (12), NÃO (até 10), VERIFICAR (outro valor).
+- Cancelamento = OK quando o iFood diz CONCLUDED e não há origem de cancelamento; senão Cancelado.
+- Tipo de pagamento: vazio/DESCONHECIDO = sem classificação; contém forma ONLINE VR do cadastro = ONLINE VR; termina em "- PRE PAGO" = ONLINE; senão OFFLINE.
+- Cards: só pedidos OK e com um tipo de pagamento só (iFood online, Descontos offline e VR, iFood adquirentes, Descontos loja online/offline/VR); Desconto copart de todos os OK; Valor e quantidade sem classificação de todos os pedidos.
+- Somas em centavos inteiros (resultado igual ao legado em 2 casas).
+- Conferência com a tela antiga (01 Goiânia, 08/11/2026): 74 pedidos, iFood online R$ 12.574,79, Descontos loja online R$ 144,90, Desconto copart R$ 114,75 - iguais.
+- Conferência automática: cópia literal do App.tsx + MergeIfoodData do legado rodando sobre os mesmos pedidos reais do DW (loja 54, 01/11/2026, 68 pedidos), com casos de borda: pedidos e cards iguais.
+
+Decisões tomadas durante a entrega
+- Busca por OPERAÇÃO, não por Empresa (exceção no workspace): o seletor lista todas as operações do escopo (ctx.operacoes()); a pesquisa manda o operacao_ref e o servidor confere com requireOperacao.
+- Cada operação traz só os seus pedidos, mesmo duas do mesmo número: o DW separa pela origem do pedido - "iFood" = operação principal, "iFood Vasto" = Vasto na loja do CB. A separação acontece antes do cruzamento.
+- Operações Vasto na loja do CB (08 vst, 17 vst, 25 vst, 69 vst, 86 vst): restaurante do Vasto numa tabela do módulo (OPERACOES_IFOOD_PROPRIO), porque o SDK só tem um vínculo iFood por Empresa. Provisório até o SDK expor locRefs em GiaOperacao.
+- Só o restaurante da operação no cruzamento, como no legado (opção 2). Os pedidos de outras marcas da loja no iFood (Express, Pizzaria, Dani...) ficam como Cancelado e fora dos cards.
+  - Foi testado cruzar também com os restaurantes de mesma razão social: 1.777 de 1.777 pedidos achados em 22 lojas (contra 1.486), mas os cards deixavam de bater com o legado (01 Goiânia: R$ 17.364,90 x R$ 12.574,79). Revertido.
+- Sem aviso de cruzamento, como no legado: pedido do DW não achado no iFood e venda do iFood sem pedido no DW não geram mensagem (o legado só registrava em log de debug). Continuam os avisos de problema real: loja sem integração iFood, credencial e falha/demora da API.
+- Dia inicial = ontem (o legado começava em hoje), no fuso de São Paulo.
+- Cadastro de formas de pagamento só leitura: a janela de edição (Admin/TI) do legado não foi portada.
+- Permissão de exportar separada (no legado o Excel era livre).
+
+Novo em relação ao legado
+- Cards como filtro da tabela (botão com o nome do card e X para tirar; card zerado não filtra; vale para o Excel).
+- Excel com abas Resumo (cards do dia e formas sem classificação) e Pedidos (todas as colunas, linha Total com SUBTOTAL); subtítulo avisa o filtro.
+- Coluna Restaurante no iFood.
+- Avisos amarelos para loja sem integração iFood, credencial recusada (401/403 com mensagem própria) e falha da API.
+- API do iFood: 204 (dia sem vendas) e 429 (limite de requisições, com nova tentativa) tratados; páginas buscadas 3 por vez.
+- Padrões de tela do workspace: celular recolhe a barra de filtros ao pesquisar, Dica só com mouse, barra de indicadores (aberta no desktop alto, fechada no celular).
+
+Token do iFood
+- Produção: o hub de Credenciais guarda client id/secret e entrega o token válido em ctx.credencial('ifood'); o módulo não renova nada. O token vale 6 h e não tem refresh - o hub precisa pedir outro antes de vencer (documentado no INTEGRATION.md).
+- Dev: scripts/token-ifood.mjs (raiz de modules-gia) gera o token com o client id/secret do .env. Roda sozinho no predev do npm run dev (se faltar menos de 30 min) e na mão com npm run token:ifood. Também ligado no fechamento-ifood-mensal. Não vai no pacote.
+
+Achados na API do iFood
+- Na v3 de vendas o orderStatusHistory vem sempre vazio: as colunas de cancelamento (data, origem, motivo, contestável, parcial) saem em branco - igual ao legado, que lê do mesmo campo. A informação está em orderEvents (CANCELLED, REFUND com cancelCode).
+- A "data limite de contestação" do legado lê o period.endDate do lançamento financeiro, que parece ser a semana de faturamento.
+- A API de pedidos (Order) responde 403 com a credencial atual e só guarda pedidos por 7 dias; não serve para fechamento.
+- A conta tem 242 restaurantes no iFood (lista paginada de 100 em 100).
+
+Testes
+- gia dev com dados reais do DW e do iFood.
+- Desktop (1440x900): tour abre na 1ª visita; dia inicial 08/11; pesquisa da 01 Goiânia com os números do legado; Pesquisar desativado sem mudança; filtro pelo card iFood online (44 de 74 pedidos) e botão para tirar; card zerado sem ação; Excel com nome padrão do GIA e soma dos 44 pedidos = card (R$ 12.574,79); dica no hover; Totais abre e fecha.
+- Celular (iPhone 13, toque): filtros recolhem ao pesquisar e a seta reabre; Pesquisar desativado sem mudança; botão Totais com rótulo; cards começam fechados; toque no card filtra sem tooltip; lista vira cards com busca; sem rolagem horizontal.
+- Operações: 08 cb (76 pedidos), 08 vst (6, todos no Vasto Teresina), 17 cb/vst, 69 cb/vst, 54 cb, 38 conc, 03 cb, 16 cb (sem integração: aviso).
+- Escopo: operação fora do escopo e inexistente respondem 403; sem loja, "Informe a loja."; data futura recusada.
+- Console sem erros.
+- Ressalva: o tempo da pesquisa é quase todo do DW (ex.: 47 s na loja 03, 12 s na 54); o iFood roda em paralelo.
+
+Pendências para instalar (INTEGRATION.md)
+- Hub de Credenciais: integração ifood (OAuth client_credentials em authentication/v1.0/oauth/token, renovação antes das 6 h). Gerar client secret novo no iFood: o atual ficou exposto no legado (uiFoodConsts.pas).
+- Liberar o módulo nas integrações apidw e ifood.
+- Secret GIA_SERVER_DATABASE_URL: banco do Maestro, só leitura de gia_relatorios.formas_pagamento (o mesmo do Fechamento Maestro).
+- Cadastro de Empresas: integração IFOOD (UUID do merchant) em cada loja; sem ela a loja aparece "Sem iFood" e os pedidos ficam Cancelado.
+- Posição no menu: subgrupo sugerido iFood, em Plataformas.
+- Pedido ao time do SDK: vínculo iFood por operação (locRefs em GiaOperacao), para tirar a tabela do Vasto do módulo.
+
+Pontos para o financeiro / próximos passos
+- Pedidos de Express, Pizzaria e Dani contam como Cancelado (regra do legado). Se um dia o fechamento tiver de incluir essas marcas, o cruzamento com os restaurantes irmãos já foi testado (1.777/1.777).
+- 03 JK x 30 Vila Olímpia: o DW grava os pedidos do "Coco Bambu Conceito Vila Olímpia" no número 03 (98 em 08/11); a operação 30 conc vem vazia. Confirmar com o cadastro do DW.
+- 15 CRYSTAL -> "Coco Bambu - Curitiba" e 25 BH -> "Coco Bambu Anchieta" foram ligações deduzidas no gia.config.ts (só dev); conferir no cadastro real.
+- Botões só com ícone no celular (Exportar, colunas, calculadora) são do DataReport do SDK; para mostrar o rótulo é preciso ajuste no SDK.
+
+Arquivos
+- fechamento-ifood-diario/src/server/fechamento.ts e src/server/lojas.ts (handlers)
+- fechamento-ifood-diario/src/api/fechamento-ifood-diario.ts
+- fechamento-ifood-diario/src/views/FechamentoIfoodDiarioView.tsx
+- fechamento-ifood-diario/src/components/FiltrosBar.tsx, ResumoCards.tsx, BadgeTipoPagamento.tsx, Dica.tsx, Recolhivel.tsx
+- fechamento-ifood-diario/src/helpers.ts, types.ts, module.ts, permissions.ts, routes.tsx, index.ts
+- fechamento-ifood-diario/src/faq.ts e src/tour.ts
+- fechamento-ifood-diario/PRD.md, INTEGRATION.md, README.md, CHANGELOG.md, .env.example, gia.config.ts
+- fechamento-ifood-diario/edge-functions/fechamento-ifood-diario/ (gerado pelo gia pack)
+- scripts/token-ifood.mjs (raiz de modules-gia, só dev)
