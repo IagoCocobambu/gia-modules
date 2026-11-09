@@ -81,3 +81,36 @@ o toque**.
 
 Referência: `fechamento-maestro/src/components/Dica.tsx` e
 `fechamento-maestro/src/components/VendasPorCanal.tsx`.
+
+### 3. Cards de totais: barra de indicadores, dica no mouse, clique filtra
+
+Os totais de uma tela de relatório ficam numa **barra de indicadores**, não em
+cards grandes soltos:
+
+- **Visual**: um só contêiner (`@container rounded-xl border border-border
+  bg-surface p-1.5 shadow-sm`) com uma grade responsiva
+  (`grid-cols-1 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-5`). Cada
+  indicador é uma linha compacta: **quadradinho 8×8 com o ícone** (lucide),
+  tingido pelo **tom** do indicador, e ao lado o **valor** (`text-base
+  font-semibold tabular-nums`, na cor do tom) em cima do **rótulo** curto em
+  minúsculas (`text-xs text-muted-foreground`). Tons só por token:
+  `neutro | success | info | primary | warning | destructive`. Use cor para dar
+  sentido (ex.: o que deveria ser zero fica `warning`/`destructive` quando não é).
+- **Dica explicativa**: cada indicador tem a explicação da conta numa dica, que
+  aparece **só com mouse** — sempre pelo `Dica` do padrão 2. **No celular não há
+  tooltip**: a explicação de cada indicador tem que estar também na **FAQ**.
+- **Clique filtra a tabela**: cada indicador que é um recorte das linhas é um
+  `<button aria-pressed>`; o clique mostra na tabela **só as linhas que somam
+  nele** e marca o indicador (`bg-primary/10 ring-1 ring-inset ring-primary/40`).
+  Clicar de novo tira o filtro. Na barra da tabela aparece um botão com o **nome
+  do filtro** e um `X` para tirá-lo. Pesquisar de novo também tira o filtro.
+  Indicador **zerado** não filtra (`aria-disabled`); indicador que soma tudo
+  (ex.: valor total) só informa.
+- Os valores da barra são da **pesquisa inteira** — não mudam com o filtro. O
+  filtro vale para o **Exportar**, e o subtítulo da planilha diz qual estava ligado.
+- Um botão **Totais** na barra da tabela abre e fecha a barra (com `Recolhivel`).
+  Ela abre sozinha em tela alta (`min-height: 700px`) fora do celular; no celular
+  começa fechada, para sobrar espaço para a lista.
+
+Referência: `fechamento-ifood-diario/src/components/ResumoCards.tsx` e
+`pagamento-echeck/src/components/ResumoCards.tsx`.
