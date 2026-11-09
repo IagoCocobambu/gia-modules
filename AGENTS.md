@@ -114,3 +114,29 @@ cards grandes soltos:
 
 Referência: `fechamento-ifood-diario/src/components/ResumoCards.tsx` e
 `pagamento-echeck/src/components/ResumoCards.tsx`.
+
+## Padrões de conteúdo
+
+### 4. FAQ e tour sem menção ao sistema antigo
+
+A FAQ e o tour são o treinamento de quem usa o módulo **no portal novo**. Eles
+explicam a tela e as regras **como são**, sem comparar com o GIA antigo.
+
+- **Não cite** o sistema anterior: nada de "tela antiga", "GIA antigo", "legado",
+  "portal antigo", "como era antes", UniGUI ou Delphi — nem no `summary`, nas
+  `sections`, no `qa` ou no `body` dos passos do tour.
+- A regra se explica sozinha. Em vez de "fica Cancelado — é a regra da tela
+  antiga", escreva só "fica Cancelado" e diga **por quê** ou **como ver** os casos.
+- Fonte de negócio que o usuário conhece pode ser citada (ex.: "a planilha do
+  financeiro"), porque não é o sistema antigo.
+- A comparação com o legado vale **só para quem desenvolve e instala**: fica no
+  `PRD.md`, no `INTEGRATION.md`, no `CHANGELOG.md` e nos comentários do código.
+- Antes de empacotar, confira:
+
+  ```bash
+  grep -n -i -E "legado|antig|UniGUI|Delphi" src/faq.ts src/tour.ts
+  ```
+
+  Não pode sobrar nenhuma ocorrência sobre o sistema anterior.
+
+Referência: `fechamento-ifood-diario/src/faq.ts` e `src/tour.ts`.

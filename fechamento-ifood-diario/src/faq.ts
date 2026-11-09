@@ -2,7 +2,7 @@ import type { ModuleFaq } from '@gia-cb/sdk/modules'
 
 export const faq: ModuleFaq = {
   summary:
-    'O **Fechamento iFood Diário** monta o fechamento dos **pedidos iFood** de uma loja num dia. Ele junta duas fontes: os pedidos de delivery do **DW** (valores, incentivos, formas de pagamento) e as vendas da **API financeira do iFood** (se o pedido foi concluído ou cancelado, quem cancelou, total do parceiro, prazo de contestação). Cada forma de pagamento é classificada em **ONLINE**, **ONLINE VR** (vale-refeição e benefícios) ou **OFFLINE**, e os **cards** somam o que o financeiro precisa para fechar o dia: iFood online, iFood adquirentes, descontos da loja e do iFood e o desconto copart. As regras são as mesmas da tela do GIA antigo. Nada é gravado: a tela só consulta.',
+    'O **Fechamento iFood Diário** monta o fechamento dos **pedidos iFood** de uma loja num dia. Ele junta duas fontes: os pedidos de delivery do **DW** (valores, incentivos, formas de pagamento) e as vendas da **API financeira do iFood** (se o pedido foi concluído ou cancelado, quem cancelou, total do parceiro, prazo de contestação). Cada forma de pagamento é classificada em **ONLINE**, **ONLINE VR** (vale-refeição e benefícios) ou **OFFLINE**, e os **cards** somam o que o financeiro precisa para fechar o dia: iFood online, iFood adquirentes, descontos da loja e do iFood e o desconto copart. Nada é gravado: a tela só consulta.',
   sections: [
     {
       id: 'primeiros-passos',
@@ -22,8 +22,7 @@ Depois de pesquisar, a tela mostra, de cima para baixo:
 
 - **avisos** sobre a parte do iFood, quando há algum (em amarelo);
 - os **cards** do dia (botão **Totais**, que mostra e esconde os cards);
-- a **tabela de pedidos iFood**: uma linha por pedido, com as colunas da tela
-  antiga. Pedidos com **Cancelamento = Cancelado** ficam com o fundo levemente
+- a **tabela de pedidos iFood**: uma linha por pedido. Pedidos com **Cancelamento = Cancelado** ficam com o fundo levemente
   vermelho.
 
 Se você mudar a loja ou o dia depois de pesquisar, a tela continua mostrando a
@@ -49,7 +48,7 @@ botão fica desativado.
       content: `
 ## O que cada card soma
 
-Os cards seguem a planilha do financeiro e a tela antiga. Duas regras valem para
+Os cards seguem a planilha do financeiro. Duas regras valem para
 quase todos:
 
 - só entram pedidos com **Cancelamento = OK**;
@@ -133,14 +132,12 @@ ID do restaurante, os campos de cancelamento, a data limite de contestação e s
 houve cancelamento parcial.
 
 Pedido do DW que **não foi achado** no iFood fica com esses campos vazios e,
-como não está confirmado, com **Cancelamento = Cancelado** — é a regra da tela
-antiga. Para ver esses pedidos, filtre a coluna **Restaurante no iFood** pelos vazios
+como não está confirmado, com **Cancelamento = Cancelado**. Para ver esses pedidos, filtre a coluna **Restaurante no iFood** pelos vazios
 ou a coluna **Cancelamento** por *Cancelado*.
 
 Os pedidos de **outras marcas da loja no iFood** (Coco Bambu Express, Pizzaria,
 Dani...) estão no DW junto com os da loja, mas são de outro restaurante no iFood:
-como na tela antiga, eles não são achados e aparecem como **Cancelado**, fora dos
-cards.
+eles não são achados e aparecem como **Cancelado**, fora dos cards.
 
 ## Só pedidos do iFood — e só da operação escolhida
 
@@ -159,7 +156,7 @@ do Vasto, os do canal **iFood Vasto**, cruzados com o restaurante do Vasto no iF
       content: `
 ## Colunas
 
-A tabela tem as mesmas colunas da tela antiga. Algumas são **obrigatórias** e
+Algumas colunas são **obrigatórias** e
 ficam sempre visíveis: Total do pedido, Nº pedido, Data hora pedido, Formas de
 pagamento e Canal de venda. As colunas de **cancelamento**, *Confirmado*, *Tipo
 de pedido*, *Agendado* e *Tem cancelamento parcial?* começam **desligadas**:
@@ -202,7 +199,7 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
       items: [
         {
           q: 'Por que um pedido entregue aparece como Cancelado?',
-          a: 'O Cancelamento vem do iFood: só é OK quando a API financeira do iFood diz que o pedido foi concluído (CONCLUDED) e não há origem de cancelamento. Se o pedido não foi achado no iFood (o Nº parceiro do DW não bateu com nenhuma venda), ele fica como Cancelado — é a regra da tela antiga. Nesses pedidos a coluna Restaurante no iFood fica vazia.',
+          a: 'O Cancelamento vem do iFood: só é OK quando a API financeira do iFood diz que o pedido foi concluído (CONCLUDED) e não há origem de cancelamento. Se o pedido não foi achado no iFood (o Nº parceiro do DW não bateu com nenhuma venda), ele fica como Cancelado. Nesses pedidos a coluna Restaurante no iFood fica vazia.',
         },
         {
           q: 'Por que um pedido OK não entrou em iFood online nem em iFood adquirentes?',
@@ -218,7 +215,7 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
         },
         {
           q: 'Por que o Total do pedido é diferente do total pago no DW?',
-          a: 'Porque ele é calculado: Taxa de entrega + Valor dos itens − Incentivo promocional da loja. É a regra da tela antiga e da planilha.',
+          a: 'Porque ele é calculado: Taxa de entrega + Valor dos itens − Incentivo promocional da loja. É a regra da planilha do financeiro.',
         },
         {
           q: 'Apareceu valor em "Valor sem classificação". O que faço?',
@@ -239,7 +236,7 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
       items: [
         {
           q: 'Posso ver mais de um dia de uma vez?',
-          a: 'Não: o fechamento é de um dia por vez, como na tela antiga. Pesquise cada dia.',
+          a: 'Não: o fechamento é de um dia por vez. Pesquise cada dia.',
         },
         {
           q: 'Os cards não mudaram quando filtrei a tabela. Está certo?',

@@ -3,9 +3,9 @@ Fechamento iFood Diário 0.1.0 - primeira entrega, migrado do GIA legado - 09/11
 Entrega
 - Módulo: fechamento-ifood-diario ("Fechamento iFood Diário"), categoria vendas, menu Plataformas (navGroup 'cardapio'; subgrupo a definir pelo time GIA).
 - Versão: 0.1.0 (package.json, package-lock.json, module.ts, INTEGRATION e CHANGELOG).
-- Pacote: modules-fechamento-ifood-diario-0.1.0.tgz (72,5 kB). Conferido: sem .env, sem token e sem client secret do iFood dentro.
+- Pacote: modules-fechamento-ifood-diario-0.1.0.tgz. Regerado em 09/11 depois da limpeza da FAQ (o primeiro 0.1.0 não foi entregue e foi substituído — exceção combinada à regra de não repetir versão). Conferido: sem .env, sem token e sem client secret do iFood dentro.
 - Validação: gia pack / gia validate 56/56, 0 erros, 0 avisos.
-- Commit e0b4ddd no branch feat/fechamento-ifood-diario-0.1.0, com push. O branch sai de feat/pagamento-echeck-0.1.0 (1 commit à frente dele; 11 à frente do main).
+- Commits no branch feat/fechamento-ifood-diario-0.1.0, com push: e0b4ddd (módulo), 06892cb (este resumo) e o da limpeza da FAQ/AGENTS.md, logo depois. O branch sai de feat/pagamento-echeck-0.1.0 (1 commit à frente dele; 11 à frente do main).
 - PR: a abrir pelo link do GitHub (o gh não está instalado na máquina). Base sugerida: feat/pagamento-echeck-0.1.0, para a PR mostrar só este módulo.
 - SDK @gia-cb/* 0.1.0-alpha.70 (fixado).
 - Sem banco próprio (nenhuma migration) e só leitura. Permissões: fechamento-ifood-diario.ler e fechamento-ifood-diario.exportar.
@@ -39,6 +39,7 @@ Decisões tomadas durante a entrega
 - Dia inicial = ontem (o legado começava em hoje), no fuso de São Paulo.
 - Cadastro de formas de pagamento só leitura: a janela de edição (Admin/TI) do legado não foi portada.
 - Permissão de exportar separada (no legado o Excel era livre).
+- FAQ e tour sem menção ao sistema antigo; a comparação com o legado fica só no PRD, INTEGRATION, CHANGELOG e código. Virou o padrão 4 do AGENTS.md do workspace.
 
 Novo em relação ao legado
 - Cards como filtro da tabela (botão com o nome do card e X para tirar; card zerado não filtra; vale para o Excel).
