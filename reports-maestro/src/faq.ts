@@ -22,8 +22,9 @@ A tabela mostra **uma linha por pedido**, na ordem de criação.
 O botão **Totais**, no cabeçalho da tabela (ao lado de Filtros), abre e fecha,
 acima da tabela, uma **barra com 4 totais** — valor pedido, valor entrega, total
 pago e desconto total —, a soma, em R$, dos pedidos do período **nos status e nas
-origens marcados** nos filtros (todos, se nada estiver marcado). Passe o mouse num
-total para ver a conta. O desconto total só fica vermelho quando há desconto. Os
+origens marcados** nos filtros (todos, se nada estiver marcado). Com mouse, pare
+o ponteiro num total para ver a conta; no celular e no tablet não há essa dica — a
+conta de cada total está na tabela abaixo. O desconto total só fica vermelho quando há desconto. Os
 totais começam **abertos** em telas com 700 px de altura ou mais e **fechados** em
 telas mais baixas e **no celular** (para sobrar espaço para a tabela); com eles abertos o botão
 fica preenchido. O botão só
@@ -136,8 +137,8 @@ botão fica desativado: o resultado na tela já é desta pesquisa.
       id: 'colunas',
       title: 'O que cada coluna mostra',
       content: `
-As primeiras 26 colunas são as mesmas do relatório antigo (UniGUI), na mesma
-ordem. Depois delas vêm **10 colunas adicionais**, que começam **ocultas** (veja
+São 36 colunas: as **26 colunas principais** aparecem quando a tela abre, e depois
+delas vêm **10 colunas adicionais**, que começam **ocultas** (veja
 *Colunas adicionais*, abaixo).
 
 | Coluna | O que é |
@@ -165,8 +166,8 @@ ordem. Depois delas vêm **10 colunas adicionais**, que começam **ocultas** (ve
 
 ## Colunas adicionais
 
-A API do DW traz mais campos do que o relatório antigo mostrava. Eles ficam no
-fim da tabela, **ocultos** quando a tela abre — para mostrar, use o botão de
+Além das 26 colunas principais, a tabela traz 10 campos de entrega, parceiro,
+taxas e incentivos. Eles ficam no fim da tabela, **ocultos** quando a tela abre — para mostrar, use o botão de
 **colunas** da barra da tabela (veja *Buscando, filtrando e escolhendo colunas*):
 
 | Coluna | O que é |
@@ -188,8 +189,7 @@ mostra **—** na tabela e fica com a célula **vazia** no Excel — vazio não 
 ## Status do pedido
 
 É o **último status conhecido** do pedido no Maestro. A tela mostra o nome em
-português; o **Excel** traz o valor original do Maestro (como no relatório
-antigo):
+português; o **Excel** traz o valor original do Maestro, em inglês:
 
 | Na tela | No Excel | Fase (cor) |
 |---|---|---|
@@ -212,7 +212,8 @@ cinza, com o nome que veio do Maestro. A busca e o filtro da coluna *Status
 pedido* usam o nome em português (digite "cancelado", não "CANCELLED").
 
 Pedidos cancelados **entram** na lista, nos cards de totais e nos totais do
-Excel, como no relatório antigo. Para tirá-los da soma, marque no filtro de
+Excel: sem nenhum status marcado, a soma vale para todos os pedidos do período. Para
+tirá-los da soma, marque no filtro de
 status todos os status que têm pedidos, **menos** *Cancelados*: a tabela, os
 totais e o Excel passam a ignorar os cancelados.
       `,
@@ -249,18 +250,29 @@ Excel exportado.
 
 ## Colunas visíveis
 
-São 36 colunas: as 26 do relatório antigo aparecem quando a tela abre, e as 10
+São 36 colunas: as 26 colunas principais aparecem quando a tela abre, e as 10
 **colunas adicionais** (tipo de entrega, parceiro, taxas, incentivos etc.) começam
 ocultas. Use o botão de **colunas** da barra da tabela para mostrar as ocultas ou
 esconder as que você não precisa. A escolha vale até você recarregar a página.
 
 ## No celular
 
+Ao clicar em **Pesquisar** no celular, a barra com a loja, as datas e o botão
+**recolhe**, para sobrar a tela para o resultado. Para pesquisar de novo, toque na
+**seta** ao lado do nome do módulo: a barra reabre. Se a pesquisa for recusada
+(período inválido ou sem loja), a barra fica aberta para você corrigir. No
+computador e no tablet os filtros ficam sempre à vista.
+
 No celular cada pedido vira um **cartão** com número, data, status e total pago;
 toque em **ver mais** para abrir os outros campos. A **busca** fica no topo da lista,
 no lugar dos filtros de coluna. O botão
 de colunas só aparece em telas maiores; para ver as colunas adicionais no celular,
 exporte o Excel.
+
+No celular e no tablet não aparecem dicas ao tocar: os botões mostram o nome
+escrito, a conta de cada total está na tabela da seção **Barra de totais**, e nos
+cartões de tempo do Dashboard Operacional o mínimo, a mediana e o máximo já vêm
+escritos no próprio cartão.
       `,
     },
     {
@@ -271,8 +283,8 @@ Com a permissão de exportação, o botão **Exportar** da barra da tabela baixa
 arquivo **.xlsx** com:
 
 - **o que está filtrado na tela** — busca e filtros de coluna valem para o arquivo;
-- as **36 colunas**, mesmo as que estão ocultas na tela: primeiro as 26 do
-  relatório antigo, depois as 10 colunas adicionais (de *Tipo de entrega* a
+- as **36 colunas**, mesmo as que estão ocultas na tela: primeiro as 26
+  colunas principais, depois as 10 colunas adicionais (de *Tipo de entrega* a
   *Criação (UTC)*);
 - valores em R$ e datas como data do Excel (dá para somar e ordenar); campo sem
   valor fica com a célula **vazia**, não com zero;
@@ -285,7 +297,8 @@ arquivo **.xlsx** com:
 O nome do arquivo segue o padrão do portal:
 *GIA - Reports Maestro - &lt;loja&gt; - &lt;período&gt;.xlsx*.
 
-O relatório antigo exportava CSV; o Excel traz as mesmas colunas já formatadas.
+O arquivo já vem formatado: valores em R$ e datas prontos para somar, filtrar e
+ordenar no Excel.
       `,
     },
     {
@@ -352,8 +365,16 @@ filtrando e escolhendo colunas → Busca*).
 A aba **Operacional** — a primeira, onde a tela abre — mostra **quanto tempo o
 pedido leva dentro da loja**, em que dias e horários a operação trava e quem cancela,
 no período pesquisado. A lista, pedido a pedido, fica na aba **Pedidos**, ao lado.
-(Na primeira visita a tela abre em Pedidos, porque o tour de apresentação mostra a
-lista; depois do tour, sempre no Operacional.)
+A tela abre sempre nesta aba, inclusive na primeira visita.
+
+Na primeira visita, um tour apresenta o cabeçalho (loja e período, **Pesquisar** e
+as abas). Depois ele troca de aba sozinho: mostra o canal, os cartões e cada
+gráfico do dashboard, depois os filtros, os totais e a lista da aba Pedidos,
+sempre com os números da sua pesquisa, e ao terminar volta para o Operacional.
+Se você chegou ao fim do cabeçalho **sem ter pesquisado**, o tour espera: assim
+que a pesquisa trouxer pedidos, ele continua do ponto em que parou. Quem pula o
+começo do tour não vê o resto; o botão de **rever o tour**, no cabeçalho, passa
+por tudo de novo.
 
 Ela usa **a mesma loja e o mesmo período** do cabeçalho. Escolha os dois, clique em
 **Pesquisar**: a mesma busca traz a lista e o dashboard, e trocar de aba **não busca
@@ -407,17 +428,19 @@ Só as **entregas** com as etapas registradas. Ficam de fora:
 - pedidos em que a loja registrou **embalado ou despachado depois** de o app de
   entrega já ter pegado ou entregado o pedido — o preparo deles não mede nada.
 
-A linha ao lado do filtro de canal diz quantas entregas entraram nos tempos. Na rota e
+O cartão **Tempo na loja** diz, embaixo do número, quantas entregas entraram nos tempos. Na rota e
 no tempo até a entrega também fica de fora a entrega com **rota acima de 2 horas**: é
 entrega marcada depois, no app de entrega, e não tempo real de rota.
 
 ## O que a aba mostra
 
-- **Canal**, no alto: todos os canais ou um só. Muda todos os cartões e gráficos.
-- **Cartões**: tempo na loja e preparo (média e 90% até); tempo até a entrega,
-  quando a loja tem a entrega registrada (senão, o total de pedidos); e cancelados
-  (parte e valor). Passe o mouse (ou toque) num cartão para ver a conta — e, nos cartões de tempo, o
-  **mínimo**, a **mediana** e o **máximo**.
+- **Canal**, na linha das abas, à direita de *Operacional* e *Pedidos* (só com esta aba
+  aberta): todos os canais ou um só. Muda todos os cartões e gráficos e volta para
+  *Todos os canais* a cada pesquisa nova.
+- **Cartões**, no alto (a conta de cada um está em **Os cartões do alto**, abaixo). Nos três
+  cartões de tempo, o **mínimo**, a **mediana** e o **máximo**: com mouse, pare o
+  ponteiro no cartão e eles aparecem na dica, junto com a conta; no celular e no
+  tablet já vêm escritos no próprio cartão, embaixo do "90% até".
 - **Tempo por etapa**: um cartão por etapa. O número grande é a **média** da etapa;
   embaixo estão a **mediana** (metade dos pedidos leva menos que isso), o **mínimo** e
   o **máximo**, e o caminho da etapa (de qual status a qual). A barra fina do cartão
@@ -431,15 +454,17 @@ entrega marcada depois, no app de entrega, e não tempo real de rota.
   99Food…), **Loja**, **Cliente e loja** e, quando não dá para saber,
   **Não identificado**. Ao lado, para cada grupo: quantos cancelamentos, que parte
   do total, o **valor** dos pedidos cancelados e a **média** do tempo entre o
-  pedido chegar e ser cancelado. Passe o mouse (ou o foco do teclado) numa fatia ou
-  num grupo da lista para destacá-lo.
+  pedido chegar e ser cancelado. Com mouse (ou com o foco do teclado), pare numa
+  fatia ou num grupo da lista para destacá-lo; no celular e no tablet todos os
+  números já estão escritos na lista.
 - **Dia × hora do pedido**: escolha o que medir — **Tempo na loja**, **Preparo** ou
   quantidade de **Pedidos** — e como agrupar os dias:
   - **Por dia da semana**: um gráfico de linhas, com as horas embaixo e a medida na
     lateral. Cada dia da semana é uma linha de **uma cor** (todas as segundas do
     período juntas, todas as terças…; só aparecem os dias que existem no período), e
-    a **linha grossa** neutra é a **média dos dias** — o dia típico. Passe o mouse
-    num dia da legenda para destacá-lo, ou clique para deixá-lo destacado: a linha
+    a **linha grossa** neutra é a **média dos dias** — o dia típico. Com mouse,
+    pare num dia da legenda para destacá-lo; clique (ou toque, no celular) para
+    deixá-lo destacado, e clique de novo para soltar: a linha
     dele fica por cima, mais grossa, com um brilho da própria cor e os pontos de cada
     hora, e os outros dias ficam apagados. Passe o mouse (ou
     toque) no gráfico para ver o valor de todos os dias naquela hora. Horário com
@@ -458,11 +483,31 @@ entrega marcada depois, no app de entrega, e não tempo real de rota.
 Quando a loja tem a entrega registrada, uma linha abaixo dos cartões mostra quantas
 entregas **saíram da loja sem a entrega registrada** (sem tempo de rota).
 
+## Os cartões do alto
+
+| Cartão | Conta |
+|---|---|
+| **Tempo na loja (média)** | do pedido recebido até o despachado: aceite, preparo e expedição. O número grande é a média das entregas; embaixo, o tempo em que 90% delas ficam e quantas entregas foram medidas (retiradas e cancelados ficam de fora) |
+| **Preparo (média)** | do pedido confirmado até o embalado: cozinha e embalagem. Média e "90% até", como no anterior |
+| **Até a entrega (média)** | do pedido recebido até a entrega registrada pelo app de entrega; só aparece quando a loja tem a entrega registrada, e conta só as entregas com esse registro |
+| **Pedidos** | no lugar do anterior, quando a loja não tem a entrega registrada: todos os pedidos de delivery do período no canal escolhido, incluindo retiradas e cancelados |
+| **Cancelados** | parte dos pedidos que foi cancelada — pelo cliente, pela plataforma ou pela loja. Embaixo, quantos de quantos pedidos do período (no canal escolhido) e o valor cancelado |
+
+Nos três cartões de tempo, o **mínimo**, a **mediana** e o **máximo** mostram a
+faixa inteira: o pedido mais rápido, o do meio e o mais demorado.
+
 ## Tela cheia e tabela
 
 Todo cartão de gráfico tem o botão de **expandir** (aparece ao passar o mouse; no
 celular, sempre). Em tela cheia, embaixo do gráfico, aparece a **tabela com os
 números** do cartão. **Esc** ou o mesmo botão saem da tela cheia.
+
+Na tabela do **Dia × hora do pedido**, cada linha é um dia e um horário, com os
+pedidos, as **entregas medidas** (as que entram nos tempos) e as médias de tempo
+na loja e de preparo. Quando o horário tem menos entregas medidas que o mínimo
+do gráfico — 5 por dia da semana, 3 por dia —, as médias aparecem como **—**,
+do mesmo jeito que o gráfico não as mostra: a média de poucos pedidos não é
+confiável.
       `,
     },
   ],
@@ -475,8 +520,8 @@ números** do cartão. **Esc** ou o mesmo botão saem da tela cheia.
           a: 'Na aba Operacional, ao lado de Pedidos, logo abaixo do cabeçalho com a loja e o período. Escolha a loja e as datas, clique em Pesquisar e abra a aba. Ela usa a mesma pesquisa da lista de pedidos.',
         },
         {
-          q: 'Por que o dashboard demora mais que a lista de pedidos?',
-          a: 'Porque ele busca, além dos pedidos, o histórico de status de cada um (a hora de cada etapa). 31 dias de uma loja movimentada levam até ~45 segundos. A mesma busca serve às duas abas — a lista de Pedidos e o Operacional —, então trocar de aba não busca de novo; o resultado fica guardado por 30 minutos.',
+          q: 'Por que a pesquisa demora em períodos longos?',
+          a: 'Porque ela busca, além dos pedidos, o histórico de status de cada um (a hora de cada etapa), que o dashboard usa. 31 dias de uma loja movimentada levam até ~45 segundos. É uma busca só para as duas abas — a lista de Pedidos e o Operacional ficam prontas ao mesmo tempo, e trocar de aba não busca de novo; o resultado fica guardado por 30 minutos.',
         },
         {
           q: 'Qual a diferença entre média e mediana?',
@@ -504,7 +549,7 @@ números** do cartão. **Esc** ou o mesmo botão saem da tela cheia.
         },
         {
           q: 'O filtro de canal muda o quê?',
-          a: 'Todos os cartões e gráficos da aba passam a contar só os pedidos daquele canal — inclusive o mapa de calor e os cancelamentos. Volte para "Todos os canais" para ver a loja inteira.',
+          a: 'O seletor de canal fica na linha das abas, à direita, e só aparece com a aba Operacional aberta. Todos os cartões e gráficos da aba passam a contar só os pedidos daquele canal — inclusive o mapa de calor e os cancelamentos. Volte para "Todos os canais" para ver a loja inteira; uma pesquisa nova também volta para todos. A lista de pedidos não muda com ele: lá, o recorte por canal é o filtro de origem.',
         },
         {
           q: 'Como vejo os números exatos de um gráfico?',
@@ -525,11 +570,11 @@ números** do cartão. **Esc** ou o mesmo botão saem da tela cheia.
         },
         {
           q: 'Por que o período é limitado a 31 dias?',
-          a: 'Acima disso a API do DW passa do tempo limite e a consulta falha (no relatório antigo ela simplesmente não voltava). Para meses inteiros, pesquise um mês por vez e exporte cada um.',
+          a: 'Acima disso a API do DW passa do tempo limite e a consulta falha. Para meses inteiros, pesquise um mês por vez e exporte cada um.',
         },
         {
           q: 'Pedidos cancelados entram no total?',
-          a: 'Entram, como no relatório antigo: sem nenhum status marcado no filtro de status, a lista e os cards de totais trazem todos os pedidos do período. Para somar só os válidos, marque no filtro de status todos os status que aparecem, menos Cancelados, e clique em "Ver N pedidos" — a tabela, os cards de totais e o Excel exportado passam a deixar os cancelados de fora.',
+          a: 'Entram: sem nenhum status marcado no filtro de status, a lista e os cards de totais trazem todos os pedidos do período. Para somar só os válidos, marque no filtro de status todos os status que aparecem, menos Cancelados, e clique em "Ver N pedidos" — a tabela, os cards de totais e o Excel exportado passam a deixar os cancelados de fora.',
         },
         {
           q: 'Onde estão os filtros de status e de origem?',
@@ -569,7 +614,7 @@ números** do cartão. **Esc** ou o mesmo botão saem da tela cheia.
         },
         {
           q: 'Como vejo o tipo de entrega, o parceiro, as taxas e os incentivos?',
-          a: 'Essas são as 10 colunas adicionais, que começam ocultas. Clique no botão de colunas da barra da tabela e marque as que quiser ver (Tipo de entrega, Entrega pela plataforma, Entregue por, Parceiro, Taxa de entrega, Taxa extra do parceiro, Incentivo da loja, Incentivo do parceiro, Nº da loja e Criação (UTC)). No Excel elas vão sempre, no fim, depois das colunas do relatório antigo. No celular o botão de colunas não aparece — exporte o Excel.',
+          a: 'Essas são as 10 colunas adicionais, que começam ocultas. Clique no botão de colunas da barra da tabela e marque as que quiser ver (Tipo de entrega, Entrega pela plataforma, Entregue por, Parceiro, Taxa de entrega, Taxa extra do parceiro, Incentivo da loja, Incentivo do parceiro, Nº da loja e Criação (UTC)). No Excel elas vão sempre, no fim, depois das 26 colunas principais. No celular o botão de colunas não aparece — exporte o Excel.',
         },
         {
           q: 'Por que algumas células das colunas adicionais estão vazias?',

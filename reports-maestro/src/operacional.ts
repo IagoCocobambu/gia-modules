@@ -2,7 +2,7 @@ import type { PedidoOperacional, QuemCancelou } from './types'
 
 // As contas do dashboard Operacional, sobre os pedidos resumidos pelo handler
 // `operacional`. Funções puras: a tela chama de novo quando muda o canal, sem
-// buscar nada. A base de cada número está em docs/gargalos-operacionais-delivery.md.
+// buscar nada. A regra de cada número está no PRD (RF-6, RN-8) e na FAQ.
 //
 // ── DUAS FAMÍLIAS DE TEMPO ──────────────────────────────────────────────────
 //

@@ -6,8 +6,11 @@
 //
 // O `loc_ref` da API de delivery é o número da loja. Sai primeiro do vínculo com a
 // BI do Simphony (`locRefs.BIAPI`, ex.: '01 CB Go' → "01") e, na falta, do `label`,
-// que faz o papel do nome da Empresa no portal ("01.CB GOIANIA" → "01"). Empresa sem
-// nenhum dos dois (ex.: o Escritório) fica fora do seletor.
+// que faz o papel do nome da Empresa no portal ("01.CB GOIANIA" → "01").
+//
+// O seletor lista só as Empresas com `tipoRegistro: 'empresa'` (a loja, com CNPJ;
+// é o padrão quando o campo falta). O Escritório é `'propriedade'` e fica fora —
+// é ele que testa esse filtro no gia dev.
 //
 // Personas: só o Admin ('*') e "Dados do cliente" veem CPF, e-mail, telefone e
 // endereço completos; Leitor e Exportador recebem esses campos mascarados.
@@ -133,8 +136,8 @@ export default {
     { id: 96, label: '96. CB Campinas Shopping' },
     { id: 97, label: '97. CB Tijuca Shopping' },
     { id: 98, label: '98. CB Joinville' },
-    // Sem número no nome nem vínculo BIAPI: fica fora do seletor.
-    { id: 9000, label: 'Escritório' },
+    // Propriedade: não é loja, não pode aparecer no seletor.
+    { id: 9000, label: 'Escritório', tipoRegistro: 'propriedade' },
   ],
 
   fixtures: {},

@@ -35,6 +35,14 @@ type GiaEmpresa = {
   locRefs: Record<string, string>
   ecs: GiaEc[]
 }
+type GiaArmazem = {
+  id: number
+  nome: string
+  codigo: string
+  localEstoque: { id: number; nome: string }
+  empresaOdoo: { id: number; nome: string }
+  empresaId: number
+}
 type GiaTextoInput = {
   prompt: string
   instrucoes?: string
@@ -70,10 +78,11 @@ type PublicServerHandler = (ctx: PublicServerContext) => Response | Promise<Resp
 type GiaCredencial = {
   baseUrl: string
   token: string
-  expiresAt: string
+  expiresAt: string | null
   escopo: string
+  parametros: Record<string, string>
 }
-type ServerContext<B> = {
+type ServerContext<B = unknown> = {
   body: B
   headers: Headers
   enviarEmail: (input: GiaEmailInput) => Promise<{ enviadoPara: string }>
@@ -91,6 +100,9 @@ type ServerContext<B> = {
   operacoes: () => Promise<GiaOperacao[]>
   requireOperacao: (ref: string, opcoes?: OpcoesDeOperacao) => Promise<GiaOperacao>
   definirTipoEc: (ec: string, tipo: GiaEc['tipo']) => Promise<GiaEcAlterado>
+  armazens: () => Promise<GiaArmazem[]>
+  requireArmazem: (armazemId: number) => Promise<GiaArmazem>
+  requireDestino: (localEstoqueId: number) => Promise<GiaArmazem>
 }
 /**
  * Modo da checagem de loja.
@@ -444,17 +456,33 @@ async function __giaCredencial(
     throw new HttpError(res.status, msg ?? `falha ao obter credencial: HTTP ${res.status}`)
   }
 
-  const d = (payload ?? {}) as { base_url?: string; token?: string; expires_at?: string; escopo?: string }
-  if (!d.base_url || !d.token || !d.expires_at) {
+  const d = (payload ?? {}) as {
+    base_url?: string
+    token?: string
+    expires_at?: string | null
+    escopo?: string
+    parametros?: Record<string, unknown> | null
+  }
+  if (!d.base_url || !d.token) {
     throw new HttpError(502, 'hub de credenciais devolveu resposta incompleta')
+  }
+  // `parametros`: o que a chamada precisa além do token, nas credenciais de chave
+  // de API (no Odoo, `db` e `usuario` = uid do usuário de serviço). Tudo vira texto.
+  const parametros: Record<string, string> = {}
+  for (const [k, v] of Object.entries(d.parametros ?? {})) {
+    if (v !== null && v !== undefined) parametros[k] = String(v)
   }
   const valor: GiaCredencial = {
     baseUrl: d.base_url.replace(/\/+$/, ''),
     token: d.token,
-    expiresAt: d.expires_at,
+    expiresAt: d.expires_at ?? null,
     escopo: d.escopo ?? escopo,
+    parametros,
   }
-  __giaCredCache.set(chave, { valor, expiraEm: Date.parse(d.expires_at) })
+  // Chave de API não vence (`expires_at` nulo): guarda por 5 minutos, para que
+  // uma chave trocada no hub chegue aos módulos sem reiniciar a função.
+  const expiraEm = d.expires_at ? Date.parse(d.expires_at) : Date.now() + 5 * 60_000
+  __giaCredCache.set(chave, { valor, expiraEm })
   return valor
 }
 async function __giaEnviarEmail(
@@ -557,6 +585,48 @@ async function __giaDefinirTipoEc(
     alterado: !!d.alterado,
   }
 }
+// ── Armazéns do Odoo (odoo.armazens_do_usuario) ────────────────────────────
+// O escopo EFETIVO: concedido ao usuário ∩ permitido pelo escopo de lojas atual
+// ∩ ativo no Odoo. Quem calcula é o banco; aqui só se lê. Service role com o id
+// verificado do usuário — o mesmo caminho do cache de permissões. `Content-Profile`
+// seleciona o schema no POST de RPC do PostgREST.
+async function __giaArmazens(userId: string): Promise<GiaArmazem[]> {
+  const key = env('SUPABASE_SERVICE_ROLE_KEY')
+  let res: Response
+  try {
+    res = await fetch(`${env('SUPABASE_URL')}/rest/v1/rpc/armazens_do_usuario`, {
+      method: 'POST',
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'Content-Profile': 'odoo',
+      },
+      body: JSON.stringify({ p_usuario: userId }),
+    })
+  } catch (e) {
+    throw new HttpError(502, `escopo de armazéns indisponível (${String(e)})`)
+  }
+  if (!res.ok) throw new HttpError(500, 'falha ao consultar os armazéns do usuário')
+  const rows = (await res.json()) as Array<{
+    armazem_id: number
+    nome: string | null
+    codigo: string | null
+    local_estoque_id: number | null
+    local_estoque_nome: string | null
+    empresa_odoo_id: number | null
+    empresa_odoo_nome: string | null
+    empresa_id: number
+  }>
+  return rows.map((r) => ({
+    id: Number(r.armazem_id),
+    nome: r.nome ?? '',
+    codigo: r.codigo ?? '',
+    localEstoque: { id: Number(r.local_estoque_id ?? 0), nome: r.local_estoque_nome ?? '' },
+    empresaOdoo: { id: Number(r.empresa_odoo_id ?? 0), nome: r.empresa_odoo_nome ?? '' },
+    empresaId: Number(r.empresa_id),
+  }))
+}
 // ── Cadastro do usuário (public.usuarios) ───────────────────────────────────
 // O `user()` sai do JWT e não tem nome nem o id legado. Uma ida ao PostgREST,
 // memoizada por request pelo __giaBuildContext.
@@ -610,6 +680,24 @@ function __giaBuildContext(body: unknown, req: Request, user: GiaUser): ServerCo
     emps = null
     return r
   }
+  let arms: Promise<GiaArmazem[]> | null = null
+  const armazens = () => (arms ??= __giaArmazens(user.id))
+  // 403 nos dois casos, com a mesma mensagem para inexistente e fora do escopo:
+  // quem sonda não descobre quais ids existem no Odoo.
+  const requireArmazem = async (armazemId: number) => {
+    const id = Number(armazemId)
+    const achado = Number.isFinite(id) ? (await armazens()).find((a) => a.id === id) : undefined
+    if (!achado) throw new HttpError(403, `armazém "${armazemId}" fora do seu escopo de acesso`)
+    return achado
+  }
+  const requireDestino = async (localEstoqueId: number) => {
+    const id = Number(localEstoqueId)
+    const achado = Number.isFinite(id)
+      ? (await armazens()).find((a) => a.localEstoque.id === id)
+      : undefined
+    if (!achado) throw new HttpError(403, `destino "${localEstoqueId}" fora do seu escopo de acesso`)
+    return achado
+  }
   let perfil: Promise<GiaPerfilUsuario> | null = null
   const perfilUsuario = () => (perfil ??= __giaPerfilUsuario(user))
   const legacyUserId = () => perfilUsuario().then((p) => p.legacyUserId)
@@ -622,6 +710,9 @@ function __giaBuildContext(body: unknown, req: Request, user: GiaUser): ServerCo
     gerarTexto: (input: GiaTextoInput) => __giaGerarTexto(input, req),
     empresas,
     definirTipoEc,
+    armazens,
+    requireArmazem,
+    requireDestino,
     callModule: <R>(moduleId: string, handler: string, b?: unknown) =>
       __giaCallModule(moduleId, handler, b, req) as Promise<R>,
     perfilUsuario,
@@ -767,7 +858,7 @@ __giaHandlers["pedidos"] = (() => {
   // - Quem cancelou: a `origem` do evento CANCELLED — CONSUMER (cliente ou
   //   plataforma) ou STORE (loja).
   //
-  // Ver docs/gargalos-operacionais-delivery.md.
+  // A regra completa está no PRD (RF-6, RN-8).
   //
   // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. As funções de
   // data e `numeroDaLoja` se repetem em outros arquivos de propósito.
