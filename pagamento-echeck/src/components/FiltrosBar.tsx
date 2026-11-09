@@ -41,21 +41,30 @@ const HORAS = Array.from({ length: 24 }, (_, h) => h)
 
 interface SeletorHoraProps {
   controle: { id: string }
-  valor: number
-  onChange: (hora: number) => void
+  value: number
+  onValueChange: (hora: number) => void
   /** Fim da faixa: 23 vale até 23:59. */
   fim?: boolean
+  /** Celular: alvo de toque de 44px. */
+  compacto?: boolean
   /** Horas que não podem ser escolhidas (a faixa precisa ter início < fim). */
   bloqueada: (hora: number) => boolean
 }
 
-function SeletorHora({ controle, valor, onChange, fim = false, bloqueada }: SeletorHoraProps) {
+function SeletorHora({
+  controle,
+  value,
+  onValueChange,
+  fim = false,
+  compacto = false,
+  bloqueada,
+}: SeletorHoraProps) {
   return (
-    <Select value={String(valor)} onValueChange={(v) => onChange(Number(v))}>
+    <Select value={String(value)} onValueChange={(v) => onValueChange(Number(v))}>
       <Select.Trigger
         id={controle.id}
-        // Mesmo fundo e altura dos campos de data ao lado.
-        className="h-[42px] w-full bg-surface tabular-nums"
+        // Mesmo fundo e altura dos campos de data ao lado; no celular, 44px de toque.
+        className={cn('w-full bg-surface tabular-nums', compacto ? 'h-11' : 'h-[42px]')}
       />
       <Select.Content>
         {HORAS.map((h) => (
@@ -97,9 +106,17 @@ export function FiltrosBar({
       linha: 'min-w-52 max-w-80 flex-1 basis-52',
     },
     grupo: { celular: 'grid grid-cols-2 gap-3', duasLinhas: 'contents', linha: 'contents' },
+    // As horas são um bloco de verdade (não `contents`): o passo "Faixa de horário"
+    // do tour se ancora nele, e elemento `display: contents` não tem caixa na tela.
+    grupoHora: {
+      celular: 'grid grid-cols-2 gap-3',
+      duasLinhas: 'col-span-2 grid grid-cols-2 items-end gap-3',
+      linha: 'flex shrink-0 items-end gap-3',
+    },
     // `px-3` no campo de data (o padrão é `px-4`): em 9rem o "08/11/2026" cortava.
     data: {
-      celular: 'min-w-0',
+      // Celular: o campo de digitar a data com 44px de toque.
+      celular: 'min-w-0 [&_input]:h-11',
       duasLinhas: 'min-w-0 [&_input]:px-3',
       linha: 'w-36 shrink-0 [&_input]:px-3',
     },
@@ -155,7 +172,7 @@ export function FiltrosBar({
             {(controle) => (
               <SearchableSelect<number>
                 triggerProps={controle}
-                className="h-[42px]"
+                className={compacto ? 'h-11' : 'h-[42px]'}
                 options={lojas.map((l) => ({
                   value: l.empresaId,
                   label: l.nome,
@@ -195,13 +212,14 @@ export function FiltrosBar({
           </div>
 
           {/* Faixa de horário do legado: começa na data inicial e termina na final. */}
-          <div className={cls.grupo[modo]} data-tour="pagamento-echeck-horario">
+          <div className={cls.grupoHora[modo]} data-tour="pagamento-echeck-horario">
             <Field label="Hora inicial" className={cls.hora[modo]}>
               {(controle) => (
                 <SeletorHora
                   controle={controle}
-                  valor={value.horaInicio}
-                  onChange={(horaInicio) => set({ horaInicio })}
+                  value={value.horaInicio}
+                  onValueChange={(horaInicio) => set({ horaInicio })}
+                  compacto={compacto}
                   bloqueada={(h) => h >= value.horaFim}
                 />
               )}
@@ -210,8 +228,9 @@ export function FiltrosBar({
               {(controle) => (
                 <SeletorHora
                   controle={controle}
-                  valor={value.horaFim}
-                  onChange={(horaFim) => set({ horaFim })}
+                  value={value.horaFim}
+                  onValueChange={(horaFim) => set({ horaFim })}
+                  compacto={compacto}
                   fim
                   bloqueada={(h) => h <= value.horaInicio}
                 />

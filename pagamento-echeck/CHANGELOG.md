@@ -1,5 +1,14 @@
 # Changelog — Pagamento eCheck
 
+## 0.1.2 — 2026-11-09
+
+- Tour: o passo "Faixa de horário" volta a destacar os campos de hora (o alvo
+  estava num elemento sem caixa na tela e o balão ficava solto no canto); texto
+  do passo ajustado.
+- Celular: loja, datas, horas e os botões do módulo na barra da tabela (Totais,
+  Gráficos e o filtro dos totais) com alvo de toque de 44px.
+- Seletor de hora com `value` / `onValueChange` (convenção do SDK).
+
 ## 0.1.1 — 2026-11-09
 
 - FAQ sem menções ao sistema antigo (6 trechos reescritos). Sem mudança de

@@ -1,13 +1,14 @@
-Pagamento eCheck 0.1.1 - migração do Relatório de Pagamentos eCheck do GIA legado - 09/11/2026
+Pagamento eCheck 0.1.2 - migração do Relatório de Pagamentos eCheck do GIA legado - 09/11/2026
 
 Entrega
-- Versão: 0.1.1 (package.json, package-lock.json, module.ts, INTEGRATION e CHANGELOG). Junta a 0.1.0 (migração) e a 0.1.1 (FAQ sem menções ao sistema antigo). O pacote a entregar é o 0.1.1; o 0.1.0 deve ser descartado.
-- Pacote: modules-pagamento-echeck-0.1.1.tgz (53,7 kB). O modules-pagamento-echeck-0.1.0.tgz que está na pasta tem a FAQ antiga e não deve ser entregue. Conferido: sem o .env e sem o token de dev.
+- Versão: 0.1.2 (package.json, package-lock.json, module.ts, INTEGRATION e CHANGELOG). Junta a 0.1.0 (migração), a 0.1.1 (FAQ sem menções ao sistema antigo) e a 0.1.2 (tour da faixa de horário e alvos de toque no celular). O pacote a entregar é o 0.1.2; o 0.1.0 e o 0.1.1 devem ser descartados.
+- Pacote: modules-pagamento-echeck-0.1.2.tgz (54,2 kB). Os modules-pagamento-echeck-0.1.0.tgz e 0.1.1.tgz que estão na pasta são versões anteriores e não devem ser entregues. Conferido: sem o .env e sem o token de dev.
 - Validação: gia pack 57/57, 0 erros, 0 avisos.
 - Commits com push no branch feat/pagamento-echeck-0.1.0 (criado a partir de feat/reports-maestro-0.3.0):
   - 16357f2: módulo v0.1.0 e o padrão 3 (cards de totais) no AGENTS.md do workspace;
   - 4ff1446: Edge Function gerada pelo gia pack;
-  - versão 0.1.1 (FAQ, versão, CHANGELOG e este resumo): commit com push no mesmo branch, logo depois dos dois acima.
+  - 8dd7ca1: versão 0.1.1 (FAQ, versão, CHANGELOG e este resumo);
+  - versão 0.1.2 (tour, alvos de toque, versão, CHANGELOG e este resumo): commit com push no mesmo branch, logo depois dos três acima.
 - PR: ainda não aberto (o gh não está instalado na máquina). Contra a main, o PR leva junto os 8 commits de feat/reports-maestro-0.3.0.
 - SDK @gia-cb/* 0.1.0-alpha.70 (fixado).
 - Sem banco (nenhuma migration; módulo só de leitura).
@@ -49,6 +50,10 @@ Decisões tomadas na revisão
   - Levantamento de out/2026 em 6 lojas (01, 13, 17, 27, 54, 71): lio em ~98% das transações (com Terminal e Cod_Ciel); também aparecem todo_cartoes, cb_app, unknown, individual_check e wallet.
 - Barra de filtros: refeita para não quebrar a linha (o botão Pesquisar caía sozinho para baixo).
 - 0.1.1: FAQ sem menções ao sistema antigo ("GIA antigo"), em 6 trechos; o tour não tinha nenhuma. Sem mudança de comportamento. PRD, INTEGRATION e este resumo continuam citando o legado, porque são documentos para o time GIA.
+- 0.1.2, da revisão contra as docs do SDK:
+  - tour: o passo "Faixa de horário" estava ancorado num elemento com display: contents (sem caixa na tela), e o balão ficava solto no canto. As horas viraram um bloco de verdade; o passo destaca os dois campos em 1366, 1024 e 390 px. Os 6 passos do tour conferidos nos 3 tamanhos;
+  - celular: loja, datas, horas, Totais, Gráficos e o botão do filtro dos totais passaram de 36-42 px para 44 px de toque. No desktop nada muda (42 px, uma linha a partir de ~1280 px). Abaixo de 44 px no celular só ficaram componentes do SDK (calendário, ícones da barra da tabela, busca, paginação, Rever tour);
+  - seletor de hora com value / onValueChange (convenção do SDK, §6).
 
 Testes (dev-shell com a API real; credencial de dev)
 - Cálculos (15/15), conferidos contra a API direta: loja 17 em out/2026, 6.808 transações e R$ 1.569.064,75. Valor total, transações, ticket médio, aprovadas + não aprovadas e as somas dos dois gráficos batem com a API.
@@ -75,6 +80,7 @@ Pendências
 - Confirmar o significado de cada valor de Tipo antes de voltar com indicadores por tipo.
 - Segurança: o view.relatorios.echeck.payments.pas do legado tem um token da API do DW escrito no código, com usuário e senha legíveis no payload. Trocar a senha desse usuário e remover o token do legado.
 - Abrir o PR (descrição já redigida).
+- Itens do checklist de entrega que o gia validate não cobra e que o time GIA pode pedir na revisão: screenshots em 3 tamanhos de tela (assets/screenshots/), Vitest/Storybook, busca síncrona de ~10 s em vez de job em segundo plano (justificada no PRD §5.4), barras do gráfico por hora com 25 px de largura no celular.
 
 Arquivos
 - pagamento-echeck/src/module.ts, permissions.ts, routes.tsx, index.ts, types.ts, helpers.ts, graficos.ts

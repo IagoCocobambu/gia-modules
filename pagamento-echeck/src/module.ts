@@ -5,7 +5,7 @@ import { pagamentoEcheckRoutes } from './routes'
 export const pagamentoEcheckModule = defineModule({
   id: 'pagamento-echeck',
   label: 'Pagamento eCheck',
-  version: '0.1.1',
+  version: '0.1.2',
   description:
     'Relatório dos pagamentos eCheck de uma loja num período e faixa de horário: valor total, transações, ticket médio, gráficos por hora e por modalidade e a lista detalhada das transações, com exportação em Excel. Substitui a tela Relatório de Pagamentos eCheck do GIA antigo.',
   icon: 'CreditCard',

@@ -16,7 +16,7 @@ export const tour = defineTour({
       screen: '/pagamento-echeck',
       target: '[data-tour="pagamento-echeck-horario"]',
       title: 'Faixa de horário',
-      body: 'A **hora inicial** vale para a data inicial e a **hora final**, para a data final — a pesquisa pega tudo entre esses dois momentos, não um horário de cada dia. Começa em 08:00 até 23:59.',
+      body: 'A **hora inicial** vale para a data inicial e a **hora final**, para a data final — a pesquisa pega tudo entre esses dois momentos, não um horário de cada dia. Por padrão, das 08:00 às 23:59.',
       placement: 'bottom',
     },
     {

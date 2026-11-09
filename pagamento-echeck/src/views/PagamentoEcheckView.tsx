@@ -79,6 +79,8 @@ const SEM_COLUNAS: ColumnDef<Transacao, unknown>[] = []
  * visível — lá não há tooltip (padrão do workspace).
  */
 const BOTAO_TOOLBAR = 'px-2.5 @max-lg:px-4 @5xl:px-4 [@media(hover:none)]:px-4'
+/** No celular, os botões do módulo na barra da tabela têm 44px de toque. */
+const BOTAO_TOOLBAR_CELULAR = 'h-11'
 const ROTULO_TOOLBAR = '@lg:hidden @5xl:inline [@media(hover:none)]:inline'
 
 /** Campos da face do card no celular; o resto fica em "ver mais". */
@@ -391,7 +393,7 @@ export function PagamentoEcheckView() {
         <Dica content="Tirar o filtro e voltar a ver todas as transações">
           <Button
             variant="default"
-            className="max-w-full"
+            className={cn('max-w-full', compacto && BOTAO_TOOLBAR_CELULAR)}
             aria-label={`Filtro: ${NOME_DO_TOTAL[filtroTotal]}. Tirar o filtro`}
             onClick={() => setFiltroTotal(null)}
           >
@@ -403,7 +405,7 @@ export function PagamentoEcheckView() {
       <Dica content={totaisAbertos ? 'Ocultar os totais' : 'Mostrar os totais'}>
         <Button
           variant={totaisAbertos ? 'default' : 'outline'}
-          className={BOTAO_TOOLBAR}
+          className={cn(BOTAO_TOOLBAR, compacto && BOTAO_TOOLBAR_CELULAR)}
           aria-label="Totais"
           aria-pressed={totaisAbertos}
           disabled={!painelDisponivel}
@@ -417,7 +419,7 @@ export function PagamentoEcheckView() {
       <Dica content="Abrir os gráficos por hora e por método de pagamento">
         <Button
           variant="outline"
-          className={BOTAO_TOOLBAR}
+          className={cn(BOTAO_TOOLBAR, compacto && BOTAO_TOOLBAR_CELULAR)}
           aria-label="Gráficos"
           disabled={!painelDisponivel || carregando || transacoes.length === 0}
           onClick={() => setGraficosAbertos(true)}

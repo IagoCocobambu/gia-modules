@@ -3,7 +3,7 @@
 ## 1. Identificação
 
 - **Módulo**: `pagamento-echeck` — Pagamento eCheck
-- **Versão do pacote**: 0.1.1
+- **Versão do pacote**: 0.1.2
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
 - **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.70 (fixada)
 
