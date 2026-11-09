@@ -183,7 +183,11 @@ relfechamentoifood` e o Excel era livre.
 
 ### 5.4 BFF / processamento em segundo plano
 
-Nenhum: uma loja × um dia, síncrono (~4 s medidos no DW). Excel no navegador.
+Nenhum: uma loja × um dia, síncrono, com o botão Pesquisar em carregamento. O tempo
+é quase todo da API do DW (medido em 09/11/2026: 12 s na loja 54 e 47 s na loja 03,
+444 pedidos); o iFood roda em paralelo, paginado 3 páginas por vez. Fica dentro do
+timeout do DW (90 s) e não é multi-loja nem export volumoso, então não usa job em
+segundo plano (conventions §15). Excel gerado no navegador.
 
 ### 5.5 Realtime
 

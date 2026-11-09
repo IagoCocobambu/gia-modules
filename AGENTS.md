@@ -65,9 +65,19 @@ o toque**.
   }
 
   export function Dica({ content, children }: { content: ReactNode; children: ReactElement }) {
-    return useComHover() ? <Tooltip content={content}>{children}</Tooltip> : children
+    return useComHover() ? (
+      <Tooltip content={content} asChild>
+        {children}
+      </Tooltip>
+    ) : (
+      children
+    )
   }
   ```
+
+  O `asChild` é obrigatório: o filho do `Dica` é sempre um elemento interativo
+  (botão). Sem ele, o Radix envolve o filho num `<button>` extra quando o tooltip
+  arma — botão dentro de botão (HTML inválido).
 
   Não exporte o hook do mesmo arquivo do componente: o ESLint do host
   (`react-refresh/only-export-components`) reprova no `gia validate`.

@@ -3,9 +3,9 @@ Fechamento iFood Diário 0.1.0 - primeira entrega, migrado do GIA legado - 09/11
 Entrega
 - Módulo: fechamento-ifood-diario ("Fechamento iFood Diário"), categoria vendas, menu Plataformas (navGroup 'cardapio'; subgrupo a definir pelo time GIA).
 - Versão: 0.1.0 (package.json, package-lock.json, module.ts, INTEGRATION e CHANGELOG).
-- Pacote: modules-fechamento-ifood-diario-0.1.0.tgz. Regerado em 09/11 depois da limpeza da FAQ (o primeiro 0.1.0 não foi entregue e foi substituído — exceção combinada à regra de não repetir versão). Conferido: sem .env, sem token e sem client secret do iFood dentro.
+- Pacote: modules-fechamento-ifood-diario-0.1.0.tgz. Regerado em 09/11 depois da limpeza da FAQ e de novo depois da revisão SDK (a 0.1.0 ainda não foi entregue; o responsável preferiu manter 0.1.0 até a primeira entrega). Conferido: sem .env, sem token e sem client secret do iFood dentro.
 - Validação: gia pack / gia validate 56/56, 0 erros, 0 avisos.
-- Commits no branch feat/fechamento-ifood-diario-0.1.0, com push: e0b4ddd (módulo), 06892cb (este resumo) e o da limpeza da FAQ/AGENTS.md, logo depois. O branch sai de feat/pagamento-echeck-0.1.0 (1 commit à frente dele; 11 à frente do main).
+- Commits no branch feat/fechamento-ifood-diario-0.1.0, com push: e0b4ddd (módulo), 06892cb (este resumo), ade56f7 (FAQ sem sistema antigo e padrão 4 do AGENTS.md) e o da revisão SDK, logo depois. O branch sai de feat/pagamento-echeck-0.1.0 (1 commit à frente dele; 11 à frente do main).
 - PR: a abrir pelo link do GitHub (o gh não está instalado na máquina). Base sugerida: feat/pagamento-echeck-0.1.0, para a PR mostrar só este módulo.
 - SDK @gia-cb/* 0.1.0-alpha.70 (fixado).
 - Sem banco próprio (nenhuma migration) e só leitura. Permissões: fechamento-ifood-diario.ler e fechamento-ifood-diario.exportar.
@@ -75,6 +75,14 @@ Pendências para instalar (INTEGRATION.md)
 - Cadastro de Empresas: integração IFOOD (UUID do merchant) em cada loja; sem ela a loja aparece "Sem iFood" e os pedidos ficam Cancelado.
 - Posição no menu: subgrupo sugerido iFood, em Plataformas.
 - Pedido ao time do SDK: vínculo iFood por operação (locRefs em GiaOperacao), para tirar a tabela do Vasto do módulo.
+
+Revisão SDK (09/11)
+- Corrigido: o Dica não passava asChild ao Tooltip do @gia-cb/ui; ao armar o tooltip o indicador ficava dentro de outro <button>. Corrigido também o exemplo do padrão 2 no AGENTS.md (o Dica do Fechamento Maestro, pagamento-echeck e iFood Mensal tem o mesmo problema e não foi alterado).
+- Corrigido: PRD §5.4 dizia ~4 s; o medido é 12 s (loja 54) a 47 s (loja 03), quase tudo do DW. Justificado por que não usa job em segundo plano (uma loja, um dia).
+- Limpeza: o handler deixou de devolver pedidosDw, vendasIfoodSemPedidoDw e pedidosSemIfood (sem uso na tela depois da retirada dos avisos).
+- Testado: 320x568 sem rolagem horizontal; teclado (Enter/Espaço no indicador, anel de foco); console sem erros.
+- Para o time do SDK: o Tooltip remonta o botão quando arma no 1º foco e o Tab cai no <body> uma vez por indicador; Esc não fecha o tour; botões do DataReport só com ícone no celular.
+- Fora do contrato, igual aos outros módulos: sem testes Vitest nem Storybook (conventions §12).
 
 Pontos para o financeiro / próximos passos
 - Pedidos de Express, Pizzaria e Dani contam como Cancelado (regra do legado). Se um dia o fechamento tiver de incluir essas marcas, o cruzamento com os restaurantes irmãos já foi testado (1.777/1.777).

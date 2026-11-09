@@ -13,6 +13,8 @@ Primeira versão. Porte da tela **Fechamento iFood Diário** do GIA legado.
 - Excel com as abas Resumo e Pedidos.
 - Permissões `fechamento-ifood-diario.ler` e `fechamento-ifood-diario.exportar`.
 - FAQ e tour sem menção ao sistema antigo (padrão 4 do `AGENTS.md` do workspace).
+- Revisão SDK: `Dica` com `asChild` no `Tooltip` (sem botão dentro de botão); resposta
+  do handler sem campos que a tela não usa; PRD §5.4 com os tempos medidos.
 - Seletor de loja por **operação** (todas as operações do escopo), exceção aos
   demais módulos. Cada operação traz só os seus pedidos: CB pelo canal "iFood",
   Vasto na loja do CB pelo canal "iFood Vasto" e o restaurante do Vasto.

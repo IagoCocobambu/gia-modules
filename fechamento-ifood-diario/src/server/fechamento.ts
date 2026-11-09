@@ -92,12 +92,6 @@ interface PedidoIfood {
 
 interface Resposta {
   pedidos: PedidoIfood[]
-  /** Pedidos que o DW devolveu para o nº da loja no dia, de todos os canais e operações. */
-  pedidosDw: number
-  /** Vendas da API do iFood que não acharam pedido no DW (o legado só registrava em log). */
-  vendasIfoodSemPedidoDw: number
-  /** Pedidos do DW que não foram achados na API do iFood. */
-  pedidosSemIfood: number
   /** Avisos sobre a parte do iFood (cadastro, credencial, resposta da API). */
   avisos: string[]
 }
@@ -759,11 +753,6 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
 
   return {
     pedidos,
-    pedidosDw: doDia.length,
-    vendasIfoodSemPedidoDw: vendas.size,
-    pedidosSemIfood: merchantId
-      ? pedidosDw.filter((p) => !p.encontrado_no_ifood && entra(p)).length
-      : 0,
     avisos,
   }
 })

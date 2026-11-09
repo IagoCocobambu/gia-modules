@@ -69,9 +69,6 @@ export interface PedidoIfood {
 
 export interface FechamentoResposta {
   pedidos: PedidoIfood[]
-  pedidosDw: number
-  vendasIfoodSemPedidoDw: number
-  pedidosSemIfood: number
   avisos: string[]
 }
 
