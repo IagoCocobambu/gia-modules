@@ -1,12 +1,14 @@
-import type { ComponentType, SVGProps } from 'react'
+import { useState, type ComponentType, type SVGProps } from 'react'
 import {
   AlertTriangle,
+  ChevronDown,
   CircleHelp,
   CircleX,
   CreditCard,
   Globe,
   HandCoins,
   Handshake,
+  ListFilter,
   Store,
 } from 'lucide-react'
 import { Skeleton } from '@gia-cb/ui'
@@ -166,12 +168,28 @@ interface ResumoCardsProps {
   /** Totais do período; `null` enquanto não há resultado. */
   totais: TotaisPeriodo | null
   carregando: boolean
+  /**
+   * Aviso de que os totais são de um recorte (ex.: "Totais só de iFood · 230 de
+   * 410 pedidos"); `null` = pesquisa inteira, sem aviso.
+   */
+  recorte?: string | null
   /** Indicador que está filtrando a tabela (`null` = sem filtro). */
   filtro: FiltroTotal | null
   /** Clique num indicador: filtra a tabela por ele; clicar de novo tira o filtro. */
   onFiltroChange: (filtro: FiltroTotal | null) => void
+  /**
+   * Indicadores à vista, nessa ordem; os demais abrem pelo botão "Ver todos os
+   * totais" (padrão 3 do `../AGENTS.md`). Sem isto, mostra os 12 (aba Totais do
+   * Dashboard, que tem espaço).
+   */
+  principais?: readonly FiltroTotal[]
   className?: string
 }
+
+/** Indicadores que deveriam ser zero: escondidos com valor, marcam o botão "Ver todos". */
+const ALERTAS: readonly FiltroTotal[] = ['nao_classificado', 'pagamentos_sem_classificacao']
+
+const GRADE = 'grid grid-cols-1 gap-x-1 gap-y-0.5 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-5'
 
 const ITEM = cn(
   'flex min-h-11 min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-left',
@@ -187,9 +205,10 @@ const DICA_FILTRO = 'Clique para ver na tabela só os pedidos que entram nesta c
  * (com a mesma divisão), os descontos da loja e do parceiro e o que ficou sem
  * classificação.
  *
- * Grade que ocupa a largura toda, com colunas que sempre dividem 12 (1, 2, 3, 4
- * ou 6, pela largura — container query; 1 no celular, para valor e nome
- * inteiros): as linhas fecham cheias, sem sobra vazia no fim.
+ * Padrão 3 do `../AGENTS.md`: grade de até 5 colunas (container query; 1 no
+ * celular). Com `principais` (a barra acima da tabela), só os 4 grupos de
+ * pagamento ficam à vista e o 5º lugar é o botão "Ver todos os totais (+8)", que
+ * abre os demais logo abaixo — fechada, a barra ocupa uma linha só.
  *
  * Cada indicador é um FILTRO da tabela: o clique mostra só os pedidos que somaram
  * nele (`pedidosDoTotal`) e o indicador fica marcado; clicar de novo tira o
@@ -199,10 +218,13 @@ const DICA_FILTRO = 'Clique para ver na tabela só os pedidos que entram nesta c
 export function ResumoCards({
   totais,
   carregando,
+  recorte = null,
   filtro,
   onFiltroChange,
+  principais,
   className,
 }: ResumoCardsProps) {
+  const [expandida, setExpandida] = useState(false)
   const pronto = !carregando && totais !== null
   const semClassificacao = pronto ? totais.pagamentos_sem_classificacao : 0
 
@@ -241,6 +263,46 @@ export function ResumoCards({
     },
   ]
 
+  type Item = (typeof itens)[number]
+  const item = (i: Item) => {
+    const ativo = filtro === i.campo
+    const semAcao = !pronto || (i.zerado && !ativo)
+    return (
+      <Dica key={i.campo} content={semAcao ? i.dica : `${i.dica}. ${DICA_FILTRO}`}>
+        <button
+          type="button"
+          aria-pressed={ativo}
+          aria-disabled={semAcao}
+          aria-label={`${i.rotulo}: ${i.valor ?? 'carregando'}`}
+          onClick={() => !semAcao && onFiltroChange(ativo ? null : i.campo)}
+          className={cn(
+            ITEM,
+            semAcao ? 'cursor-default' : 'hover:bg-muted/60',
+            ativo && 'bg-primary/10 ring-1 ring-inset ring-primary/40 hover:bg-primary/15',
+            i.campo === 'pagamentos_sem_classificacao' &&
+              pronto &&
+              !i.zerado &&
+              !ativo &&
+              'bg-destructive/5 hover:bg-destructive/10'
+          )}
+        >
+          <Indicador icone={i.icone} tom={i.tom} valor={i.valor} rotulo={i.rotulo} />
+        </button>
+      </Dica>
+    )
+  }
+
+  const destaque = principais
+    ? principais.map((c) => itens.find((i) => i.campo === c)).filter((i): i is Item => !!i)
+    : itens
+  const demais = principais ? itens.filter((i) => !principais.includes(i.campo)) : []
+  // O card que filtra a tabela nunca fica escondido: se for um dos demais, a parte
+  // de baixo abre sozinha (e o botão trava até o filtro sair).
+  const filtroEscondido = filtro !== null && demais.some((i) => i.campo === filtro)
+  const aberta = expandida || filtroEscondido
+  // Algo que deveria ser zero está entre os escondidos: o botão ganha um ponto vermelho.
+  const alertaEscondido = pronto && demais.some((i) => ALERTAS.includes(i.campo) && !i.zerado)
+
   return (
     <div
       className={cn(
@@ -248,39 +310,62 @@ export function ResumoCards({
         className
       )}
     >
+      {recorte && (
+        <p className="flex items-center gap-1.5 px-2 pb-1 pt-0.5 text-xs text-primary">
+          <ListFilter aria-hidden className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">{recorte}</span>
+        </p>
+      )}
       <div
         role="group"
         aria-label="Totais do período — clique num indicador para filtrar a tabela"
-        className="grid grid-cols-1 gap-x-1 gap-y-0.5 @sm:grid-cols-2 @lg:grid-cols-3 @2xl:grid-cols-4 @5xl:grid-cols-6"
+        className={GRADE}
       >
-        {itens.map((i) => {
-          const ativo = filtro === i.campo
-          const semAcao = !pronto || (i.zerado && !ativo)
-          return (
-            <Dica key={i.campo} content={semAcao ? i.dica : `${i.dica}. ${DICA_FILTRO}`}>
-              <button
-                type="button"
-                aria-pressed={ativo}
-                aria-disabled={semAcao}
-                aria-label={`${i.rotulo}: ${i.valor ?? 'carregando'}`}
-                onClick={() => !semAcao && onFiltroChange(ativo ? null : i.campo)}
-                className={cn(
-                  ITEM,
-                  semAcao ? 'cursor-default' : 'hover:bg-muted/60',
-                  ativo && 'bg-primary/10 ring-1 ring-inset ring-primary/40 hover:bg-primary/15',
-                  i.campo === 'pagamentos_sem_classificacao' &&
-                    pronto &&
-                    !i.zerado &&
-                    !ativo &&
-                    'bg-destructive/5 hover:bg-destructive/10'
-                )}
-              >
-                <Indicador icone={i.icone} tom={i.tom} valor={i.valor} rotulo={i.rotulo} />
-              </button>
-            </Dica>
-          )
-        })}
+        {destaque.map(item)}
+        {demais.length > 0 && (
+          <button
+            type="button"
+            aria-expanded={aberta}
+            disabled={filtroEscondido}
+            onClick={() => setExpandida(!aberta)}
+            className="flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors duration-fast ease-default hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+          >
+            {aberta ? 'Ocultar os demais totais' : `Ver todos os totais (+${demais.length})`}
+            {alertaEscondido && !aberta && (
+              <span className="h-2 w-2 shrink-0 rounded-full bg-destructive">
+                <span className="sr-only">— há pagamento sem classificação</span>
+              </span>
+            )}
+            <ChevronDown
+              aria-hidden
+              className={cn(
+                'h-4 w-4 transition-transform duration-fast ease-default',
+                aberta && 'rotate-180'
+              )}
+            />
+          </button>
+        )}
       </div>
+      {demais.length > 0 && (
+        <div
+          inert={!aberta}
+          aria-hidden={!aberta}
+          className={cn(
+            'grid transition-all duration-default ease-default',
+            aberta ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+          )}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <div
+              role="group"
+              aria-label="Demais totais do período"
+              className={cn(GRADE, 'mt-1 border-t border-border pt-1')}
+            >
+              {demais.map(item)}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

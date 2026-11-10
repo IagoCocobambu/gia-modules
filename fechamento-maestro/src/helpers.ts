@@ -255,6 +255,27 @@ export function resumirTotais(pedidos: PedidoFechamento[]): TotaisPeriodo {
 }
 
 /**
+ * Os 4 indicadores à vista na barra de totais acima da tabela (os grupos de
+ * pagamento do fechamento); os demais abrem por "Ver todos os totais".
+ */
+export const TOTAIS_PRINCIPAIS: readonly FiltroTotal[] = [
+  'online',
+  'adquirentes_online',
+  'adquirentes_offline',
+  'offline',
+]
+
+/** Canal do pedido (a `origem` da API); "Sem origem" quando a API não informou. */
+export function canalDoPedido(p: PedidoFechamento): string {
+  return p.origem?.trim() || 'Sem origem'
+}
+
+/** Canais que aparecem nos pedidos da pesquisa (cancelados inclusive), em ordem alfabética. */
+export function canaisDosPedidos(pedidos: PedidoFechamento[]): string[] {
+  return [...new Set(pedidos.map(canalDoPedido))].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+}
+
+/**
  * Dashboard "Vendas por canal": o total pago dos pedidos não cancelados, somado
  * por origem (App Coco Bambu, iFood, ...), do maior para o menor. A soma dos
  * canais é o "total pago" da barra de totais.
@@ -263,7 +284,7 @@ export function vendasPorCanal(pedidos: PedidoFechamento[]): VendaCanal[] {
   const porCanal = new Map<string, PedidoFechamento[]>()
   for (const p of pedidos) {
     if (p.cancelado) continue
-    const canal = p.origem?.trim() || 'Sem origem'
+    const canal = canalDoPedido(p)
     const lista = porCanal.get(canal)
     if (lista) lista.push(p)
     else porCanal.set(canal, [p])

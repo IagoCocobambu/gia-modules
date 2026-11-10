@@ -8,9 +8,9 @@
 | **Label visível**      | Fechamento Maestro                        |
 | **Categoria**          | `operacional`                             |
 | **Autor**              | Iago Pereira (iago.pereira@cocobambu.com) |
-| **Versão do PRD**      | `1.1`                                     |
+| **Versão do PRD**      | `1.2`                                     |
 | **Status**             | `em-dev`                                  |
-| **Última atualização** | 2026-11-03                                |
+| **Última atualização** | 2026-11-10                                |
 | **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.67`              |
 
 ---
@@ -178,12 +178,18 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 - Cada indicador: ícone num quadradinho tingido + valor em negrito colorido +
   rótulo em minúsculas embaixo. Grade de largura total com colunas que dividem
   12 (container query: 1 → 2 → 3 → 4 → 6; 1 no celular), pra as linhas fecharem
-  cheias. Tooltip com a explicação da conta no hover (fecha no clique).
+  cheias. **0.3.0 — padrão 3 do workspace:** grade de até 5 colunas; à vista os 4
+  grupos de pagamento (Online, Adquirentes online/offline, Offline) e o botão
+  "Ver todos os totais (+8)" com os demais logo abaixo (cancelados, descontos,
+  sem classificação). Ponto vermelho no botão com sem classificação escondido;
+  card escondido filtrando mantém a parte de baixo aberta. A aba Totais do
+  Dashboard mostra os 12. Tooltip com a explicação da conta no hover (fecha no clique).
 - **Cada indicador é um filtro da tabela** (pedido de 2026-11-06): o clique mostra
   só os pedidos que somaram nele (`pedidosDoTotal`, mesma regra de
   `resumirTotais`, valor ≠ 0 no grupo); o indicador fica marcado (`aria-pressed`)
   e a toolbar ganha um botão com o nome dele, que tira o filtro. Clicar de novo
-  também tira; nova pesquisa zera. Os totais seguem do período inteiro.
+  também tira; nova pesquisa zera. Os totais seguem do período inteiro do canal
+  escolhido (RF-10) — o indicador não recalcula a barra (zeraria os outros).
   Indicador zerado não filtra. Combina com "Só divergências" (E) e vale para o
   Exportar (subtítulo "filtrado (Indicador): X de Y pedidos"). No celular, o
   toque na aba Totais do Dashboard filtra e fecha o dialog.
@@ -201,7 +207,9 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 
 - Permissão `fechamento-maestro.exportar`. Arquivo `.xlsx` com 3 abas:
   Fechamento diário, Pedidos (sem cancelados) e Cancelados; linhas Total com
-  SUBTOTAL(109). Segue os pedidos que estão na tabela (filtros incluídos).
+  SUBTOTAL(109). Segue os pedidos que estão na tabela (filtros incluídos). Com
+  canal e/ou indicador ligados, o subtítulo diz "filtrado (iFood · Online): X de
+  Y pedidos".
 
 ### RF-9: Dashboard (vendas por canal)
 
@@ -217,6 +225,25 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 - Cores = as do `BadgeOrigemPedido` (tokens `accent-group`, `accent-exception`,
   `accent-role`; manual e canais novos em `muted-foreground`). Anel cresce ao
   abrir (`duration-slow`), sem animação com movimento reduzido.
+- O gráfico de canais usa sempre todos os pedidos da pesquisa (ignora o canal
+  escolhido na RF-10); a aba Totais segue o canal.
+
+### RF-10: Filtro de canal (devolutiva de 2026-11-10)
+
+- Pedido do cliente: os totais estavam "consolidados" — filtrar a coluna Origem
+  (ex.: só iFood) mudava a tabela, mas não os 12 indicadores.
+- Seletor **Canal** na toolbar da tabela (`Select` do `@gia-cb/ui`): "Todos os
+  canais" + os canais da pesquisa (`origem`, "Sem origem" quando vazia, em ordem
+  alfabética). Só aparece com mais de um canal na pesquisa.
+- O canal recorta **tudo**: os 12 indicadores (barra e aba Totais do Dashboard),
+  a tabela, o contador do "Só divergências" e o Exportar. A barra de totais
+  mostra "Totais só de iFood · X de Y pedidos". Nova pesquisa volta a todos.
+- **Filtros de coluna não mudam os totais.** O `DataReport` (`@gia-cb/ui`
+  0.1.0-alpha.70) não expõe as linhas filtradas ao módulo — só no `onExport` e no
+  `summaryRow`, que desenha uma linha na grade (proibido pelo padrão 3 do
+  `../AGENTS.md`) e não é chamado com 0 linhas nem no modo cards. Contorno
+  descartado; pedido ao time do SDK um `onFilteredRowsChange` (§11). Quando
+  sair, os totais passam a seguir também os filtros de coluna.
 
 ---
 
@@ -359,6 +386,8 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 - [ ] No celular, o botão Totais abre o Dashboard na aba Totais com os 12 indicadores
 - [ ] Clicar num indicador filtra a tabela pelos pedidos dele; clicar de novo (ou no botão do filtro) tira o filtro
 - [ ] Com o filtro, a soma da coluna do grupo na tabela bate com o valor do indicador
+- [ ] Seletor Canal (com 2+ canais): escolher iFood muda os 12 indicadores, a tabela, o contador do Só divergências e o Exportar; a barra avisa "Totais só de iFood · X de Y pedidos"
+- [ ] Soma dos indicadores por canal = totais com Todos os canais; nova pesquisa volta a Todos os canais
 - [ ] No celular, os filtros recolhem pelo chevron do cabeçalho (ListHeader) e recolhem sozinhos quando a pesquisa começa (recusada: ficam abertos)
 - [ ] Em tela de toque, os botões da barra mostram o nome (não só o ícone)
 - [ ] Tocar numa linha da legenda do Dashboard destaca o canal; tocar de novo volta ao total
@@ -425,6 +454,8 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 ### Decisões pendentes
 
 - [ ] Validar RN-8 e RN-9 com o financeiro.
+- [ ] Time do SDK: `onFilteredRowsChange(linhas)` no `DataReport`, para os
+      totais seguirem também os filtros de coluna (RF-10).
 - [ ] Liberação deste módulo na integração `apidw` do hub de Credenciais — time GIA, na instalação.
 - [ ] Secret `GIA_SERVER_DATABASE_URL` da Edge Function apontando para o banco do
       Maestro, com usuário só-leitura (`SELECT` em `gia_relatorios.formas_pagamento`) — time GIA.
@@ -444,7 +475,7 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 8. Em que dia cai um pedido entregue depois da meia-noite?
 9. O que é "Venda concluída"?
 10. Como vejo o fechamento de um dia específico?
-11. Por que os totais não mudam com os filtros?
+11. Por que os totais não mudam com os filtros de coluna? Como vejo os totais só do iFood? (Canal)
 12. Como exporto e o que vai no Excel?
 13. Posso cadastrar a classificação de uma forma de pagamento?
 14. Por que não vejo o botão Exportar?
@@ -501,3 +532,9 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
   legado (saíram Total pago e Cancelado), só no desktop.
 - Layout: título do módulo à esquerda e filtros à direita, na mesma barra; busca
   genérica da tabela só no celular.
+
+### 2026-11-10 — v1.2 filtro de canal
+
+- Devolutiva: totais "consolidados", sem acompanhar o filtro da coluna Origem.
+  Novo seletor Canal (RF-10) que recorta totais, tabela, divergências e Excel.
+  Totais por filtro de coluna dependem do SDK (pendência em §11).

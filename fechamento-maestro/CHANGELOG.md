@@ -1,5 +1,27 @@
 # Changelog — Fechamento Maestro
 
+## 0.3.0 — 10/11/2026
+
+Devolutiva: os totais estavam "consolidados" — filtrar a coluna Origem (ex.: só
+iFood) mudava a tabela, mas não os indicadores. Sem mudança de banco nem de
+permissões.
+
+- **Filtro de Canal:** seletor na barra da tabela (Todos os canais, App Coco
+  Bambu, iFood, 99Food...). O canal escolhido recorta os 12 totais (barra e aba
+  Totais do Dashboard), a tabela, o contador do Só divergências e o Exportar; a
+  barra de totais avisa "Totais só de iFood · X de Y pedidos". Nova pesquisa
+  volta a todos os canais. O gráfico Vendas por canal segue com todos.
+- **Filtros de coluna continuam sem mudar os totais:** o `DataReport` do SDK não
+  expõe as linhas filtradas ao módulo. Pedido ao time do SDK (PRD §11).
+- **Excel:** com canal ligado, o subtítulo das abas diz "filtrado (iFood): X de Y
+  pedidos" (com indicador: "iFood · Online").
+- **Barra de totais no padrão do workspace:** à vista os 4 grupos de pagamento
+  (Online, Adquirentes online/offline, Offline) e o botão "Ver todos os totais
+  (+8)", que abre os cancelados, os descontos e os sem classificação logo
+  abaixo. Fechada, a barra ocupa uma linha só. Ponto vermelho no botão quando há
+  sem classificação escondido.
+- FAQ (seção "Filtrar por canal" e perguntas) e tour atualizados.
+
 ## 0.2.1 — 06/11/2026
 
 - **Excel:** o Online líquido (coluna Online (líquido) e o Online do

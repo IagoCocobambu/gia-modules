@@ -12,6 +12,7 @@ import {
   Button,
   DataReport,
   EmptyState,
+  Select,
   TourReplayButton,
   WidthFrame,
   nomeArquivoExport,
@@ -33,6 +34,8 @@ import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
 import { Recolhivel } from '../components/Recolhivel'
 import { ResumoCards } from '../components/ResumoCards'
 import {
+  canaisDosPedidos,
+  canalDoPedido,
   COLUNAS_DIA,
   COLUNAS_PEDIDO,
   divergente,
@@ -46,6 +49,7 @@ import {
   preencherPlanilha,
   resumirPorDia,
   resumirTotais,
+  TOTAIS_PRINCIPAIS,
   rotuloTiposDoPedido,
   somarDias,
   tiposDoPedido,
@@ -94,6 +98,9 @@ const SEM_COLUNAS_PEDIDO: ColumnDef<PedidoFechamento, unknown>[] = []
  */
 const BOTAO_TOOLBAR = 'px-2.5 @max-lg:px-4 @5xl:px-4 [@media(hover:none)]:px-4'
 const ROTULO_TOOLBAR = '@lg:hidden @5xl:inline [@media(hover:none)]:inline'
+
+/** Valor do seletor de canal para "todos" (o Select do Radix não aceita ''). */
+const TODOS_CANAIS = '__todos__'
 
 /** Campos que formam a face do card no celular; o resto fica em "ver mais". */
 const CAMPOS_CARD_PEDIDO = new Set<string>(['n_pedido', 'data_de_criacao', 'total_pago', 'tipo'])
@@ -201,7 +208,7 @@ async function exportarXlsx(
   pedidos: PedidoFechamento[],
   consulta: Consulta,
   totalPesquisa: number,
-  /** Nome do indicador de totais que filtra a tabela, se houver. */
+  /** Canal e/ou indicador de totais que filtram a tabela, se houver (ex.: "iFood · Online"). */
   filtroTotal: string | null
 ) {
   const { Workbook } = await import('exceljs')
@@ -298,6 +305,9 @@ export function FechamentoMaestroView() {
   const [pedidoAberto, setPedidoAberto] = useState<PedidoFechamento | null>(null)
   // Indicador da barra de totais que filtra a tabela (clique no indicador).
   const [filtroTotal, setFiltroTotal] = useState<FiltroTotal | null>(null)
+  // Canal (origem) escolhido na barra da tabela; `null` = todos. Diferente do
+  // indicador, o canal recorta TUDO: totais, tabela, divergências e Exportar.
+  const [canal, setCanal] = useState<string | null>(null)
   const [dashboardAberto, setDashboardAberto] = useState(false)
   const [dashboardAba, setDashboardAba] = useState<AbaDashboard>('canais')
   const abrirDashboard = (aba: AbaDashboard) => {
@@ -310,16 +320,29 @@ export function FechamentoMaestroView() {
   const [totaisEscolhidos, setTotaisEscolhidos] = useState<boolean | null>(null)
   const totaisAbertos = totaisEscolhidos ?? telaAlta
 
-  const totais = useMemo(
-    () => (fechamentoQuery.data ? resumirTotais(pedidos) : null),
-    [fechamentoQuery.data, pedidos]
+  const canais = useMemo(() => canaisDosPedidos(pedidos), [pedidos])
+  // Os pedidos do canal escolhido (todos, sem canal). É a base dos totais e da tabela.
+  const pedidosCanal = useMemo(
+    () => (canal ? pedidos.filter((p) => canalDoPedido(p) === canal) : pedidos),
+    [pedidos, canal]
   )
-  // A tabela: os pedidos do indicador escolhido (se houver) e, com "Só
-  // divergências", só os divergentes entre eles. Os totais seguem do período todo.
+  const totais = useMemo(
+    () => (fechamentoQuery.data ? resumirTotais(pedidosCanal) : null),
+    [fechamentoQuery.data, pedidosCanal]
+  )
+  // A tabela: os pedidos do canal, do indicador escolhido (se houver) e, com "Só
+  // divergências", só os divergentes entre eles. Os totais seguem o canal, mas
+  // não o indicador nem "Só divergências" (senão o clique num card zeraria os outros).
   const pedidosVisao = useMemo(() => {
-    const doTotal = filtroTotal ? pedidosDoTotal(pedidos, filtroTotal) : pedidos
+    const doTotal = filtroTotal ? pedidosDoTotal(pedidosCanal, filtroTotal) : pedidosCanal
     return soDivergencias ? doTotal.filter(divergente) : doTotal
-  }, [pedidos, filtroTotal, soDivergencias])
+  }, [pedidosCanal, filtroTotal, soDivergencias])
+  // Aviso na barra de totais quando eles são de um canal só.
+  const recorteTotais = canal
+    ? `Totais só de ${canal} · ${pedidosCanal.length.toLocaleString('pt-BR')} de ${pedidos.length.toLocaleString('pt-BR')} pedidos`
+    : null
+  const nomeFiltroExport =
+    [canal, filtroTotal ? NOME_DO_TOTAL[filtroTotal] : null].filter(Boolean).join(' · ') || null
 
   const semAlteracao =
     consulta !== null &&
@@ -342,6 +365,7 @@ export function FechamentoMaestroView() {
     }
     setSoDivergencias(false)
     setFiltroTotal(null)
+    setCanal(null)
     setConsulta({
       empresaId: loja.empresaId,
       lojaNome: loja.nome,
@@ -540,8 +564,8 @@ export function FechamentoMaestroView() {
         title="Nenhum pedido neste filtro"
         description={
           filtroTotal
-            ? `Nenhum pedido de ${NOME_DO_TOTAL[filtroTotal]} com divergência.`
-            : 'Nenhum pedido com divergência — os pagamentos e descontos conferem.'
+            ? `Nenhum pedido de ${NOME_DO_TOTAL[filtroTotal]}${canal ? ` em ${canal}` : ''} com divergência.`
+            : `Nenhum pedido${canal ? ` de ${canal}` : ''} com divergência — os pagamentos e descontos conferem.`
         }
       />
     )
@@ -559,6 +583,29 @@ export function FechamentoMaestroView() {
 
   const acoes = (
     <>
+      {/* Canal: recorta totais, tabela e Exportar. Só aparece com mais de um canal
+          na pesquisa (com um só, não há o que escolher). */}
+      {painelDisponivel && (canais.length > 1 || canal) && (
+        <div className="w-44 shrink-0 @max-lg:w-full" data-tour="fechamento-maestro-canal">
+          <Select
+            value={canal ?? TODOS_CANAIS}
+            onValueChange={(v) => setCanal(v === TODOS_CANAIS ? null : v)}
+          >
+            <Select.Trigger
+              className={cn('h-9 w-full', canal && 'border-primary text-primary')}
+              aria-label="Canal"
+            />
+            <Select.Content>
+              <Select.Item value={TODOS_CANAIS}>Todos os canais</Select.Item>
+              {canais.map((c) => (
+                <Select.Item key={c} value={c}>
+                  {c}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select>
+        </div>
+      )}
       {/* Filtro ligado por um indicador de totais: mostra qual e tira com um toque. */}
       {filtroTotal && (
         <Dica content="Tirar o filtro e voltar a ver todos os pedidos">
@@ -680,8 +727,10 @@ export function FechamentoMaestroView() {
           <ResumoCards
             totais={totais}
             carregando={carregando}
+            recorte={recorteTotais}
             filtro={filtroTotal}
             onFiltroChange={setFiltroTotal}
+            principais={TOTAIS_PRINCIPAIS}
           />
         </Recolhivel>
 
@@ -716,13 +765,7 @@ export function FechamentoMaestroView() {
           rowClassName={(p) => (divergente(p) ? 'bg-destructive/5' : undefined)}
           onExport={
             canExport && consulta && fechamentoQuery.data
-              ? (visiveis) =>
-                  exportarXlsx(
-                    visiveis,
-                    consulta,
-                    pedidos.length,
-                    filtroTotal ? NOME_DO_TOTAL[filtroTotal] : null
-                  )
+              ? (visiveis) => exportarXlsx(visiveis, consulta, pedidos.length, nomeFiltroExport)
               : undefined
           }
         />
@@ -734,6 +777,7 @@ export function FechamentoMaestroView() {
         onAbaChange={setDashboardAba}
         pedidos={pedidos}
         totais={totais}
+        recorte={recorteTotais}
         carregando={carregando}
         descricao={subtitle}
         filtro={filtroTotal}

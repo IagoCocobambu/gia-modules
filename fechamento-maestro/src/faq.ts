@@ -19,8 +19,8 @@ No alto da tela fica o título do módulo, à esquerda, e a loja e as datas, à
 direita (no celular, embaixo do título, recolhíveis). Depois de pesquisar, a
 tela mostra, de cima para baixo:
 
-- a **barra de totais** do período inteiro (no celular, os totais ficam no
-  botão **Totais**);
+- a **barra de totais** do período inteiro — ou só do **canal** escolhido (no
+  celular, os totais ficam no botão **Totais**);
 - a **tabela de pedidos**: uma linha por pedido, com número, cliente, origem, status, total pago, forma de pagamento e o
   **Tipo** de cada forma (ONLINE, ONLINE VR, OFFLINE). Outras colunas (valores
   por grupo, checks, endereço...) se ligam no botão de colunas. **Clique num
@@ -38,13 +38,37 @@ do período têm divergência — em vermelho quando há algum. Clique de novo p
 voltar a ver todos. Nas linhas da tabela, pedido com divergência fica com o
 fundo levemente vermelho.
 
+## Filtrar por canal (iFood, App, 99Food...)
+
+Depois de pesquisar, a barra da tabela traz o seletor de **Canal**, que começa
+em **Todos os canais**. Escolha um canal (por exemplo, **iFood**) e **tudo passa
+a ser só dele**: os **12 totais**, a **tabela**, o número do **Só divergências**
+e o **Exportar**. Assim dá para ver, por exemplo, quanto entrou em Adquirentes
+online só no iFood.
+
+Com um canal escolhido, o seletor fica destacado e a barra de totais mostra o
+aviso *Totais só de iFood · 230 de 410 pedidos* — quantos pedidos do canal
+entraram, de quantos da pesquisa. Volte a **Todos os canais** para ver a
+pesquisa inteira. Pesquisar de novo também volta a todos os canais.
+
+O seletor lista os canais que aparecem nos pedidos da pesquisa; pedido sem
+origem aparece como **Sem origem**. Se a pesquisa só tem pedidos de um canal,
+o seletor não aparece. O gráfico **Vendas por canal** do Dashboard continua
+mostrando todos os canais, para comparar um com o outro.
+
 ## Totais do período
 
 No computador, o botão **Totais** abre e fecha, acima da tabela, uma **barra
 com os 12 indicadores** do fechamento, do período inteiro. Cada indicador tem
-um ícone, o **valor** em destaque e o nome embaixo. Os indicadores ocupam a
-largura toda, em colunas iguais: 6 por linha em telas largas, 4 ou 3 em telas
-médias. **No celular** a barra não cabe acima da tabela: o botão **Totais** abre
+um ícone, o **valor** em destaque e o nome embaixo. Ficam **à vista os 4 grupos
+de pagamento** — **Online**, **Adquirentes online**, **Adquirentes offline** e
+**Offline** — e, ao lado, o botão **Ver todos os totais (+8)**, que abre logo
+abaixo os demais: os 4 **cancelados**, **Descontos loja**, **Descontos parceiro**
+e os dois **sem classificação**. Clique em **Ocultar os demais totais** para
+fechar. Fechada, a barra ocupa uma linha só e sobra mais espaço para a tabela.
+Quando há valor **sem classificação** escondido, o botão mostra um **ponto
+vermelho**. Se um dos indicadores escondidos está filtrando a tabela, a parte de
+baixo fica aberta até você tirar o filtro. **No celular** a barra não cabe acima da tabela: o botão **Totais** abre
 o **Dashboard** direto na aba **Totais**, com os mesmos 12 indicadores, um
 por linha. A aba Totais também está no Dashboard do computador.
 
@@ -60,8 +84,9 @@ em **Adquirentes online**, só os pedidos não cancelados com vale pago antes; e
 **Cancelado offline**, só os cancelados com parte paga na entrega. O indicador
 fica marcado e aparece, na barra da tabela, um botão com o nome dele: clique nele
 (ou no indicador de novo) para voltar a ver todos os pedidos. Pesquisar de novo
-também tira o filtro. Os valores da barra de totais **não mudam** com o filtro —
-continuam sendo do período inteiro. Indicador zerado não tem pedido para mostrar
+também tira o filtro. Os valores da barra de totais **não mudam** com o filtro do
+indicador — se mudassem, os outros indicadores zerariam. Eles seguem só o
+**Canal** escolhido. Indicador zerado não tem pedido para mostrar
 e não filtra. O filtro combina com **Só divergências** (mostra os divergentes
 dentro do indicador) e vale para o **Exportar**: o Excel sai com os pedidos
 filtrados e o subtítulo de cada aba diz qual filtro estava ligado.
@@ -94,8 +119,9 @@ pedido para abrir o detalhe com cada forma. Sem nenhum, ele mostra **0** em verd
 A barra fica **aberta** em telas com 700 px de altura ou mais e **fechada** em
 telas mais baixas, para sobrar espaço para a tabela — e acompanha a janela se
 você mudar o tamanho dela. Depois que você clica em **Totais**, vale a sua
-escolha até recarregar a página. A barra mostra sempre o período inteiro — o
-*Só divergências* e a busca não mudam os totais.
+escolha até recarregar a página. A barra mostra o período inteiro do **Canal**
+escolhido (ou de todos) — o *Só divergências*, a busca e os filtros de coluna
+não mudam os totais. Para recortar os totais, use o seletor de **Canal**.
 
 ## Dashboard — vendas por canal
 
@@ -280,7 +306,8 @@ servidor: sem a permissão, o dado completo nem chega ao seu navegador.
 No celular, os **totais** ficam no botão **Totais**, que abre o Dashboard na aba
 **Totais** com os 12 indicadores: toque num indicador para filtrar a tabela pelos
 pedidos dele (a janela fecha e a tabela já aparece filtrada). A explicação de
-cada indicador está em *Totais do período*, nesta ajuda.
+cada indicador está em *Totais do período*, nesta ajuda. O seletor de **Canal**
+fica na barra da tabela e recorta os totais, como no computador.
 O título fica em cima, com a loja e as datas embaixo. Ao tocar em **Pesquisar**,
 a loja e as datas **se recolhem** para a tela ficar com o resultado; toque na
 **seta** ao lado do título para abri-las de novo e fazer outra pesquisa. Se a
@@ -421,7 +448,7 @@ nenhum dos dois lugares, a pesquisa avisa que falta o número no cadastro.
         },
         {
           q: 'Como vejo quais pedidos formam um total?',
-          a: 'Clique (ou toque) no indicador na barra de totais: a tabela mostra só os pedidos que entram naquela conta — em Descontos parceiro, por exemplo, só os pedidos com incentivo do parceiro. Um botão com o nome do indicador aparece na barra da tabela; clique nele (ou no indicador de novo) para voltar a ver todos. Os totais não mudam com o filtro, e o Exportar sai com os pedidos filtrados.',
+          a: 'Clique (ou toque) no indicador na barra de totais: a tabela mostra só os pedidos que entram naquela conta — em Descontos parceiro, por exemplo, só os pedidos com incentivo do parceiro. Um botão com o nome do indicador aparece na barra da tabela; clique nele (ou no indicador de novo) para voltar a ver todos. Os totais não mudam com o filtro do indicador (só com o Canal), e o Exportar sai com os pedidos filtrados.',
         },
         {
           q: 'Onde vejo os totais no celular?',
@@ -432,8 +459,12 @@ nenhum dos dois lugares, a pesquisa avisa que falta o número no cadastro.
           a: 'Clique em Dashboard. O gráfico Vendas por canal mostra a fatia de cada origem no total pago, com o valor e a porcentagem na legenda. Passe o mouse (ou toque, no celular) num canal para ver também quantos pedidos ele teve. Pedidos cancelados não entram.',
         },
         {
+          q: 'Como vejo os totais só do iFood (ou de outro canal)?',
+          a: 'Depois de pesquisar, escolha o canal no seletor Canal, na barra da tabela. Os 12 totais, a tabela, o Só divergências e o Exportar passam a ser só daquele canal, e a barra de totais avisa: Totais só de iFood · 230 de 410 pedidos. Volte a Todos os canais para ver a pesquisa inteira.',
+        },
+        {
           q: 'Os totais não mudaram quando filtrei. Está certo?',
-          a: 'Está. Os totais mostram sempre o período inteiro da pesquisa. O Só divergências e os filtros de coluna mudam só a tabela de pedidos. Para ver a soma de um recorte, exporte o Excel: a aba Fechamento diário soma só os pedidos que estão na tabela.',
+          a: 'Depende do filtro. O seletor Canal muda os totais: eles passam a ser só do canal escolhido. Já o Só divergências, o clique num indicador, a busca e os filtros de coluna (o funil de cada coluna) mudam só a tabela de pedidos. Para ver a soma de outro recorte, exporte o Excel: a aba Fechamento diário soma só os pedidos que estão na tabela.',
         },
         {
           q: 'Por que a consulta demora?',

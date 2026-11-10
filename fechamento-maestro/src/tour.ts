@@ -40,7 +40,7 @@ export const tour = defineTour({
       screen: '/fechamento-maestro',
       target: '[data-tour="fechamento-maestro-toolbar"]',
       title: 'Colunas e Excel',
-      body: 'Ligue as **colunas** que começam desligadas (valores por grupo, checks, endereço...) e **exporte** em Excel (com a permissão de exportação). O arquivo traz 3 abas: fechamento diário, pedidos e cancelados. Para filtrar, use o funil de cada coluna; no celular há um campo de busca.',
+      body: 'Ligue as **colunas** que começam desligadas (valores por grupo, checks, endereço...) e **exporte** em Excel (com a permissão de exportação). O arquivo traz 3 abas: fechamento diário, pedidos e cancelados. Para ver só um canal (iFood, App...), use o seletor **Canal**: ele recorta também os totais. Para filtrar só a tabela, use o funil de cada coluna; no celular há um campo de busca.',
       placement: 'bottom',
     },
     {

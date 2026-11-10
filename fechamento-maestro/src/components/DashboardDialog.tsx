@@ -19,10 +19,12 @@ interface DashboardDialogProps {
   /** Aba visível — controlada pela tela: o botão Totais do celular abre direto nela. */
   aba: AbaDashboard
   onAbaChange: (aba: AbaDashboard) => void
-  /** Todos os pedidos da pesquisa (o filtro "Só divergências" não vale aqui). */
+  /** Todos os pedidos da pesquisa: o gráfico de canais ignora o canal escolhido e "Só divergências". */
   pedidos: PedidoFechamento[]
-  /** Os 12 indicadores do período — os mesmos da barra de totais. */
+  /** Os 12 indicadores do período — os mesmos da barra de totais (do canal escolhido). */
   totais: TotaisPeriodo | null
+  /** Aviso de recorte da barra de totais (canal escolhido); `null` = pesquisa inteira. */
+  recorte?: string | null
   carregando: boolean
   /** Loja e período da pesquisa, como no subtítulo da tela. */
   descricao: string
@@ -46,6 +48,7 @@ export function DashboardDialog({
   onAbaChange,
   pedidos,
   totais,
+  recorte = null,
   carregando,
   descricao,
   filtro,
@@ -97,6 +100,7 @@ export function DashboardDialog({
               <ResumoCards
                 totais={totais}
                 carregando={carregando}
+                recorte={recorte}
                 filtro={filtro}
                 onFiltroChange={onFiltroChange}
               />
