@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react'
-import { Modal, Tooltip, type ModalContentProps } from '@gia-cb/ui'
+import { Modal, type ModalContentProps } from '@gia-cb/ui'
+import { Dica } from './Dica'
 
 interface PainelDialogProps {
   aberto: boolean
@@ -33,9 +34,9 @@ export function PainelDialog({
 }: PainelDialogProps) {
   return (
     <Modal open={aberto} onOpenChange={onAbertoChange}>
-      <Tooltip content={tooltip}>
+      <Dica content={tooltip}>
         <Modal.Trigger asChild>{gatilho}</Modal.Trigger>
-      </Tooltip>
+      </Dica>
       <Modal.Content size={size}>
         <Modal.Header>
           <Modal.Title>{titulo}</Modal.Title>

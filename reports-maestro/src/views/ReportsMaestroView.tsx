@@ -9,21 +9,20 @@ import {
   WidthFrame,
   nomeArquivoExport,
   toast,
-  Tooltip,
   type ColumnDef,
 } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
+import { Dica } from '../components/Dica'
 import { fadeIn } from '@gia-cb/ui/motion'
-import {
-  getPendingStepsForScreen,
-  useTourProgress,
-  useTourReplayTrigger,
-} from '@gia-cb/sdk/modules'
+import { useTourProgress, useTourReplayTrigger } from '@gia-cb/sdk/modules'
 import { useCanAccess } from '@gia-cb/sdk/permissions'
 import { useLojasReportsMaestro, usePedidosReportsMaestro } from '../api/reports-maestro'
 import { AbasDoReports } from '../components/AbasDoReports'
 import { tour } from '../tour'
 import { AbaOperacional } from '../components/operacional/AbaOperacional'
+import { TourDasAbas } from '../components/operacional/TourDasAbas'
+import { TOUR_DAS_ABAS_ID } from '../tour-das-abas'
+import { SeletorDeCanal } from '../components/operacional/SeletorDeCanal'
 import { BadgeOrigemPedido } from '../components/BadgeOrigemPedido'
 import { BadgeStatusPedido } from '../components/BadgeStatusPedido'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
@@ -50,7 +49,7 @@ import {
   somarPedidos,
   validarPeriodo,
 } from '../helpers'
-import type { AbaReports } from '../operacional'
+import { canaisDosPedidos, type AbaReports } from '../operacional'
 import { statusPedido } from '../status-pedido'
 import type { Consulta, PedidoMaestro } from '../types'
 
@@ -80,7 +79,7 @@ const SEM_COLUNAS: ColumnDef<PedidoMaestro, unknown>[] = []
  * de @lg a toolbar tem a linha inteira, e a partir de @5xl sobra espaço: rótulo.
  */
 const BOTAO_TOOLBAR = 'px-2.5 @max-lg:px-4 @5xl:px-4'
-const ROTULO_TOOLBAR = '@lg:hidden @5xl:inline'
+const ROTULO_TOOLBAR = '@lg:hidden @5xl:inline [@media(hover:none)]:!inline'
 
 /** Colunas que formam a face do card no celular; o resto fica em "ver mais". */
 const CAMPOS_CARD = new Set<keyof PedidoMaestro>([
@@ -188,26 +187,51 @@ export function ReportsMaestroView() {
   // A aba aberta. As duas leem o MESMO resultado da pesquisa (uma chamada só à
   // API); trocar de aba não busca de novo — ver api/reports-maestro.ts.
   //
-  // A tela abre no OPERACIONAL (pedido do usuário em 05/11/2026). Exceção: na
-  // primeira visita o tour guiado ainda tem passos pendentes, e eles apontam para
-  // a lista de pedidos (filtros, totais, colunas) — o tour do portal some quando
-  // o alvo não está na tela. Então, com tour pendente, abre em Pedidos; depois de
-  // concluído ou pulado, sempre no Operacional. A decisão é tomada UMA vez, quando
-  // o progresso do tour chega: terminar o tour não troca a aba no meio do uso.
+  // A tela abre SEMPRE no Operacional (pedido do usuário em 05/11/2026 e de novo
+  // em 09/11/2026), inclusive na primeira visita: o tour da tela só aponta para o
+  // que aparece nas duas abas, e o tour das abas troca de aba sozinho.
   const [aba, setAba] = useState<AbaReports>('operacional')
+
+  // ── Tour das abas ──────────────────────────────────────────────────────────
+  //
+  // O tour da tela (`tour.ts`) é montado pelo portal, que não avisa o módulo
+  // quando o passo muda — um passo dele não troca a aba. O que é de cada aba
+  // está no tour das abas (`tour-das-abas.ts`), montado aqui com `useTourTabSync`.
+  //
+  // Ele só é montado depois que TODOS os passos do tour da tela foram vistos (os
+  // dois nunca juntos) e não começa para quem PULOU o tour da tela — "Rever
+  // tour" passa pelos dois.
+  //
+  // No "Rever tour" o progresso do tour da tela é zerado, mas a tela pode nunca
+  // ver o zerado: se o usuário clica em "Próximo" antes de a busca do progresso
+  // voltar, o SDK cancela essa busca e grava o passo por cima do progresso
+  // ANTIGO. Por isso o clique tira uma foto das marcas (data de conclusão ou de
+  // pulo) de cada passo, e um passo só conta como visto quando a marca dele muda
+  // depois da foto — sem depender de tempo de rede.
   const progressoDoTour = useTourProgress('reports-maestro')
-  const [abaDecidida, setAbaDecidida] = useState(false)
-  // Ajuste de estado durante a renderização (padrão do React para estado que
-  // deriva de um dado que chega depois), e não num efeito: sem render a mais.
-  if (!abaDecidida && progressoDoTour.data) {
-    setAbaDecidida(true)
-    const pendentes = getPendingStepsForScreen(tour.steps, progressoDoTour.data, '/reports-maestro')
-    if (pendentes.length > 0) setAba('pedidos')
-  }
-  function trocarAba(nova: AbaReports) {
-    setAbaDecidida(true)
-    setAba(nova)
-  }
+  const replayTourDasAbas = useTourReplayTrigger(TOUR_DAS_ABAS_ID)
+  const [marcasAntesDoRever, setMarcasAntesDoRever] = useState<ReadonlySet<string> | null>(null)
+  const marcasDaTela = useMemo(() => {
+    const m = new Map<string, { marca: string; pulou: boolean }>()
+    for (const p of progressoDoTour.data ?? []) {
+      const marca = p.completed_at ?? p.skipped_at
+      // Só os passos ATUAIS: linha de passo que já saiu do `tour.ts` não conta.
+      if (marca && tour.steps.some((s) => s.id === p.step_id)) {
+        m.set(p.step_id, { marca, pulou: p.skipped_at != null })
+      }
+    }
+    return m
+  }, [progressoDoTour.data])
+  const vistos = tour.steps
+    .map((s) => marcasDaTela.get(s.id))
+    .filter(
+      (v): v is { marca: string; pulou: boolean } =>
+        v != null && (marcasAntesDoRever == null || !marcasAntesDoRever.has(v.marca))
+    )
+  const tourDaTelaVisto = progressoDoTour.data != null && vistos.length === tour.steps.length
+  const pulouTourDaTela = vistos.some((v) => v.pulou)
+  const podeMontarTourDasAbas = tourDaTelaVisto && !pulouTourDaTela
+  const [tourDasAbasAberto, setTourDasAbasAberto] = useState(false)
 
   const [area, setArea] = useState<HTMLDivElement | null>(null)
   const compacto = useModoCompacto(area)
@@ -226,6 +250,23 @@ export function ReportsMaestroView() {
   const carregando = pedidosQuery.isFetching
   const erro = pedidosQuery.error ?? lojasQuery.error
   const pesquisando = carregando
+
+  // Canal do dashboard Operacional (`null` = todos). Mora aqui, e não na aba,
+  // porque o seletor fica na linha das abas (ver AbasDoReports). Volta para
+  // "todos" a cada pesquisa; um canal que não existe no resultado vale "todos".
+  const operacional = pedidosQuery.data?.operacional ?? null
+  const temDashboardReal = !carregando && !erro && operacional != null && operacional.length > 0
+  const canais = useMemo(() => canaisDosPedidos(operacional ?? []), [operacional])
+  const [canalEscolhido, setCanal] = useState<string | null>(null)
+  const canal = canalEscolhido != null && canais.includes(canalEscolhido) ? canalEscolhido : null
+  // O seletor só aparece com a aba Operacional aberta e o dashboard montado.
+  const mostrarCanal = aba === 'operacional' && temDashboardReal
+  // O tour das abas só começa com o dashboard montado (os alvos dele só existem
+  // com pedidos): quem terminou o tour da tela sem pesquisar vê o tour continuar
+  // sozinho quando a pesquisa trouxer pedidos — do passo em que parou, porque o
+  // progresso de cada passo fica gravado. Já aberto, segue montado mesmo que uma
+  // pesquisa nova esvazie a tela no meio dele.
+  const montarTourDasAbas = podeMontarTourDasAbas && (temDashboardReal || tourDasAbasAberto)
 
   // Filtros de chips (vazio = todos). Os APLICADOS (`statusFiltro`/`origemFiltro`)
   // filtram a tabela, os totais em R$ e o export. No dialog o usuário mexe num
@@ -301,26 +342,29 @@ export function ReportsMaestroView() {
     consulta.de === filtros.de &&
     consulta.ate === filtros.ate
 
-  function pesquisar() {
-    if (semAlteracao) return
+  /** Dispara a pesquisa; `false` quando recusou (a barra de filtros fica aberta). */
+  function pesquisar(): boolean {
+    if (semAlteracao) return false
     const msg = validarPeriodo(filtros.de, filtros.ate)
     if (msg) {
       toast.error(msg)
-      return
+      return false
     }
     const loja = lojas.find((l) => l.empresaId === empresaIdSelecionada)
     if (!loja) {
       toast.error('Informe uma loja.')
-      return
+      return false
     }
     setStatusFiltro(new Set())
     setOrigemFiltro(new Set())
+    setCanal(null)
     setConsulta({
       empresaId: loja.empresaId,
       lojaNome: loja.nome,
       de: filtros.de,
       ate: filtros.ate,
     })
+    return true
   }
 
   // Colunas = as da planilha (mesmos nomes e ordem do legado), com a célula pelo tipo.
@@ -501,15 +545,28 @@ export function ReportsMaestroView() {
           tituloExtra={
             <TourReplayButton
               onClick={() => {
-                // Os passos do tour apontam para a lista de pedidos.
-                trocarAba('pedidos')
+                // Zera os dois tours: o da tela roda primeiro, e o das abas só
+                // volta depois que cada passo dele for visto de novo (ver
+                // `marcasAntesDoRever`).
+                setMarcasAntesDoRever(new Set([...marcasDaTela.values()].map((v) => v.marca)))
+                void replayTourDasAbas()
                 replayTour()
               }}
             />
           }
         />
 
-        <AbasDoReports ativa={aba} onChange={trocarAba} />
+        <AbasDoReports
+          ativa={aba}
+          onChange={setAba}
+          acao={
+            mostrarCanal && (
+              <motion.div variants={fadeIn} initial="hidden" animate="visible">
+                <SeletorDeCanal canal={canal} canais={canais} onChange={setCanal} />
+              </motion.div>
+            )
+          }
+        />
 
         {aba === 'operacional' ? (
           <motion.div
@@ -521,13 +578,14 @@ export function ReportsMaestroView() {
           >
             <AbaOperacional
               consulta={consulta}
-              pedidos={pedidosQuery.data?.operacional ?? null}
+              pedidos={operacional}
               carregando={carregando}
               erro={pedidosQuery.error ?? lojasQuery.error}
               onTentarDeNovo={() => {
                 if (lojasQuery.isError) void lojasQuery.refetch()
                 if (pedidosQuery.isError) void pedidosQuery.refetch()
               }}
+              canal={canal}
               compacto={compacto}
               className={compacto ? undefined : 'min-h-0 flex-1'}
             />
@@ -631,7 +689,7 @@ export function ReportsMaestroView() {
                       />
                     </div>
                   </PainelDialog>
-                  <Tooltip
+                  <Dica
                     content={totaisAbertos ? 'Ocultar os totais em R$' : 'Mostrar os totais em R$'}
                   >
                     <Button
@@ -646,7 +704,7 @@ export function ReportsMaestroView() {
                       <ChartPie className="h-4 w-4" />
                       <span className={ROTULO_TOOLBAR}>Totais</span>
                     </Button>
-                  </Tooltip>
+                  </Dica>
                 </>
               }
               data={erro ? [] : pedidosFiltrados}
@@ -678,6 +736,9 @@ export function ReportsMaestroView() {
           </motion.div>
         )}
       </div>
+      {montarTourDasAbas && (
+        <TourDasAbas aba={aba} onAba={setAba} onAberto={setTourDasAbasAberto} />
+      )}
     </WidthFrame>
   )
 }

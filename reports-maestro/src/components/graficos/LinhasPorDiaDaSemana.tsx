@@ -9,8 +9,7 @@ import { DicaGrafico, LinhaDica } from './DicaGrafico'
 // A leitura "Por dia da semana" do dia × hora: uma linha por dia da semana, com
 // as horas no eixo horizontal e a métrica no vertical.
 //
-// Escolha do usuário em 05/11/2026, entre cinco propostas em
-// docs/artefatos/mapa-de-calor-propostas.html. O mapa de calor só mostrava o
+// Escolha do usuário em 05/11/2026, entre cinco propostas de desenho. O mapa de calor só mostrava o
 // número no hover; a linha mostra a FORMA do dia (subida do almoço, vale da
 // tarde, pico do jantar) e o valor se lê no eixo. A leitura "Por dia" (uma linha
 // por data, até 31) continua no mapa de calor: 31 linhas viram um feixe.
@@ -302,12 +301,17 @@ export function LinhasPorDiaDaSemana({ series, horas, metrica, formatar, unidade
                 type="button"
                 aria-pressed={fixo === s.chave}
                 onClick={() => setFixo((f) => (f === s.chave ? null : s.chave))}
-                onPointerEnter={() => setPrevia(s.chave)}
+                // Prévia só com mouse: no toque o navegador emula um "mouse" no
+                // ponto tocado e a prévia ligaria e desligaria sozinha (padrão 2
+                // do workspace). No toque, o clique fixa o dia.
+                onPointerEnter={(e) => {
+                  if (e.pointerType === 'mouse') setPrevia(s.chave)
+                }}
                 onPointerLeave={() => setPrevia(null)}
                 onFocus={() => setPrevia(s.chave)}
                 onBlur={() => setPrevia(null)}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-md border px-2 py-0.5 outline-none transition-[color,background-color,border-color,opacity] duration-fast focus-visible:ring-2 focus-visible:ring-ring',
+                  'flex items-center gap-1.5 rounded-md border px-2 py-0.5 outline-none [@media(hover:none)]:min-h-11 [@media(hover:none)]:px-3 transition-[color,background-color,border-color,opacity] duration-fast focus-visible:ring-2 focus-visible:ring-ring',
                   ativo
                     ? 'font-medium text-foreground'
                     : 'border-border text-muted-foreground hover:text-foreground',

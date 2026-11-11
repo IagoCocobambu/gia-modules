@@ -7,7 +7,7 @@ import type { EstatisticasDaEtapa } from '../../operacional'
 // O tempo de cada etapa do pedido, um cartão por etapa.
 //
 // Substitui as barras numa régua única (escolha do usuário em 04/11/2026, entre
-// cinco propostas em docs/artefatos/tempo-por-etapa-propostas.html). Na régua
+// cinco propostas de desenho). Na régua
 // única o aceite (0,3 min) e o preparo (15 min) dividiam o mesmo eixo, e as
 // etapas curtas viravam um risco. No cartão cada etapa tem a SUA régua, e o
 // número que importa — a média — vem grande, como nos cartões de indicador

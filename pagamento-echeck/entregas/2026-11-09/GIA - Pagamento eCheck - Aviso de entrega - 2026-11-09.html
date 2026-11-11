@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>GIA — Pagamento eCheck — Aviso de entrega</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --accent:   #14577a;
+    --ink:      #16202b;
+    --ink-2:    #3f4a57;
+    --muted:    #5a6874;
+    --amber:    #7a4a12;
+    --amber-bg: #fbf0e0;
+    --rule:     #dae0e6;
+    --rule-2:   #c3ccd5;
+    --chip:     #e4eef4;
+    --box:      #e8f0f5;
+    --roxo:     #4a3a6b;
+    --roxo-bg:  #ece8f4;
+    --verde:    #2f5a3f;
+    --verde-bg: #e4efe7;
+  }
+
+  @page { size: A4; margin: 16mm 16mm 14mm; }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    margin: 0;
+    background: #fff;
+    font-family: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+    font-size: 11.9pt;
+    line-height: 1.594;
+    color: var(--ink-2);
+  }
+
+  /* Na tela (fora da impressão), a folha tem a largura do A4 e fica centrada. */
+  @media screen {
+    body { max-width: 210mm; margin: 0 auto; padding: 16mm; }
+  }
+
+  .sans { font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; }
+
+  /* ── cabeçalho ─────────────────────────────────────────────────────── */
+  .sobrancelha {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.3pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14pt;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 25.2pt;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin: 0 0 8pt;
+  }
+
+  .resumo {
+    font-size: 12.6pt;
+    line-height: 1.45;
+    color: var(--ink-2);
+    margin: 0 0 18pt;
+    max-width: 44em;
+  }
+
+  .regua-forte { border: 0; border-top: 1.5pt solid var(--rule-2); margin: 0 0 14pt; }
+
+  /* ── ficha ─────────────────────────────────────────────────────────── */
+  .meta { display: flex; gap: 0 14pt; margin: 0 0 20pt; }
+  .meta > div { flex: 1 1 0; min-width: 0; }
+  .meta dt {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 4pt;
+  }
+  .meta dd {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 11.1pt;
+    color: var(--ink);
+    margin: 0;
+  }
+  .seta { color: var(--muted); padding: 0 1pt; }
+
+  /* ── seções ────────────────────────────────────────────────────────── */
+  section { border-top: 0.75pt solid var(--rule); padding-top: 14pt; margin-top: 18pt; }
+  section:first-of-type { margin-top: 0; }
+
+  h2 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 9.6pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10pt;
+  }
+
+  p { margin: 0 0 9pt; max-width: 46em; }
+  p:last-child { margin-bottom: 0; }
+  b, strong { font-weight: 600; color: var(--ink); }
+
+  /* ── telas ─────────────────────────────────────────────────────────── */
+  .tela { margin: 0 0 18pt; break-inside: avoid; }
+  .tela:last-child { margin-bottom: 0; }
+  .tela h3 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 12.6pt;
+    color: var(--ink);
+    margin: 0 0 3pt;
+  }
+  .caminho {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.6pt;
+    color: var(--muted);
+    margin: 0 0 8pt;
+  }
+  .caminho b { font-weight: 500; color: var(--ink-2); }
+  .caminho .sep { padding: 0 3pt; color: var(--rule-2); }
+
+  .quem {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 10.4pt;
+    color: var(--muted);
+    margin: 9pt 0 0;
+    display: flex;
+    align-items: center;
+    gap: 5pt;
+    flex-wrap: wrap;
+  }
+
+  /* ── públicos: uma cor por público, a mesma em todo aviso ──────────── */
+  /* A classe de cada público está em references/publicos.md. Público novo
+     ganha a próxima cor livre e entra no registro. */
+  .chip {
+    display: inline-block;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.9pt;
+    letter-spacing: 0.02em;
+    border-radius: 2.5pt;
+    padding: 1.5pt 6pt;
+    margin: 0 3pt 3pt 0;
+    color: var(--accent);
+    background: var(--chip);
+  }
+  .p-diretores   { color: #135779; background: #e3eef4; }
+  .p-auditoria   { color: #3f4a57; background: #e8ecf0; }
+  .p-assistentes { color: #794a12; background: #f6ecde; }
+  .p-padrinhos   { color: #4a3a6a; background: #ece8f3; }
+  .p-fundadores  { color: #2f5a3f; background: #e4efe7; }
+  .p-admin       { color: #6a3a3a; background: #f3e7e7; }
+  .p-gerentes    { color: #3b5a6e; background: #e6eef2; }
+  .p-auxiliarrh  { color: #5a4a2f; background: #f0ebe1; }
+  .p-suporte     { color: #5a3a55; background: #f1e6ef; }
+  .p-cor10       { color: #34584f; background: #e3efeb; }
+
+  /* ── listas ────────────────────────────────────────────────────────── */
+  .resolve { margin: 0; padding: 0; list-style: none; }
+  .resolve li { margin: 0 0 9pt; padding-left: 12pt; position: relative; max-width: 46em; }
+  .resolve li:last-child { margin-bottom: 0; }
+  .resolve li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0.62em;
+    width: 4pt; height: 4pt;
+    border-radius: 50%;
+    background: var(--rule-2);
+  }
+  /* Subtítulo dentro de "O que muda" (ex.: "Pedidos do Davi Nascimento"). */
+  .bloco {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 10.4pt;
+    color: var(--ink);
+    margin: 14pt 0 7pt;
+  }
+  .bloco:first-of-type { margin-top: 0; }
+
+  /* ── tabela de permissões ──────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; margin: 0; }
+  thead th {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 0 8pt 6pt 0;
+    border-bottom: 0.75pt solid var(--rule-2);
+  }
+  thead th:last-child { padding-right: 0; }
+  tbody tr { break-inside: avoid; }
+  tbody td {
+    padding: 8pt 8pt 8pt 0;
+    border-bottom: 0.75pt solid var(--rule);
+    vertical-align: top;
+    font-size: 10.4pt;
+    line-height: 1.4;
+  }
+  tbody td:last-child { padding-right: 0; }
+  tbody tr.grupo td {
+    border-bottom: 0.75pt solid var(--rule-2);
+    padding-top: 12pt;
+    padding-bottom: 5pt;
+  }
+  .grupo-rotulo {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.9pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--roxo);
+    background: var(--roxo-bg);
+    border-radius: 2.5pt;
+    padding: 2pt 6pt;
+    margin-right: 7pt;
+  }
+  .grupo-caminho {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.6pt;
+    color: var(--muted);
+  }
+  code {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 9.8pt;
+    color: var(--ink);
+    word-break: break-word;
+  }
+  .col-chave  { width: 40%; }
+  .col-libera { width: 36%; }
+  .col-para   { width: 24%; }
+  /* Chave que entrou nesta versão. */
+  .nova {
+    display: inline-block;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 7.6pt;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--verde);
+    background: var(--verde-bg);
+    border-radius: 2pt;
+    padding: 0.5pt 4pt;
+    margin-left: 5pt;
+    vertical-align: 1pt;
+  }
+
+  /* ── caixas ────────────────────────────────────────────────────────── */
+  .caixa {
+    background: var(--box);
+    border-left: 2.5pt solid var(--accent);
+    padding: 11pt 13pt;
+    margin: 14pt 0 0;
+    break-inside: avoid;
+  }
+  .caixa p { max-width: none; }
+  .caixa p:last-child { margin-bottom: 0; }
+
+  .atencao {
+    background: var(--amber-bg);
+    border-left: 2.5pt solid var(--amber);
+    padding: 11pt 13pt;
+    margin: 14pt 0 0;
+    color: var(--amber);
+    break-inside: avoid;
+  }
+  .atencao b { color: var(--amber); }
+  .atencao p { max-width: none; }
+  .atencao p:last-child { margin-bottom: 0; }
+
+  /* ── passos ────────────────────────────────────────────────────────── */
+  ol.passos { margin: 0 0 12pt; padding-left: 16pt; break-inside: avoid; }
+  section.junta { break-inside: avoid; }
+  ol.passos li { margin: 0 0 5pt; max-width: 46em; }
+
+  /* ── permissões por perfil (gerado pelo perfis.mjs) ────────────────── */
+  /* O título, a abertura e o primeiro perfil ficam juntos: sem isso, o título caía
+     sozinho no pé da página (aviso do App CB, 23/10/2026). */
+  .perfis-abertura { break-inside: avoid; }
+  .perfil { border-top: 0.75pt solid var(--rule); padding: 10pt 0 4pt; break-inside: avoid; }
+  .perfil:first-of-type { border-top: 0; padding-top: 2pt; }
+  .perfil-cab { display: flex; align-items: center; gap: 8pt; margin: 0 0 7pt; }
+  .perfil-cab .chip { font-size: 10pt; padding: 2pt 8pt; margin: 0; }
+  .perfil-conta {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.2pt;
+    color: var(--muted);
+  }
+  /* Uma coluna por módulo, a mesma em todos os perfis: o módulo sem chave fica "—". */
+  .perfil-modulos {
+    display: grid;
+    grid-template-columns: repeat(var(--colunas, 3), minmax(0, 1fr));
+    gap: 2pt 20pt;
+  }
+  .perfil-rotulo {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--roxo);
+    margin: 0 0 3pt;
+  }
+  .perfil-chaves { list-style: none; margin: 0 0 6pt; padding: 0; }
+  .perfil-chaves li { margin: 0 0 2pt; line-height: 1.35; }
+  .perfil-chaves code { font-size: 9.4pt; }
+  .perfil-nenhuma { color: var(--muted); }
+  /* ── fim das permissões por perfil ── */
+  .perfil-nenhuma { color: var(--muted); }
+  /* ── fim das permissões por perfil ── */
+
+  /* ── rodapé ────────────────────────────────────────────────────────── */
+  footer {
+    border-top: 0.75pt solid var(--rule);
+    margin-top: 20pt;
+    padding-top: 9pt;
+    display: flex;
+    justify-content: space-between;
+    gap: 16pt;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.2pt;
+    color: var(--muted);
+  }
+  footer b { font-weight: 500; color: var(--ink-2); }
+</style>
+</head>
+<body>
+
+<p class="sobrancelha">Aviso de entrega · Portal GIA</p>
+<h1>Pagamento eCheck</h1>
+<p class="resumo">Os pagamentos eCheck de cada loja passam a ser consultados no portal: as transações de um período e de uma faixa de horário, o valor total, o ticket médio, quanto foi aprovado, as horas de mais venda e o Excel com a lista.</p>
+
+<hr class="regua-forte" />
+
+<dl class="meta">
+  <div>
+    <dt>Entregue em</dt>
+    <dd>09/11/2026</dd>
+  </div>
+  <div>
+    <dt>Onde já está</dt>
+    <dd>Produção</dd>
+  </div>
+  <div>
+    <dt>Onde encontrar</dt>
+    <dd>Relatórios <span class="seta">→</span> Pagamento eCheck</dd>
+  </div>
+  <div>
+    <dt>Responsável</dt>
+    <dd>Iago Pereira</dd>
+  </div>
+</dl>
+
+<section>
+  <h2>O que é</h2>
+  <p>
+    O financeiro e as lojas precisam conferir os pagamentos eCheck de uma loja: cada
+    transação, com data e hora, modalidade, bandeira, status e valor, e ver de relance quanto
+    entrou no período, em quantas transações, o ticket médio, em que horas a loja mais vende e
+    por qual método de pagamento. Até agora, isso se fazia na tela <b>Relatório de Pagamentos
+    eCheck</b> do GIA antigo, que buscava as transações com uma senha fixa, gravada no próprio
+    sistema e exposta no navegador de quem abria a tela.
+  </p>
+  <p>
+    O módulo traz essa tela para o portal, com as mesmas regras. Escolhe-se a loja, o período
+    e a faixa de horário, e a tela mostra os totais, os gráficos e a lista das transações, com
+    as mesmas colunas do sistema antigo. As transações são lidas na hora da pesquisa: o portal
+    não guarda cópia e não altera nada. Um mês inteiro de uma loja movimentada — 6.808
+    transações na loja de Recife em outubro de 2026 — sai em cerca de 10 segundos. A versão
+    entregue é a 0.1.2.
+  </p>
+</section>
+
+<section>
+  <!-- O título fica dentro da .tela para não cair sozinho no pé da página. -->
+  <div class="tela">
+    <h2>Onde fica, e quem usa</h2>
+    <h3>Pagamento eCheck</h3>
+    <p class="caminho">
+      <b>Relatórios</b><span class="sep">›</span><b>Pagamento eCheck</b>
+    </p>
+    <p>
+      No topo, a <b>Loja</b> (só as do acesso da pessoa), a <b>Data inicial</b> e a
+      <b>Data final</b> — começam em ontem —, a <b>Hora inicial</b> e a <b>Hora final</b> — das
+      08:00 às 23:59 — e o botão <b>Pesquisar</b>. Abaixo, a barra de totais e a tabela
+      <b>Detalhamento das transações</b>, das mais recentes para as mais antigas, com
+      <b>Totais</b>, <b>Gráficos</b> e <b>Exportar</b> na barra da tabela. No celular, a
+      tabela vira cartões.
+    </p>
+    <p class="quem">Quem usa: <span class="chip p-diretores">Diretores</span><span class="chip p-gerentes">Gerentes</span><span class="chip p-auditoria">Auditoria</span><span class="chip p-admin">Administração/GIA</span></p>
+  </div>
+
+  <div class="caixa">
+    <p><b>A faixa de horário vale para o período inteiro, não para cada dia.</b> A hora
+    inicial vale para a data inicial e a hora final, para a data final: de 01/10 a 03/10, das
+    08:00 às 18:00, a pesquisa traz tudo de 01/10 às 08:00 até 03/10 às 18:00, inclusive a
+    madrugada no meio. É a mesma regra do GIA antigo, e a ajuda da tela explica com
+    exemplo.</p>
+  </div>
+
+  <div class="caixa">
+    <p><b>A tela só consulta.</b> Nenhum botão grava ou altera uma transação. O resultado de
+    uma pesquisa fica guardado por 30 minutos; enquanto nenhum filtro muda, o botão
+    <b>Pesquisar</b> fica desativado, porque o resultado na tela já é o da pesquisa.</p>
+  </div>
+</section>
+
+<section>
+  <h2>O que a entrega resolve</h2>
+  <ul class="resolve">
+    <li><b>Os números do período, prontos.</b> A barra de totais traz o valor total, o número
+    de transações, com quantas estão aprovadas, e o ticket médio, na mesma conta do GIA antigo:
+    o valor total soma todas as transações, de qualquer status. Passando o mouse sobre um
+    indicador, a tela explica a conta.</li>
+    <li><b>O que não foi aprovado, de uma vez.</b> Os indicadores <b>aprovadas</b> e <b>não
+    aprovadas</b> mostram quanto teve status PAGO e quanto não teve — o normal é zero, e o
+    indicador fica vermelho quando não é. Um clique num deles filtra a tabela só por essas
+    transações, e um botão com o nome do filtro, na barra da tabela, volta a mostrar
+    todas.</li>
+    <li><b>Achar uma transação contestada.</b> Cada coluna tem filtro: pelo código de
+    autorização, pela conta, pelo terminal ou pelo final do cartão. No celular, um campo de
+    busca procura em todas as colunas.</li>
+    <li><b>Quando e como a loja recebe.</b> <b>Gráficos</b> abre o <b>Volume de vendas por
+    hora</b>, com o pico do período em destaque, e os <b>Métodos de pagamento</b>, com a parte
+    de cada modalidade no valor total, em valor, quantidade e porcentagem.</li>
+    <li><b>A lista em Excel.</b> O arquivo traz as 17 colunas, inclusive as desligadas na
+    tela, com data e valor prontos para somar e ordenar, e uma linha <b>Total</b> no fim. O
+    que está filtrado na tela é o que vai no arquivo, e o subtítulo da planilha diz qual filtro
+    estava ligado.</li>
+    <li><b>Cada um vê só as próprias lojas.</b> O seletor lista só as lojas do acesso da
+    pessoa no portal, e isso é conferido de novo a cada pesquisa.</li>
+    <li><b>Sem senha fixa.</b> O portal busca as transações com a credencial cadastrada e
+    controlada pelo time do Portal GIA; nada de senha no navegador de quem usa.</li>
+    <li><b>Funciona no celular.</b> Todas as ações — pesquisar, filtrar pelos totais, ver os
+    gráficos e exportar — estão disponíveis na tela pequena.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Permissões</h2>
+  <p>
+    Cada chave libera uma coisa só, e as duas são de leitura — o módulo não altera nenhuma
+    transação. A coluna da direita é sugestão: o gestor decide conforme a necessidade real de
+    uso.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="col-chave">Chave</th>
+        <th class="col-libera">O que libera</th>
+        <th class="col-para">Sugerido para</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="grupo">
+        <td colspan="3">
+          <span class="grupo-rotulo">Pagamento eCheck</span>
+          <span class="grupo-caminho">Relatórios › Pagamento eCheck</span>
+        </td>
+      </tr>
+      <tr>
+        <td><code>pagamento-echeck.ler</code></td>
+        <td>Abrir a tela e consultar as transações, os totais e os gráficos das próprias lojas, com os filtros por coluna e pelos totais</td>
+        <td><span class="chip p-diretores">Diretores</span><span class="chip p-gerentes">Gerentes</span><span class="chip p-auditoria">Auditoria</span><span class="chip p-admin">Administração/GIA</span></td>
+      </tr>
+      <tr>
+        <td><code>pagamento-echeck.exportar</code></td>
+        <td>Baixar o Excel com as transações, do jeito que estão filtradas na tela</td>
+        <td><span class="chip p-diretores">Diretores</span><span class="chip p-gerentes">Gerentes</span><span class="chip p-auditoria">Auditoria</span><span class="chip p-admin">Administração/GIA</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="atencao">
+    <p><b><code>pagamento-echeck.exportar</code> só vale junto de
+    <code>pagamento-echeck.ler</code>.</b> Sozinha, ela não abre a tela: a pessoa vê o aviso de
+    acesso negado. Com a de leitura e sem a de exportação, a pessoa consulta na tela, mas o
+    botão <b>Exportar</b> não aparece.</p>
+  </div>
+
+  <div class="atencao">
+    <p><b>O período vai até 31 dias.</b> O GIA antigo aceitava até 6 meses, mas a fonte das
+    transações não responde a períodos tão longos: em testes, 6 meses de uma loja davam erro,
+    e 3 meses levavam mais de um minuto. Quem precisar de um período maior pesquisa mês a mês
+    e exporta cada um. Uma pesquisa com mais de 30 mil transações também é recusada, com o
+    pedido de um período menor.</p>
+  </div>
+
+  <div class="atencao">
+    <p><b>O que conferir no ambiente.</b> Sem estes pontos, a tela abre e a pesquisa falha ou
+    volta vazia.</p>
+    <p>O módulo precisa estar liberado na integração <code>apidw</code> do hub de Credenciais
+    — a mesma que o Fechamento Maestro, o Reports Maestro e a Validação Fiscal já usam. Sem
+    isso, a pesquisa responde “Não foi possível consultar os dados”, com uma mensagem de
+    credencial ou de integração. O módulo não precisa de nenhum outro segredo.</p>
+    <p>A loja só aparece no seletor se a Empresa tiver, no cadastro de Empresas, o vínculo com
+    a BI do Simphony (o código da loja, como “17. CB R”) ou, na falta dele, a integração TS2 —
+    a que o GIA antigo usava. Empresa sem nenhum dos dois não aparece, e a correção é no
+    cadastro. Um código errado faz a pesquisa voltar sem nenhuma transação, sem erro.</p>
+  </div>
+</section>
+
+<!-- PERFIS:INICIO — gerado pelo perfis.mjs a partir da tabela de permissões; não edite à mão -->
+<section class="perfis" style="--colunas: 1">
+  <div class="perfis-abertura">
+  <h2>Permissões por perfil</h2>
+  <p>A mesma tabela, vista ao contrário: cada perfil com todas as chaves que deve receber. É a lista para marcar no grupo de cada um no portal.</p>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-diretores">Diretores</span><span class="perfil-conta">2 chaves</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>pagamento-echeck.ler</code></li>
+            <li><code>pagamento-echeck.exportar</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-gerentes">Gerentes</span><span class="perfil-conta">2 chaves</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>pagamento-echeck.ler</code></li>
+            <li><code>pagamento-echeck.exportar</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-auditoria">Auditoria</span><span class="perfil-conta">2 chaves</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>pagamento-echeck.ler</code></li>
+            <li><code>pagamento-echeck.exportar</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-admin">Administração/GIA</span><span class="perfil-conta">2 chaves</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>pagamento-echeck.ler</code></li>
+            <li><code>pagamento-echeck.exportar</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+</section>
+<!-- PERFIS:FIM -->
+
+<section class="junta">
+  <h2>Como atribuir</h2>
+  <ol class="passos">
+    <li>Portal <span class="seta">→</span> Cadastros › Grupos (ou Papéis, para função que atravessa departamentos).</li>
+    <li>Abra o grupo que vai receber o acesso — Diretores, Gerentes, Auditoria, Administração/GIA…</li>
+    <li>Na aba de permissões, procure por <code>pagamento-echeck</code> e marque as chaves.</li>
+    <li>Salve. Quem já estiver logado enxerga a mudança sem precisar sair e entrar.</li>
+  </ol>
+  <p>
+    O acesso continua limitado às lojas que a pessoa já enxerga no portal, sem exceção: o
+    seletor só lista essas lojas, e cada pesquisa é conferida de novo. Quem confere lojas da
+    rede inteira — a Auditoria — precisa ter essas lojas no próprio acesso.
+  </p>
+</section>
+
+<footer>
+  <span>Dúvidas sobre o módulo: <b>time do Portal GIA</b></span>
+  <span>Ajuda dentro da tela: <b>botão ? no topo</b></span>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+Fechamento Maestro 0.3.0 e 0.4.0 - devolutivas de 10 e 11/11/2026
+
+Pedido do cliente
+- Os totais estavam "consolidados": filtrar a coluna Origem (ex.: só iFood) mudava a tabela, mas não os indicadores.
+- Depois: unificar os totais com o dashboard (vendas por canal) na mesma seção da tela.
+
+0.3.0 (10/11/2026) - commit 5ac057c, pacote modules-fechamento-maestro-0.3.0.tgz
+- Seletor Canal (Todos, iFood, App Coco Bambu, 99Food...) que recorta os 12 totais, a tabela, o contador do Só divergências e o Exportar. Aviso "Totais só de iFood · X de Y pedidos" na barra.
+- Clicar num card de total continua filtrando só a tabela (não recalcula a barra, senão os outros cards zerariam).
+- Barra de totais no padrão 3 do workspace: à vista Online, Adquirentes online, Adquirentes offline e Offline; o resto em "Ver todos os totais (+8)". Ponto vermelho no botão quando há sem classificação escondido.
+- Filtros de coluna (funil) NÃO mudam os totais: o DataReport do SDK (0.1.0-alpha.70) não informa ao módulo as linhas filtradas. Pedido ao time do SDK em docs/20261110-pedido-sdk-datareport-linhas-filtradas.md (onFilteredRowsChange).
+
+0.4.0 (11/11/2026) - commit 091a5db, pacote modules-fechamento-maestro-0.4.0.tgz
+- Validação de layout num canvas com 3 opções (A: anel à esquerda dos totais; B: faixa de botões em cima; A no celular). A B chegou a ser implementada e foi trocada pela A.
+- Seção única de canais e totais: anel de vendas por canal à esquerda (em cima no celular), indicadores ao lado.
+- Anel sem legenda: dica (tooltip) só com mouse, com canal, valor, % e pedidos. Clicar numa fatia escolhe o canal; clicar de novo nela ou no meio do anel ("ver todos") volta a todos. No toque, o meio do anel mostra os números do canal escolhido. Nome de canal longo não invade as fatias (quebra em 2 linhas e corta com "…").
+- Saiu o botão/dialog Dashboard (o anel e a aba Totais viraram a própria seção).
+- Seletor Canal na barra de filtros, à esquerda do Pesquisar, ligado ao anel (escolher num muda o outro). Vale na hora, sem Pesquisar, e continua entre pesquisas (volta a Todos se a pesquisa nova não tiver o canal). Desativado antes da pesquisa e com menos de 2 canais.
+- Tabela de pedidos sem subtítulo (loja e período já estão nos filtros).
+- Celular: o botão Totais abre a seção acima da lista (começa fechada), em vez do Dashboard.
+- Tour: passos novos para o anel de canais e para os indicadores (esperam a pesquisa e a seção aberta). Agora são 7 passos.
+- Responsivo conferido em 1920, 1440, 1280, 1024, 768, 390 e 320 px: campos de filtro mais estreitos; Canal e Pesquisar descem juntos quando a linha não cabe; no tablet o formulário ocupa a largura toda; indicadores em 3 colunas até ~900 px; total do anel inteiro.
+- Aviso "Totais só de…" e botão do filtro do indicador entram com fade (regra de UI fluida).
+- FAQ (seção Canais), tour, PRD (RF-7, RF-9, RF-10, critérios de aceite, histórico v1.2/v1.3) e CHANGELOG atualizados. FAQ e tour sem menção ao sistema antigo.
+- Sem mudança de banco nem de permissões; o módulo continua só leitura.
+- Validação 58/58, 0 erros, 0 avisos.
+
+Testes no gia dev (01.CB GOIANIA, 10/11/2026, 55 pedidos)
+- Tour, anel (dica, clique, ver todos), seletor Canal, indicadores e Ver todos (trava com card escondido filtrando), Só divergências, botão Totais, detalhe do pedido (abre e fecha com Esc), Exportar (.xlsx), persona Leitor sem Exportar, 320×568 sem rolagem lateral, toque na fatia sem tooltip, desktop sem rolagem vertical de página, teclado alcançando Canal, indicadores e Ver todos.
+- Achado do SDK (fora do módulo): depois de um elemento com Tooltip do @gia-cb/ui, o Tab seguinte manda o foco para o <body> (acontece também nos botões do DataReport). Avisar o time do SDK.
+
+Pagamentos sem classificação (análise do legado, sem mudança no módulo)
+- O legado só lê e grava uma tabela do Maestro: gia_relatorios.formas_pagamento (descricao, tipo, origem, is_deleted). Gravação pelo formulário "Nova forma de pagamento" (Adicionar à lista + Salvar em lote) e "Classificar Pagamento"; exclusão lógica (is_deleted). Sem histórico e sem trava de grupo no servidor (Admin/TI só na tela).
+- O contador "pagamentos sem classificação" sobe só quando o nome da forma vem da API vazio ou "DESCONHECIDO", antes de consultar o cadastro. O formulário NÃO muda esse contador (confirmado: apagar o cadastro só mudou os valores). O cadastro só influencia as linhas ONLINE VR (Adquirentes x Online/Offline).
+- Pendente: decidir se o módulo segue só leitura (recomendado, com a lista das formas sem nome no card) ou se ganha o gerenciamento do cadastro ONLINE VR (exigiria permissão nova, usuário de banco com escrita, histórico e cuidado por ser tabela global compartilhada com o legado).
+- Atenção: se a tabela apagada no teste foi a do Maestro de produção, os vales ONLINE VR saíram do fechamento de todas as lojas (legado e módulo) até as linhas voltarem.
+
+Fora do commit, de propósito
+- AGENTS.md da raiz: atualização dos padrões 2 e 3 (anel de canais) misturada com alterações de outras sessões ainda não commitadas.
+- test.ts, test2.ts, test.json, entregas/2026-11-09/ e a alteração no resumo de 05/11.
+
+Arquivos alterados (0.4.0)
+- src/components/PainelCanais.tsx (novo)
+- src/components/ResumoCards.tsx
+- src/components/FiltrosBar.tsx
+- src/views/FechamentoMaestroView.tsx
+- src/helpers.ts
+- src/faq.ts, src/tour.ts, src/module.ts
+- PRD.md, CHANGELOG.md, package.json, package-lock.json
+- Removidos (entraram no commit 85aef36 de outra sessão): src/components/DashboardDialog.tsx e src/components/VendasPorCanal.tsx

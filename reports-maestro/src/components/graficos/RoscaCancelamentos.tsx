@@ -20,8 +20,7 @@ const fmtBRLOuTraco = (v: number | null) => (v == null ? TRACO : fmtBRLCompacto(
 
 // Quem cancelou: uma rosca com o total no meio e a legenda ao lado.
 //
-// Escolha do usuário em 05/11/2026, entre cinco propostas em
-// docs/artefatos/quem-cancelou-propostas.html. As barras de antes deixavam o
+// Escolha do usuário em 05/11/2026, entre cinco propostas de desenho. As barras de antes deixavam o
 // card quase vazio (2, 1 e 1 cancelamentos numa moldura alta); a rosca põe o
 // total em destaque e a "parte do todo" se lê de relance.
 //
@@ -86,10 +85,7 @@ export function RoscaCancelamentos({ grupos }: Props) {
         height={TAMANHO}
         role="img"
         aria-label={`${fmtInt(total)} cancelamentos: ${grupos
-          .map(
-            (g) =>
-              `${QUEM_CANCELOU[g.por]} $<NumeroAnimado valor={g.pedidos} formatar={fmtIntOuTraco} />`
-          )
+          .map((g) => `${QUEM_CANCELOU[g.por]} ${fmtInt(g.pedidos)}`)
           .join(', ')}`}
         className="shrink-0"
       >
@@ -105,8 +101,13 @@ export function RoscaCancelamentos({ grupos }: Props) {
               'transition-opacity duration-fast',
               apagada ? 'opacity-40' : 'opacity-100'
             ),
-            onPointerEnter: () => setAtivo(g.por),
+            // Destaque e dica da fatia só com mouse (padrão 2 do workspace): no
+            // toque, os números estão escritos na lista ao lado.
+            onPointerEnter: (ev: PointerEvent) => {
+              if (ev.pointerType === 'mouse') setAtivo(g.por)
+            },
             onPointerMove: (ev: PointerEvent) => {
+              if (ev.pointerType !== 'mouse') return
               const caixa = ref.current?.getBoundingClientRect()
               if (!caixa) return
               setDica({ x: ev.clientX - caixa.left, y: ev.clientY - caixa.top, g })
@@ -165,7 +166,9 @@ export function RoscaCancelamentos({ grupos }: Props) {
           <li
             key={g.por}
             tabIndex={0}
-            onPointerEnter={() => setAtivo(g.por)}
+            onPointerEnter={(ev) => {
+              if (ev.pointerType === 'mouse') setAtivo(g.por)
+            }}
             onPointerLeave={() => setAtivo(null)}
             onFocus={() => setAtivo(g.por)}
             onBlur={() => setAtivo(null)}

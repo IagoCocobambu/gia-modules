@@ -1,0 +1,26 @@
+Reports Maestro 0.3.0 - entrega de 05/11/2026
+
+- Seletor de lojas: lista todas as lojas com CNPJ do acesso da pessoa; loja sem número no cadastro avisa ao pesquisar.
+- Análise dos gargalos operacionais do delivery com o histórico de status dos pedidos (preparo é o maior gargalo).
+- Regra de documentos: arquivos com data e hora no nome, sem sobrescrever versões.
+- Nova aba Operacional: tempo na loja, preparo, cancelados, tempo por etapa e dia x hora da loja e período pesquisados.
+- Dashboard só com o que toda loja tem: dados de entrega só aparecem quando existem; retiradas fora dos tempos.
+- Tempo por etapa em cartões: um por etapa, média em destaque e barra com mínimo, mediana, média e máximo.
+- Quem cancelou em rosca: total no centro, fatia por grupo, valor dos pedidos cancelados e média até cancelar.
+- Dia x hora: por dia da semana em linhas coloridas com destaque; por dia em mapa de calor com números e pior horário.
+- Média como número principal do Operacional; dica dos cartões com mínimo, mediana e máximo.
+- A tela abre no Operacional (na primeira visita, em Pedidos, para o tour).
+- Uma consulta à API para as duas abas: trocar de aba não pesquisa de novo.
+- Barra de totais compacta na aba Pedidos, no desenho do Fechamento Diário Maestro.
+- Tempos no formato 0m 00s, com a hora só quando há, alinhados.
+- Paleta de cores única nos gráficos: primárias, secundárias e terciárias.
+- Efeitos de entrada: números contam do zero e gráficos crescem ao aparecer.
+- Celular: tocar e segurar a célula do mapa de calor abre a dica.
+- FAQ, tour, PRD e INTEGRATION atualizados.
+- Changelog, apresentação em PowerPoint e aviso de entrega (PDF) com as permissões.
+- Validação 57/57, pacote 0.3.0 gerado, commit e push no branch feat/reports-maestro-0.3.0.
+
+Permissões
+- reports-maestro.ler: consultar pedidos (dados do cliente mascarados) e o Operacional.
+- reports-maestro.exportar: baixar em Excel os pedidos filtrados.
+- reports-maestro.ver-dados-cliente (nova): ver CPF, e-mail, telefone e endereço completos.

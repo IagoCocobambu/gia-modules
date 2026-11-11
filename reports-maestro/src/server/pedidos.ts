@@ -33,7 +33,7 @@ import { defineHandler, HttpError } from '@gia-cb/sdk/server'
 // - Quem cancelou: a `origem` do evento CANCELLED — CONSUMER (cliente ou
 //   plataforma) ou STORE (loja).
 //
-// Ver docs/gargalos-operacionais-delivery.md.
+// A regra completa está no PRD (RF-6, RN-8).
 //
 // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. As funções de
 // data e `numeroDaLoja` se repetem em outros arquivos de propósito.
