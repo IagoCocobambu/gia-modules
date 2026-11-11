@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Online — opções de layout</title>
+<style>
+  :root { --bg:#0a0e16; --card:#0d121c; --th:#161d2b; --line:#1d2533; --line2:#263041; --tx:#e5e7eb; --tx2:#d1d5db; --mut:#9ca3af; --neg:#f87171; --ok:#4ade80; }
+  body { margin:0; background:var(--bg); color:var(--tx); font-family:Inter,system-ui,sans-serif; padding:24px; }
+  h1 { font-size:22px; margin:0 0 6px }
+  .sub { color:var(--mut); font-size:14px; margin:0 0 28px }
+  section { margin-bottom:36px }
+  h2 { font-size:17px; margin:0 0 4px }
+  .desc { color:var(--mut); font-size:13px; margin:0 0 10px }
+  .box { border:1px solid var(--line2); border-radius:10px; overflow:auto; background:var(--card) }
+  table { border-collapse:collapse; width:100%; font-size:13px }
+  th { background:var(--th); color:var(--mut); font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; text-align:left; padding:10px 12px; border-bottom:1px solid var(--line2); border-right:1px solid var(--line); white-space:nowrap }
+  th.g { text-align:center; color:var(--tx) }
+  td { padding:12px; border-bottom:1px solid var(--line); border-right:1px solid var(--line); color:var(--tx2); white-space:nowrap; font-variant-numeric:tabular-nums }
+  tbody tr:nth-child(even) td { background:#0f1520 }
+  .d { font-weight:600; color:var(--tx) } .neg { color:var(--neg); font-weight:600 } .ok { color:var(--ok); font-weight:600 }
+  .q { color:var(--mut); font-size:12px } .qc { color:var(--mut); text-align:center }
+  .selo { display:inline-block; min-width:26px; text-align:center; padding:1px 6px; margin-right:8px; border-radius:999px; background:#1e293b; color:#cbd5e1; font-size:11px; font-weight:600 }
+  .duas span { display:block; line-height:1.25 } .duas small { color:var(--mut); font-size:11px }
+  .det td { background:#111827 !important; padding:14px 16px 14px 52px }
+  .det .grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px 32px }
+  .det .grid div { display:flex; justify-content:space-between; gap:12px } .det .grid span:first-child { color:var(--mut) }
+  .pros { color:var(--mut); font-size:13px; margin:10px 0 0 }
+</style>
+</head>
+<body>
+<h1>Grade Online — opções de layout</h1>
+<p class="sub">Maquete estática com os dias do print. Compare o que cabe na largura, se a quantidade fica clara e quantas linhas cabem na altura.</p>
+
+<section>
+  <h2>A — Atual: valor seguido da quantidade</h2>
+  <p class="desc">Uma coluna por par; a quantidade vem depois do “·”, em cinza.</p>
+  <div class="box"><table>
+    <thead><tr><th>Data</th><th>iFood online</th><th>Descontos iFood</th><th>Cancel. total</th><th>Cancel. parcial</th><th>Promo rede</th><th>SD online</th><th>CB online</th><th># Online</th></tr></thead>
+    <tbody>
+      <tr><td class="d">01/10/2026</td><td>R$ 1.373,39</td><td>R$ 30,00 <span class="q">· 3</span></td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.373,39</td><td>R$ 5.309,17</td><td class="neg">-R$ 3.935,78</td></tr>
+      <tr><td class="d">02/10/2026</td><td>R$ 1.371,58</td><td>R$ 20,00 <span class="q">· 2</span></td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.371,58</td><td>R$ 9.693,39</td><td class="neg">-R$ 8.321,81</td></tr>
+      <tr><td class="d">03/10/2026</td><td>R$ 1.307,23</td><td>R$ 20,00 <span class="q">· 2</span></td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.307,23</td><td>R$ 18.192,09</td><td class="neg">-R$ 16.884,86</td></tr>
+    </tbody></table></div>
+  <p class="pros">Prós: estreita, um cabeçalho só. Contra: “R$ 30,00 · 3” pode ser lido como um número só; não diz o que é o 3.</p>
+</section>
+
+<section>
+  <h2>B — Quantidade num selo antes do valor</h2>
+  <p class="desc">Selo “3×” = 3 lançamentos; some quando é zero.</p>
+  <div class="box"><table>
+    <thead><tr><th>Data</th><th>iFood online</th><th>Descontos iFood</th><th>Cancel. total</th><th>Cancel. parcial</th><th>Promo rede</th><th>SD online</th><th>CB online</th><th># Online</th></tr></thead>
+    <tbody>
+      <tr><td class="d">01/10/2026</td><td>R$ 1.373,39</td><td><span class="selo">3×</span>R$ 30,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.373,39</td><td>R$ 5.309,17</td><td class="neg">-R$ 3.935,78</td></tr>
+      <tr><td class="d">02/10/2026</td><td>R$ 1.371,58</td><td><span class="selo">2×</span>R$ 20,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.371,58</td><td>R$ 9.693,39</td><td class="neg">-R$ 8.321,81</td></tr>
+      <tr><td class="d">03/10/2026</td><td>R$ 1.307,23</td><td><span class="selo">2×</span>R$ 20,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.307,23</td><td>R$ 18.192,09</td><td class="neg">-R$ 16.884,86</td></tr>
+    </tbody></table></div>
+  <p class="pros">Prós: mesma largura da A; o “×” deixa claro que é contagem. Contra: um elemento visual a mais por célula.</p>
+</section>
+
+<section>
+  <h2>C — Valor em cima, quantidade por extenso embaixo</h2>
+  <p class="desc">“3 lançamentos” escrito; zero não mostra a segunda linha.</p>
+  <div class="box"><table>
+    <thead><tr><th>Data</th><th>iFood online</th><th>Descontos iFood</th><th>Cancel. total</th><th>Cancel. parcial</th><th>Promo rede</th><th>SD online</th><th>CB online</th><th># Online</th></tr></thead>
+    <tbody>
+      <tr><td class="d">01/10/2026</td><td>R$ 1.373,39</td><td class="duas"><span>R$ 30,00</span><small>3 lançamentos</small></td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.373,39</td><td>R$ 5.309,17</td><td class="neg">-R$ 3.935,78</td></tr>
+      <tr><td class="d">02/10/2026</td><td>R$ 1.371,58</td><td class="duas"><span>R$ 20,00</span><small>2 lançamentos</small></td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.371,58</td><td>R$ 9.693,39</td><td class="neg">-R$ 8.321,81</td></tr>
+      <tr><td class="d">03/10/2026</td><td>R$ 1.307,23</td><td class="duas"><span>R$ 20,00</span><small>2 lançamentos</small></td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.307,23</td><td>R$ 18.192,09</td><td class="neg">-R$ 16.884,86</td></tr>
+    </tbody></table></div>
+  <p class="pros">Prós: impossível confundir; mesma largura da A. Contra: a linha fica um pouco mais alta onde há quantidade.</p>
+</section>
+
+<section>
+  <h2>D — Qtd e R$ em colunas separadas (como era antes)</h2>
+  <p class="desc">Cabeçalho de grupo em dois níveis; mais larga.</p>
+  <div class="box"><table>
+    <thead>
+      <tr><th rowspan="2">Data</th><th rowspan="2">iFood online</th><th class="g" colspan="2">Descontos iFood</th><th class="g" colspan="2">Cancel. total</th><th class="g" colspan="2">Cancel. parcial</th><th rowspan="2">Promo rede</th><th rowspan="2">SD online</th><th rowspan="2">CB online</th></tr>
+      <tr><th>Qtd</th><th>R$</th><th>Qtd</th><th>R$</th><th>Qtd</th><th>R$</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="d">01/10/2026</td><td>R$ 1.373,39</td><td class="qc">3</td><td>R$ 30,00</td><td class="qc">0</td><td>R$ 0,00</td><td class="qc">0</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.373,39</td><td>R$ 5.309,17</td></tr>
+      <tr><td class="d">02/10/2026</td><td>R$ 1.371,58</td><td class="qc">2</td><td>R$ 20,00</td><td class="qc">0</td><td>R$ 0,00</td><td class="qc">0</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.371,58</td><td>R$ 9.693,39</td></tr>
+      <tr><td class="d">03/10/2026</td><td>R$ 1.307,23</td><td class="qc">2</td><td>R$ 20,00</td><td class="qc">0</td><td>R$ 0,00</td><td class="qc">0</td><td>R$ 0,00</td><td>R$ 0,00</td><td>R$ 1.307,23</td><td>R$ 18.192,09</td></tr>
+    </tbody></table></div>
+  <p class="pros">Prós: cada número tem o seu título. Contra: uma linha de cabeçalho a mais e 7 colunas a mais na grade inteira — o “# Online” já sai da tela.</p>
+</section>
+
+<section>
+  <h2>E — Grade resumida (SD × CB = #) e detalhe do dia ao abrir</h2>
+  <p class="desc">A grade mostra só o que se confere; quantidades, cancelamentos, promo e previsão aparecem ao abrir o dia (01/10 aberto no exemplo).</p>
+  <div class="box"><table>
+    <thead>
+      <tr><th rowspan="2"></th><th rowspan="2">Data</th><th class="g" colspan="3">Online</th><th class="g" colspan="3">Desconto iFood</th><th class="g" colspan="3">Desconto loja</th><th rowspan="2"># Total</th><th rowspan="2">Comentário</th></tr>
+      <tr><th>SD</th><th>CB</th><th>#</th><th>SD</th><th>CB</th><th>#</th><th>SD</th><th>CB</th><th>#</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="qc">▾</td><td class="d">01/10/2026</td><td>R$ 1.373,39</td><td>R$ 5.309,17</td><td class="neg">-R$ 3.935,78</td><td>R$ 10,00</td><td>R$ 10,00</td><td class="ok">R$ 0,00</td><td>R$ 48,00</td><td>R$ 17,25</td><td class="neg">R$ 30,75</td><td class="neg">-R$ 3.935,78</td><td class="q">—</td></tr>
+      <tr class="det"><td colspan="13"><div class="grid">
+        <div><span>Descontos iFood</span><span>3 lançamentos · R$ 30,00</span></div>
+        <div><span>Cancel. total</span><span>nenhum</span></div>
+        <div><span>Cancel. parcial</span><span>nenhum</span></div>
+        <div><span>Promo rede</span><span>R$ 0,00</span></div>
+        <div><span>Desc. offline</span><span>nenhum</span></div>
+        <div><span>Desc. VR</span><span>1 lançamento · R$ 10,00</span></div>
+        <div><span>Desc. loja online</span><span>6 lançamentos · R$ 48,00</span></div>
+        <div><span>Previsão</span><span>09/11/2026</span></div>
+      </div></td></tr>
+      <tr><td class="qc">▸</td><td class="d">02/10/2026</td><td>R$ 1.371,58</td><td>R$ 9.693,39</td><td class="neg">-R$ 8.321,81</td><td>R$ 10,00</td><td>R$ 10,00</td><td class="ok">R$ 0,00</td><td>R$ 48,00</td><td>R$ 17,25</td><td class="neg">R$ 30,75</td><td class="neg">-R$ 8.321,81</td><td class="q">—</td></tr>
+      <tr><td class="qc">▸</td><td class="d">03/10/2026</td><td>R$ 1.307,23</td><td>R$ 18.192,09</td><td class="neg">-R$ 16.884,86</td><td>R$ 10,00</td><td>R$ 10,00</td><td class="ok">R$ 0,00</td><td>R$ 48,00</td><td>R$ 17,25</td><td class="neg">R$ 30,75</td><td class="neg">-R$ 16.884,86</td><td class="q">—</td></tr>
+    </tbody></table></div>
+  <p class="pros">Prós: a grade cabe inteira em monitor estreito e mostra o que precisa ser conferido. Contra: quantidades e detalhes ficam a um clique; a planilha completa pediria um “ver todas as colunas”.</p>
+</section>
+</body>
+</html>
