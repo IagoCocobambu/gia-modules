@@ -3,7 +3,7 @@
 ## 1. Identificação
 
 - **Módulo**: `fechamento-ifood-diario` — Fechamento iFood Diário
-- **Versão do pacote**: 0.1.0
+- **Versão do pacote**: 0.2.0
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
 - **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.70 (fixada)
 
@@ -14,9 +14,9 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
 | Handler (`src/server/`) | Fonte                                                                                                       | Acesso                            |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------- |
 | `lojas.ts`              | `ctx.operacoes()` (todas as operações do escopo — exceção: busca por operação) + `locRefs.IFOOD` da Empresa | —                                 |
-| `fechamento.ts`         | `api-dw.cocobambu.com/Delivery/?loc_ref=<nº loja>&start_date=<dia>&end_date=<dia>`                          | `ctx.credencial('apidw')`         |
-| `fechamento.ts`         | `merchant-api.ifood.com.br/financial/v3.0/merchants/<merchant>/sales?beginSalesDate&endSalesDate&page`      | `ctx.credencial('ifood')`         |
-| `fechamento.ts`         | banco do Maestro: `SELECT` em `gia_relatorios.formas_pagamento`                                             | `sql` (`GIA_SERVER_DATABASE_URL`) |
+| `pedidos.ts`            | `api-dw.cocobambu.com/Delivery/?loc_ref=<nº loja>&start_date=<dia>&end_date=<dia>`                          | `ctx.credencial('apidw')`         |
+| `vendas.ts`             | `merchant-api.ifood.com.br/financial/v3.0/merchants/<merchant>/sales?beginSalesDate&endSalesDate&page`      | `ctx.credencial('ifood')`         |
+| `pedidos.ts`            | banco do Maestro: `SELECT` em `gia_relatorios.formas_pagamento`                                             | `sql` (`GIA_SERVER_DATABASE_URL`) |
 
 ### 2.1 Credenciais / integrações
 
@@ -47,14 +47,14 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
 ### 2.2 Cadastro de Empresas e operações
 
 - [ ] **Busca por operação (exceção deste módulo):** o seletor lista `ctx.operacoes()`
-      e o handler `fechamento` recebe o `operacao_ref` e chama `requireOperacao`. O nº
+      e os handlers `pedidos` e `vendas` recebem o `operacao_ref` e chama `requireOperacao`. O nº
       da loja no DW é o número do começo do `operacao_ref` ("54 cb" → `54`).
 - [ ] A operação não tem vínculo iFood no SDK: o restaurante principal vem da
       **Empresa dona da operação**. As operações Vasto na loja do CB (`08 vst`,
       `17 vst`, `25 vst`, `69 vst`, `86 vst`) têm o restaurante numa tabela do
-      módulo (`OPERACOES_IFOOD_PROPRIO`, em `lojas.ts` e `fechamento.ts`) —
+      módulo (`OPERACOES_IFOOD_PROPRIO`, em `lojas.ts`, `pedidos.ts` e `vendas.ts`) —
       provisório. Pedido ao time do SDK: expor `locRefs` em `GiaOperacao`.
-- [ ] O handler `fechamento` também lista os restaurantes da conta no iFood
+- [ ] O handler `vendas` também lista os restaurantes da conta no iFood
       (`GET /merchant/v1.0/merchants`, guardado 30 min), só para mostrar o nome do
       restaurante na tabela — mesma credencial `ifood`.
 - [ ] Cada Empresa precisa da integração **`IFOOD`** com o UUID do merchant no iFood
@@ -64,8 +64,9 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
 
 ## 3. Posição no menu
 
-- **Grupo**: `cardapio` (Plataformas). Subgrupo a definir pelo time GIA na
-  instalação (sugestão: **iFood**, junto do futuro Fechamento iFood Mensal).
+- **Grupo**: `cardapio` (Plataformas) › subgrupo **iFood** › Fechamento iFood Diário
+  (`navGroup: 'ifood'`), ao lado do Fechamento iFood Mensal.
+- [ ] O subgrupo **iFood** é criado pelo time GIA na instalação, dentro de Plataformas.
 
 | Tela      | path                       | label                   | ícone (lucide) | permissão                     | faqId                     |
 | --------- | -------------------------- | ----------------------- | -------------- | ----------------------------- | ------------------------- |

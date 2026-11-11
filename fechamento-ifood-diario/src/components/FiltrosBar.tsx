@@ -24,6 +24,12 @@ interface FiltrosBarProps {
   semAlteracao: boolean
   /** Layout de celular: campos empilhados, ocupando a largura toda. */
   compacto: boolean
+  /**
+   * Depois da pesquisa, fora do celular: uma linha só, sem o subtítulo e sem os
+   * rótulos acima dos campos (padrão 8 do AGENTS.md da raiz) — sobra altura para a
+   * tabela em monitor pequeno.
+   */
+  enxuto?: boolean
   /** Ao lado do título do módulo (o botão de rever o tour). */
   tituloExtra?: ReactNode
   className?: string
@@ -38,6 +44,7 @@ export function FiltrosBar({
   onPesquisar,
   semAlteracao,
   compacto,
+  enxuto = false,
   tituloExtra,
   className,
 }: FiltrosBarProps) {
@@ -68,6 +75,75 @@ export function FiltrosBar({
     </Button>
   )
 
+  const seletorLoja = (controle: Record<string, unknown>) => (
+    <SearchableSelect<string>
+      triggerProps={controle}
+      options={lojas.map((l) => ({
+        value: l.ref,
+        label: l.nome,
+        description:
+          [l.ativo ? null : 'Inativa', l.temIfood ? null : 'Sem iFood']
+            .filter(Boolean)
+            .join(' · ') || undefined,
+      }))}
+      value={value.operacaoRef}
+      onChange={(operacaoRef) => set({ operacaoRef })}
+      placeholder={lojasLoading ? 'Carregando lojas…' : 'Selecione a loja'}
+      searchPlaceholder="Buscar loja…"
+      emptyLabel="Nenhuma loja disponível"
+      disabled={lojasLoading}
+    />
+  )
+  const seletorDia = (controle: Record<string, unknown>) => (
+    <DatePicker
+      {...controle}
+      value={value.data}
+      max={hojeLocal()}
+      onChange={(data) => set({ data })}
+    />
+  )
+  // Botão desativado não recebe o mouse: a dica fica num invólucro focável. Largura
+  // total só no celular — na linha enxuta ele empurraria o botão para baixo.
+  const pesquisar =
+    semAlteracao && !pesquisando ? (
+      <Dica content="Nenhum filtro mudou desde a última pesquisa — o resultado na tela já é este.">
+        <span
+          tabIndex={0}
+          className={cn(
+            'inline-flex rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            compacto && 'w-full'
+          )}
+        >
+          {botao}
+        </span>
+      </Dica>
+    ) : (
+      botao
+    )
+
+  // Forma enxuta (depois da pesquisa, fora do celular): título e campos numa linha.
+  if (enxuto && !compacto) {
+    return (
+      <div
+        className={cn(
+          'flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border bg-surface px-3 py-2 transition-all duration-default ease-default',
+          className
+        )}
+        data-tour="fechamento-ifood-diario-filtros"
+      >
+        <div className="flex min-w-0 items-center gap-1">
+          <h1 className="truncate text-sm font-semibold text-foreground">{NOME_MODULO}</h1>
+          {tituloExtra}
+        </div>
+        <div className="ml-auto flex min-w-0 items-center gap-2">
+          <div className="w-64 min-w-0 shrink">{seletorLoja({ 'aria-label': 'Loja' })}</div>
+          <div className="w-44 shrink-0">{seletorDia({ 'aria-label': 'Dia' })}</div>
+          {pesquisar}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div ref={raiz} className="contents">
       <ListHeader
@@ -84,53 +160,14 @@ export function FiltrosBar({
       >
         <div className={compacto ? 'flex flex-col gap-3' : 'flex flex-wrap items-end gap-3'}>
           <Field label="Loja" className={compacto ? 'w-full' : 'w-80'}>
-            {(controle) => (
-              <SearchableSelect<string>
-                triggerProps={controle}
-                options={lojas.map((l) => ({
-                  value: l.ref,
-                  label: l.nome,
-                  description:
-                    [l.ativo ? null : 'Inativa', l.temIfood ? null : 'Sem iFood']
-                      .filter(Boolean)
-                      .join(' · ') || undefined,
-                }))}
-                value={value.operacaoRef}
-                onChange={(operacaoRef) => set({ operacaoRef })}
-                placeholder={lojasLoading ? 'Carregando lojas…' : 'Selecione a loja'}
-                searchPlaceholder="Buscar loja…"
-                emptyLabel="Nenhuma loja disponível"
-                disabled={lojasLoading}
-              />
-            )}
+            {(controle) => seletorLoja(controle)}
           </Field>
 
           <Field label="Dia" className={compacto ? 'w-full' : 'w-44'}>
-            {(controle) => (
-              <DatePicker
-                {...controle}
-                value={value.data}
-                max={hojeLocal()}
-                onChange={(data) => set({ data })}
-              />
-            )}
+            {(controle) => seletorDia(controle)}
           </Field>
 
-          {/* Botão desativado não recebe o mouse: a dica fica num invólucro focável. */}
-          <div className={compacto ? 'w-full' : undefined}>
-            {semAlteracao && !pesquisando ? (
-              <Dica content="Nenhum filtro mudou desde a última pesquisa — o resultado na tela já é este.">
-                <span
-                  tabIndex={0}
-                  className="inline-flex w-full rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {botao}
-                </span>
-              </Dica>
-            ) : (
-              botao
-            )}
-          </div>
+          <div className={compacto ? 'w-full' : undefined}>{pesquisar}</div>
         </div>
       </ListHeader>
     </div>

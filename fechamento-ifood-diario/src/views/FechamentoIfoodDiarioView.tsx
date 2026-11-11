@@ -14,12 +14,14 @@ import {
 import { cn } from '@gia-cb/ui/cn'
 import { useTourReplayTrigger } from '@gia-cb/sdk/modules'
 import { useCanAccess } from '@gia-cb/sdk/permissions'
-import { useFechamentoIfood, useLojasFechamentoIfood } from '../api/fechamento-ifood-diario'
+import { useLojasFechamentoIfood } from '../api/fechamento-ifood-diario'
 import { BadgeTipoPagamento } from '../components/BadgeTipoPagamento'
 import { Dica } from '../components/Dica'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
+import { ProgressoConsulta } from '../components/ProgressoConsulta'
 import { Recolhivel } from '../components/Recolhivel'
 import { ResumoCards } from '../components/ResumoCards'
+import { useConsultaDiaria } from '../hooks/use-consulta-diaria'
 import {
   COLUNAS_PEDIDO,
   dataArquivo,
@@ -230,25 +232,38 @@ export function FechamentoIfoodDiarioView() {
   // Sem escolha do usuário, vale a primeira loja da lista (como no legado).
   const refSelecionada = filtros.operacaoRef ?? lojas[0]?.ref ?? null
 
-  const fechamentoQuery = useFechamentoIfood(
-    consulta ? { operacaoRef: consulta.operacaoRef, data: consulta.data } : null
-  )
-  const pedidos = useMemo(() => fechamentoQuery.data?.pedidos ?? [], [fechamentoQuery.data])
-  const carregando = fechamentoQuery.isFetching
-  const erro = fechamentoQuery.error ?? lojasQuery.error
-  const painelDisponivel = consulta !== null && !erro
+  // A consulta em partes (pedidos do DW + páginas do iFood em paralelo), com progresso.
+  const {
+    fase,
+    progresso,
+    resultado,
+    erro: erroConsulta,
+    consultar,
+    cancelar,
+  } = useConsultaDiaria()
+  const pedidos = useMemo(() => resultado?.pedidos ?? [], [resultado])
+  const carregando = fase === 'consultando'
+  const erro = lojasQuery.error?.message ?? erroConsulta
+  const painelDisponivel = resultado !== null && !erro
+  // Resultado parcial: os pedidos já estão na tabela, o iFood ainda está chegando.
+  const parcial = resultado !== null && !resultado.completo
 
+  // Os valores do dia só com o resultado completo: parcial não vira número na tela.
   const totais = useMemo(
-    () => (fechamentoQuery.data ? resumirTotais(pedidos) : null),
-    [fechamentoQuery.data, pedidos]
+    () => (resultado?.completo ? resumirTotais(pedidos) : null),
+    [resultado, pedidos]
   )
   const pedidosVisao = useMemo(
     () => (filtroTotal ? pedidosDoTotal(pedidos, filtroTotal) : pedidos),
     [pedidos, filtroTotal]
   )
 
+  // Depois de um erro ou de cancelar, a mesma pesquisa pode ser repetida.
   const semAlteracao =
-    consulta !== null && consulta.operacaoRef === refSelecionada && consulta.data === filtros.data
+    consulta !== null &&
+    (fase === 'consultando' || fase === 'pronto') &&
+    consulta.operacaoRef === refSelecionada &&
+    consulta.data === filtros.data
 
   /** Dispara a pesquisa. Devolve `false` quando ela foi recusada. */
   function pesquisar(): boolean {
@@ -264,7 +279,9 @@ export function FechamentoIfoodDiarioView() {
       return false
     }
     setFiltroTotal(null)
-    setConsulta({ operacaoRef: loja.ref, lojaNome: loja.nome, data: filtros.data })
+    const nova = { operacaoRef: loja.ref, lojaNome: loja.nome, data: filtros.data }
+    setConsulta(nova)
+    void consultar(nova)
     return true
   }
 
@@ -337,9 +354,15 @@ export function FechamentoIfoodDiarioView() {
         header: 'Cancelamento',
         cell: ({ row }) =>
           centro(
-            <Badge variant={row.original.venda_concluida === 'OK' ? 'success' : 'destructive'}>
-              {row.original.venda_concluida}
-            </Badge>
+            row.original.venda_concluida === 'Aguardando' ? (
+              <Badge variant="secondary" className="whitespace-nowrap">
+                Aguardando iFood
+              </Badge>
+            ) : (
+              <Badge variant={row.original.venda_concluida === 'OK' ? 'success' : 'destructive'}>
+                {row.original.venda_concluida}
+              </Badge>
+            )
           ),
       },
       {
@@ -410,14 +433,17 @@ export function FechamentoIfoodDiarioView() {
   if (erro) {
     emptyState = (
       <EmptyState
+        // A tabela não quebra linha nas células (e o estado vazio fica numa célula): a
+        // mensagem de erro, que pode ser longa, precisa quebrar.
+        className="whitespace-normal break-words"
         icon={AlertTriangle}
         title="Não foi possível consultar os dados"
-        description={erro.message}
+        description={erro}
         action={
           <Button
             onClick={() => {
               if (lojasQuery.isError) void lojasQuery.refetch()
-              if (fechamentoQuery.isError) void fechamentoQuery.refetch()
+              if (erroConsulta && consulta) void consultar(consulta)
             }}
           >
             <RefreshCw className="h-4 w-4" /> Tentar de novo
@@ -506,29 +532,41 @@ export function FechamentoIfoodDiarioView() {
           onPesquisar={pesquisar}
           semAlteracao={semAlteracao}
           compacto={compacto}
+          enxuto={consulta !== null && !erro}
           tituloExtra={<TourReplayButton onClick={replayTour} />}
         />
 
-        {painelDisponivel && !carregando && fechamentoQuery.data && (
-          <Avisos resposta={fechamentoQuery.data} />
-        )}
+        {resultado && !erro && <Avisos resposta={resultado} />}
 
         <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos}>
           <ResumoCards
             totais={totais}
-            carregando={carregando}
+            carregando={carregando || parcial}
             filtro={filtroTotal}
             onFiltroChange={setFiltroTotal}
           />
         </Recolhivel>
 
+        {/* A faixa de progresso fica acima da tabela durante toda a busca (como no
+            Fechamento iFood Mensal); a tabela carrega até os pedidos chegarem. */}
+        {carregando && consulta && (
+          <ProgressoConsulta
+            progresso={progresso}
+            comPedidos={resultado !== null}
+            onCancelar={() => {
+              cancelar()
+              setConsulta(null)
+            }}
+          />
+        )}
+
         <DataReport<PedidoIfood>
+          loading={carregando && !resultado}
           className={cn('[&_td]:whitespace-nowrap', compacto ? 'shrink-0' : 'min-h-0 flex-1')}
           fillHeight={!compacto}
           title="Pedidos iFood"
           subtitle={subtitle}
           actions={acoes}
-          loading={carregando}
           globalSearch={compacto}
           columnVisibilityToggle
           initialColumnVisibility={COLUNAS_INATIVAS}
@@ -541,9 +579,15 @@ export function FechamentoIfoodDiarioView() {
           searchPlaceholder="Buscar pedido, forma de pagamento…"
           countNoun="pedidos"
           pageSize={50}
-          rowClassName={(p) => (p.venda_concluida === 'Cancelado' ? 'bg-destructive/5' : undefined)}
+          rowClassName={(p) =>
+            p.venda_concluida === 'Cancelado'
+              ? 'bg-destructive/5'
+              : p.venda_concluida === 'Aguardando'
+                ? 'opacity-60 transition-opacity duration-default'
+                : undefined
+          }
           onExport={
-            canExport && consulta && fechamentoQuery.data && totais
+            canExport && consulta && resultado?.completo && totais
               ? (visiveis) =>
                   exportarXlsx(
                     visiveis,

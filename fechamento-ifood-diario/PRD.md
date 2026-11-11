@@ -8,9 +8,9 @@
 | **Label visível**      | Fechamento iFood Diário                   |
 | **Categoria**          | `vendas`                                  |
 | **Autor**              | Iago Pereira (iago.pereira@cocobambu.com) |
-| **Versão do PRD**      | `1.0`                                     |
+| **Versão do PRD**      | `1.1`                                     |
 | **Status**             | `em-dev`                                  |
-| **Última atualização** | 2026-11-06                                |
+| **Última atualização** | 2026-11-11                                |
 | **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.70`              |
 
 ---
@@ -101,8 +101,23 @@ datas futuras.
 
 ### RF-3: Leitura e cruzamento
 
-Handler `fechamento`: DW + API do iFood + cadastro de formas ONLINE VR, cruzados
-e calculados no servidor (RN-1 a RN-7). Devolve só os pedidos do canal iFood.
+Consulta em partes, conduzida pela tela (como o Fechamento iFood Mensal), para
+mostrar o progresso:
+
+- handler `pedidos`: os pedidos do DW do canal da operação e o cadastro de formas
+  ONLINE VR (uma chamada; sem nova tentativa, porque pode levar até 90 s);
+- handler `vendas`: UMA página (20 vendas) do iFood, já reduzida aos campos do
+  cruzamento; a tela busca a página 1 e depois as demais, até 4 ao mesmo tempo, com
+  nova tentativa em falha. Página "leve" do iFood (vendas sem pagamentos) é pedida de
+  novo até 2 vezes;
+- a tela cruza e calcula (RN-1 a RN-7, `src/regras.ts`) e vai **populando**: assim
+  que os pedidos do DW chegam a tabela aparece, recalculada a cada página do iFood;
+  o pedido ainda não achado fica **Aguardando iFood** (apagado), nunca Cancelado antes
+  do fim. Os cards, o filtro pelos cards e o Excel só com as duas partes completas.
+  A faixa de progresso fica acima da tabela durante toda a busca; **Cancelar** interrompe.
+
+Os dois handlers conferem a permissão e a operação (`requireOperacao`). O módulo só
+lê: nenhum valor calculado volta ao servidor.
 
 ### RF-4: Cards do dia
 
@@ -176,16 +191,17 @@ relfechamentoifood` e o Excel era livre.
 
 | Integração                                                  | Propósito        | Camada                              | Credencial                                    |
 | ----------------------------------------------------------- | ---------------- | ----------------------------------- | --------------------------------------------- |
-| `api-dw.cocobambu.com` `/Delivery/`                         | Pedidos do dia   | handler `fechamento`                | hub de Credenciais, integração `apidw`        |
-| Merchant API do iFood `financial/v3.0/merchants/{id}/sales` | Vendas do dia    | handler `fechamento`                | hub de Credenciais, integração `ifood`        |
-| Banco do Maestro (`gia_relatorios.formas_pagamento`)        | Formas ONLINE VR | handler `fechamento` (`sql`)        | secret `GIA_SERVER_DATABASE_URL` (só leitura) |
+| `api-dw.cocobambu.com` `/Delivery/`                         | Pedidos do dia   | handler `pedidos`                   | hub de Credenciais, integração `apidw`        |
+| Merchant API do iFood `financial/v3.0/merchants/{id}/sales` | Vendas do dia    | handler `vendas`                    | hub de Credenciais, integração `ifood`        |
+| Banco do Maestro (`gia_relatorios.formas_pagamento`)        | Formas ONLINE VR | handler `pedidos` (`sql`)           | secret `GIA_SERVER_DATABASE_URL` (só leitura) |
 | Operações do escopo e Empresa da operação (`locRefs.IFOOD`) | Lojas e merchant | `ctx.operacoes()`, `ctx.empresas()` | —                                             |
 
 ### 5.4 BFF / processamento em segundo plano
 
 Nenhum: uma loja × um dia, síncrono, com o botão Pesquisar em carregamento. O tempo
 é quase todo da API do DW (medido em 09/11/2026: 12 s na loja 54 e 47 s na loja 03,
-444 pedidos); o iFood roda em paralelo, paginado 3 páginas por vez. Fica dentro do
+444 pedidos); o iFood roda em paralelo, até 4 páginas ao mesmo tempo (10 s para as
+9 páginas da loja 03). A tela mostra o andamento por etapa e pode cancelar. Fica dentro do
 timeout do DW (90 s) e não é multi-loja nem export volumoso, então não usa job em
 segundo plano (conventions §15). Excel gerado no navegador.
 
@@ -307,7 +323,7 @@ código não usa, como `× 0,965`) e não foi seguido.
 
 ## 9. Métricas / Telemetria
 
-- Pesquisas por dia e tempo de resposta do handler `fechamento`.
+- Pesquisas por dia e tempo de resposta dos handlers `pedidos` e `vendas`.
 - Quantidade de avisos de iFood por pesquisa (integração ausente, API fora).
 
 ## 10. Riscos e mitigações
@@ -331,7 +347,6 @@ API do DW, Merchant API do iFood, banco do Maestro.
 
 ### Decisões pendentes
 
-- Posição no menu (hoje `navGroup: 'cardapio'`, Plataformas).
 - Vínculo iFood por operação: o SDK só tem um por Empresa. As operações Vasto na
   loja do CB estão numa tabela do módulo (RN-1) até o SDK expor `locRefs` em
   `GiaOperacao`.

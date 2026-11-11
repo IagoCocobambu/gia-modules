@@ -10,7 +10,7 @@ import { defineHandler } from '@gia-cb/sdk/server'
 // CB), que têm o merchant em `OPERACOES_IFOOD_PROPRIO`. `temIfood` diz se ele existe.
 //
 // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. `numeroDaOperacao`,
-// `chaveOperacao` e `OPERACOES_IFOOD_PROPRIO` se repetem em fechamento.ts de propósito.
+// `chaveOperacao` e `OPERACOES_IFOOD_PROPRIO` se repetem em pedidos.ts e vendas.ts de propósito.
 
 interface Loja {
   /** `operacao_ref` — a chave que a pesquisa manda ao servidor. */
@@ -28,7 +28,7 @@ interface Loja {
  * pedido: "iFood" é a operação principal, "iFood Vasto" a do Vasto. O SDK não tem
  * vínculo iFood por operação (só por Empresa, um por Empresa), então o merchant destas
  * fica aqui — PROVISÓRIO até o SDK expor `locRefs` em `GiaOperacao`. Operação nova
- * nessa situação precisa entrar nesta tabela (e na de fechamento.ts).
+ * nessa situação precisa entrar nesta tabela (e nas de pedidos.ts e vendas.ts).
  * Merchants: lista `GET /merchant/v1.0/merchants` da conta iFood da Coco Bambu.
  */
 const OPERACOES_IFOOD_PROPRIO: Record<string, { canal: string; merchant: string }> = {

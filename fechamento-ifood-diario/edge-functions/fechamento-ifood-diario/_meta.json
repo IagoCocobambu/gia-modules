@@ -1,8 +1,9 @@
 {
   "name": "fechamento-ifood-diario",
   "handlers": [
-    "fechamento",
-    "lojas"
+    "lojas",
+    "pedidos",
+    "vendas"
   ],
   "secrets_required": [
     "GIA_SERVER_DATABASE_URL"

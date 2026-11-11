@@ -21,7 +21,7 @@ export interface Pagamento {
   tipo: TipoPagamento
 }
 
-/** Pedido iFood do fechamento (handler `fechamento`) — os campos da grade do legado. */
+/** Pedido iFood do fechamento (montado em `regras.ts` a partir dos handlers `pedidos` e `vendas`) — os campos da grade do legado. */
 export interface PedidoIfood {
   id: string
   n_pedido: string
@@ -53,7 +53,11 @@ export interface PedidoIfood {
   cancelamento_parcial: string
   ifood_reembolsa: 'N/A' | 'SIM' | 'NÃO' | 'VERIFICAR'
   desconto_copart: number
-  venda_concluida: 'OK' | 'Cancelado'
+  /**
+   * OK / Cancelado — e, só enquanto a consulta não terminou, Aguardando: o pedido ainda
+   * não foi achado nas páginas do iFood que já chegaram.
+   */
+  venda_concluida: 'OK' | 'Cancelado' | 'Aguardando'
   tipos: TipoPagamento[]
   pagamentos: Pagamento[]
   total_pago_online: number
@@ -70,6 +74,66 @@ export interface PedidoIfood {
 export interface FechamentoResposta {
   pedidos: PedidoIfood[]
   avisos: string[]
+}
+
+/** Campos que as regras calculam (o resto do pedido vem do DW e do iFood). */
+type CamposCalculados =
+  | 'total_pago'
+  | 'ifood_reembolsa'
+  | 'desconto_copart'
+  | 'venda_concluida'
+  | 'tipos'
+  | 'pagamentos'
+  | 'total_pago_online'
+  | 'total_pago_adquirentes'
+  | 'total_pago_offline'
+  | 'qtd_sem_classificacao'
+  | 'valor_sem_classificacao'
+  | 'formas_sem_classificacao'
+
+/** Pedido do DW no formato do legado, antes do cruzamento e das contas (handler `pedidos`). */
+export type PedidoDw = Omit<PedidoIfood, CamposCalculados>
+
+/** Forma "ONLINE VR" do cadastro de formas de pagamento. */
+export interface FormaOnlineVr {
+  /** Trecho em maiúsculas procurado dentro da forma de pagamento. */
+  descricao: string
+  /** Chave da origem (normalizada); vazia = vale para todas. */
+  origem: string
+}
+
+/** Handler `pedidos`. */
+export interface RespostaPedidos {
+  pedidos: PedidoDw[]
+  formasVr: FormaOnlineVr[]
+  /** Operação com canal próprio (Vasto na loja do CB). */
+  canalProprio: boolean
+  /** Nome do restaurante da operação no iFood. */
+  restaurante: string | null
+}
+
+/** Venda do iFood já reduzida ao que o cruzamento usa (handler `vendas`). */
+export interface VendaIfood {
+  shortId: string
+  idLoja: string | null
+  totalParceiro: number
+  confirmado: 'SIM' | 'NÃO'
+  tipoPedido: string
+  canal: string
+  dataCancelamento: string
+  origemCancelamento: string
+  motivoCancelamento: string
+  cancelamentoContestavel: string
+  motivoImpossibilidade: string
+  dataLimiteContestacao: string
+  cancelamentoParcial: 'SIM' | 'NÃO'
+}
+
+/** Handler `vendas` (uma página). */
+export interface RespostaVendas {
+  vendas: VendaIfood[]
+  totalPaginas: number
+  aviso: string | null
 }
 
 /** Pesquisa feita (foto do clique em Pesquisar). */

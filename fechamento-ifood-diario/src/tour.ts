@@ -16,7 +16,7 @@ export const tour = defineTour({
       screen: '/fechamento-ifood-diario',
       target: '[data-tour="fechamento-ifood-diario-pesquisar"]',
       title: 'Pesquisar',
-      body: 'Busca os pedidos do dia no DW, cruza com as vendas da API financeira do iFood e classifica as formas de pagamento. No celular, a barra se recolhe depois da pesquisa; a seta do cabeçalho reabre.',
+      body: 'Busca os pedidos do dia e as vendas do iFood ao mesmo tempo. O **andamento** aparece numa faixa acima da tabela (com **Cancelar**), e os pedidos entram na tabela conforme chegam — os que ainda esperam o iFood ficam apagados, com o selo *Aguardando iFood*. Em loja grande pode levar até 1 minuto. No celular, a barra se recolhe depois da pesquisa; a seta do cabeçalho reabre.',
       placement: 'bottom',
     },
     {
@@ -24,7 +24,7 @@ export const tour = defineTour({
       screen: '/fechamento-ifood-diario',
       target: '[data-tour="fechamento-ifood-diario-totais"]',
       title: 'Cards do dia',
-      body: 'Mostra e esconde os **cards** do fechamento: iFood online, iFood adquirentes, descontos da loja e do iFood, desconto copart e o que ficou sem classificação. **Clique num card para filtrar a tabela** pelos pedidos que entram nele.',
+      body: 'Mostra e esconde os **cards** do fechamento. À vista ficam iFood online, iFood adquirentes, desconto copart e pagamentos sem classificação; os descontos e o valor sem classificação ficam em **Ver todos os totais**. **Clique num card para filtrar a tabela** pelos pedidos que entram nele. Os valores saem quando a consulta termina.',
       placement: 'bottom',
     },
     {

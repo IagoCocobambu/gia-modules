@@ -18,6 +18,29 @@ export const faq: ModuleFaq = {
 2. Escolha o **Dia**. Ele já vem com *ontem* selecionado e não aceita datas futuras.
 3. Clique em **Pesquisar**.
 
+## Enquanto a pesquisa roda
+
+Durante a busca, uma **faixa acima da tabela** mostra o andamento das duas etapas,
+com a barra das páginas do iFood e o botão **Cancelar**:
+
+- **Vendas no iFood** — as vendas do dia vêm do iFood em páginas de 20, várias ao
+  mesmo tempo; a faixa mostra quantas páginas já chegaram e quantas vendas;
+- **Pedidos do delivery** — os pedidos da loja no dia vêm de uma vez só. Em loja
+  grande é a parte mais demorada: pode levar até 1 minuto.
+
+Até os **pedidos do delivery** chegarem, a tabela fica carregando. Assim que eles
+chegam, a **tabela já aparece**, mesmo com vendas do iFood ainda chegando:
+
+- o pedido que ainda não foi achado nas vendas do iFood fica **apagado**, com
+  **Cancelamento = Aguardando iFood** — ele ainda não é OK nem Cancelado;
+- a cada página do iFood que chega, os pedidos achados viram **OK** ou **Cancelado**;
+- os **valores do dia** (os cards), o filtro pelos cards e o **Exportar** ficam
+  esperando: só aparecem com as duas etapas completas, para nenhum número parcial
+  ser tomado pelo fechamento do dia.
+
+Dá para continuar usando o portal enquanto isso. **Cancelar** interrompe a pesquisa
+e volta a tela para o começo.
+
 Depois de pesquisar, a tela mostra, de cima para baixo:
 
 - **avisos** sobre a parte do iFood, quando há algum (em amarelo);
@@ -88,6 +111,15 @@ mapeadas**. Sem nenhuma, ele mostra **0** em verde.
 O botão **Totais**, na barra da tabela, mostra e esconde os cards. Eles nascem
 abertos no computador com tela de 700 px de altura ou mais e fechados nas telas
 mais baixas e no celular, para sobrar espaço para a tabela.
+
+Na barra ficam **sempre à vista 4 cards**: **iFood online**, **iFood adquirentes**,
+**desconto copart** e **pagamentos sem classificação** (o que deveria ser zero). Os
+outros 5 — **descontos offline e VR**, **descontos loja — online**, **descontos loja
+— offline**, **descontos loja — VR** e **valor sem classificação** — abrem logo
+abaixo pelo botão **Ver todos os totais (+5)**; aberto, ele vira **Ocultar os demais
+totais**. Se um desses cards escondidos estiver filtrando a tabela, a parte de baixo
+abre sozinha e só fecha quando o filtro sai. A conta de cada card está na tabela
+acima.
 `,
     },
     {
@@ -101,7 +133,7 @@ mais baixas e no celular, para sobrar espaço para a tabela.
 | **Total do pedido** | Taxa de entrega + Valor dos itens − Incentivo promocional da loja |
 | **Desconto copart** | Incentivo promocional do iFood − Taxa de serviço |
 | **iFood reembolsa?** | incentivo da loja **0** → N/A; **12** → SIM; até **10** → NÃO; outro valor → VERIFICAR |
-| **Cancelamento** | **OK** quando o iFood diz que o pedido foi **concluído** (CONCLUDED) e não há origem de cancelamento; senão **Cancelado** |
+| **Cancelamento** | **OK** quando o iFood diz que o pedido foi **concluído** (CONCLUDED) e não há origem de cancelamento; senão **Cancelado**. Durante a pesquisa, **Aguardando iFood** enquanto o pedido não foi achado nas vendas que já chegaram |
 | **Status** | o tipo de cada forma de pagamento do pedido (ONLINE, ONLINE VR, OFFLINE), separados por "; " |
 | **Data** | o dia pesquisado |
 
@@ -237,6 +269,10 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
         {
           q: 'Posso ver mais de um dia de uma vez?',
           a: 'Não: o fechamento é de um dia por vez. Pesquise cada dia.',
+        },
+        {
+          q: 'Por que a pesquisa demora em algumas lojas?',
+          a: 'O tempo é quase todo da etapa Pedidos do delivery, que traz todos os pedidos da loja no dia de uma vez — numa loja grande, até 1 minuto. As vendas do iFood vêm em paralelo, várias páginas ao mesmo tempo, e costumam terminar antes. O andamento de cada etapa aparece na faixa acima da tabela; se precisar, use Cancelar.',
         },
         {
           q: 'Os cards não mudaram quando filtrei a tabela. Está certo?',

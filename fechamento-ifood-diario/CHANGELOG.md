@@ -1,5 +1,31 @@
 # Changelog — Fechamento iFood Diário
 
+## 0.2.0 — 11/11/2026
+
+Desempenho e padrões de tela do workspace. Regras de cálculo sem mudança (conferido
+com o legado: 0 diferenças em 01, 54, 08 cb e 08 vst).
+
+- Consulta em partes com **progresso por etapa** (Vendas no iFood, Pedidos do
+  delivery) numa faixa acima da tabela, com **Cancelar**, como no Fechamento iFood
+  Mensal (padrão 9 do `AGENTS.md`): páginas do iFood 4 ao mesmo tempo, com nova
+  tentativa. Handler `fechamento` dividido em `pedidos` e `vendas`; regras em
+  `src/regras.ts`, sem mudança.
+- A tabela **vai populando**: aparece assim que os pedidos do delivery chegam e é
+  cruzada a cada página do iFood; o pedido ainda não achado fica **Aguardando iFood**.
+  Os cards, o filtro pelos cards e o Excel só no fim. Página do iFood que trava desiste
+  em 20 s (era 60 s).
+- Página "leve" do iFood (vendas sem pagamentos, intermitente) pedida de novo: Total do
+  parceiro e Data limite de contestação não saem mais vazios por isso.
+- Barra de totais no padrão 3: os 4 principais à vista (iFood online, iFood
+  adquirentes, desconto copart, pagamentos sem classificação) e os outros 5 em
+  **Ver todos os totais**; card escondido que filtra abre a parte de baixo sozinho.
+- Barra de filtros enxuta (uma linha) depois da pesquisa, fora do celular (padrão 8).
+- Menu: **Plataformas › iFood › Fechamento iFood Diário** (`navGroup: 'ifood'`; era
+  `cardapio`).
+- Tour atualizado (faixa de andamento, Aguardando iFood, Ver todos os totais);
+  descrição do módulo sem menção ao sistema antigo.
+- A consulta é abandonada ao sair da tela, e o andamento é limpo depois de um erro.
+
 ## 0.1.0 — 09/11/2026
 
 Primeira versão. Porte da tela **Fechamento iFood Diário** do GIA legado.

@@ -1,7 +1,7 @@
 {
   "name": "@modules/fechamento-ifood-diario",
-  "version": "0.1.0",
-  "description": "Fechamento diário dos pedidos iFood de uma loja: cruza os pedidos do DW com a API financeira do iFood, classifica as formas de pagamento (Online, Adquirentes/VR, Offline) e soma os cards do fechamento. Substitui a tela Fechamento iFood Diário do GIA antigo.",
+  "version": "0.2.0",
+  "description": "Fechamento diário dos pedidos iFood de uma loja: cruza os pedidos do DW com a API financeira do iFood, classifica as formas de pagamento (Online, Adquirentes/VR, Offline) e soma os cards do fechamento.",
   "private": true,
   "type": "module",
   "author": "Iago Pereira <iago.pereira@cocobambu.com>",

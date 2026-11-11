@@ -777,120 +777,111 @@ const __giaHandlers: Record<string, ServerHandler<unknown, unknown>> = {}
 const __giaPublicHandlers: Record<string, PublicServerHandler> = {}
 const __giaPublicRotas: { handler: string; segmentos: string[]; methods: string[] }[] = []
 
-// ─── src/server/fechamento.ts ───────────────────────────────────────────
-__giaHandlers["fechamento"] = (() => {
+// ─── src/server/lojas.ts ────────────────────────────────────────────────
+__giaHandlers["lojas"] = (() => {
 
-  // Fechamento iFood de UMA loja num dia — a `BuscarFechamento` do legado
-  // (`model.ifood.fechamentoDiario.pas`) mais as contas do `App.tsx` do front antigo:
+  // Lojas do seletor: TODAS as operações do escopo do usuário (`ctx.operacoes()`).
+  // Exceção combinada para este módulo — os demais buscam por Empresa. Uma Empresa
+  // pode ter mais de uma operação (ex.: `08 cb` e `08 vst` em Teresina).
   //
-  // 1. pedidos de delivery da loja no dia, da API do DW (`/Delivery/`);
-  // 2. vendas do dia na API financeira do iFood (`financial/v3.0/merchants/{id}/sales`),
-  //    paginadas; o merchant vem da Empresa dona da operação (`locRefs.IFOOD`);
-  // 3. cruza as duas pelo `n_parceiro` do DW = `shortId` do iFood (`MergeIfoodData`);
-  // 4. classifica cada forma de pagamento (ONLINE / ONLINE VR / OFFLINE) com o cadastro
-  //    `gia_relatorios.formas_pagamento` do Maestro — só leitura;
-  // 5. calcula as colunas do legado (Total, Desconto copart, iFood reembolsa?, Cancelamento)
-  //    e devolve só os pedidos do canal iFood (a tela do legado só mostra esses).
+  // O número da loja (`loc_ref` da API de delivery do DW) sai do começo do
+  // `operacao_ref` ("54 cb" → "54"). O merchant do iFood vem da Empresa dona da
+  // operação (`locRefs.IFOOD`), menos nas operações com canal próprio (Vasto na loja do
+  // CB), que têm o merchant em `OPERACOES_IFOOD_PROPRIO`. `temIfood` diz se ele existe.
   //
-  // A loja chega como `operacaoRef` (exceção deste módulo: a busca é por OPERAÇÃO, não
-  // por Empresa), validado com `requireOperacao`. O `loc_ref` do DW é o número do
-  // `operacao_ref` e o merchant vem da Empresa da operação — o body não escolhe nenhum.
+  // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. `numeroDaOperacao`,
+  // `chaveOperacao` e `OPERACOES_IFOOD_PROPRIO` se repetem em pedidos.ts e vendas.ts de propósito.
+
+  interface Loja {
+    /** `operacao_ref` — a chave que a pesquisa manda ao servidor. */
+    ref: string
+    nome: string
+    empresaId: number
+    locRef: string | null
+    temIfood: boolean
+    ativo: boolean
+  }
+
+  /**
+   * Operações que dividem o número de loja com outra e têm canal e merchant próprios no
+   * iFood. O DW devolve as duas juntas no mesmo `loc_ref` e as separa pela `origem` do
+   * pedido: "iFood" é a operação principal, "iFood Vasto" a do Vasto. O SDK não tem
+   * vínculo iFood por operação (só por Empresa, um por Empresa), então o merchant destas
+   * fica aqui — PROVISÓRIO até o SDK expor `locRefs` em `GiaOperacao`. Operação nova
+   * nessa situação precisa entrar nesta tabela (e nas de pedidos.ts e vendas.ts).
+   * Merchants: lista `GET /merchant/v1.0/merchants` da conta iFood da Coco Bambu.
+   */
+  const OPERACOES_IFOOD_PROPRIO: Record<string, { canal: string; merchant: string }> = {
+    '08 vst': { canal: 'iFood Vasto', merchant: '60a90e35-3568-4ecd-a4b5-8261e5a19c08' }, // Vasto Teresina
+    '17 vst': { canal: 'iFood Vasto', merchant: 'aa5dcb37-dfaf-4442-b5dc-ef69637f73ad' }, // Vasto Recife
+    '25 vst': { canal: 'iFood Vasto', merchant: '591659a8-f40b-4b65-bca7-0999638782ee' }, // Vasto Restaurante - Bh Anchieta
+    '69 vst': { canal: 'iFood Vasto', merchant: '6293b97f-48d6-4325-8d47-d43e970760b0' }, // Vasto São José dos Campos
+    '86 vst': { canal: 'iFood Vasto', merchant: 'c5671839-c503-4032-80cb-e5c4ebb58ac9' }, // Vasto - Barra da Tijuca
+  }
+
+  /** `operacao_ref` normalizado para a tabela ("08  VST" → "08 vst"). */
+  function chaveOperacao(ref: string): string {
+    return ref.trim().toLowerCase().replace(/\s+/g, ' ')
+  }
+
+  /** Número da loja com 2 dígitos — o `loc_ref` da API do DW ("54 cb" → "54"). */
+  function numeroDaOperacao(ref: string): string | null {
+    const m = /^\s*(\d{1,4})/.exec(ref)
+    return m ? String(Number(m[1])).padStart(2, '0') : null
+  }
+
+  const __giaHandler = defineHandler<Record<string, never>, Loja[]>(async (ctx) => {
+    await ctx.requirePermission('fechamento-ifood-diario.ler')
+    // ctx.operacoes() já vem recortado pelo escopo do usuário.
+    const [operacoes, empresas] = await Promise.all([ctx.operacoes(), ctx.empresas()])
+    const merchant = new Map(empresas.map((e) => [e.id, e.locRefs?.IFOOD?.trim() || null]))
+    return operacoes
+      .map((o) => ({
+        ref: o.ref,
+        nome: o.nome,
+        empresaId: o.empresaId,
+        locRef: numeroDaOperacao(o.ref),
+        temIfood: Boolean(
+          OPERACOES_IFOOD_PROPRIO[chaveOperacao(o.ref)]?.merchant ?? merchant.get(o.empresaId)
+        ),
+        ativo: o.ativo,
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { numeric: true }))
+  })
+
+
+  return __giaHandler
+})() as ServerHandler<unknown, unknown>
+
+// ─── src/server/pedidos.ts ──────────────────────────────────────────────
+__giaHandlers["pedidos"] = (() => {
+
+  // Pedidos de delivery de UMA operação num dia, da API do DW (`/Delivery/`) — a 1ª
+  // metade da `BuscarFechamento` do legado (`MapApiItemToTransaction`) — e a lista de
+  // formas "ONLINE VR" do cadastro `gia_relatorios.formas_pagamento` do Maestro (só
+  // leitura). O cruzamento com o iFood e as contas são feitos na tela, que busca as
+  // vendas do iFood em paralelo (handler `vendas`) e mostra o progresso.
   //
-  // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. `numeroDaOperacao` e
-  // `normalizarOrigem` se repetem em outros arquivos de propósito.
+  // O DW junta as operações do mesmo número (ex.: `08 cb` e `08 vst`); aqui ficam só os
+  // pedidos do canal da operação — "iFood" na principal, "iFood Vasto" no Vasto — ANTES
+  // do cruzamento, porque o shortId do iFood (4 dígitos) de um restaurante pode coincidir
+  // com o n_parceiro de um pedido do outro.
+  //
+  // A loja chega como `operacaoRef` (exceção deste módulo: busca por OPERAÇÃO), validada
+  // com `requireOperacao`. O `loc_ref` do DW é o número do `operacao_ref`.
+  //
+  // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. Validação de data,
+  // tabela das operações Vasto e `normalizarOrigem` se repetem em `vendas.ts` e em
+  // `src/regras.ts` de propósito.
 
   interface Body {
     operacaoRef: string
     data: string
   }
 
-  type TipoPagamento = 'ONLINE' | 'ONLINE VR' | 'OFFLINE' | 'SEM_CLASSIFICACAO'
-
-  interface Pagamento {
-    /** Texto antes do `(valor)`, como veio da API. */
-    descricao: string
-    /** `null` quando o trecho não traz o valor entre parênteses. */
-    valor: number | null
-    tipo: TipoPagamento
-  }
-
-  interface PedidoIfood {
-    id: string
-    n_pedido: string
-    n_parceiro: string
-    /** Dia pesquisado (`YYYY-MM-DD`) — a coluna DATA do legado. */
-    data_calc: string
-    data_de_criacao: string
-    /** Canal de venda: o `salesChannel` do iFood quando o pedido foi achado lá. */
-    origem: string
-    valor_do_pedido: number
-    valor_da_entrega: number
-    /** TOTAL DO PEDIDO do legado: entrega + itens − incentivo da loja. */
-    total_pago: number
-    /** Total pago que veio do DW (o legado troca pelo calculado). */
-    total_pago_dw: number
-    desconto_total: number
-    forma_de_pagamentos: string
-    nome_loja: string
-    id_loja: string
-    agendado: string
-    incentivo_parceiro: number
-    incentivo_loja: number
-    taxa_extra_parceiro: number
-    // Do iFood (vazios quando o pedido não foi achado na API do iFood)
-    confirmado_por: string
-    total_parceiro: number
-    tipo_pedido: string
-    data_cancelamento: string
-    origem_cancelamento: string
-    motivo_cancelamento: string
-    cancelamento_contestavel: string
-    motivo_impossibilidade: string
-    data_limite_contestacao: string
-    cancelamento_parcial: string
-    // Calculados (regra do legado)
-    ifood_reembolsa: 'N/A' | 'SIM' | 'NÃO' | 'VERIFICAR'
-    /** Incentivo do iFood − taxa de serviço. */
-    desconto_copart: number
-    /** CANCELAMENTO do legado: OK = sem origem de cancelamento e confirmado (CONCLUDED). */
-    venda_concluida: 'OK' | 'Cancelado'
-    /** Tipos das formas de pagamento, sem repetir, na ordem em que aparecem. */
-    tipos: TipoPagamento[]
-    pagamentos: Pagamento[]
-    total_pago_online: number
-    total_pago_adquirentes: number
-    total_pago_offline: number
-    /** Trechos de pagamento sem classificação (vazios ou DESCONHECIDO). */
-    qtd_sem_classificacao: number
-    valor_sem_classificacao: number
-    formas_sem_classificacao: string[]
-    /** O pedido do DW foi achado na API financeira do iFood. */
-    encontrado_no_ifood: boolean
-    /** Restaurante do iFood (merchant) em que o pedido foi achado. */
-    merchant_ifood: string
-  }
-
-  interface Resposta {
-    pedidos: PedidoIfood[]
-    /** Avisos sobre a parte do iFood (cadastro, credencial, resposta da API). */
-    avisos: string[]
-  }
-
-  /** Id da integração da api-dw.cocobambu.com no hub de Credenciais. */
-  const INTEGRACAO_DW = 'apidw'
-  /** Id da integração da Merchant API do iFood no hub de Credenciais. */
-  const INTEGRACAO_IFOOD = 'ifood'
   /** Mesmo teto do Fechamento Maestro (90 s); acima disso a borda da API do DW devolve 524. */
   const TIMEOUT_DW_MS = 90_000
-  const TIMEOUT_IFOOD_MS = 60_000
-  /** Proteção contra laço: um dia de uma loja nunca chega perto disto. */
-  const MAX_PAGINAS_IFOOD = 200
   const DATA_RE = /^\d{4}-\d{2}-\d{2}$/
-
-  /** Sufixo que a API põe nas formas pagas antes, no app ou no parceiro. */
-  const PRE_PAGO = /\s*-\s*PRE\s+PAGO\s*$/i
-  /** Cartão mascarado (`**** 1234 - Amex` → `Amex`) — a `trimPaymentDescription` do legado. */
-  const CARTAO_MASCARADO = /\*\*\*\*\s\d{4}\s-\s/
 
   /** Hoje em São Paulo, `AAAA-MM-DD`. */
   function hojeSp(): string {
@@ -981,11 +972,6 @@ __giaHandlers["fechamento"] = (() => {
     return false
   }
 
-  /** Soma em centavos e devolve em reais — sem acumular erro de ponto flutuante. */
-  function somar(valores: number[]): number {
-    return valores.reduce((acc, v) => acc + Math.round(v * 100), 0) / 100
-  }
-
   /**
    * Chave da origem — a `normalizeOrigemKey` do legado: minúsculas, espaços viram `_`,
    * `APP CB` = `App Coco Bambu`, `99 Food` = `99Food`.
@@ -1003,30 +989,6 @@ __giaHandlers["fechamento"] = (() => {
     descricao: string
     /** Chave da origem (`normalizarOrigem`); vazia = vale para todas. */
     origem: string
-  }
-
-  /**
-   * Tipo de um trecho de pagamento — a `classifyPaymentSegment` do legado, nesta ordem:
-   * 1. vazio ou `DESCONHECIDO` → SEM_CLASSIFICACAO;
-   * 2. contém (sem o " - PRE PAGO") uma forma "ONLINE VR" do cadastro, da mesma origem
-   *    do pedido ou sem origem → ONLINE VR;
-   * 3. termina em " - PRE PAGO" → ONLINE;
-   * 4. qualquer outro → OFFLINE.
-   */
-  function classificar(
-    descricao: string,
-    origemPedido: string,
-    formasVr: FormaOnlineVr[]
-  ): TipoPagamento {
-    const bruto = descricao.trim()
-    const semCartao = bruto.replace(CARTAO_MASCARADO, '').trim().toUpperCase()
-    if (semCartao === '' || semCartao === 'DESCONHECIDO') return 'SEM_CLASSIFICACAO'
-    const semPrePago = semCartao.replace(PRE_PAGO, '').trim()
-    const vr = formasVr.some(
-      (f) => (f.origem === '' || f.origem === origemPedido) && semPrePago.includes(f.descricao)
-    )
-    if (vr) return 'ONLINE VR'
-    return PRE_PAGO.test(bruto) ? 'ONLINE' : 'OFFLINE'
   }
 
   /** Formas "ONLINE VR" ativas do cadastro, da descrição mais longa para a mais curta. */
@@ -1097,44 +1059,338 @@ __giaHandlers["fechamento"] = (() => {
 
   type PedidoDw = ReturnType<typeof doDw>
 
+  /** Restaurante do iFood (merchant) da operação, como nas vendas. */
+  interface MerchantDaConta {
+    id: string
+    name: string
+    corporateName: string
+  }
+
+  /** Restaurantes da conta do iFood — mudam pouco: guardados 30 min por instância. */
+  let cacheMerchants: { em: number; lista: MerchantDaConta[] } | null = null
+  const CACHE_MERCHANTS_MS = 30 * 60_000
+
+  async function merchantsDaConta(base: string, token: string): Promise<MerchantDaConta[]> {
+    if (cacheMerchants && Date.now() - cacheMerchants.em < CACHE_MERCHANTS_MS) {
+      return cacheMerchants.lista
+    }
+    const todos: MerchantDaConta[] = []
+    for (let pagina = 1; pagina <= 20; pagina++) {
+      const r = await fetch(`${base}/merchant/v1.0/merchants?page=${pagina}&size=100`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        signal: AbortSignal.timeout(30_000),
+      })
+      if (r.status === 204) break
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      const itens = lista(await r.json())
+      for (const i of itens) {
+        const m = obj(i)
+        const id = m && texto(m.id)
+        if (m && id) {
+          todos.push({ id, name: texto(m.name) ?? id, corporateName: texto(m.corporateName) ?? '' })
+        }
+      }
+      if (itens.length < 100) break
+    }
+    cacheMerchants = { em: Date.now(), lista: todos }
+    return todos
+  }
+
+  /**
+   * Nome do restaurante no iFood, para a coluna "Restaurante no iFood". Só informativo:
+   * se a lista da conta falhar, vai um nome genérico, sem aviso. Fica aqui (e não nas
+   * vendas) porque a chamada ao DW é mais lenta: o nome sai sem atrasar o progresso.
+   */
+  async function nomeDoRestaurante(base: string, token: string, id: string): Promise<string> {
+    try {
+      return (await merchantsDaConta(base, token)).find((m) => m.id === id)?.name ?? 'iFood'
+    } catch (e) {
+      console.error('[fechamento-ifood-diario] lista de restaurantes do iFood:', e)
+      return 'iFood'
+    }
+  }
+
+  interface Resposta {
+    /** Pedidos do canal da operação, no formato do legado, antes do cruzamento. */
+    pedidos: PedidoDw[]
+    /** Formas "ONLINE VR" do cadastro, da descrição mais longa para a mais curta. */
+    formasVr: FormaOnlineVr[]
+    /** Operação com canal próprio (Vasto na loja do CB): não filtra o canal do iFood. */
+    canalProprio: boolean
+    /** Nome do restaurante da operação no iFood; `null` sem integração ou sem a lista. */
+    restaurante: string | null
+  }
+
+  /** Mensagem que a API devolve no corpo de um erro, se houver. */
+  async function detalheDoErro(r: Response): Promise<string> {
+    try {
+      const corpo = (await r.json()) as { detail?: unknown; message?: unknown }
+      const msg = corpo.detail ?? corpo.message
+      return typeof msg === 'string' ? ` ${msg}` : ''
+    } catch {
+      return ''
+    }
+  }
+
+  function ehTimeout(e: unknown): boolean {
+    return e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')
+  }
+
+  const __giaHandler = defineHandler<Body, Resposta>(async (ctx) => {
+    await ctx.requirePermission('fechamento-ifood-diario.ler')
+    const ref = typeof ctx.body.operacaoRef === 'string' ? ctx.body.operacaoRef.trim() : ''
+    if (!ref) throw new HttpError(422, 'Informe a loja.')
+    // 403 se a operação está fora do escopo do usuário.
+    const operacao = await ctx.requireOperacao(ref)
+    const data = validarData(ctx.body.data)
+
+    const locRef = numeroDaOperacao(operacao.ref)
+    if (!locRef) {
+      throw new HttpError(
+        422,
+        `A operação "${operacao.nome}" não tem número de loja no código (${operacao.ref}).`
+      )
+    }
+    const propria = OPERACOES_IFOOD_PROPRIO[chaveOperacao(operacao.ref)]
+    const canal = normalizarOrigem(propria?.canal ?? 'iFood')
+
+    // O cadastro e o nome do restaurante carregam enquanto a API do DW (bem mais lenta)
+    // responde. O restaurante é o da tabela (Vasto na loja do CB) ou o da Empresa.
+    const formasVrPromise = carregarFormasOnlineVr()
+    const restaurantePromise = (async (): Promise<string | null> => {
+      const empresa = propria
+        ? undefined
+        : (await ctx.empresas()).find((e) => e.id === operacao.empresaId)
+      const merchantId = propria?.merchant ?? (empresa?.locRefs?.IFOOD?.trim() || null)
+      if (!merchantId) return null
+      try {
+        const cred = await ctx.credencial('ifood')
+        return await nomeDoRestaurante(cred.baseUrl.replace(/\/+$/, ''), cred.token, merchantId)
+      } catch {
+        return null
+      }
+    })()
+    // Sem isto, um erro do banco antes da API terminar viraria "unhandled rejection".
+    formasVrPromise.catch(() => {})
+
+    const { baseUrl, token } = await ctx.credencial('apidw')
+    const qs = new URLSearchParams({ loc_ref: locRef, start_date: data, end_date: data })
+    let r: Response
+    try {
+      r = await fetch(`${baseUrl.replace(/\/+$/, '')}/Delivery/?${qs}`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        signal: AbortSignal.timeout(TIMEOUT_DW_MS),
+      })
+    } catch (e) {
+      if (ehTimeout(e)) {
+        throw new HttpError(504, 'A API de delivery do DW demorou demais para responder.')
+      }
+      throw e
+    }
+    if (!r.ok) {
+      throw new HttpError(
+        502,
+        `A API de delivery do DW respondeu ${r.status}.${await detalheDoErro(r)}`
+      )
+    }
+    const json = (await r.json()) as unknown
+    // Como no legado: lista na raiz, ou em `results`, `data` ou `orders`.
+    const raiz = obj(json)
+    const linhas = Array.isArray(json)
+      ? json
+      : (raiz && [raiz.results, raiz.data, raiz.orders].find(Array.isArray)) || null
+    // 200 sem a lista é falha, não "zero pedidos".
+    if (!linhas) throw new HttpError(502, 'A API de delivery do DW devolveu um formato inesperado.')
+
+    const pedidos = (linhas as unknown[])
+      .map(obj)
+      .filter((l): l is Json => l !== null)
+      .filter((l) => normalizarOrigem(texto(l.origem) ?? texto(l.channel) ?? 'iFood') === canal)
+      .map((l) => doDw(l, `Loja ${locRef}`, data))
+
+    const [formasVr, restaurante] = await Promise.all([formasVrPromise, restaurantePromise])
+    return { pedidos, formasVr, canalProprio: propria !== undefined, restaurante }
+  })
+
+
+  return __giaHandler
+})() as ServerHandler<unknown, unknown>
+
+// ─── src/server/vendas.ts ───────────────────────────────────────────────
+__giaHandlers["vendas"] = (() => {
+
+  // UMA página (20 vendas, fixo) das vendas do dia do restaurante da operação na API
+  // financeira do iFood (`financial/v3.0/merchants/{id}/sales`) — a `BuscarVendasIfood`
+  // do legado, quebrada em páginas para a tela buscar várias ao mesmo tempo (até 4, como
+  // o Fechamento iFood Mensal) e mostrar o progresso. Cada venda volta só com os campos
+  // que o cruzamento usa (a `MergeIfoodData` do legado), já extraídos.
+  //
+  // O restaurante é o da Empresa dona da operação (`locRefs.IFOOD`), menos nas operações
+  // com canal próprio (Vasto na loja do CB), que estão na tabela abaixo. Falha do iFood
+  // não derruba o fechamento (como no legado): o que é definitivo (sem integração,
+  // credencial, 401/403) volta como `aviso`; o que é passageiro (5xx, demora) volta como
+  // erro, e a tela tenta de novo.
+  //
+  // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server.
+
+  interface Body {
+    operacaoRef: string
+    data: string
+    pagina: number
+  }
+
+  /**
+   * Uma página leva 0,4–4 s; acima de 20 s é conexão travada (visto em dev: ETIMEDOUT ao
+   * conectar no iFood, ~47 s até desistir). Melhor desistir cedo: a tela tenta de novo.
+   */
+  const TIMEOUT_IFOOD_MS = 20_000
+  /** Proteção contra laço: um dia de uma loja nunca chega perto disto. */
+  const MAX_PAGINAS_IFOOD = 200
+  const DATA_RE = /^\d{4}-\d{2}-\d{2}$/
+
+  /** Hoje em São Paulo, `AAAA-MM-DD`. */
+  function hojeSp(): string {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date())
+  }
+
+  function validarData(data: unknown): string {
+    if (typeof data !== 'string' || !DATA_RE.test(data)) {
+      throw new HttpError(422, 'Informe a data no formato AAAA-MM-DD.')
+    }
+    // Date.parse aceita "2026-02-30" (vira 02/03); a volta para texto tem que bater.
+    const t = Date.parse(`${data}T00:00:00Z`)
+    if (Number.isNaN(t) || new Date(t).toISOString().slice(0, 10) !== data) {
+      throw new HttpError(422, 'Data inválida.')
+    }
+    if (data > hojeSp()) throw new HttpError(422, 'A data não pode ser futura.')
+    return data
+  }
+
+  /**
+   * Operações que dividem o número de loja com outra e têm canal e merchant próprios no
+   * iFood. O DW devolve as duas juntas no mesmo `loc_ref` e as separa pela `origem` do
+   * pedido: "iFood" é a operação principal, "iFood Vasto" a do Vasto. O SDK não tem
+   * vínculo iFood por operação (só por Empresa, um por Empresa), então o merchant destas
+   * fica aqui — PROVISÓRIO até o SDK expor `locRefs` em `GiaOperacao`. Operação nova
+   * nessa situação precisa entrar nesta tabela (e na de lojas.ts).
+   * Merchants: lista `GET /merchant/v1.0/merchants` da conta iFood da Coco Bambu.
+   */
+  const OPERACOES_IFOOD_PROPRIO: Record<string, { canal: string; merchant: string }> = {
+    '08 vst': { canal: 'iFood Vasto', merchant: '60a90e35-3568-4ecd-a4b5-8261e5a19c08' }, // Vasto Teresina
+    '17 vst': { canal: 'iFood Vasto', merchant: 'aa5dcb37-dfaf-4442-b5dc-ef69637f73ad' }, // Vasto Recife
+    '25 vst': { canal: 'iFood Vasto', merchant: '591659a8-f40b-4b65-bca7-0999638782ee' }, // Vasto Restaurante - Bh Anchieta
+    '69 vst': { canal: 'iFood Vasto', merchant: '6293b97f-48d6-4325-8d47-d43e970760b0' }, // Vasto São José dos Campos
+    '86 vst': { canal: 'iFood Vasto', merchant: 'c5671839-c503-4032-80cb-e5c4ebb58ac9' }, // Vasto - Barra da Tijuca
+  }
+
+  /** `operacao_ref` normalizado para a tabela ("08  VST" → "08 vst"). */
+  function chaveOperacao(ref: string): string {
+    return ref.trim().toLowerCase().replace(/\s+/g, ' ')
+  }
+
+  type Json = Record<string, unknown>
+
+  function obj(v: unknown): Json | null {
+    return v && typeof v === 'object' && !Array.isArray(v) ? (v as Json) : null
+  }
+
+  function lista(v: unknown): unknown[] {
+    return Array.isArray(v) ? v : []
+  }
+
+  /**
+   * Texto de um campo — a `GetJsonStr` do legado: número vira inteiro em texto
+   * (`n_pedido`/`shortId` vêm como número), `null`/ausente/outro tipo = `null`.
+   */
+  function texto(v: unknown): string | null {
+    if (typeof v === 'string') return v
+    if (typeof v === 'number' && Number.isFinite(v)) return String(Math.trunc(v))
+    return null
+  }
+
+  /** Número de um campo — a `GetJsonNum` do legado: `null`/ausente/inválido = `null`. */
+  function numero(v: unknown): number | null {
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null
+    if (typeof v === 'string' && v.trim() !== '') {
+      const n = Number(v)
+      return Number.isFinite(n) ? n : null
+    }
+    return null
+  }
+
+  /** Soma em centavos e devolve em reais — sem acumular erro de ponto flutuante. */
+  function somar(valores: number[]): number {
+    return valores.reduce((acc, v) => acc + Math.round(v * 100), 0) / 100
+  }
+
   /** `true`/`false` do iFood como SIM/NÃO; texto como veio. */
   function simNao(v: unknown): string {
     if (typeof v === 'boolean') return v ? 'SIM' : 'NÃO'
     return texto(v) ?? ''
   }
 
-  /** Campos que a venda do iFood traz para o pedido — a `MergeIfoodData` do legado. */
-  function cruzar(p: PedidoDw, venda: Json): void {
-    p.encontrado_no_ifood = true
+  /** O que a venda do iFood traz para o pedido do DW — a `MergeIfoodData` do legado. */
+  interface VendaIfood {
+    shortId: string
+    /** `merchant.shortId` (vira o ID DO RESTAURANTE); `null` sem merchant na venda. */
+    idLoja: string | null
+    totalParceiro: number
+    confirmado: 'SIM' | 'NÃO'
+    tipoPedido: string
+    canal: string
+    dataCancelamento: string
+    origemCancelamento: string
+    motivoCancelamento: string
+    cancelamentoContestavel: string
+    motivoImpossibilidade: string
+    dataLimiteContestacao: string
+    cancelamentoParcial: 'SIM' | 'NÃO'
+  }
 
+  /** Extrai da venda os campos do cruzamento, com as mesmas regras da `MergeIfoodData`. */
+  function extrair(venda: Json): VendaIfood | null {
+    const shortId = texto(venda.shortId)
+    if (!shortId) return null
     const merchant = obj(venda.merchant)
-    if (merchant) p.id_loja = String(Math.trunc(numero(merchant.shortId) ?? 0))
-
-    const metodos = lista(obj(venda.payments)?.methods)
-    p.total_parceiro = somar(metodos.map((m) => numero(obj(m)?.value) ?? 0))
-
     const status = texto(venda.currentStatus) ?? ''
-    p.confirmado_por = status === 'CONCLUDED' ? 'SIM' : 'NÃO'
-    p.tipo_pedido = texto(venda.type) ?? ''
-    p.origem = texto(venda.salesChannel) ?? ''
-
-    let parcial = false
+    const v: VendaIfood = {
+      shortId,
+      idLoja: merchant ? String(Math.trunc(numero(merchant.shortId) ?? 0)) : null,
+      totalParceiro: somar(
+        lista(obj(venda.payments)?.methods).map((m) => numero(obj(m)?.value) ?? 0)
+      ),
+      confirmado: status === 'CONCLUDED' ? 'SIM' : 'NÃO',
+      tipoPedido: texto(venda.type) ?? '',
+      canal: texto(venda.salesChannel) ?? '',
+      dataCancelamento: '',
+      origemCancelamento: '',
+      motivoCancelamento: '',
+      cancelamentoContestavel: '',
+      motivoImpossibilidade: '',
+      dataLimiteContestacao: '',
+      cancelamentoParcial: 'NÃO',
+    }
     for (const item of lista(venda.orderStatusHistory)) {
       const h = obj(item)
       if (!h) continue
       const valor = texto(h.value)
-      if (valor === 'PARTIAL_CANCELLATION_ORDER') parcial = true
+      if (valor === 'PARTIAL_CANCELLATION_ORDER') v.cancelamentoParcial = 'SIM'
       if (status === 'CANCELLED' && valor === 'CANCELLED') {
-        p.data_cancelamento = texto(h.createdAt) ?? ''
+        v.dataCancelamento = texto(h.createdAt) ?? ''
         const meta = obj(h.metadata)
         if (meta) {
-          p.origem_cancelamento = texto(meta.cancelOrigin) ?? ''
-          p.motivo_cancelamento = texto(meta.cancelCodeDescription) ?? ''
+          v.origemCancelamento = texto(meta.cancelOrigin) ?? ''
+          v.motivoCancelamento = texto(meta.cancelCodeDescription) ?? ''
           const disputa = obj(meta.cancellationDispute)
           if (disputa) {
-            p.cancelamento_contestavel = simNao(disputa.isContestable)
+            v.cancelamentoContestavel = simNao(disputa.isContestable)
             if (Array.isArray(disputa.reasons)) {
-              p.motivo_impossibilidade = disputa.reasons
+              v.motivoImpossibilidade = disputa.reasons
                 .map((r) => (typeof r === 'string' ? r : JSON.stringify(r)))
                 .join(', ')
             }
@@ -1142,76 +1398,15 @@ __giaHandlers["fechamento"] = (() => {
         }
       }
     }
-    p.cancelamento_parcial = parcial ? 'SIM' : 'NÃO'
-
     // Data limite de contestação: 1º lançamento do evento financeiro FBOE.
     for (const item of lista(venda.orderEvents)) {
       const ev = obj(item)
       if (texto(ev?.fullCode) !== 'FINANCIAL_BILLED_ORDER_ENTRY') continue
       const entrada = obj(lista(obj(ev?.metadata)?.entries)[0])
-      p.data_limite_contestacao = texto(obj(entrada?.period)?.endDate) ?? ''
+      v.dataLimiteContestacao = texto(obj(entrada?.period)?.endDate) ?? ''
       break
     }
-  }
-
-  /** `forma_de_pagamentos` → trechos, como o legado: separa em toda vírgula ou ponto e vírgula. */
-  function separarPagamentos(bruto: string): { descricao: string; valor: number | null }[] {
-    return bruto
-      .split(/[,;]/)
-      .map((parte) => parte.trim())
-      .filter(Boolean)
-      .map((parte) => {
-        const m = /^(.*?)\s*\(([\d.,]+)\)$/.exec(parte)
-        return m
-          ? { descricao: m[1].trim(), valor: parseFloat(m[2].replace(',', '.')) }
-          : { descricao: parte, valor: null }
-      })
-  }
-
-  /** As contas do `App.tsx` do legado (`enrichedTransactions` + parte do `calculateSummary`). */
-  function calcular(p: PedidoDw, formasVr: FormaOnlineVr[]): PedidoIfood {
-    const origemChave = normalizarOrigem(p.origem)
-    const trechosBrutos = p.forma_de_pagamentos ? p.forma_de_pagamentos.split(/[,;]/).length : 0
-    const pagamentos: Pagamento[] = separarPagamentos(p.forma_de_pagamentos).map((t) => ({
-      ...t,
-      tipo: classificar(t.descricao, origemChave, formasVr),
-    }))
-
-    const total = somar([p.valor_da_entrega, p.valor_do_pedido, -p.incentivo_loja])
-    // Trecho sem "(valor)": vale o total do pedido se for o único, senão zero (legado).
-    // As colunas por grupo usavam o total do DW; o card "sem classificação", o calculado.
-    const valorDe = (pg: Pagamento, totalSemValor: number) =>
-      pg.valor ?? (trechosBrutos === 1 ? totalSemValor : 0)
-    const doTipo = (tipo: TipoPagamento) =>
-      somar(pagamentos.filter((pg) => pg.tipo === tipo).map((pg) => valorDe(pg, p.total_pago_dw)))
-    const semClassificacao = pagamentos.filter((pg) => pg.tipo === 'SEM_CLASSIFICACAO')
-
-    const incLoja = p.incentivo_loja
-    const reembolsa =
-      incLoja === 0 ? 'N/A' : incLoja === 12 ? 'SIM' : incLoja <= 10 ? 'NÃO' : 'VERIFICAR'
-    const ok = p.origem_cancelamento.trim() === '' && p.confirmado_por.trim().toUpperCase() === 'SIM'
-
-    return {
-      ...p,
-      total_pago: total,
-      ifood_reembolsa: reembolsa,
-      desconto_copart: somar([p.incentivo_parceiro, -p.taxa_extra_parceiro]),
-      venda_concluida: ok ? 'OK' : 'Cancelado',
-      tipos: [...new Set(pagamentos.map((pg) => pg.tipo))],
-      pagamentos,
-      total_pago_online: doTipo('ONLINE'),
-      total_pago_adquirentes: doTipo('ONLINE VR'),
-      total_pago_offline: doTipo('OFFLINE'),
-      qtd_sem_classificacao: semClassificacao.length,
-      valor_sem_classificacao: somar(semClassificacao.map((pg) => valorDe(pg, total))),
-      formas_sem_classificacao: [
-        ...new Set(
-          semClassificacao
-            .map((pg) => pg.descricao.replace(CARTAO_MASCARADO, '').trim() || pg.descricao.trim())
-            .filter(Boolean)
-        ),
-      ],
-    }
+    return v
   }
 
   /** Mensagem que a API devolve no corpo de um erro, se houver. */
@@ -1247,18 +1442,6 @@ __giaHandlers["fechamento"] = (() => {
     return e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')
   }
 
-  /** Restaurante do iFood (merchant) consultado. */
-  interface Merchant {
-    id: string
-    nome: string
-  }
-
-  /** Venda do iFood com o restaurante de onde veio. */
-  interface VendaIfood {
-    venda: Json
-    merchant: Merchant
-  }
-
   /** Espera `ms` milissegundos. */
   function esperar(ms: number): Promise<void> {
     return new Promise((ok) => setTimeout(ok, ms))
@@ -1280,136 +1463,34 @@ __giaHandlers["fechamento"] = (() => {
     }
   }
 
-  /**
-   * Uma página de vendas do dia de UM restaurante na API financeira do iFood (20 por
-   * página, fixo). `null` = falhou (aviso registrado); 204 = dia sem vendas.
-   */
-  async function paginaDeVendas(
-    base: string,
-    token: string,
-    merchant: Merchant,
-    data: string,
-    pagina: number,
-    avisos: string[]
-  ): Promise<{ vendas: VendaIfood[]; totalPaginas: number } | null> {
-    const qs = new URLSearchParams({ beginSalesDate: data, endSalesDate: data, page: String(pagina) })
-    const onde = `${merchant.nome}, página ${pagina}`
-    let r: Response
+  interface Resposta {
+    vendas: VendaIfood[]
+    /** Páginas do dia (a página 1 é que diz); 0 = sem vendas ou sem consulta. */
+    totalPaginas: number
+    /** Problema definitivo da parte do iFood (sem integração, credencial, 401/403). */
+    aviso: string | null
+  }
+
+  function lerCorpo(bruto: string): Json | null {
     try {
-      r = await getIfood(
-        `${base}/financial/v3.0/merchants/${encodeURIComponent(merchant.id)}/sales?${qs}`,
-        token
-      )
-    } catch (e) {
-      console.error('[fechamento-ifood-diario] API do iFood:', e)
-      avisos.push(
-        ehTimeout(e)
-          ? `A API do iFood demorou demais para responder (${onde}).`
-          : `Não foi possível falar com a API do iFood (${onde}).`
-      )
-      return null
-    }
-    if (r.status === 204) return { vendas: [], totalPaginas: 0 }
-    if (!r.ok) {
-      avisos.push(
-        recusaIfood(r.status) ??
-          `A API do iFood respondeu ${r.status} (${onde}).${await detalheDoErro(r)}`
-      )
-      return null
-    }
-    const bruto = await r.text()
-    if (!bruto.trim()) return { vendas: [], totalPaginas: 0 }
-    let corpo: Json | null
-    try {
-      corpo = obj(JSON.parse(bruto))
+      return obj(JSON.parse(bruto))
     } catch {
-      corpo = null
-    }
-    if (!corpo) {
-      avisos.push(`A API do iFood devolveu um formato inesperado (${onde}).`)
       return null
     }
-    const vendas: VendaIfood[] = []
-    for (const item of lista(corpo.sales)) {
-      const venda = obj(item)
-      if (venda && texto(venda.shortId)) vendas.push({ venda, merchant })
-    }
-    return { vendas, totalPaginas: Math.max(1, Math.trunc(numero(corpo.pageCount) ?? 1)) }
   }
 
-  /**
-   * Todas as vendas do dia de UM restaurante — a `BuscarVendasIfood` do legado. Falha
-   * não derruba o fechamento (como no legado): volta o que já veio e um aviso.
-   */
-  async function vendasIfood(
-    base: string,
-    token: string,
-    merchant: Merchant,
-    data: string,
-    avisos: string[]
-  ): Promise<VendaIfood[]> {
-    const primeira = await paginaDeVendas(base, token, merchant, data, 1, avisos)
-    if (!primeira) return []
-    const vendas = [...primeira.vendas]
-    // As demais páginas, 3 por vez (a página tem 20 vendas fixas; o limite de
-    // requisições do iFood não aguenta todas de uma vez).
-    const total = Math.min(primeira.totalPaginas, MAX_PAGINAS_IFOOD)
-    for (let pagina = 2; pagina <= total; pagina += 3) {
-      const lote = [pagina, pagina + 1, pagina + 2].filter((n) => n <= total)
-      const pgs = await Promise.all(
-        lote.map((n) => paginaDeVendas(base, token, merchant, data, n, avisos))
-      )
-      for (const pg of pgs) if (pg) vendas.push(...pg.vendas)
-      if (pgs.some((pg) => !pg)) break
-    }
-    return vendas
+  /** Vendas da página que vieram sem os pagamentos (a resposta "leve" do iFood). */
+  function vendasLeves(corpo: Json): number {
+    return lista(corpo.sales)
+      .map(obj)
+      .filter((v) => lista(obj(v?.payments)?.methods).length === 0).length
   }
 
-  interface MerchantDaConta {
-    id: string
-    name: string
-    corporateName: string
-  }
-
-  /** Restaurantes da conta do iFood — mudam pouco: guardados 30 min por instância. */
-  let cacheMerchants: { em: number; lista: MerchantDaConta[] } | null = null
-  const CACHE_MERCHANTS_MS = 30 * 60_000
-
-  async function merchantsDaConta(base: string, token: string): Promise<MerchantDaConta[]> {
-    if (cacheMerchants && Date.now() - cacheMerchants.em < CACHE_MERCHANTS_MS) {
-      return cacheMerchants.lista
-    }
-    const todos: MerchantDaConta[] = []
-    for (let pagina = 1; pagina <= 20; pagina++) {
-      const r = await getIfood(`${base}/merchant/v1.0/merchants?page=${pagina}&size=100`, token)
-      if (r.status === 204) break
-      if (!r.ok) throw new Error(recusaIfood(r.status) ?? `HTTP ${r.status}`)
-      const itens = lista(await r.json())
-      for (const i of itens) {
-        const m = obj(i)
-        const id = m && texto(m.id)
-        if (m && id) {
-          todos.push({ id, name: texto(m.name) ?? id, corporateName: texto(m.corporateName) ?? '' })
-        }
-      }
-      if (itens.length < 100) break
-    }
-    cacheMerchants = { em: Date.now(), lista: todos }
-    return todos
-  }
-
-  /**
-   * Nome do restaurante no iFood, para a coluna "Restaurante no iFood". Só informativo:
-   * se a lista da conta falhar, vai um nome genérico, sem aviso.
-   */
-  async function nomeDoRestaurante(base: string, token: string, id: string): Promise<string> {
-    try {
-      return (await merchantsDaConta(base, token)).find((m) => m.id === id)?.name ?? 'iFood'
-    } catch (e) {
-      console.error('[fechamento-ifood-diario] lista de restaurantes do iFood:', e)
-      return 'iFood'
-    }
-  }
+  const vazio = (aviso: string | null): Resposta => ({
+    vendas: [],
+    totalPaginas: 0,
+    aviso,
+  })
 
   const __giaHandler = defineHandler<Body, Resposta>(async (ctx) => {
     await ctx.requirePermission('fechamento-ifood-diario.ler')
@@ -1418,199 +1499,91 @@ __giaHandlers["fechamento"] = (() => {
     // 403 se a operação está fora do escopo do usuário.
     const operacao = await ctx.requireOperacao(ref)
     const data = validarData(ctx.body.data)
+    const pagina = Number(ctx.body.pagina)
+    if (!Number.isInteger(pagina) || pagina < 1 || pagina > MAX_PAGINAS_IFOOD) {
+      throw new HttpError(422, 'Página inválida.')
+    }
 
-    const locRef = numeroDaOperacao(operacao.ref)
-    if (!locRef) {
-      throw new HttpError(
-        422,
-        `A operação "${operacao.nome}" não tem número de loja no código (${operacao.ref}).`
+    // Operação com canal próprio: o restaurante da tabela; as demais, o da Empresa.
+    const propria = OPERACOES_IFOOD_PROPRIO[chaveOperacao(operacao.ref)]
+    const empresa = propria
+      ? undefined
+      : (await ctx.empresas()).find((e) => e.id === operacao.empresaId)
+    const merchantId = propria?.merchant ?? (empresa?.locRefs?.IFOOD?.trim() || null)
+    if (!merchantId) {
+      return vazio(
+        'A Empresa desta operação não tem a integração com o iFood no cadastro: os pedidos não foram cruzados com o iFood e contam como Cancelado.'
       )
     }
-    // Operação com canal próprio (Vasto na loja do CB): merchant e canal da tabela. As
-    // demais: canal "iFood" e o merchant da Empresa dona da operação (regra do legado).
-    const propria = OPERACOES_IFOOD_PROPRIO[chaveOperacao(operacao.ref)]
-    const canal = normalizarOrigem(propria?.canal ?? 'iFood')
-    const empresa = (await ctx.empresas()).find((e) => e.id === operacao.empresaId)
-    const merchantId = propria?.merchant ?? (empresa?.locRefs?.IFOOD?.trim() || null)
-    const avisos: string[] = []
 
-    // O cadastro e o iFood carregam enquanto a API do DW (bem mais lenta) responde.
-    const formasVrPromise = carregarFormasOnlineVr()
-    // Só o restaurante da operação, como no legado (decisão de 2026-11-09): pedidos de
-    // outras marcas da loja no iFood (Express, Pizzaria, Dani…) não são achados nele e
-    // ficam como Cancelado — os números batem com a tela antiga.
-    const ifoodPromise: Promise<VendaIfood[]> = (async () => {
-      if (!merchantId) {
-        avisos.push(
-          'A Empresa desta operação não tem a integração com o iFood no cadastro: os pedidos não foram cruzados com o iFood e contam como Cancelado.'
-        )
-        return []
-      }
-      let cred: { baseUrl: string; token: string }
-      try {
-        cred = await ctx.credencial(INTEGRACAO_IFOOD)
-      } catch (e) {
-        console.error('[fechamento-ifood-diario] credencial do iFood:', e)
-        avisos.push(
-          `Não foi possível obter a credencial da API do iFood${e instanceof Error ? `: ${e.message}` : '.'}`
-        )
-        return []
-      }
-      const base = cred.baseUrl.replace(/\/+$/, '')
-      const [nome, vendas] = await Promise.all([
-        nomeDoRestaurante(base, cred.token, merchantId),
-        vendasIfood(base, cred.token, { id: merchantId, nome: 'iFood' }, data, avisos),
-      ])
-      for (const v of vendas) v.merchant = { id: merchantId, nome }
-      return vendas
-    })()
-    // Sem isto, um erro antes da API do DW terminar viraria "unhandled rejection".
-    formasVrPromise.catch(() => {})
-    ifoodPromise.catch(() => {})
-
-    const { baseUrl, token } = await ctx.credencial(INTEGRACAO_DW)
-    const qs = new URLSearchParams({ loc_ref: locRef, start_date: data, end_date: data })
-    let r: Response
+    let cred: { baseUrl: string; token: string }
     try {
-      r = await fetch(`${baseUrl.replace(/\/+$/, '')}/Delivery/?${qs}`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-        signal: AbortSignal.timeout(TIMEOUT_DW_MS),
-      })
+      cred = await ctx.credencial('ifood')
     } catch (e) {
-      if (ehTimeout(e)) {
-        throw new HttpError(504, 'A API de delivery do DW demorou demais para responder.')
-      }
-      throw e
+      console.error('[fechamento-ifood-diario] credencial do iFood:', e)
+      return vazio(
+        `Não foi possível obter a credencial da API do iFood${e instanceof Error ? `: ${e.message}` : '.'}`
+      )
     }
+    const base = cred.baseUrl.replace(/\/+$/, '')
+    const qs = new URLSearchParams({
+      beginSalesDate: data,
+      endSalesDate: data,
+      page: String(pagina),
+    })
+    const url = `${base}/financial/v3.0/merchants/${encodeURIComponent(merchantId)}/sales?${qs}`
+    const pedir = () =>
+      getIfood(url, cred.token).catch((e: unknown) => {
+        console.error('[fechamento-ifood-diario] API do iFood:', e)
+        throw new HttpError(
+          ehTimeout(e) ? 504 : 502,
+          ehTimeout(e)
+            ? `A API do iFood demorou demais para responder (página ${pagina}).`
+            : `Não foi possível falar com a API do iFood (página ${pagina}).`
+        )
+      })
+    const r = await pedir()
+    // 204 = restaurante sem vendas no dia.
+    if (r.status === 204) return vazio(null)
     if (!r.ok) {
+      const recusa = recusaIfood(r.status)
+      if (recusa) return vazio(recusa)
       throw new HttpError(
         502,
-        `A API de delivery do DW respondeu ${r.status}.${await detalheDoErro(r)}`
+        `A API do iFood respondeu ${r.status} (página ${pagina}).${await detalheDoErro(r)}`
       )
     }
-    const json = (await r.json()) as unknown
-    // Como no legado: lista na raiz, ou em `results`, `data` ou `orders`.
-    const raiz = obj(json)
-    const linhas = Array.isArray(json)
-      ? json
-      : (raiz && [raiz.results, raiz.data, raiz.orders].find(Array.isArray)) || null
-    // 200 sem a lista é falha, não "zero pedidos".
-    if (!linhas) throw new HttpError(502, 'A API de delivery do DW devolveu um formato inesperado.')
-
-    const doDia = (linhas as unknown[]).map(obj).filter((l): l is Json => l !== null)
-    // Só os pedidos do canal da operação, ANTES de cruzar: o DW junta CB e Vasto no mesmo
-    // nº de loja, e o shortId do iFood (4 dígitos) de um merchant pode coincidir com o
-    // n_parceiro de um pedido do outro.
-    const pedidosDw = doDia
-      .filter((l) => normalizarOrigem(texto(l.origem) ?? texto(l.channel) ?? 'iFood') === canal)
-      .map((l) => doDw(l, `Loja ${locRef}`, data))
-
-    const [formasVr, vendasDoDia] = await Promise.all([formasVrPromise, ifoodPromise])
-    // n_parceiro do DW = shortId do iFood (`MergeIfoodData`). O legado tirava a venda do
-    // dicionário ao cruzar: dois pedidos com o mesmo n_parceiro, só o primeiro leva.
-    const vendas = new Map<string, VendaIfood>()
-    for (const v of vendasDoDia) {
-      const k = texto(v.venda.shortId)
-      if (k) vendas.set(k, v)
+    const bruto = await r.text()
+    if (!bruto.trim()) return vazio(null)
+    let corpo = lerCorpo(bruto)
+    // O iFood às vezes devolve a página "leve": vendas sem pagamentos nem eventos
+    // financeiros, todas ou parte delas (medido em 10/11/2026: 2 de 6 pedidos seguidos da
+    // mesma página). O status vem igual — os valores do fechamento não mudam —, mas Total
+    // do parceiro e Data limite de contestação sairiam vazios. Pede de novo, até 2 vezes,
+    // e fica com a resposta mais completa.
+    for (let tentativa = 0; tentativa < 2 && corpo && vendasLeves(corpo) > 0; tentativa++) {
+      try {
+        const r2 = await pedir()
+        if (!r2.ok) break
+        const outro = lerCorpo(await r2.text())
+        if (outro && vendasLeves(outro) < vendasLeves(corpo)) corpo = outro
+      } catch {
+        break
+      }
     }
-    for (const p of pedidosDw) {
-      const v = p.n_parceiro ? vendas.get(p.n_parceiro) : undefined
-      if (!v) continue
-      vendas.delete(p.n_parceiro)
-      cruzar(p, v.venda)
-      p.merchant_ifood = v.merchant.nome
+    if (!corpo) {
+      throw new HttpError(502, `A API do iFood devolveu um formato inesperado (página ${pagina}).`)
     }
-
-    // Operação principal, como no legado: o canal (do iFood, quando cruzado; senão o do
-    // DW) tem que ser iFood — sai, por exemplo, o IFOOD_SHOP. Na operação com canal
-    // próprio, o filtro de canal do DW acima já basta (o iFood devolve "IFOOD" nelas).
-    const entra = (p: PedidoDw) =>
-      propria !== undefined || normalizarOrigem(p.origem || 'Outros') === 'ifood'
-    const pedidos = pedidosDw
-      .filter(entra)
-      .map((p) => calcular(p, formasVr))
-      .sort((a, b) => a.data_de_criacao.localeCompare(b.data_de_criacao))
-
+    const vendas = lista(corpo.sales)
+      .map(obj)
+      .filter((v): v is Json => v !== null)
+      .map(extrair)
+      .filter((v): v is VendaIfood => v !== null)
     return {
-      pedidos,
-      avisos,
+      vendas,
+      totalPaginas: Math.max(1, Math.trunc(numero(corpo.pageCount) ?? 1)),
+      aviso: null,
     }
-  })
-
-
-  return __giaHandler
-})() as ServerHandler<unknown, unknown>
-
-// ─── src/server/lojas.ts ────────────────────────────────────────────────
-__giaHandlers["lojas"] = (() => {
-
-  // Lojas do seletor: TODAS as operações do escopo do usuário (`ctx.operacoes()`).
-  // Exceção combinada para este módulo — os demais buscam por Empresa. Uma Empresa
-  // pode ter mais de uma operação (ex.: `08 cb` e `08 vst` em Teresina).
-  //
-  // O número da loja (`loc_ref` da API de delivery do DW) sai do começo do
-  // `operacao_ref` ("54 cb" → "54"). O merchant do iFood vem da Empresa dona da
-  // operação (`locRefs.IFOOD`), menos nas operações com canal próprio (Vasto na loja do
-  // CB), que têm o merchant em `OPERACOES_IFOOD_PROPRIO`. `temIfood` diz se ele existe.
-  //
-  // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. `numeroDaOperacao`,
-  // `chaveOperacao` e `OPERACOES_IFOOD_PROPRIO` se repetem em fechamento.ts de propósito.
-
-  interface Loja {
-    /** `operacao_ref` — a chave que a pesquisa manda ao servidor. */
-    ref: string
-    nome: string
-    empresaId: number
-    locRef: string | null
-    temIfood: boolean
-    ativo: boolean
-  }
-
-  /**
-   * Operações que dividem o número de loja com outra e têm canal e merchant próprios no
-   * iFood. O DW devolve as duas juntas no mesmo `loc_ref` e as separa pela `origem` do
-   * pedido: "iFood" é a operação principal, "iFood Vasto" a do Vasto. O SDK não tem
-   * vínculo iFood por operação (só por Empresa, um por Empresa), então o merchant destas
-   * fica aqui — PROVISÓRIO até o SDK expor `locRefs` em `GiaOperacao`. Operação nova
-   * nessa situação precisa entrar nesta tabela (e na de fechamento.ts).
-   * Merchants: lista `GET /merchant/v1.0/merchants` da conta iFood da Coco Bambu.
-   */
-  const OPERACOES_IFOOD_PROPRIO: Record<string, { canal: string; merchant: string }> = {
-    '08 vst': { canal: 'iFood Vasto', merchant: '60a90e35-3568-4ecd-a4b5-8261e5a19c08' }, // Vasto Teresina
-    '17 vst': { canal: 'iFood Vasto', merchant: 'aa5dcb37-dfaf-4442-b5dc-ef69637f73ad' }, // Vasto Recife
-    '25 vst': { canal: 'iFood Vasto', merchant: '591659a8-f40b-4b65-bca7-0999638782ee' }, // Vasto Restaurante - Bh Anchieta
-    '69 vst': { canal: 'iFood Vasto', merchant: '6293b97f-48d6-4325-8d47-d43e970760b0' }, // Vasto São José dos Campos
-    '86 vst': { canal: 'iFood Vasto', merchant: 'c5671839-c503-4032-80cb-e5c4ebb58ac9' }, // Vasto - Barra da Tijuca
-  }
-
-  /** `operacao_ref` normalizado para a tabela ("08  VST" → "08 vst"). */
-  function chaveOperacao(ref: string): string {
-    return ref.trim().toLowerCase().replace(/\s+/g, ' ')
-  }
-
-  /** Número da loja com 2 dígitos — o `loc_ref` da API do DW ("54 cb" → "54"). */
-  function numeroDaOperacao(ref: string): string | null {
-    const m = /^\s*(\d{1,4})/.exec(ref)
-    return m ? String(Number(m[1])).padStart(2, '0') : null
-  }
-
-  const __giaHandler = defineHandler<Record<string, never>, Loja[]>(async (ctx) => {
-    await ctx.requirePermission('fechamento-ifood-diario.ler')
-    // ctx.operacoes() já vem recortado pelo escopo do usuário.
-    const [operacoes, empresas] = await Promise.all([ctx.operacoes(), ctx.empresas()])
-    const merchant = new Map(empresas.map((e) => [e.id, e.locRefs?.IFOOD?.trim() || null]))
-    return operacoes
-      .map((o) => ({
-        ref: o.ref,
-        nome: o.nome,
-        empresaId: o.empresaId,
-        locRef: numeroDaOperacao(o.ref),
-        temIfood: Boolean(
-          OPERACOES_IFOOD_PROPRIO[chaveOperacao(o.ref)]?.merchant ?? merchant.get(o.empresaId)
-        ),
-        ativo: o.ativo,
-      }))
-      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { numeric: true }))
   })
 
 

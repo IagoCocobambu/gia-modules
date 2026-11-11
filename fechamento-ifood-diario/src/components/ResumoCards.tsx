@@ -1,5 +1,6 @@
-import type { ComponentType, SVGProps } from 'react'
+import { useState, type ComponentType, type SVGProps } from 'react'
 import {
+  ChevronDown,
   AlertTriangle,
   CircleHelp,
   CreditCard,
@@ -161,11 +162,29 @@ const ITEM = cn(
 const DICA_FILTRO = 'Clique para ver na tabela só os pedidos que entram nesta conta.'
 
 /**
+ * Os 4 cards sempre à vista (padrão 3 do AGENTS.md do workspace): o que o financeiro
+ * lança no fechamento e o alerta que deveria ser zero. Os outros 5 abrem pelo botão
+ * "Ver todos os totais".
+ */
+const PRINCIPAIS: FiltroTotal[] = [
+  'ifood_online',
+  'ifood_adquirentes',
+  'desconto_copart',
+  'pagamentos_sem_classificacao',
+]
+
+const GRADE = 'grid grid-cols-1 gap-x-1 gap-y-0.5 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-5'
+
+/**
  * Os 9 cards do legado numa barra: 8 de valor e o contador de pagamentos sem
  * classificação. Cada card é um FILTRO da tabela (os pedidos que somaram nele);
  * clicar de novo tira o filtro. Card zerado não tem pedido para mostrar e fica
  * sem ação. As formas sem classificação aparecem por extenso abaixo da barra —
  * no legado ficavam num tooltip, que não abre no toque.
+ *
+ * Só os 4 `PRINCIPAIS` ficam à vista; o 5º lugar da grade é o botão "Ver todos os
+ * totais (+5)", que abre os demais logo abaixo. Se um card escondido está filtrando a
+ * tabela, a parte de baixo abre sozinha e o botão fica desativado até o filtro sair.
  */
 export function ResumoCards({
   totais,
@@ -174,6 +193,7 @@ export function ResumoCards({
   onFiltroChange,
   className,
 }: ResumoCardsProps) {
+  const [expandida, setExpandida] = useState(false)
   const pronto = !carregando && totais !== null
   const qtdSem = pronto ? totais.pagamentos_sem_classificacao : 0
 
@@ -204,6 +224,42 @@ export function ResumoCards({
     },
   ]
 
+  const card = (i: (typeof itens)[number]) => {
+    const ativo = filtro === i.campo
+    const semAcao = !pronto || (i.zerado && !ativo)
+    return (
+      <Dica key={i.campo} content={semAcao ? i.dica : `${i.dica}. ${DICA_FILTRO}`}>
+        <button
+          type="button"
+          aria-pressed={ativo}
+          aria-disabled={semAcao}
+          aria-label={`${i.rotulo}: ${i.valor ?? 'carregando'}`}
+          onClick={() => !semAcao && onFiltroChange(ativo ? null : i.campo)}
+          className={cn(
+            ITEM,
+            semAcao ? 'cursor-default' : 'hover:bg-muted/60',
+            ativo && 'bg-primary/10 ring-1 ring-inset ring-primary/40 hover:bg-primary/15',
+            i.campo === 'pagamentos_sem_classificacao' &&
+              pronto &&
+              !i.zerado &&
+              !ativo &&
+              'bg-destructive/5 hover:bg-destructive/10'
+          )}
+        >
+          <Indicador icone={i.icone} tom={i.tom} valor={i.valor} rotulo={i.rotulo} />
+        </button>
+      </Dica>
+    )
+  }
+
+  const destaque = PRINCIPAIS.map((c) => itens.find((i) => i.campo === c)).filter(
+    (i): i is (typeof itens)[number] => i !== undefined
+  )
+  const demais = itens.filter((i) => !PRINCIPAIS.includes(i.campo))
+  // O card que está filtrando a tabela nunca fica escondido.
+  const filtroEscondido = filtro !== null && demais.some((i) => i.campo === filtro)
+  const aberta = expandida || filtroEscondido
+
   return (
     <div
       className={cn(
@@ -214,35 +270,44 @@ export function ResumoCards({
       <div
         role="group"
         aria-label="Totais do dia — clique num card para filtrar a tabela"
-        className="grid grid-cols-1 gap-x-1 gap-y-0.5 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-5"
+        className={GRADE}
       >
-        {itens.map((i) => {
-          const ativo = filtro === i.campo
-          const semAcao = !pronto || (i.zerado && !ativo)
-          return (
-            <Dica key={i.campo} content={semAcao ? i.dica : `${i.dica}. ${DICA_FILTRO}`}>
-              <button
-                type="button"
-                aria-pressed={ativo}
-                aria-disabled={semAcao}
-                aria-label={`${i.rotulo}: ${i.valor ?? 'carregando'}`}
-                onClick={() => !semAcao && onFiltroChange(ativo ? null : i.campo)}
-                className={cn(
-                  ITEM,
-                  semAcao ? 'cursor-default' : 'hover:bg-muted/60',
-                  ativo && 'bg-primary/10 ring-1 ring-inset ring-primary/40 hover:bg-primary/15',
-                  i.campo === 'pagamentos_sem_classificacao' &&
-                    pronto &&
-                    !i.zerado &&
-                    !ativo &&
-                    'bg-destructive/5 hover:bg-destructive/10'
-                )}
-              >
-                <Indicador icone={i.icone} tom={i.tom} valor={i.valor} rotulo={i.rotulo} />
-              </button>
-            </Dica>
-          )
-        })}
+        {destaque.map(card)}
+        <button
+          type="button"
+          aria-expanded={aberta}
+          disabled={filtroEscondido}
+          onClick={() => setExpandida(!aberta)}
+          className="flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors duration-fast ease-default hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+          data-tour="fechamento-ifood-diario-ver-todos"
+        >
+          {aberta ? 'Ocultar os demais totais' : `Ver todos os totais (+${demais.length})`}
+          <ChevronDown
+            aria-hidden
+            className={cn(
+              'h-4 w-4 transition-transform duration-fast ease-default',
+              aberta && 'rotate-180'
+            )}
+          />
+        </button>
+      </div>
+      <div
+        inert={!aberta}
+        aria-hidden={!aberta}
+        className={cn(
+          'grid transition-all duration-default ease-default',
+          aberta ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div
+            role="group"
+            aria-label="Totais do dia — demais"
+            className={cn(GRADE, 'mt-1 border-t border-border pt-1')}
+          >
+            {demais.map(card)}
+          </div>
+        </div>
       </div>
       {pronto && totais.formas_sem_classificacao.length > 0 && (
         <p className="px-2 pb-1 pt-1.5 text-xs text-destructive">
