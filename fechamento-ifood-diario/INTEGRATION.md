@@ -3,7 +3,7 @@
 ## 1. Identificação
 
 - **Módulo**: `fechamento-ifood-diario` — Fechamento iFood Diário
-- **Versão do pacote**: 0.2.0
+- **Versão do pacote**: 0.2.2
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
 - **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.70 (fixada)
 
@@ -64,9 +64,12 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
 
 ## 3. Posição no menu
 
-- **Grupo**: `cardapio` (Plataformas) › subgrupo **iFood** › Fechamento iFood Diário
-  (`navGroup: 'ifood'`), ao lado do Fechamento iFood Mensal.
-- [ ] O subgrupo **iFood** é criado pelo time GIA na instalação, dentro de Plataformas.
+- **Caminho**: Plataformas › iFood › Fechamento iFood Diário.
+- **Grupo**: `cardapio` (Plataformas) — é o `navGroup` do manifest.
+- **Subgrupo**: **iFood** (id `ifood`), que **já existe** na NAV_TREE dentro de
+  Plataformas (hoje com a tela Lojas, do `delivery-manager`).
+- [ ] Adicionar a tela abaixo em `screens` do subgrupo `ifood` de `cardapio` na NAV_TREE.
+  Sem isso, o módulo aparece direto em Plataformas (fallback do `navGroup`).
 
 | Tela      | path                       | label                   | ícone (lucide) | permissão                     | faqId                     |
 | --------- | -------------------------- | ----------------------- | -------------- | ----------------------------- | ------------------------- |

@@ -1,5 +1,19 @@
 # Changelog — Fechamento iFood Diário
 
+## 0.2.2 — 11/11/2026
+
+- Menu: `navGroup` volta a ser **`cardapio`** (Plataformas). O `navGroup` é o grupo
+  raiz; com `'ifood'` o módulo, antes de entrar na NAV_TREE, apareceria num grupo
+  solto “Ifood” fora de Plataformas. O subgrupo **iFood** já existe em Plataformas na
+  NAV_TREE; o `INTEGRATION.md` §3 pede ao time GIA para pôr a tela nele. Caminho final:
+  **Plataformas › iFood › Fechamento iFood Diário**.
+
+## 0.2.1 — 11/11/2026
+
+Reempacotado depois de uma nova revisão contra o SDK (alpha.70): `gia validate` 58/58,
+sem avisos; teste no `gia dev` em desktop e celular sem achados no módulo. Sem mudança
+de código nem de regra.
+
 ## 0.2.0 — 11/11/2026
 
 Desempenho e padrões de tela do workspace. Regras de cálculo sem mudança (conferido
