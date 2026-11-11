@@ -1,0 +1,48 @@
+Fechamento iFood Diário 0.2.0 a 0.2.3 - desempenho, padrões de tela, menu e aviso de entrega - 11/11/2026
+
+Entrega
+- Módulo: fechamento-ifood-diario ("Fechamento iFood Diário").
+- Versão final: 0.2.3 (pacote modules-fechamento-ifood-diario-0.2.3.tgz, 79,1 kB).
+- Menu: Plataformas › iFood › Fechamento iFood Diário (navGroup 'cardapio'; a tela entra no subgrupo iFood pelo time GIA).
+- Validação: gia validate 58/58, 0 erros, 0 avisos (ESLint do host e tsc sem erros).
+- Regras de cálculo sem mudança desde a 0.1.0 (legado prevalece): 0 diferenças contra o legado em 01, 54, 08 cb e 08 vst.
+
+0.2.0 (11/11/2026)
+- Consulta em partes com progresso por etapa (Vendas no iFood, Pedidos do delivery) numa faixa acima da tabela, com Cancelar (padrão 9 do AGENTS.md). Páginas do iFood 4 ao mesmo tempo, com nova tentativa (1,5 s e 4 s); o DW não é repetido (chamada lenta).
+- Handler fechamento dividido em pedidos e vendas; regras movidas para src/regras.ts sem mudança.
+- A tabela vai populando: aparece quando os pedidos do delivery chegam; pedido ainda não achado no iFood fica apagado com "Aguardando iFood". Cards, filtro pelos cards e Excel só no fim. Página do iFood que trava desiste em 20 s (era 60 s).
+- Página "leve" do iFood (vendas sem pagamentos, intermitente) pedida de novo: Total do parceiro e Data limite de contestação não saem mais vazios.
+- Barra de totais no padrão 3: à vista iFood online, iFood adquirentes, desconto copart e pagamentos sem classificação; os outros 5 em "Ver todos os totais (+5)". Card escondido que filtra abre a parte de baixo sozinho.
+- Barra de filtros enxuta (uma linha) depois da pesquisa, fora do celular (padrão 8).
+- Hook da consulta abandona a consulta ao sair da tela e limpa o andamento depois de um erro.
+- Tour atualizado (faixa de andamento, Aguardando iFood, Ver todos os totais); descrição do módulo sem menção ao sistema antigo.
+- Removidos: DashboardDialog.tsx e VendasPorCanal.tsx.
+
+0.2.1 (11/11/2026)
+- Reempacotada após nova revisão contra o SDK (alpha.70). Sem mudança de código.
+
+0.2.2 (11/11/2026)
+- Correção do menu: a 0.2.0 tinha navGroup 'ifood'. O navGroup é o grupo RAIZ do menu (é o que o host grava em nav_group); com 'ifood' o módulo apareceria num grupo solto "Ifood", fora de Plataformas, até entrar na NAV_TREE. Voltou para 'cardapio' (Plataformas), como o Fechamento iFood Mensal.
+- O subgrupo iFood JÁ EXISTE na NAV_TREE do SDK, dentro de Plataformas (id 'ifood', hoje com a tela Lojas do delivery-manager). INTEGRATION.md §3 pede ao time GIA para pôr a tela em screens desse subgrupo. Sem esse passo, a tela aparece direto em Plataformas.
+- Onde se aponta o menu: navGroup no src/module.ts (só o grupo raiz) + INTEGRATION.md §3 (caminho completo, para o time GIA wirar na NAV_TREE, que é código do host).
+
+0.2.3 (11/11/2026)
+- Reempacotada. Sem mudança de código nem de regra em relação à 0.2.2.
+
+Testes no gia dev (Playwright + axe-core; leitura apenas, nenhuma escrita)
+- Desktop 1440x900: tour, Cancelar no meio da consulta, faixa de andamento, "Aguardando iFood" durante a consulta, barra de filtros enxuta, Pesquisar desativado sem mudança, cards à vista e Ver todos, filtro por card com botão do filtro, Exportar com filtro, teclado.
+- Celular (iPhone 13): filtros recolhem ao pesquisar, totais começam fechados, lista em cards, rótulo visível no botão Totais, sem tooltip no toque, sem rolagem lateral.
+- Nenhuma inconformidade do módulo com o SDK.
+- Achados do SDK (fora do módulo, para avisar o time do SDK): botões ‹ › da paginação do DataReport sem nome acessível; contraste bg-primary + primary-foreground 3,28; região rolável do DataReport sem foco por teclado; depois de um elemento com Tooltip o Tab manda o foco para o body; ícones e seletores da barra do SDK com 36-40 px (abaixo de 44 px no toque).
+
+Aviso de entrega (skill /aviso-entrega)
+- Arquivos: entregas/2026-11-11/GIA - Fechamento iFood Diário - Aviso de entrega - 2026-11-11.html e .pdf (6 páginas).
+- Feito como PRIMEIRA entrega, já na 0.2.3 (o aviso de 09/11, da 0.1.0, foi apagado e não é citado).
+- Públicos: as 2 chaves (fechamento-ifood-diario.ler e .exportar) para Diretores, Gerentes, Auditoria e Administração/GIA.
+- Onde já está: ainda não instalado. Responsável: Iago Pereira.
+- Caixa "O que conferir no ambiente": menu (subgrupo iFood), integração apidw, integração ifood (token de 6 h renovado pelo hub; gerar chave nova no iFood), integração IFOOD de cada Empresa, secret GIA_SERVER_DATABASE_URL (só leitura em gia_relatorios.formas_pagamento) e as 5 operações Vasto com restaurante fixado no módulo (08, 17, 25, 69, 86).
+- conferir.mjs: 0 pontos de atenção. PDF gerado com o Chromium do Playwright (Edge/Chrome não instalados). Quebras de página ajustadas (Onde fica e Permissões começam em página nova); metade da página 4 fica em branco porque a caixa de atenção não cabe abaixo da tabela.
+
+Pendências
+- Time GIA: pôr a tela no subgrupo iFood de Plataformas na NAV_TREE na instalação.
+- Time do SDK: expor locRefs em GiaOperacao (tira a tabela fixa das operações Vasto) e os achados de acessibilidade acima.
