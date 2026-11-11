@@ -1,13 +1,5 @@
 import { useLayoutEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
-import {
-  AlertTriangle,
-  ChartPie,
-  LayoutDashboard,
-  ListFilter,
-  ReceiptText,
-  RefreshCw,
-  X,
-} from 'lucide-react'
+import { AlertTriangle, ChartPie, ListFilter, ReceiptText, RefreshCw, X } from 'lucide-react'
 import {
   Button,
   DataReport,
@@ -27,14 +19,13 @@ import { BadgeCheck } from '../components/BadgeCheck'
 import { BadgeOrigemPedido } from '../components/BadgeOrigemPedido'
 import { BadgeStatusPedido } from '../components/BadgeStatusPedido'
 import { BadgeTipoPagamento } from '../components/BadgeTipoPagamento'
-import { DashboardDialog, type AbaDashboard } from '../components/DashboardDialog'
+import { PainelCanais } from '../components/PainelCanais'
 import { DetalhePedidoDialog } from '../components/DetalhePedidoDialog'
 import { Dica } from '../components/Dica'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
 import { Recolhivel } from '../components/Recolhivel'
 import { ResumoCards } from '../components/ResumoCards'
 import {
-  canaisDosPedidos,
   canalDoPedido,
   COLUNAS_DIA,
   COLUNAS_PEDIDO,
@@ -53,6 +44,7 @@ import {
   rotuloTiposDoPedido,
   somarDias,
   tiposDoPedido,
+  vendasPorCanal,
   validarPeriodo,
 } from '../helpers'
 import { statusPedido } from '../status-pedido'
@@ -87,6 +79,9 @@ function useTelaAlta(): boolean {
  * `<td colSpan>` DENTRO da tabela, e com todas as colunas no cabeçalho a tabela
  * fica mais larga que a tela e o aviso centraliza fora da área visível.
  */
+/** Valor do seletor de canal para "todos" (o Select do Radix não aceita ''). */
+const TODOS_CANAIS = '__todos__'
+
 const SEM_COLUNAS_PEDIDO: ColumnDef<PedidoFechamento, unknown>[] = []
 
 /**
@@ -98,9 +93,6 @@ const SEM_COLUNAS_PEDIDO: ColumnDef<PedidoFechamento, unknown>[] = []
  */
 const BOTAO_TOOLBAR = 'px-2.5 @max-lg:px-4 @5xl:px-4 [@media(hover:none)]:px-4'
 const ROTULO_TOOLBAR = '@lg:hidden @5xl:inline [@media(hover:none)]:inline'
-
-/** Valor do seletor de canal para "todos" (o Select do Radix não aceita ''). */
-const TODOS_CANAIS = '__todos__'
 
 /** Campos que formam a face do card no celular; o resto fica em "ver mais". */
 const CAMPOS_CARD_PEDIDO = new Set<string>(['n_pedido', 'data_de_criacao', 'total_pago', 'tipo'])
@@ -305,22 +297,24 @@ export function FechamentoMaestroView() {
   const [pedidoAberto, setPedidoAberto] = useState<PedidoFechamento | null>(null)
   // Indicador da barra de totais que filtra a tabela (clique no indicador).
   const [filtroTotal, setFiltroTotal] = useState<FiltroTotal | null>(null)
-  // Canal (origem) escolhido na barra da tabela; `null` = todos. Diferente do
-  // indicador, o canal recorta TUDO: totais, tabela, divergências e Exportar.
-  const [canal, setCanal] = useState<string | null>(null)
-  const [dashboardAberto, setDashboardAberto] = useState(false)
-  const [dashboardAba, setDashboardAba] = useState<AbaDashboard>('canais')
-  const abrirDashboard = (aba: AbaDashboard) => {
-    setDashboardAba(aba)
-    setDashboardAberto(true)
-  }
-  // Barra de totais: segue a altura da tela até o usuário clicar em "Totais";
-  // daí em diante vale a escolha dele.
+  // Canal (origem) escolhido no seletor da barra de filtros ou no anel da seção
+  // de totais; `null` = todos. Diferente do indicador, o canal recorta TUDO:
+  // totais, tabela, divergências e Exportar. Vale na hora, sem Pesquisar, e fica
+  // entre pesquisas como a loja e o período — o `canal` efetivo (abaixo) volta a
+  // todos quando a pesquisa nova não tem aquele canal.
+  const [canalEscolhido, setCanal] = useState<string | null>(null)
+  // Seção de totais: segue a altura da tela até o usuário clicar em "Totais";
+  // daí em diante vale a escolha dele. No celular começa fechada (padrão 3).
   const telaAlta = useTelaAlta()
   const [totaisEscolhidos, setTotaisEscolhidos] = useState<boolean | null>(null)
-  const totaisAbertos = totaisEscolhidos ?? telaAlta
+  const totaisAbertos = totaisEscolhidos ?? (telaAlta && !compacto)
 
-  const canais = useMemo(() => canaisDosPedidos(pedidos), [pedidos])
+  // Venda de cada canal da pesquisa inteira (o anel não muda com o canal escolhido).
+  const canais = useMemo(() => vendasPorCanal(pedidos), [pedidos])
+  const canal =
+    canalEscolhido !== null && canais.some((c) => c.canal === canalEscolhido)
+      ? canalEscolhido
+      : null
   // Os pedidos do canal escolhido (todos, sem canal). É a base dos totais e da tabela.
   const pedidosCanal = useMemo(
     () => (canal ? pedidos.filter((p) => canalDoPedido(p) === canal) : pedidos),
@@ -365,7 +359,6 @@ export function FechamentoMaestroView() {
     }
     setSoDivergencias(false)
     setFiltroTotal(null)
-    setCanal(null)
     setConsulta({
       empresaId: loja.empresaId,
       lojaNome: loja.nome,
@@ -524,12 +517,6 @@ export function FechamentoMaestroView() {
     )
   }
 
-  const subtitle = consulta
-    ? `${consulta.lojaNome} · ${formatDataHora(consulta.de)}${
-        consulta.de !== consulta.ate ? ` a ${formatDataHora(consulta.ate)}` : ''
-      }`
-    : 'Conciliação dos pagamentos dos pedidos de delivery do Maestro por loja e período.'
-
   let emptyState
   if (erro) {
     emptyState = (
@@ -583,35 +570,12 @@ export function FechamentoMaestroView() {
 
   const acoes = (
     <>
-      {/* Canal: recorta totais, tabela e Exportar. Só aparece com mais de um canal
-          na pesquisa (com um só, não há o que escolher). */}
-      {painelDisponivel && (canais.length > 1 || canal) && (
-        <div className="w-44 shrink-0 @max-lg:w-full" data-tour="fechamento-maestro-canal">
-          <Select
-            value={canal ?? TODOS_CANAIS}
-            onValueChange={(v) => setCanal(v === TODOS_CANAIS ? null : v)}
-          >
-            <Select.Trigger
-              className={cn('h-9 w-full', canal && 'border-primary text-primary')}
-              aria-label="Canal"
-            />
-            <Select.Content>
-              <Select.Item value={TODOS_CANAIS}>Todos os canais</Select.Item>
-              {canais.map((c) => (
-                <Select.Item key={c} value={c}>
-                  {c}
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select>
-        </div>
-      )}
       {/* Filtro ligado por um indicador de totais: mostra qual e tira com um toque. */}
       {filtroTotal && (
         <Dica content="Tirar o filtro e voltar a ver todos os pedidos">
           <Button
             variant="default"
-            className="max-w-full"
+            className="max-w-full animate-in fade-in duration-default"
             aria-label={`Filtro: ${NOME_DO_TOTAL[filtroTotal]}. Tirar o filtro`}
             onClick={() => setFiltroTotal(null)}
           >
@@ -652,43 +616,19 @@ export function FechamentoMaestroView() {
           </span>
         </Button>
       </Dica>
-      {/* No computador, Totais abre e fecha a barra acima da tabela. No celular a
-          barra não cabe: o mesmo botão abre o Dashboard direto na aba Totais. */}
-      <Dica
-        content={
-          compacto
-            ? 'Ver os totais do período'
-            : totaisAbertos
-              ? 'Ocultar os totais do período'
-              : 'Mostrar os totais do período'
-        }
-      >
+      {/* Totais abre e fecha a seção de canais e totais acima da tabela. */}
+      <Dica content={totaisAbertos ? 'Ocultar os canais e totais' : 'Mostrar os canais e totais'}>
         <Button
-          variant={!compacto && totaisAbertos ? 'default' : 'outline'}
+          variant={totaisAbertos ? 'default' : 'outline'}
           className={BOTAO_TOOLBAR}
           aria-label="Totais"
-          aria-pressed={compacto ? undefined : totaisAbertos}
+          aria-pressed={totaisAbertos}
           disabled={!painelDisponivel}
-          onClick={() =>
-            compacto ? abrirDashboard('totais') : setTotaisEscolhidos(!totaisAbertos)
-          }
+          onClick={() => setTotaisEscolhidos(!totaisAbertos)}
           data-tour="fechamento-maestro-totais-toggle"
         >
           <ChartPie className="h-4 w-4" />
           <span className={ROTULO_TOOLBAR}>Totais</span>
-        </Button>
-      </Dica>
-      <Dica content="Abrir o dashboard do período (vendas por canal e totais)">
-        <Button
-          variant="outline"
-          className={BOTAO_TOOLBAR}
-          aria-label="Dashboard"
-          disabled={!painelDisponivel}
-          onClick={() => abrirDashboard('canais')}
-          data-tour="fechamento-maestro-dashboard"
-        >
-          <LayoutDashboard className="h-4 w-4" />
-          <span className={ROTULO_TOOLBAR}>Dashboard</span>
         </Button>
       </Dica>
     </>
@@ -721,10 +661,45 @@ export function FechamentoMaestroView() {
           semAlteracao={semAlteracao}
           compacto={compacto}
           tituloExtra={<TourReplayButton onClick={replayTour} />}
+          seletorCanal={
+            // Vale na hora (não precisa de Pesquisar); antes do resultado, ou com
+            // um canal só na pesquisa, fica desativado em "Todos os canais".
+            <Select
+              value={canal ?? TODOS_CANAIS}
+              onValueChange={(v) => setCanal(v === TODOS_CANAIS ? null : v)}
+              disabled={!painelDisponivel || carregando || canais.length < 2}
+            >
+              <Select.Trigger
+                className={cn('h-10 w-full', canal && 'border-primary text-primary')}
+                aria-label="Canal"
+              />
+              <Select.Content>
+                <Select.Item value={TODOS_CANAIS}>Todos os canais</Select.Item>
+                {canais.map((c) => (
+                  <Select.Item key={c.canal} value={c.canal}>
+                    {c.canal}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select>
+          }
         />
 
-        <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos && !compacto}>
+        <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos}>
           <ResumoCards
+            tourPrefixo={
+              painelDisponivel && totaisAbertos && !carregando
+                ? 'fechamento-maestro-totais'
+                : undefined
+            }
+            lateral={
+              <PainelCanais
+                canais={canais}
+                canal={canal}
+                onCanalChange={setCanal}
+                carregando={carregando}
+              />
+            }
             totais={totais}
             carregando={carregando}
             recorte={recorteTotais}
@@ -742,7 +717,6 @@ export function FechamentoMaestroView() {
           )}
           fillHeight={!compacto}
           title="Pedidos"
-          subtitle={subtitle}
           actions={acoes}
           loading={carregando}
           // Busca genérica só no celular; no desktop, os filtros de cada coluna.
@@ -771,22 +745,6 @@ export function FechamentoMaestroView() {
         />
       </div>
 
-      <DashboardDialog
-        aberto={dashboardAberto}
-        aba={dashboardAba}
-        onAbaChange={setDashboardAba}
-        pedidos={pedidos}
-        totais={totais}
-        recorte={recorteTotais}
-        carregando={carregando}
-        descricao={subtitle}
-        filtro={filtroTotal}
-        onFiltroChange={(f) => {
-          setFiltroTotal(f)
-          setDashboardAberto(false)
-        }}
-        onFechar={() => setDashboardAberto(false)}
-      />
       <DetalhePedidoDialog pedido={pedidoAberto} onFechar={() => setPedidoAberto(null)} />
     </WidthFrame>
   )

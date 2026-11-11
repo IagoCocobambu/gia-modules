@@ -1,5 +1,43 @@
 # Changelog — Fechamento Maestro
 
+## 0.4.0 — 11/11/2026
+
+Devolutiva: unificar os totais com o dashboard na mesma seção (opção A validada
+no canvas). Sem mudança de banco nem de permissões.
+
+- **Canais à esquerda dos totais:** o anel Vendas por canal (total pago no
+  meio), ao lado dos indicadores, sem legenda: a dica de cada fatia (só com
+  mouse) diz o canal, o valor, a % e os pedidos. O anel é o seletor: clicar
+  numa fatia recorta os 12 totais, a tabela, o Só
+  divergências e o Exportar, e o meio do anel mostra os números do canal;
+  clicar de novo na fatia, ou no meio do anel ("ver todos"), volta à pesquisa
+  inteira. Canal só com cancelados (sem fatia) se escolhe pelo seletor Canal.
+- **Sai o Dashboard:** o anel saiu do dialog para a seção; a aba Totais do
+  dialog virou a própria seção.
+- **O seletor Canal vai para a barra de filtros**, à esquerda do Pesquisar,
+  ligado ao anel (escolher num muda o outro) — serve com a seção de totais
+  fechada. Vale na hora, sem nova pesquisa, e continua entre pesquisas (volta a
+  Todos os canais se a pesquisa nova não tiver aquele canal).
+- **Celular:** a seção de canais e totais fica acima da lista e abre pelo botão
+  Totais (começa fechada), em vez de abrir o Dashboard; o anel fica em cima dos
+  indicadores.
+- **Tabela sem subtítulo:** a loja e o período já estão na barra de filtros.
+- **Responsivo** (conferido em 1920, 1440, 1280, 1024, 768 e 390 px): campos
+  da barra de filtros mais estreitos; Canal e Pesquisar descem juntos quando a
+  linha não cabe; no tablet (modo compacto em tela sm+) o formulário ocupa a
+  largura toda; ao lado do anel os indicadores ficam em 3 colunas até ~900 px
+  (em 5 cortavam valores); o meio do anel mostra o total inteiro.
+- **Tour:** passos novos para o anel de canais e para os indicadores (aparecem
+  depois da pesquisa, com a seção aberta).
+- **Transições:** o aviso "Totais só de …" e o botão do filtro do indicador
+  entram com fade.
+- **Teste no `gia dev`** (01.CB GOIANIA, 10/11/2026): tour, anel (dica, clique,
+  ver todos), seletor Canal, indicadores, Ver todos, Só divergências, Totais,
+  detalhe, Exportar, persona Leitor sem Exportar, 320×568 e teclado. Achado do
+  SDK, fora do módulo: depois de um elemento com `Tooltip` do `@gia-cb/ui`, o Tab
+  seguinte manda o foco para o `<body>` (inclusive nos botões do `DataReport`).
+- FAQ (seção "Canais"), tour e PRD atualizados.
+
 ## 0.3.0 — 10/11/2026
 
 Devolutiva: os totais estavam "consolidados" — filtrar a coluna Origem (ex.: só

@@ -270,24 +270,19 @@ export function canalDoPedido(p: PedidoFechamento): string {
   return p.origem?.trim() || 'Sem origem'
 }
 
-/** Canais que aparecem nos pedidos da pesquisa (cancelados inclusive), em ordem alfabética. */
-export function canaisDosPedidos(pedidos: PedidoFechamento[]): string[] {
-  return [...new Set(pedidos.map(canalDoPedido))].sort((a, b) => a.localeCompare(b, 'pt-BR'))
-}
-
 /**
- * Dashboard "Vendas por canal": o total pago dos pedidos não cancelados, somado
- * por origem (App Coco Bambu, iFood, ...), do maior para o menor. A soma dos
- * canais é o "total pago" da barra de totais.
+ * Anel de canais da seção de totais e opções do seletor Canal: o total pago dos
+ * pedidos não cancelados, somado por origem (App Coco Bambu, iFood, ...), do
+ * maior para o menor. Canal só com cancelados entra com zero (sem fatia no anel)
+ * — dá para escolhê-lo no seletor e ver os cancelados dele.
  */
 export function vendasPorCanal(pedidos: PedidoFechamento[]): VendaCanal[] {
   const porCanal = new Map<string, PedidoFechamento[]>()
   for (const p of pedidos) {
-    if (p.cancelado) continue
     const canal = canalDoPedido(p)
-    const lista = porCanal.get(canal)
-    if (lista) lista.push(p)
-    else porCanal.set(canal, [p])
+    const lista = porCanal.get(canal) ?? []
+    if (!p.cancelado) lista.push(p)
+    porCanal.set(canal, lista)
   }
   return [...porCanal.entries()]
     .map(([canal, lista]) => ({

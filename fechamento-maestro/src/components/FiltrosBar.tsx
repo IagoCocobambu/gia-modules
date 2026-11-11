@@ -26,6 +26,11 @@ interface FiltrosBarProps {
   compacto: boolean
   /** Ao lado do título do módulo (o botão de rever o tour). */
   tituloExtra?: ReactNode
+  /**
+   * Seletor de canal, à esquerda do Pesquisar. Diferente da loja e do período, ele
+   * recorta o resultado na hora, sem nova pesquisa (quem filtra é a tela).
+   */
+  seletorCanal?: ReactNode
   className?: string
 }
 
@@ -39,6 +44,7 @@ export function FiltrosBar({
   semAlteracao,
   compacto,
   tituloExtra,
+  seletorCanal,
   className,
 }: FiltrosBarProps) {
   const hoje = hojeLocal()
@@ -86,8 +92,10 @@ export function FiltrosBar({
           className
         )}
       >
-        <div className={compacto ? 'flex flex-col gap-3' : 'flex flex-wrap items-end gap-3'}>
-          <Field label="Loja" className={compacto ? 'w-full' : 'w-80'}>
+        {/* No modo compacto em tela sm+ (tablet, painel estreito) o ListHeader alinha os
+            controles à direita: w-full faz o formulário ocupar a largura toda. */}
+        <div className={compacto ? 'flex w-full flex-col gap-3' : 'flex flex-wrap items-end gap-3'}>
+          <Field label="Loja" className={compacto ? 'w-full' : 'w-52'}>
             {(controle) => (
               <SearchableSelect<number>
                 triggerProps={controle}
@@ -107,7 +115,7 @@ export function FiltrosBar({
           </Field>
 
           <div className={compacto ? 'grid grid-cols-2 gap-3' : 'contents'}>
-            <Field label="Data inicial" className={compacto ? 'min-w-0' : 'w-44'}>
+            <Field label="Data inicial" className={compacto ? 'min-w-0' : 'w-40'}>
               {(controle) => (
                 <DatePicker
                   {...controle}
@@ -117,7 +125,7 @@ export function FiltrosBar({
                 />
               )}
             </Field>
-            <Field label="Data final" className={compacto ? 'min-w-0' : 'w-44'}>
+            <Field label="Data final" className={compacto ? 'min-w-0' : 'w-40'}>
               {(controle) => (
                 <DatePicker
                   {...controle}
@@ -129,20 +137,29 @@ export function FiltrosBar({
             </Field>
           </div>
 
-          {/* Botão desativado não recebe o mouse: a dica fica num invólucro focável. */}
-          <div className={compacto ? 'w-full' : undefined}>
-            {semAlteracao && !pesquisando ? (
-              <Dica content="Nenhum filtro mudou desde a última pesquisa — o resultado na tela já é este.">
-                <span
-                  tabIndex={0}
-                  className="inline-flex w-full rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {botao}
-                </span>
-              </Dica>
-            ) : (
-              botao
+          {/* Canal e Pesquisar andam juntos: quando a linha não cabe, descem os dois. */}
+          <div className={compacto ? 'contents' : 'flex items-end gap-3'}>
+            {seletorCanal && (
+              <Field label="Canal" className={compacto ? 'w-full' : 'w-40'}>
+                {() => <div data-tour="fechamento-maestro-canal">{seletorCanal}</div>}
+              </Field>
             )}
+
+            {/* Botão desativado não recebe o mouse: a dica fica num invólucro focável. */}
+            <div className={compacto ? 'w-full' : undefined}>
+              {semAlteracao && !pesquisando ? (
+                <Dica content="Nenhum filtro mudou desde a última pesquisa — o resultado na tela já é este.">
+                  <span
+                    tabIndex={0}
+                    className="inline-flex w-full rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {botao}
+                  </span>
+                </Dica>
+              ) : (
+                botao
+              )}
+            </div>
           </div>
         </div>
       </ListHeader>

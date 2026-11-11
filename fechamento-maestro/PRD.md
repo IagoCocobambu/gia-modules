@@ -8,9 +8,9 @@
 | **Label visível**      | Fechamento Maestro                        |
 | **Categoria**          | `operacional`                             |
 | **Autor**              | Iago Pereira (iago.pereira@cocobambu.com) |
-| **Versão do PRD**      | `1.2`                                     |
+| **Versão do PRD**      | `1.3`                                     |
 | **Status**             | `em-dev`                                  |
-| **Última atualização** | 2026-11-10                                |
+| **Última atualização** | 2026-11-11                                |
 | **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.67`              |
 
 ---
@@ -159,12 +159,13 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 - Cada forma de pagamento com valor e grupo, cada desconto, os dois checks, os
   totais e as divergências por extenso.
 
-### RF-7: Barra de totais
+### RF-7: Seção de canais e totais
 
-- **Desktop**: barra acima da tabela, aberta e fechada pelo botão "Totais".
-  **Celular** (modo compacto): a barra não cabe; o botão "Totais" abre o
-  Dashboard (RF-9) direto na aba **Totais**, com os mesmos indicadores
-  (devolutiva 0.1.0, ajuste 8 — revoga a decisão de 2026-11-03).
+- Seção acima da tabela, aberta e fechada pelo botão "Totais" (`Recolhivel`), com
+  o painel de canais (RF-10) à esquerda (em cima, em seção estreita) e os
+  indicadores ao lado. **0.4.0:** também
+  no celular, inline acima da lista, começando fechada (padrão 3); o Dashboard
+  saiu (RF-9).
 - Os 12 indicadores do Fechamento Diário do legado em produção, nesta ordem.
   Aberta em telas com altura ≥ 700 px e fechada abaixo (segue o resize, via
   `matchMedia`); depois que o usuário usa o botão "Totais", vale a escolha dele
@@ -182,8 +183,7 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
   grupos de pagamento (Online, Adquirentes online/offline, Offline) e o botão
   "Ver todos os totais (+8)" com os demais logo abaixo (cancelados, descontos,
   sem classificação). Ponto vermelho no botão com sem classificação escondido;
-  card escondido filtrando mantém a parte de baixo aberta. A aba Totais do
-  Dashboard mostra os 12. Tooltip com a explicação da conta no hover (fecha no clique).
+  card escondido filtrando mantém a parte de baixo aberta. Tooltip com a explicação da conta no hover (fecha no clique).
 - **Cada indicador é um filtro da tabela** (pedido de 2026-11-06): o clique mostra
   só os pedidos que somaram nele (`pedidosDoTotal`, mesma regra de
   `resumirTotais`, valor ≠ 0 no grupo); o indicador fica marcado (`aria-pressed`)
@@ -191,8 +191,7 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
   também tira; nova pesquisa zera. Os totais seguem do período inteiro do canal
   escolhido (RF-10) — o indicador não recalcula a barra (zeraria os outros).
   Indicador zerado não filtra. Combina com "Só divergências" (E) e vale para o
-  Exportar (subtítulo "filtrado (Indicador): X de Y pedidos"). No celular, o
-  toque na aba Totais do Dashboard filtra e fecha o dialog.
+  Exportar (subtítulo "filtrado (Indicador): X de Y pedidos").
 - Cores (tokens semânticos): Online `info`, Adquirentes online/offline `primary`,
   Offline `warning`; cancelados `destructive` só se > 0; Sem classificação
   (valor) `warning` só se ≠ 0; o resto neutro.
@@ -211,33 +210,39 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
   canal e/ou indicador ligados, o subtítulo diz "filtrado (iFood · Online): X de
   Y pedidos".
 
-### RF-9: Dashboard (vendas por canal)
+### RF-9: Dashboard (removido na 0.4.0)
 
-- Botão "Dashboard" na toolbar abre um dialog com duas abas: **Vendas por canal**
-  e **Totais** (os indicadores da RF-7). Vendas por canal:
-  anel (donut SVG) com a fatia de cada `origem` no total pago dos pedidos não
-  cancelados do período inteiro (RN-11); total e nº de pedidos no miolo.
-- Legenda com cor, canal, valor e % (é a versão em tabela do gráfico), do maior
-  para o menor. Hover/foco numa fatia ou linha destaca o canal e troca o miolo
-  pelos números dele; no toque, a legenda alterna o destaque (hover só com mouse,
-  via `pointerType`). Legenda embaixo do anel em
-  larguras pequenas.
-- Cores = as do `BadgeOrigemPedido` (tokens `accent-group`, `accent-exception`,
-  `accent-role`; manual e canais novos em `muted-foreground`). Anel cresce ao
-  abrir (`duration-slow`), sem animação com movimento reduzido.
-- O gráfico de canais usa sempre todos os pedidos da pesquisa (ignora o canal
-  escolhido na RF-10); a aba Totais segue o canal.
+- Até a 0.3.0, botão "Dashboard" com dialog de duas abas (anel Vendas por canal e
+  Totais). Na 0.4.0 o anel foi para a seção de totais (RF-10,
+  opção A validada em 2026-11-11) e o dialog saiu.
 
-### RF-10: Filtro de canal (devolutiva de 2026-11-10)
+### RF-10: Painel de canais (devolutivas de 2026-11-10 e 2026-11-11)
 
 - Pedido do cliente: os totais estavam "consolidados" — filtrar a coluna Origem
   (ex.: só iFood) mudava a tabela, mas não os 12 indicadores.
-- Seletor **Canal** na toolbar da tabela (`Select` do `@gia-cb/ui`): "Todos os
-  canais" + os canais da pesquisa (`origem`, "Sem origem" quando vazia, em ordem
-  alfabética). Só aparece com mais de um canal na pesquisa.
-- O canal recorta **tudo**: os 12 indicadores (barra e aba Totais do Dashboard),
-  a tabela, o contador do "Só divergências" e o Exportar. A barra de totais
-  mostra "Totais só de iFood · X de Y pedidos". Nova pesquisa volta a todos.
+- 0.3.0: seletor Canal na toolbar. **0.4.0** (pedido de unificar totais e
+  dashboard; opção A do canvas de validação — a B, faixa de botões, foi
+  implementada e trocada pela A): **painel de canais** à esquerda dos
+  indicadores (`PainelCanais`; em cima em seção < @4xl): anel (donut SVG) com a
+  fatia de cada `origem` no total pago ("Sem origem" quando vazia;
+  `vendasPorCanal`, sem cancelados), **sem legenda** (pedido de 2026-11-11).
+  Tooltip por fatia só com mouse (`Dica`): canal, valor, % e pedidos. Clicar na
+  fatia escolhe o canal; clicar nela de novo, ou no miolo ("ver todos", botão
+  quando há canal escolhido), volta a todos. Miolo: o canal escolhido (nome,
+  valor, %, pedidos) ou o total — é o que o toque mostra, sem tooltip. Fatia sob
+  o mouse acende (padrão 2). Cores = `BadgeOrigemPedido`. Anel = pesquisa
+  inteira (não muda com o canal). Canal só com cancelados não tem fatia: escolhe-se
+  pelo seletor Canal, que também é o caminho pelo teclado.
+- O seletor **Canal** (0.3.0, na toolbar) fica na **barra de filtros**, à esquerda
+  do Pesquisar (0.4.0), ligado ao mesmo estado do anel (escolher num muda o
+  outro): dá para trocar de canal com a seção de totais fechada, pelo teclado ou
+  para um canal sem fatia. Vale na hora, sem Pesquisar. Desativado antes da
+  primeira pesquisa e com menos de 2 canais.
+- O canal recorta **tudo**: os 12 indicadores, a tabela,
+  o contador do "Só divergências" e o Exportar. A seção mostra "Totais só de
+  iFood · X de Y pedidos" e o anel apaga os outros canais. O canal escolhido
+  continua entre pesquisas (como a loja e o período); se a pesquisa nova não tem
+  aquele canal, volta a todos.
 - **Filtros de coluna não mudam os totais.** O `DataReport` (`@gia-cb/ui`
   0.1.0-alpha.70) não expõe as linhas filtradas ao módulo — só no `onExport` e no
   `summaryRow`, que desenha uma linha na grade (proibido pelo padrão 3 do
@@ -261,7 +266,7 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 2. **Investigar divergência**: Só divergências → clicar no pedido → detalhe.
 3. **Forma não classificada**: card Pagamentos sem classificação → lista → pedido → detalhe.
 4. **Exportar**: Exportar → `.xlsx` de 3 abas.
-5. **Ver os canais**: Dashboard → vendas por canal → hover/toque num canal.
+5. **Ver um canal**: Totais → clicar na fatia do canal no anel, ou seletor Canal (totais, tabela e Excel só dele).
 
 ---
 
@@ -383,17 +388,17 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 - [ ] Período inválido é recusado com mensagem
 - [ ] Mesma loja e dia: os 12 indicadores iguais aos do Fechamento Diário do legado
 - [ ] Online + Adquirentes online + Adquirentes offline + Offline + Valor sem classificação = total pago − incentivo abatido do Online (RN-10)
-- [ ] No celular, o botão Totais abre o Dashboard na aba Totais com os 12 indicadores
+- [ ] No celular, a seção de canais e totais começa fechada e abre pelo botão Totais, acima da lista
 - [ ] Clicar num indicador filtra a tabela pelos pedidos dele; clicar de novo (ou no botão do filtro) tira o filtro
 - [ ] Com o filtro, a soma da coluna do grupo na tabela bate com o valor do indicador
-- [ ] Seletor Canal (com 2+ canais): escolher iFood muda os 12 indicadores, a tabela, o contador do Só divergências e o Exportar; a barra avisa "Totais só de iFood · X de Y pedidos"
-- [ ] Soma dos indicadores por canal = totais com Todos os canais; nova pesquisa volta a Todos os canais
+- [ ] Painel de canais: escolher iFood muda os 12 indicadores, a tabela, o contador do Só divergências e o Exportar; a barra avisa "Totais só de iFood · X de Y pedidos"
+- [ ] Soma dos indicadores por canal = totais com Todos os canais; nova pesquisa mantém o canal (ou volta a Todos se ele não estiver na pesquisa)
 - [ ] No celular, os filtros recolhem pelo chevron do cabeçalho (ListHeader) e recolhem sozinhos quando a pesquisa começa (recusada: ficam abertos)
 - [ ] Em tela de toque, os botões da barra mostram o nome (não só o ícone)
-- [ ] Tocar numa linha da legenda do Dashboard destaca o canal; tocar de novo volta ao total
+- [ ] Clicar no canal escolhido (ou em Todos os canais) volta à pesquisa inteira; o anel apaga os outros canais
 - [ ] Busca genérica só no celular; título do módulo à esquerda e filtros à direita
 - [ ] Indicador de pagamentos sem classificação filtra os pedidos com forma sem nome quando > 0
-- [ ] Dashboard: soma dos canais = Total pago; % da legenda somam ~100%
+- [ ] Painel de canais: soma dos canais = total do miolo do anel; % somam ~100%
 - [ ] Aba Fechamento diário do Excel soma por data de criação, sem cancelados
 - [ ] "Só divergências" mostra só pedidos não cancelados com check divergente
 - [ ] Detalhe do pedido mostra grupo de cada forma e o motivo das divergências
@@ -481,7 +486,7 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 14. Por que não vejo o botão Exportar?
 15. Por que minha loja não aparece no seletor?
 16. Por que a consulta demora e o período é limitado a 31 dias?
-17. Quanto cada canal vendeu? (Dashboard) E por que o total dele deve bater com o Total pago?
+17. Quanto cada canal vendeu? (painel de canais) E por que a soma deve bater com o total do anel?
 18. Apareceu "A loja não tem número de loja no cadastro". O que faço? (Erros comuns)
 19. Como vejo quais pedidos formam um total? (clique no indicador filtra a tabela)
 
@@ -489,14 +494,15 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 
 ## 13. Insumo pra Tour (obrigatório)
 
-| #   | Tela       | Target                                           | Mensagem          |
-| --- | ---------- | ------------------------------------------------ | ----------------- |
-| 1   | Fechamento | `[data-tour="fechamento-maestro-filtros"]`       | Loja e período    |
-| 2   | Fechamento | `[data-tour="fechamento-maestro-pesquisar"]`     | Pesquisar         |
-| 3   | Fechamento | `[data-tour="fechamento-maestro-totais-toggle"]` | Totais do período |
-| 4   | Fechamento | `[data-tour="fechamento-maestro-dashboard"]`     | Dashboard         |
-| 5   | Fechamento | `[data-tour="fechamento-maestro-toolbar"]`       | Colunas e Excel   |
-| 6   | Fechamento | `[data-tour="fechamento-maestro-frame"]`         | Divergências      |
+| #   | Tela       | Target                                                | Mensagem                             |
+| --- | ---------- | ----------------------------------------------------- | ------------------------------------ |
+| 1   | Fechamento | `[data-tour="fechamento-maestro-filtros"]`            | Loja e período                       |
+| 2   | Fechamento | `[data-tour="fechamento-maestro-pesquisar"]`          | Pesquisar                            |
+| 3   | Fechamento | `[data-tour="fechamento-maestro-totais-canais"]`      | Vendas por canal (espera a pesquisa) |
+| 4   | Fechamento | `[data-tour="fechamento-maestro-totais-indicadores"]` | Totais do fechamento                 |
+| 5   | Fechamento | `[data-tour="fechamento-maestro-totais-toggle"]`      | Mostrar e esconder os totais         |
+| 6   | Fechamento | `[data-tour="fechamento-maestro-toolbar"]`            | Colunas e Excel                      |
+| 7   | Fechamento | `[data-tour="fechamento-maestro-divergencias"]`       | Divergências                         |
 
 ---
 
@@ -538,3 +544,13 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 - Devolutiva: totais "consolidados", sem acompanhar o filtro da coluna Origem.
   Novo seletor Canal (RF-10) que recorta totais, tabela, divergências e Excel.
   Totais por filtro de coluna dependem do SDK (pendência em §11).
+
+### 2026-11-11 — v1.3 canais e totais na mesma seção
+
+- Devolutiva: unificar os totais com o dashboard. Opção A do canvas de
+  validação (a B, faixa de botões, foi trocada pela A no mesmo dia): anel e
+  anel de canais à esquerda dos indicadores, na mesma seção, sem legenda (dica
+  no mouse); clicar na fatia escolhe o canal e recorta os 12 indicadores, a
+  tabela e o Excel. Sai o
+  Dashboard (RF-9); o seletor Canal vai para a barra de filtros, ligado ao anel; no
+  celular a seção abre inline pelo botão Totais.

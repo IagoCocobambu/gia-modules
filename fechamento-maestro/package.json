@@ -1,6 +1,6 @@
 {
   "name": "@modules/fechamento-maestro",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Fechamento diário dos pedidos de delivery do Maestro: concilia as formas de pagamento de cada pedido (Online, Adquirentes online/offline, Offline) e aponta as divergências, por loja e período. Para o financeiro e as lojas fecharem o caixa do delivery. Substitui a tela Fechamento Diário Maestro do GIA antigo.",
   "private": true,
   "type": "module",
