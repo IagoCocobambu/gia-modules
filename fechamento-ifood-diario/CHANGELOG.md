@@ -1,5 +1,9 @@
 # Changelog — Fechamento iFood Diário
 
+## 0.2.3 — 11/11/2026
+
+Reempacotado. Sem mudança de código nem de regra em relação à 0.2.2.
+
 ## 0.2.2 — 11/11/2026
 
 - Menu: `navGroup` volta a ser **`cardapio`** (Plataformas). O `navGroup` é o grupo
