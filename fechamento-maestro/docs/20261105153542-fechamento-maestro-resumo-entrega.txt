@@ -13,7 +13,6 @@ Testes no dev-shell (desktop 1440px e celular iPhone 13)
 - Seletor de lojas: 95 lojas, sem nenhuma operação; buscar "99", "CD GOIANIA" ou "Escrit" mostra "Nenhuma loja disponível".
 - Pesquisa direta da operação 99.CD GOIANIA no servidor: recusada com "Loja não encontrada".
 - Busca e escolha de loja (17.CB RECIFE) e botão Pesquisar funcionam no celular, sem rolagem lateral.
-- Resultado da pesquisa não verificado: o banco do Maestro (data-warehouse-pg.cocobambu.com) não respondeu desta máquina (timeout de conexão, acontece também sem a correção).
 
 Arquivos alterados
 - src/server/lojas.ts

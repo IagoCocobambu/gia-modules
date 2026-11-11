@@ -1,14 +1,14 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { AlertTriangle, Gauge, Info, RefreshCw } from 'lucide-react'
-import { Button, EmptyState, SegmentedControl, Select, Skeleton } from '@gia-cb/ui'
+import { Button, EmptyState, SegmentedControl, Skeleton } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
 import { useEntradaEmCascata } from '../../hooks/use-entrada'
+import { useComHover } from '../../hooks/use-com-hover'
 import {
   MIN_PEDIDOS_CELULA,
   MIN_PEDIDOS_CELULA_DIA,
   QUEM_CANCELOU,
   TRACO,
-  canaisDosPedidos,
   cancelamentosPorQuem,
   chaveDaCelula,
   estatisticasDasEtapas,
@@ -35,8 +35,8 @@ import { CartoesEtapas } from '../graficos/CartoesEtapas'
 import { NumeroAnimado } from '../graficos/NumeroAnimado'
 
 // O dashboard Operacional: quanto tempo o pedido leva dentro da loja, em que dias
-// e horários trava, e quem cancela. Base: docs/gargalos-operacionais-delivery.md;
-// as contas estão em `operacional.ts`.
+// e horários trava, e quem cancela. A regra está no PRD (RF-6, RN-8); as contas
+// estão em `operacional.ts`.
 //
 // ── SÓ O QUE TODA LOJA TEM ──────────────────────────────────────────────────
 //
@@ -47,10 +47,11 @@ import { NumeroAnimado } from '../graficos/NumeroAnimado'
 // vazio seria lido como defeito.
 //
 // O desenho segue o Dashboard do Plano de Contas: cartões de indicador no topo,
-// gráficos em molduras com tela cheia (e a tabela dos números), e o filtro de
-// canal acima de tudo o que ele muda.
+// gráficos em molduras com tela cheia (e a tabela dos números). O filtro de
+// canal fica na linha das abas (`SeletorDeCanal`, na view), e a contagem de
+// pedidos e de entregas medidas vai dentro dos cartões do topo.
 
-/** Mínimo, mediana e máximo de um tempo, para a dica dos cartões do topo. */
+/** Mínimo, mediana e máximo de um tempo, para os cartões do topo. */
 const extremos = (f: Faixa) => [
   { rotulo: 'Mínimo', valor: fmtDuracao(f.minimo) },
   { rotulo: 'Mediana', valor: fmtDuracao(f.mediana) },
@@ -72,13 +73,14 @@ const LEITURAS_DO_MAPA: Array<{ value: LeituraDoMapa; label: string; tooltip: st
   { value: 'dia', label: 'Por dia', tooltip: 'Uma linha para cada dia do período pesquisado' },
 ]
 
+/** Botões do `SegmentedControl` com 44 px de altura no toque (alvo do dedo). */
+const ALVO_DE_TOQUE = '[@media(hover:none)]:[&_button]:min-h-11'
+
 const METRICAS_DO_MAPA: Array<{ value: MetricaDoMapa; label: string }> = [
   { value: 'naLoja', label: 'Tempo na loja' },
   { value: 'preparo', label: 'Preparo' },
   { value: 'pedidos', label: 'Pedidos' },
 ]
-
-const TODOS = '__todos'
 
 interface Props {
   consulta: Consulta | null
@@ -86,6 +88,8 @@ interface Props {
   carregando: boolean
   erro: Error | null
   onTentarDeNovo: () => void
+  /** Canal escolhido na linha das abas (`null` = todos). */
+  canal: string | null
   /** Celular: a página rola inteira, e a aba não rola por dentro. */
   compacto: boolean
   className?: string
@@ -110,6 +114,7 @@ export function AbaOperacional({
   carregando,
   erro,
   onTentarDeNovo,
+  canal,
   compacto,
   className,
 }: Props) {
@@ -152,14 +157,15 @@ export function AbaOperacional({
       </Aviso>
     )
   }
-  // `key`: outra pesquisa monta o painel de novo — o canal volta para "todos" e
-  // a entrada em cascata roda outra vez, com os dados novos.
+  // `key`: outra pesquisa monta o painel de novo — a entrada em cascata roda
+  // outra vez, com os dados novos (o canal volta para "todos" na view).
   return (
     <PainelOperacional
       key={`${consulta.empresaId}|${consulta.de}|${consulta.ate}`}
       de={consulta.de}
       ate={consulta.ate}
       pedidos={pedidos}
+      canal={canal}
       compacto={compacto}
       className={className}
     />
@@ -204,22 +210,28 @@ function PainelOperacional({
   de,
   ate,
   pedidos: todos,
+  canal,
   compacto,
   className,
 }: {
   de: string
   ate: string
   pedidos: PedidoOperacional[]
+  canal: string | null
   compacto: boolean
   className?: string
 }) {
   const raiz = useRef<HTMLDivElement>(null)
   useEntradaEmCascata(raiz, true)
-  const [canal, setCanal] = useState<string | null>(null)
   const [metricaMapa, setMetricaMapa] = useState<MetricaDoMapa>('naLoja')
   const [leituraMapa, setLeituraMapa] = useState<LeituraDoMapa>('semana')
+  // O `SegmentedControl` do portal põe a dica da opção num `Tooltip` próprio; em
+  // tela de toque ela sai (padrão 2 do workspace) — a FAQ explica as duas leituras.
+  const comHover = useComHover()
+  const leiturasDoMapa = comHover
+    ? LEITURAS_DO_MAPA
+    : LEITURAS_DO_MAPA.map(({ tooltip: _, ...o }) => o)
 
-  const canais = useMemo(() => canaisDosPedidos(todos), [todos])
   const pedidos = useMemo(() => filtrarCanal(todos, canal), [todos, canal])
   const r = useMemo(() => resumoOperacional(pedidos), [pedidos])
   const mapa = useMemo(() => mapaDeCalor(pedidos, de, ate), [pedidos, de, ate])
@@ -270,32 +282,6 @@ function PainelOperacional({
     >
       <div className="flex flex-col gap-4 pb-4">
         <div
-          className="flex flex-wrap items-center gap-x-4 gap-y-2"
-          data-tour="reports-maestro-operacional-filtros"
-        >
-          <div className="flex min-w-0 items-center gap-1.5">
-            <span className="whitespace-nowrap text-xs text-muted-foreground">Canal</span>
-            <Select value={canal ?? TODOS} onValueChange={(v) => setCanal(v === TODOS ? null : v)}>
-              <Select.Trigger className="h-8 w-52 max-w-full text-xs" aria-label="Canal">
-                <span className="truncate">{canal ?? 'Todos os canais'}</span>
-              </Select.Trigger>
-              <Select.Content>
-                <Select.Item value={TODOS}>Todos os canais</Select.Item>
-                {canais.map((c) => (
-                  <Select.Item key={c} value={c}>
-                    {c}
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {plural(r.pedidos, 'pedido', 'pedidos')} · tempos de{' '}
-            {plural(r.medidos, 'entrega', 'entregas')} (sem retiradas e cancelados)
-          </span>
-        </div>
-
-        <div
           className="grid grid-cols-2 gap-2 @4xl:grid-cols-4"
           data-tour="reports-maestro-operacional-resumo"
         >
@@ -303,16 +289,22 @@ function PainelOperacional({
             atraso={0}
             rotulo="Tempo na loja (média)"
             valor={<NumeroAnimado valor={r.naLoja.media} formatar={fmtMin} />}
-            detalhe={`90% até ${fmtMin(r.naLoja.p90)}`}
-            valoresDaDica={extremos(r.naLoja)}
-            ajuda="Do pedido recebido até o despachado: aceite, preparo e expedição. O número grande é a média das entregas; 90% levam até o segundo número."
+            detalhe={
+              <>
+                90% até {fmtMin(r.naLoja.p90)}
+                <br />
+                {plural(r.medidos, 'entrega medida', 'entregas medidas')}
+              </>
+            }
+            valores={extremos(r.naLoja)}
+            ajuda="Do pedido recebido até o despachado: aceite, preparo e expedição. O número grande é a média das entregas medidas (sem retiradas e cancelados); 90% levam até o segundo número."
           />
           <CartaoIndicador
             atraso={40}
             rotulo="Preparo (média)"
             valor={<NumeroAnimado valor={r.preparo.media} formatar={fmtMin} />}
             detalhe={`90% até ${fmtMin(r.preparo.p90)}`}
-            valoresDaDica={extremos(r.preparo)}
+            valores={extremos(r.preparo)}
             ajuda="Do pedido confirmado até o embalado: cozinha e embalagem."
           />
           {r.entrega ? (
@@ -321,7 +313,7 @@ function PainelOperacional({
               rotulo="Até a entrega (média)"
               valor={<NumeroAnimado valor={r.entrega.total.media} formatar={fmtMin} />}
               detalhe={`90% até ${fmtMin(r.entrega.total.p90)}`}
-              valoresDaDica={extremos(r.entrega.total)}
+              valores={extremos(r.entrega.total)}
               ajuda={`Do pedido recebido até a entrega registrada pelo app de entrega. Medido em ${plural(r.entrega.medidas, 'entrega', 'entregas')}.`}
             />
           ) : (
@@ -337,7 +329,7 @@ function PainelOperacional({
             atraso={120}
             rotulo="Cancelados"
             valor={<NumeroAnimado valor={fracao(r.cancelados, r.pedidos)} formatar={fmtPct} />}
-            detalhe={`${fmtInt(r.cancelados)} · ${fmtBRLCompacto(r.canceladosValor)}`}
+            detalhe={`${fmtInt(r.cancelados)} de ${plural(r.pedidos, 'pedido', 'pedidos')} · ${fmtBRLCompacto(r.canceladosValor)}`}
             ajuda="Pedidos cancelados, pelo cliente, pela plataforma ou pela loja."
           />
         </div>
@@ -452,13 +444,15 @@ function PainelOperacional({
                 value={leituraMapa}
                 onChange={setLeituraMapa}
                 ariaLabel="Como o mapa agrupa os dias"
-                options={LEITURAS_DO_MAPA}
+                options={leiturasDoMapa}
+                className={ALVO_DE_TOQUE}
               />
               <SegmentedControl<MetricaDoMapa>
                 value={metricaMapa}
                 onChange={setMetricaMapa}
                 ariaLabel="O que o mapa mostra"
                 options={METRICAS_DO_MAPA}
+                className={ALVO_DE_TOQUE}
               />
             </div>
           }
@@ -467,23 +461,27 @@ function PainelOperacional({
               { titulo: 'Dia' },
               { titulo: 'Hora', numerica: true },
               { titulo: 'Pedidos', numerica: true },
+              { titulo: 'Entregas medidas', numerica: true },
               { titulo: 'Tempo na loja (média)', numerica: true },
               { titulo: 'Preparo (média)', numerica: true },
             ],
+            // Mesmo piso do gráfico: abaixo dele a média não é confiável, e o
+            // gráfico não a mostra — a tabela também não (vai "—").
             linhas: grade.linhas.flatMap((d) =>
               mapa.horas.flatMap((h) => {
                 const c = grade.celulas.get(chaveDaCelula(d.chave, h))
-                return c
-                  ? [
-                      [
-                        d.rotulo,
-                        `${h}h`,
-                        fmtInt(c.pedidos),
-                        fmtMin(c.naLojaMedia),
-                        fmtMin(c.preparoMedia),
-                      ],
-                    ]
-                  : []
+                if (!c) return []
+                const ok = c.medidos >= piso
+                return [
+                  [
+                    d.rotulo,
+                    `${h}h`,
+                    fmtInt(c.pedidos),
+                    fmtInt(c.medidos),
+                    ok ? fmtMin(c.naLojaMedia) : TRACO,
+                    ok ? fmtMin(c.preparoMedia) : TRACO,
+                  ],
+                ]
               })
             ),
           })}

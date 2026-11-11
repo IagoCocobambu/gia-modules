@@ -3,9 +3,9 @@
 ## 1. Identificação
 
 - **Módulo**: `reports-maestro` — Reports Maestro
-- **Versão do pacote**: 0.3.0
+- **Versão do pacote**: 0.3.1
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
-- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.69 (fixada)
+- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.70 (fixada)
 
 ## 2. Fontes de dados externas
 
@@ -75,3 +75,10 @@ Módulo **read-only** — não cria tabela nem migration no portal.
   serve às duas abas: trocar de aba não busca de novo. Os gráficos são SVG com
   tokens do tema (base copiada do Dashboard do Plano de Contas); nenhuma
   dependência nova.
+- **Tour das abas** (0.3.1): além do tour da tela (`tour.ts`, `module_id`
+  `reports-maestro`, montado pelo portal), o módulo monta um segundo tour com
+  `useTourGuide` + `useTourTabSync`, que troca de aba sozinho. Ele grava o
+  progresso em `user_tour_progress` com **`module_id = 'reports-maestro:abas'`**
+  (mesmo formato do exemplo `onboarding:editor` do SDK). Se o `mark_tour_step` do
+  portal só aceitar id de módulo registrado, esse tour reaparece a cada visita —
+  confirmar na instalação.

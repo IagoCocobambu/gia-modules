@@ -20,8 +20,7 @@ import { DicaGrafico, LinhaDica } from './DicaGrafico'
 //
 // ── O NÚMERO NA CÉLULA, DISCRETO ────────────────────────────────────────────
 //
-// Pedido do usuário em 05/11/2026 (proposta A em
-// docs/artefatos/mapa-de-calor-propostas.html): o valor escrito dentro da célula,
+// Pedido do usuário em 05/11/2026 (proposta A, entre cinco de desenho): o valor escrito dentro da célula,
 // para ler sem passar o mouse — no toque não há hover. E DISCRETO: fonte pequena,
 // sem negrito, com transparência; a cor continua sendo a leitura principal e o
 // número é o detalhe para quem chega perto. Sobre as faixas fortes ele é claro,

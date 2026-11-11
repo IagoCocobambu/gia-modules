@@ -1,6 +1,7 @@
 import type { ComponentType, SVGProps } from 'react'
 import { BadgePercent, Bike, ShoppingBag, Wallet } from 'lucide-react'
-import { Skeleton, Tooltip } from '@gia-cb/ui'
+import { Skeleton } from '@gia-cb/ui'
+import { Dica } from './Dica'
 import { cn } from '@gia-cb/ui/cn'
 import { formatBRL, type TotaisPedidos } from '../helpers'
 import { NumeroAnimado } from './graficos/NumeroAnimado'
@@ -133,13 +134,13 @@ export function TotaisCards({ totais, carregando, className }: TotaisCardsProps)
                 )}
                 <span className="truncate text-xs text-muted-foreground">{rotulo}</span>
               </span>
-              <Tooltip content={dica}>
+              <Dica content={dica}>
                 <span
                   tabIndex={0}
                   aria-label={`${rotulo}: ${dica}`}
                   className="absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
-              </Tooltip>
+              </Dica>
             </div>
           )
         })}

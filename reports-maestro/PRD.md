@@ -8,10 +8,10 @@
 | **Label visível**      | Reports Maestro                           |
 | **Categoria**          | `operacional`                             |
 | **Autor**              | Iago Pereira (iago.pereira@cocobambu.com) |
-| **Versão do PRD**      | `1.4`                                     |
+| **Versão do PRD**      | `1.5`                                     |
 | **Status**             | `em-dev`                                  |
-| **Última atualização** | 2026-11-04                                |
-| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.67`              |
+| **Última atualização** | 2026-11-09                                |
+| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.68`              |
 
 ---
 
@@ -192,16 +192,16 @@ sai como célula vazia, não zero. Os dados pessoais saem como chegaram do servi
 
 ### RF-6: Dashboard Operacional
 
-**Descrição**: aba **Operacional** — a primeira e a que abre por padrão (na primeira
-visita, com o tour pendente, a tela abre em Pedidos, onde o tour aponta) —, ao lado
+**Descrição**: aba **Operacional** — a primeira e a que a tela **sempre** abre,
+inclusive na primeira visita —, ao lado
 de **Pedidos**, com a mesma loja e o
 mesmo período da pesquisa. Mostra quanto tempo o pedido leva dentro da loja, em que
 dias e horários trava e quem cancela, a partir do **histórico de status** de cada
 pedido (o mesmo handler `pedidos`, que busca com `incluir_historico=true` e devolve
-também o resumo do dashboard). Base:
-`docs/gargalos-operacionais-delivery.md`.
+também o resumo do dashboard).
 
-- **Filtro de canal** acima de tudo (todos ou um).
+- **Filtro de canal** na linha das abas, à direita, só com a aba Operacional aberta
+  (todos ou um); volta para todos a cada pesquisa.
 - **Cartões**: tempo na loja (Recebido → Despachado) e preparo, com média e 90%
   até; tempo até a entrega quando a loja tem a entrega registrada (senão, total de
   pedidos); cancelados (% e R$).
@@ -402,7 +402,9 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 - [ ] Leitor sem `reports-maestro.exportar` não vê o botão Exportar
 - [ ] Sem `reports-maestro.ver-dados-cliente`, a resposta do handler (DevTools → Rede) já traz CPF/e-mail/telefone/número/referência mascarados; com ela, completos
 - [ ] Colunas adicionais começam ocultas, aparecem pelo botão de colunas e vão no fim do Excel
-- [ ] Empresa sem número não aparece no seletor
+- [ ] Propriedade (`tipoRegistro = 'propriedade'`, ex.: Escritório) não aparece no seletor; loja sem número aparece e a pesquisa avisa (422)
+- [ ] No celular, Pesquisar recolhe a barra de filtros e a seta do cabeçalho reabre; pesquisa recusada (período inválido, sem loja) deixa a barra aberta; em `sm+` os filtros ficam sempre visíveis
+- [ ] Em tela de toque não abre tooltip; mínimo, mediana e máximo vêm escritos nos cartões de tempo; botões com 44 px de altura
 - [ ] Handler recusa (403) empresa fora do escopo
 - [ ] Mesma loja e período trazem os mesmos pedidos que o Reports Maestro legado
 - [ ] Linha Total do Excel bate com a soma das colunas em R$ das linhas exportadas
@@ -493,17 +495,62 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 
 ## 13. Insumo pra Tour (obrigatório)
 
-| #   | Tela    | Target                                    | Mensagem               |
-| --- | ------- | ----------------------------------------- | ---------------------- |
-| 1   | Pedidos | `[data-tour="reports-maestro-filtros"]`   | Escolha loja e período |
-| 2   | Pedidos | `[data-tour="reports-maestro-pesquisar"]` | Pesquisar              |
-| 3   | Pedidos | `[data-tour="reports-maestro-toolbar"]`   | Busca, colunas e Excel |
-| 4   | Pedidos | `[data-tour="reports-maestro-frame"]`     | Pedidos                |
-| 5   | Pedidos | `[data-tour="reports-maestro-abas"]`      | Pedidos e Operacional  |
+Dois tours, um depois do outro, nunca juntos:
+
+**Tour da tela** (`tour.ts`, montado pelo portal) — só o que aparece nas duas abas:
+
+| #   | Aba   | Target                                    | Mensagem              |
+| --- | ----- | ----------------------------------------- | --------------------- |
+| 1   | ambas | `[data-tour="reports-maestro-filtros"]`   | Loja e período        |
+| 2   | ambas | `[data-tour="reports-maestro-pesquisar"]` | Pesquisar             |
+| 3   | ambas | `[data-tour="reports-maestro-abas"]`      | Operacional e Pedidos |
+
+**Tour das abas** (`tour-das-abas.ts`, id `reports-maestro:abas`, montado pelo
+módulo com `useTourTabSync`) — começa quando todos os passos do tour da tela
+foram vistos (não para quem o pulou) **e** o dashboard tem pedidos. Sem pesquisa,
+ele espera e continua sozinho, do passo em que parou, assim que a pesquisa trouxer
+pedidos; com os pedidos já na tela, segue direto do começo ao fim. Troca de aba
+sozinho, usa sempre os números da pesquisa (API) e volta para o Operacional no fim.
+
+| #   | Aba         | Target                                                    | Mensagem                 |
+| --- | ----------- | --------------------------------------------------------- | ------------------------ |
+| 1   | Operacional | (sem destaque)                                            | Dashboard Operacional    |
+| 2   | Operacional | `[data-tour="reports-maestro-operacional-filtros"]`       | Canal                    |
+| 3   | Operacional | `[data-tour="reports-maestro-operacional-resumo"]`        | Cartões do alto          |
+| 4   | Operacional | `[data-tour="reports-maestro-operacional-etapas"]`        | Tempo por etapa          |
+| 5   | Operacional | `[data-tour="reports-maestro-operacional-cancelamentos"]` | Quem cancelou            |
+| 6   | Operacional | `[data-tour="reports-maestro-operacional-mapa"]`          | Dia × hora do pedido     |
+| 7   | Pedidos     | `[data-tour="reports-maestro-filtros-toggle"]`            | Filtros de status/origem |
+| 8   | Pedidos     | `[data-tour="reports-maestro-totais-toggle"]`             | Totais em R$             |
+| 9   | Pedidos     | `[data-tour="reports-maestro-toolbar"]`                   | Busca, colunas e Excel   |
+| 10  | Pedidos     | `[data-tour="reports-maestro-frame"]`                     | Pedidos                  |
 
 ---
 
 ## 14. Histórico
+
+### 2026-11-09 — v1.5 (pacote 0.3.1)
+
+Ajustes da devolutiva da 0.3.0 (05/11/2026):
+
+- Rosca de cancelamentos: o rótulo para leitor de tela lê os números, não código.
+- Cartões de indicador: em tela de toque, mínimo, mediana e máximo vêm escritos
+  no cartão; com mouse, continuam na dica. Todo tooltip do módulo passa pelo
+  `Dica` (só com mouse), e a conta de cada cartão e de cada total está na FAQ.
+- Filtro de canal na linha das abas, à direita; "N entregas medidas" vai no cartão
+  Tempo na loja e "X de N pedidos" no cartão Cancelados.
+- Alvos de toque com 44 px (legenda dos dias, seletor de canal, tela cheia,
+  seletores do mapa); destaque por hover só com mouse.
+- Tabela da tela cheia do Dia × hora: coluna "Entregas medidas" e "—" nas médias
+  abaixo do piso, como o gráfico.
+- A tela abre sempre no Operacional. Tour da tela com o que é comum às duas abas e
+  tour das abas (`reports-maestro:abas`, com `useTourTabSync`) depois da primeira
+  pesquisa com pedidos — ver §13.
+- FAQ sem comparação com o sistema substituído.
+- No celular, Pesquisar recolhe a barra de filtros (padrão 1 do workspace).
+- SDK mínima corrigida para a alpha.68 (`tipoRegistro`); Escritório como
+  `propriedade` no `gia.config.ts`; referências a documentos fora do pacote
+  retiradas.
 
 ### 2026-11-04 — v1.4 (pacote 0.3.0)
 
@@ -511,7 +558,8 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
   e mapa de calor dia × hora, pelo histórico de status da API
   (`incluir_historico=true`), com o desenho do Dashboard do Plano de Contas. Rota
   e tempo até a entrega só quando a loja tem a entrega registrada.
-- A lista de pedidos passa a buscar só com a aba Pedidos aberta.
+- Uma busca só serve às duas abas: a lista de pedidos e o dashboard saem da mesma
+  chamada, e trocar de aba não busca de novo.
 
 ### 2026-11-04 — v1.3
 

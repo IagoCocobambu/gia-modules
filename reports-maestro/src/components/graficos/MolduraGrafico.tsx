@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { Button, TelaCheia, Tooltip } from '@gia-cb/ui'
+import { Button, TelaCheia } from '@gia-cb/ui'
+import { Dica } from '../Dica'
 import { cn } from '@gia-cb/ui/cn'
 import { Maximize2, Minimize2 } from 'lucide-react'
 import { useCortado } from '../../hooks/use-cortado'
@@ -89,7 +90,7 @@ export function MolduraGrafico({
           <header className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
             <div className="min-w-[11rem] flex-1">
               <div className="flex min-w-0 items-center gap-1.5">
-                {tituloCortado ? <Tooltip content={titulo}>{h3}</Tooltip> : h3}
+                {tituloCortado ? <Dica content={titulo}>{h3}</Dica> : h3}
                 <div
                   className={cn(
                     'ml-auto flex shrink-0 items-center gap-0.5 transition-opacity duration-fast ease-default',
@@ -97,11 +98,12 @@ export function MolduraGrafico({
                       'opacity-0 group-focus-within/cartao:opacity-100 group-hover/cartao:opacity-100 [@media(hover:none)]:opacity-100'
                   )}
                 >
-                  <Tooltip content={cheia ? 'Sair da tela cheia (Esc)' : 'Expandir em tela cheia'}>
+                  <Dica content={cheia ? 'Sair da tela cheia (Esc)' : 'Expandir em tela cheia'}>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
+                      // 44 px no toque: alvo mínimo para o dedo.
+                      className="h-7 w-7 [@media(hover:none)]:h-11 [@media(hover:none)]:w-11"
                       aria-label={cheia ? 'Sair da tela cheia' : 'Expandir em tela cheia'}
                       aria-pressed={cheia}
                       onClick={() => {
@@ -117,7 +119,7 @@ export function MolduraGrafico({
                         <Maximize2 className="h-3.5 w-3.5" aria-hidden />
                       )}
                     </Button>
-                  </Tooltip>
+                  </Dica>
                 </div>
               </div>
               {subtitulo && (

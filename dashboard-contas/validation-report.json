@@ -1,0 +1,360 @@
+{
+  "moduleId": "dashboard-contas",
+  "cwd": "/home/cb_tech/modules-gia/dashboard-contas",
+  "timestamp": "2026-11-05T19:14:13.102Z",
+  "passed": true,
+  "errors": 0,
+  "warnings": 0,
+  "results": [
+    {
+      "category": "Estrutura",
+      "name": "package.json",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Estrutura",
+      "name": "tsconfig.json",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Estrutura",
+      "name": "PRD.md",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Estrutura",
+      "name": "src/module.ts",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Estrutura",
+      "name": "src/permissions.ts",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Estrutura",
+      "name": "src/faq.ts",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Estrutura",
+      "name": "src/tour.ts",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Estrutura",
+      "name": "src/routes.tsx",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Estrutura",
+      "name": "src/views/<PascalCase>.tsx",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Estrutura",
+      "name": "naming kebab-case em src/",
+      "severity": "warning",
+      "passed": true
+    },
+    {
+      "category": "Manifest",
+      "name": "defineModule(...)",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Manifest",
+      "name": "campo `id`",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Manifest",
+      "name": "campo `label`",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Manifest",
+      "name": "campo `icon`",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Manifest",
+      "name": "campo `defaultNavPath`",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Manifest",
+      "name": "campo `permissions`",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Manifest",
+      "name": "campo `description`",
+      "severity": "warning",
+      "passed": true
+    },
+    {
+      "category": "Manifest",
+      "name": "registerModule(...)",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Manifest",
+      "name": "version declarada e igual à do package.json",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Permissões",
+      "name": "mínimo 2 permissões",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Permissões",
+      "name": "leitura + escrita separadas",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Permissões",
+      "name": "prefixo \"dashboard-contas.\"",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Permissões",
+      "name": "todas com groupPath",
+      "severity": "warning",
+      "passed": true
+    },
+    {
+      "category": "Permissões",
+      "name": "groupPath com no máximo 2 níveis",
+      "severity": "warning",
+      "passed": true
+    },
+    {
+      "category": "FAQ",
+      "name": "mínimo 5 entradas",
+      "severity": "error",
+      "passed": true,
+      "message": "58 entradas encontradas"
+    },
+    {
+      "category": "FAQ",
+      "name": "sem placeholders de STUB",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "FAQ",
+      "name": "summary preenchido",
+      "severity": "warning",
+      "passed": true
+    },
+    {
+      "category": "FAQ",
+      "name": "bloco qa com ao menos 3 perguntas",
+      "severity": "error",
+      "passed": true,
+      "message": "30 perguntas em 4 categoria(s)"
+    },
+    {
+      "category": "Tour",
+      "name": "mínimo 3 steps",
+      "severity": "error",
+      "passed": true,
+      "message": "12 steps encontrados"
+    },
+    {
+      "category": "Tour",
+      "name": "target = [data-tour=\"...\"]",
+      "severity": "warning",
+      "passed": true
+    },
+    {
+      "category": "Tour",
+      "name": "sem placeholders de STUB",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "PRD",
+      "name": "seções obrigatórias",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "PRD",
+      "name": "sem placeholders do template",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "PRD",
+      "name": "volume mínimo (≥ 300 palavras)",
+      "severity": "warning",
+      "passed": true,
+      "message": "3636 palavras"
+    },
+    {
+      "category": "Código",
+      "name": "import de @/app/*",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Código",
+      "name": "import cross-módulo",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Código",
+      "name": "atributo `title=` HTML",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Código",
+      "name": "persistência client-side",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Código",
+      "name": "export default",
+      "severity": "warning",
+      "passed": true
+    },
+    {
+      "category": "Código",
+      "name": "import legado @/ui",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Código",
+      "name": "import legado @/lib",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Código",
+      "name": "bandeira por lista fixa (depreciado)",
+      "severity": "warning",
+      "passed": true
+    },
+    {
+      "category": "Design system",
+      "name": "Sem classes de utility inexistentes",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Dependências",
+      "name": "Sem dependência declarada de forma vulnerável",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Lint (eslint do host)",
+      "name": "src/ passa no ESLint do host",
+      "severity": "error",
+      "passed": true,
+      "message": "sem erros de lint"
+    },
+    {
+      "category": "Formatação (prettier do host)",
+      "name": "src/ passa no Prettier do host",
+      "severity": "error",
+      "passed": true,
+      "message": "sem diferenças de formatação"
+    },
+    {
+      "category": "Typecheck (tsc)",
+      "name": "tsc --noEmit",
+      "severity": "error",
+      "passed": true,
+      "message": "sem erros de tipo"
+    },
+    {
+      "category": "Banco (migrations)",
+      "name": "migrations/ (opcional)",
+      "severity": "info",
+      "passed": true,
+      "message": "módulo sem migrations — ok se não tem dados próprios"
+    },
+    {
+      "category": "Edge Functions",
+      "name": "Cada função tem index.ts",
+      "severity": "error",
+      "passed": true,
+      "message": "1 funções"
+    },
+    {
+      "category": "Edge Functions",
+      "name": "Entrypoint usa Deno.serve(...)",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Edge Functions",
+      "name": "_meta.json válido (quando presente)",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Edge Functions",
+      "name": "Sintaxe TS válida (esbuild)",
+      "severity": "error",
+      "passed": true
+    },
+    {
+      "category": "Edge Functions",
+      "name": "Secrets requeridos declarados",
+      "severity": "info",
+      "passed": true,
+      "details": [
+        "dashboard-contas: GIA_SERVER_DATABASE_URL"
+      ]
+    },
+    {
+      "category": "Server (autorização)",
+      "name": "Todo handler chama ctx.requirePermission(...)",
+      "severity": "error",
+      "passed": true,
+      "message": "3 handlers autenticados"
+    },
+    {
+      "category": "Server (autorização)",
+      "name": "Handler com loja no body valida o escopo",
+      "severity": "error",
+      "passed": true,
+      "message": "2 handlers com loja no body, todos com checagem de escopo"
+    },
+    {
+      "category": "Entrega (handoff)",
+      "name": "INTEGRATION.md preenchido",
+      "severity": "warning",
+      "passed": true
+    }
+  ]
+}
