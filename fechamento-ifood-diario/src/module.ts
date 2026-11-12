@@ -5,7 +5,7 @@ import { fechamentoIfoodDiarioRoutes } from './routes'
 export const fechamentoIfoodDiarioModule = defineModule({
   id: 'fechamento-ifood-diario',
   label: 'Fechamento iFood Diário',
-  version: '0.2.4',
+  version: '0.2.5',
   description:
     'Fechamento diário dos pedidos iFood de uma loja, com todas as operações dela: cruza os pedidos do DW com as vendas de todos os restaurantes da loja na API financeira do iFood, classifica as formas de pagamento (Online, Adquirentes/VR, Offline) e soma os cards do fechamento.',
   icon: 'ReceiptText',

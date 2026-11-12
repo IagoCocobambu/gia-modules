@@ -202,7 +202,7 @@ relfechamentoifood` e o Excel era livre.
 | `api-dw.cocobambu.com` `/Delivery/`                         | Pedidos do dia   | handler `pedidos`                   | hub de Credenciais, integração `apidw`        |
 | Merchant API do iFood `financial/v3.0/merchants/{id}/sales` | Vendas do dia    | handler `vendas`                    | hub de Credenciais, integração `ifood`        |
 | Banco do Maestro (`gia_relatorios.formas_pagamento`)        | Formas ONLINE VR | handler `pedidos` (`sql`)           | secret `GIA_SERVER_DATABASE_URL` (só leitura) |
-| Operações do escopo e Empresa da operação (`locRefs.IFOOD`) | Lojas e merchant | `ctx.operacoes()`, `ctx.empresas()` | —                                             |
+| Empresas e operações do escopo (`integracoes` IFOOD)        | Lojas e merchant | `ctx.operacoes()`, `ctx.empresas()` | —                                             |
 
 ### 5.4 BFF / processamento em segundo plano
 
@@ -231,12 +231,13 @@ código não usa, como `× 0,965`) e não foi seguido.
   **todas as operações** dela juntas. `loc_ref` do DW = número da loja (vínculo
   `locRefs.BIAPI` ou o começo do nome, "54.CB MINAS SHOPPING" → `54`); do DW entram os
   pedidos dos canais **"iFood"** e **"iFood Vasto"** (`origem`). Os restaurantes do
-  iFood da loja são **um por operação com integração IFOOD** no cadastro (cb, cbx,
-  pzcb, dani, adgcb, burger, vst, vstss…), numa tabela do módulo
-  (`RESTAURANTES_IFOOD`, por número de loja, em `lojas.ts` e `vendas.ts`) gerada da
-  planilha "GIA - Empresas - Cadastro - 2026-11-09" (aba Integrações das operações) —
-  provisória: o SDK não expõe vínculo por operação (§11). Loja fora da tabela usa o
-  `locRefs.IFOOD` da Empresa, se houver. Até a 0.2.3 a loja era a operação, com só o
+  iFood da loja são os **vínculos IFOOD ativos das operações** da Empresa no cadastro
+  do portal (cb, cbx, pzcb, dani, adgcb, burger, vst, vstss…; uma operação pode ter mais
+  de um), lidos a cada chamada em `ctx.operacoes()` → `integracoes` (SDK alpha.71). Na
+  0.2.4 eles estavam numa tabela fixa do módulo (`RESTAURANTES_IFOOD`), gerada da
+  planilha de cadastro de 09/11/2026; a 0.2.5 tirou a tabela — loja nova ou conta movida
+  passa a valer sem versão nova do módulo. Restaurante que o iFood não reconhece (404:
+  identificador errado no cadastro) vira aviso daquele restaurante. Até a 0.2.3 a loja era a operação, com só o
   restaurante dela (os pedidos de Express, Pizzaria, Dani… ficavam Cancelado, como no
   legado); com a consolidação, eles cruzam e entram nos cards — **os cards deixam de
   bater com a tela antiga** nas lojas com mais de um restaurante, por decisão do
@@ -312,6 +313,10 @@ código não usa, como `× 0,965`) e não foi seguido.
       iFood do DW cruzados, cada um com o restaurante e a operação certos (mesmo código
       em dois restaurantes desempatado pela hora)
 - [ ] Loja sem integração iFood: aviso amarelo e pedidos como Cancelado
+- [x] Restaurantes da loja vindos dos vínculos IFOOD das operações (0.2.5): no `gia dev`,
+      os mesmos 236 da tabela da 0.2.4 + o vínculo incompleto da `43 cbx`
+- [x] Restaurante que o iFood não reconhece (404, `43 cbx` incompleto): aviso daquele
+      restaurante, sem nova tentativa; as outras operações da loja normais (43, 11/11/2026)
 - [ ] Erro na API do iFood: aviso amarelo, pesquisa não falha
 - [ ] Clicar num card filtra a tabela pelos pedidos dele; clicar de novo tira
 - [ ] Com o filtro de um card, a soma da coluna correspondente bate com o card
@@ -343,12 +348,12 @@ código não usa, como `× 0,965`) e não foi seguido.
 
 ## 10. Riscos e mitigações
 
-| Risco                                      | Mitigação                                                                           |
-| ------------------------------------------ | ----------------------------------------------------------------------------------- |
-| Integração `ifood` ainda não existe no hub | Aviso claro na tela; pendência no INTEGRATION.md                                    |
-| Restaurante novo fora da tabela do módulo  | Pedidos dele ficam Cancelado; atualizar `RESTAURANTES_IFOOD` (lojas.ts e vendas.ts) |
-| API do iFood instável                      | Aviso na tela; timeout de 20 s por página                                           |
-| Cadastro de formas ONLINE VR desatualizado | FAQ orienta pedir a inclusão ao time de TI/Sistemas                                 |
+| Risco                                       | Mitigação                                                                                       |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Integração `ifood` ainda não existe no hub  | Aviso claro na tela; pendência no INTEGRATION.md                                                |
+| Vínculo IFOOD errado ou ausente no cadastro | 404 vira aviso do restaurante; sem vínculo, pedidos Cancelado — corrigir o cadastro da operação |
+| API do iFood instável                       | Aviso na tela; timeout de 20 s por página                                                       |
+| Cadastro de formas ONLINE VR desatualizado  | FAQ orienta pedir a inclusão ao time de TI/Sistemas                                             |
 
 ## 11. Dependências
 
@@ -362,9 +367,6 @@ API do DW, Merchant API do iFood, banco do Maestro.
 
 ### Decisões pendentes
 
-- Vínculo iFood por operação: o SDK só tem um por Empresa. Os restaurantes de todas
-  as operações estão numa tabela do módulo (RN-1) até o SDK expor `locRefs` em
-  `GiaOperacao`; aí a tabela sai e o cadastro passa a valer sozinho.
 - Se a edição do cadastro de formas de pagamento deve ser portada.
 
 ---

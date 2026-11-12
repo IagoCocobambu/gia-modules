@@ -51,7 +51,7 @@ function validarData(data: unknown): string {
 }
 
 /**
- * Número da loja com 2 dígitos — o `loc_ref` do DW e a chave de `RESTAURANTES_IFOOD`.
+ * Número da loja com 2 dígitos — o `loc_ref` do DW.
  * Sai primeiro do nome da Empresa ("01.CB GOIANIA" → "01"; todas as lojas do cadastro
  * têm o número no nome) e, na falta, do vínculo com a BI do Simphony (`locRefs.BIAPI`
  * começa pelo número: "01 CB Go", "17. CB R"). O nome vem antes porque o BIAPI pode

@@ -326,7 +326,7 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
         },
         {
           q: 'O aviso amarelo começa com o nome de um restaurante (ex.: "Coco Bambu Express (17 cbx): …"). O que quer dizer?',
-          a: 'Que a falha foi só na parte do iFood daquele restaurante. Os pedidos dele que não vieram ficam como Cancelado; os dos outros restaurantes da loja estão certos. Pesquise de novo em alguns minutos. Se o aviso for 403, o restaurante não autorizou o aplicativo da Coco Bambu no Portal do Parceiro do iFood: avise o time do Portal GIA.',
+          a: 'Que a falha foi só na parte do iFood daquele restaurante. Os pedidos dele que não vieram ficam como Cancelado; os dos outros restaurantes da loja estão certos. Pesquise de novo em alguns minutos. Se o aviso for 403, o restaurante não autorizou o aplicativo da Coco Bambu no Portal do Parceiro do iFood. Se for 404, o iFood não reconhece o identificador do restaurante que está no cadastro da operação (ele está errado ou incompleto). Nos dois casos, pesquisar de novo não resolve: avise o time do Portal GIA.',
         },
         {
           q: 'Apareceu um aviso de que a API do iFood respondeu com erro. Os números valem?',

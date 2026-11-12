@@ -1,6 +1,6 @@
 # Fechamento iFood Diário — cálculo dos totais e chaves das APIs
 
-Versão **0.2.4** · 11/11/2026
+Versão **0.2.5** · 12/11/2026
 
 Este documento explica:
 
@@ -44,25 +44,25 @@ Authorization: Bearer {token}
 
 ### Chaves lidas de cada pedido
 
-| Chave do DW | Chave reserva | Uso na tela |
-|---|---|---|
-| `id` | `order_id` | ID do pedido |
-| `n_pedido` | `order_id` | Nº pedido |
-| `n_parceiro` | — | **Chave do cruzamento** com o `shortId` do iFood |
-| `data_de_criacao_horario_sp` | `data_de_criacao_utc` | Data hora pedido |
-| `data_de_criacao_utc` | — | **Desempate do cruzamento** (comparada com o `createdAt` do iFood) |
-| `origem` | `channel` | Canal do pedido (filtro iFood / iFood Vasto) |
-| `valor_do_pedido` | `order_value`, depois o total pago | Valor dos itens |
-| `valor_da_entrega` | `delivery_fee` | Taxa de entrega |
-| `total_pago` | `total`, `amount` | Total pago no DW (informativo; usado no trecho sem valor, seção 5.2) |
-| `desconto_total` | `discount` | Total descontos (DW) |
-| `forma_de_pagamentos` | `payment_method` | Formas de pagamento (texto que é classificado) |
-| `incentivo_parceiro` | — | Incentivo promocional do iFood |
-| `incentivo_loja` | — | Incentivo promocional da loja |
-| `taxa_extra_parceiro` | — | Taxa de serviço |
-| `retirada` | — | Agendado (SIM/NÃO) |
-| `nome_loja` | — | Restaurante |
-| `id_loja` | — | ID do restaurante (trocado pelo do iFood quando cruza) |
+| Chave do DW                  | Chave reserva                      | Uso na tela                                                          |
+| ---------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| `id`                         | `order_id`                         | ID do pedido                                                         |
+| `n_pedido`                   | `order_id`                         | Nº pedido                                                            |
+| `n_parceiro`                 | —                                  | **Chave do cruzamento** com o `shortId` do iFood                     |
+| `data_de_criacao_horario_sp` | `data_de_criacao_utc`              | Data hora pedido                                                     |
+| `data_de_criacao_utc`        | —                                  | **Desempate do cruzamento** (comparada com o `createdAt` do iFood)   |
+| `origem`                     | `channel`                          | Canal do pedido (filtro iFood / iFood Vasto)                         |
+| `valor_do_pedido`            | `order_value`, depois o total pago | Valor dos itens                                                      |
+| `valor_da_entrega`           | `delivery_fee`                     | Taxa de entrega                                                      |
+| `total_pago`                 | `total`, `amount`                  | Total pago no DW (informativo; usado no trecho sem valor, seção 5.2) |
+| `desconto_total`             | `discount`                         | Total descontos (DW)                                                 |
+| `forma_de_pagamentos`        | `payment_method`                   | Formas de pagamento (texto que é classificado)                       |
+| `incentivo_parceiro`         | —                                  | Incentivo promocional do iFood                                       |
+| `incentivo_loja`             | —                                  | Incentivo promocional da loja                                        |
+| `taxa_extra_parceiro`        | —                                  | Taxa de serviço                                                      |
+| `retirada`                   | —                                  | Agendado (SIM/NÃO)                                                   |
+| `nome_loja`                  | —                                  | Restaurante                                                          |
+| `id_loja`                    | —                                  | ID do restaurante (trocado pelo do iFood quando cruza)               |
 
 Número ausente ou inválido vale **0**. Texto ausente vale **vazio**.
 
@@ -87,35 +87,36 @@ GET {base ifood}/financial/v3.0/merchants/{merchantId}/sales?beginSalesDate={dia
 Authorization: Bearer {token}
 ```
 
-- **`merchantId`**: UUID do restaurante no iFood. Os restaurantes de cada loja estão na tabela `RESTAURANTES_IFOOD` do módulo, gerada da planilha "GIA - Empresas - Cadastro - 2026-11-09" (aba Integrações das operações, tipo IFOOD).
+- **`merchantId`**: UUID do restaurante no iFood. Os restaurantes de cada loja são os vínculos IFOOD das operações dela no cadastro do portal (`ctx.operacoes()` → `integracoes`, tipo `IFOOD`, `locRef` = merchantId).
 - **`page`**: começa em 1. A página 1 diz o total em `pageCount`; cada página traz 20 vendas.
 - **Respostas tratadas:**
   - `204` (ou corpo vazio): o restaurante não teve vendas.
   - `401`: token vencido → aviso.
   - `403`: o restaurante não autorizou o aplicativo → aviso.
+  - `404`: o iFood não reconhece o restaurante (identificador errado no cadastro da operação) → aviso.
   - `429`: limite de requisições → espera e tenta de novo.
 - **Tempo limite**: 20 s por página.
 - **Página "leve"**: o iFood às vezes devolve vendas sem `payments`. Nesse caso a página é pedida de novo até 2 vezes, e fica a resposta mais completa.
 
 #### Chaves lidas de cada venda (`sales[]`)
 
-| Chave do iFood | Uso |
-|---|---|
-| `shortId` | **Chave do cruzamento** (= `n_parceiro` do DW) |
-| `createdAt` | **Desempate do cruzamento** (= `data_de_criacao_utc` do DW) |
-| `merchant.shortId` | ID do restaurante |
-| `currentStatus` | `CONCLUDED` → Confirmado = SIM; outro → NÃO |
-| `type` | Tipo de pedido |
-| `salesChannel` | Canal de venda (tem que ser `IFOOD` para o pedido ficar na tela) |
-| `payments.methods[].value` | Somados → Total do parceiro |
-| `orderStatusHistory[].value` | `PARTIAL_CANCELLATION_ORDER` → Tem cancelamento parcial = SIM |
-| `orderStatusHistory[]` com `value = CANCELLED` (só se `currentStatus = CANCELLED`) → `createdAt` | Data do cancelamento |
-| ↳ `metadata.cancelOrigin` | **Origem do cancelamento** (se preenchida, o pedido é Cancelado) |
-| ↳ `metadata.cancelCodeDescription` | Motivo do cancelamento |
-| ↳ `metadata.cancellationDispute.isContestable` | Cancelamento é contestável (SIM/NÃO) |
-| ↳ `metadata.cancellationDispute.reasons[]` | Motivo da impossibilidade de contestar |
-| `orderEvents[]` com `fullCode = FINANCIAL_BILLED_ORDER_ENTRY` → `metadata.entries[0].period.endDate` | Data limite de contestação |
-| `pageCount` (raiz da resposta) | Total de páginas do restaurante no dia |
+| Chave do iFood                                                                                       | Uso                                                              |
+| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `shortId`                                                                                            | **Chave do cruzamento** (= `n_parceiro` do DW)                   |
+| `createdAt`                                                                                          | **Desempate do cruzamento** (= `data_de_criacao_utc` do DW)      |
+| `merchant.shortId`                                                                                   | ID do restaurante                                                |
+| `currentStatus`                                                                                      | `CONCLUDED` → Confirmado = SIM; outro → NÃO                      |
+| `type`                                                                                               | Tipo de pedido                                                   |
+| `salesChannel`                                                                                       | Canal de venda (tem que ser `IFOOD` para o pedido ficar na tela) |
+| `payments.methods[].value`                                                                           | Somados → Total do parceiro                                      |
+| `orderStatusHistory[].value`                                                                         | `PARTIAL_CANCELLATION_ORDER` → Tem cancelamento parcial = SIM    |
+| `orderStatusHistory[]` com `value = CANCELLED` (só se `currentStatus = CANCELLED`) → `createdAt`     | Data do cancelamento                                             |
+| ↳ `metadata.cancelOrigin`                                                                            | **Origem do cancelamento** (se preenchida, o pedido é Cancelado) |
+| ↳ `metadata.cancelCodeDescription`                                                                   | Motivo do cancelamento                                           |
+| ↳ `metadata.cancellationDispute.isContestable`                                                       | Cancelamento é contestável (SIM/NÃO)                             |
+| ↳ `metadata.cancellationDispute.reasons[]`                                                           | Motivo da impossibilidade de contestar                           |
+| `orderEvents[]` com `fullCode = FINANCIAL_BILLED_ORDER_ENTRY` → `metadata.entries[0].period.endDate` | Data limite de contestação                                       |
+| `pageCount` (raiz da resposta)                                                                       | Total de páginas do restaurante no dia                           |
 
 ### 3.2 Lista de restaurantes da conta (só o nome)
 
@@ -146,12 +147,12 @@ Chaves usadas: `id` (UUID) e `name`. Servem só para mostrar o nome na coluna **
 
 ### 5.1 Valores
 
-| Coluna | Fórmula |
-|---|---|
-| **Total do pedido** | `valor_da_entrega` + `valor_do_pedido` − `incentivo_loja` |
-| **Desconto copart** | `incentivo_parceiro` − `taxa_extra_parceiro` |
-| **iFood reembolsa?** | `incentivo_loja` = 0 → N/A; = 12 → SIM; ≤ 10 → NÃO; outro valor → VERIFICAR |
-| **Cancelamento** | **OK** quando Confirmado = SIM (`currentStatus = CONCLUDED`) **e** não há origem de cancelamento; senão **Cancelado**. Durante a busca, o pedido ainda não achado fica **Aguardando iFood** |
+| Coluna               | Fórmula                                                                                                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Total do pedido**  | `valor_da_entrega` + `valor_do_pedido` − `incentivo_loja`                                                                                                                                   |
+| **Desconto copart**  | `incentivo_parceiro` − `taxa_extra_parceiro`                                                                                                                                                |
+| **iFood reembolsa?** | `incentivo_loja` = 0 → N/A; = 12 → SIM; ≤ 10 → NÃO; outro valor → VERIFICAR                                                                                                                 |
+| **Cancelamento**     | **OK** quando Confirmado = SIM (`currentStatus = CONCLUDED`) **e** não há origem de cancelamento; senão **Cancelado**. Durante a busca, o pedido ainda não achado fica **Aguardando iFood** |
 
 O **Total do pedido** é calculado. Ele **não** é o `total_pago` do DW.
 
@@ -182,17 +183,17 @@ Regras comuns:
 - Os cards "só ONLINE", "só OFFLINE" e "só ONLINE VR" exigem **tipo único**.
 - As somas são feitas em centavos.
 
-| Card | Pedidos que entram | Soma de cada pedido |
-|---|---|---|
-| **iFood online** | OK e só ONLINE | Total do pedido − Desconto copart |
-| **iFood adquirentes** | OK e só ONLINE VR | Total do pedido − `incentivo_parceiro` − Desconto copart |
-| **Descontos offline e VR** | OK e só OFFLINE ou só ONLINE VR | `incentivo_parceiro` |
-| **Descontos loja — online** | OK e só ONLINE | `incentivo_loja` |
-| **Descontos loja — offline** | OK e só OFFLINE | `incentivo_loja` |
-| **Descontos loja — VR** | OK e só ONLINE VR | `incentivo_loja` |
-| **Desconto copart** | OK (qualquer tipo, inclusive misto) | Desconto copart |
-| **Valor sem classificação** | todos | soma dos trechos sem classificação (trecho sem valor: Total do pedido, se for a única forma) |
-| **Pagamentos sem classificação** | todos | quantidade de trechos sem classificação |
+| Card                             | Pedidos que entram                  | Soma de cada pedido                                                                          |
+| -------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------- |
+| **iFood online**                 | OK e só ONLINE                      | Total do pedido − Desconto copart                                                            |
+| **iFood adquirentes**            | OK e só ONLINE VR                   | Total do pedido − `incentivo_parceiro` − Desconto copart                                     |
+| **Descontos offline e VR**       | OK e só OFFLINE ou só ONLINE VR     | `incentivo_parceiro`                                                                         |
+| **Descontos loja — online**      | OK e só ONLINE                      | `incentivo_loja`                                                                             |
+| **Descontos loja — offline**     | OK e só OFFLINE                     | `incentivo_loja`                                                                             |
+| **Descontos loja — VR**          | OK e só ONLINE VR                   | `incentivo_loja`                                                                             |
+| **Desconto copart**              | OK (qualquer tipo, inclusive misto) | Desconto copart                                                                              |
+| **Valor sem classificação**      | todos                               | soma dos trechos sem classificação (trecho sem valor: Total do pedido, se for a única forma) |
+| **Pagamentos sem classificação** | todos                               | quantidade de trechos sem classificação                                                      |
 
 À vista ficam iFood online, iFood adquirentes, Desconto copart e Pagamentos sem classificação. Os outros 5 abrem em **Ver todos os totais**.
 
@@ -202,13 +203,13 @@ Regras comuns:
 
 ### Exemplo (loja 17, 08/11/2026, pedido 9878)
 
-| Campo do DW | Valor |
-|---|---|
-| `valor_do_pedido` | 213,90 |
-| `valor_da_entrega` | 13,99 |
-| `incentivo_loja` | 11,98 |
-| `incentivo_parceiro` | 12,01 |
-| `taxa_extra_parceiro` | 3,99 |
+| Campo do DW           | Valor                                                                            |
+| --------------------- | -------------------------------------------------------------------------------- |
+| `valor_do_pedido`     | 213,90                                                                           |
+| `valor_da_entrega`    | 13,99                                                                            |
+| `incentivo_loja`      | 11,98                                                                            |
+| `incentivo_parceiro`  | 12,01                                                                            |
+| `taxa_extra_parceiro` | 3,99                                                                             |
 | `forma_de_pagamentos` | três trechos, todos `- PRE PAGO` → ONLINE (supondo nenhum no cadastro ONLINE VR) |
 
 - Total do pedido = 13,99 + 213,90 − 11,98 = **215,91**
@@ -237,10 +238,10 @@ where coalesce(is_deleted, false) = false and tipo = 'ONLINE VR'
 
 ## 8. API do próprio módulo (handlers)
 
-| Handler | Body | Devolve |
-|---|---|---|
-| `lojas` | — | Empresas do escopo: `empresaId`, `nome`, `locRef`, `restaurantes[]` (`operacao`, `merchant`), `ativo` |
-| `pedidos` | `empresaId`, `data` | `pedidos[]` (DW, canais iFood e iFood Vasto) e `formasVr[]` |
-| `vendas` | `empresaId`, `data`, `merchant`, `pagina` | `vendas[]`, `totalPaginas`, `restaurante` (nome, na página 1) e `aviso` |
+| Handler   | Body                                      | Devolve                                                                                               |
+| --------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `lojas`   | —                                         | Empresas do escopo: `empresaId`, `nome`, `locRef`, `restaurantes[]` (`operacao`, `merchant`), `ativo` |
+| `pedidos` | `empresaId`, `data`                       | `pedidos[]` (DW, canais iFood e iFood Vasto) e `formasVr[]`                                           |
+| `vendas`  | `empresaId`, `data`, `merchant`, `pagina` | `vendas[]`, `totalPaginas`, `restaurante` (nome, na página 1) e `aviso`                               |
 
 Todos os handlers exigem a permissão `fechamento-ifood-diario.ler`. Os que recebem loja conferem o escopo com `requireEmpresa`. O `vendas` recusa (422) um `merchant` que não seja da loja.

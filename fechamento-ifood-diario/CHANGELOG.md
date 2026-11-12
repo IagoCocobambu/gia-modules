@@ -1,5 +1,28 @@
 # Changelog — Fechamento iFood Diário
 
+## 0.2.5 — 12/11/2026
+
+Restaurantes do iFood vindos do cadastro do portal — sai a tabela fixa do código
+(bloqueante da devolutiva da 0.2.4).
+
+- SDK **alpha.71** (`@gia-cb/*`): `GiaOperacao.integracoes` traz os vínculos de cada
+  operação. Os restaurantes da loja agora são os vínculos **IFOOD** ativos das operações
+  da Empresa (`ctx.operacoes()` → `integracoes`), lidos a cada chamada em `lojas` e
+  `vendas`. Loja nova ou conta movida de operação vale na próxima pesquisa, sem versão
+  nova do módulo (a 99 Praia Grande, que faltava na tabela, entra assim).
+- Sai a tabela `RESTAURANTES_IFOOD` (236 restaurantes, em `lojas.ts` e `vendas.ts`) e o
+  `locRefs.IFOOD` da Empresa como reserva: o vínculo do iFood é sempre da operação.
+  `vendas.ts` de 694 para 432 linhas; `lojas.ts` de 338 para 86.
+- `vendas` confere o restaurante do body nos vínculos das operações da loja (422 se não
+  for dela, como antes).
+- **404 do iFood vira aviso** do restaurante (identificador errado no cadastro), sem nova
+  tentativa: era erro 502, e a tela repetia a chamada antes de avisar. Caso real: o 2º
+  vínculo da `43 cbx`, com o UUID incompleto, que o time GIA vai corrigir.
+- `gia.config.ts`: 241 operações com `integracoes` IFOOD (237 vínculos) da planilha de
+  cadastro de 09/11/2026, com os ids de produção, no lugar da tabela. Conferido no
+  `gia dev`: os mesmos 236 restaurantes da tabela + o vínculo incompleto da `43 cbx`.
+- FAQ (aviso 404), PRD, INTEGRATION, README e o doc de cálculo e chaves atualizados.
+
 ## 0.2.4 — 11/11/2026
 
 A loja passa a ser a **Empresa**, com **todas as operações** dela juntas.

@@ -3,20 +3,20 @@
 ## 1. Identificação
 
 - **Módulo**: `fechamento-ifood-diario` — Fechamento iFood Diário
-- **Versão do pacote**: 0.2.4
+- **Versão do pacote**: 0.2.5
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
-- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.70 (fixada)
+- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.71 (fixada; mínimo para `integracoes` em `GiaOperacao`)
 
 ## 2. Fontes de dados externas
 
 Módulo **read-only** — não cria tabela nem migration no portal e não grava nada.
 
-| Handler (`src/server/`) | Fonte                                                                                                      | Acesso                            |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `lojas.ts`              | `ctx.empresas()` (Empresas do escopo) + tabela `RESTAURANTES_IFOOD` (restaurantes do iFood por nº de loja) | —                                 |
-| `pedidos.ts`            | `api-dw.cocobambu.com/Delivery/?loc_ref=<nº loja>&start_date=<dia>&end_date=<dia>`                         | `ctx.credencial('apidw')`         |
-| `vendas.ts`             | `merchant-api.ifood.com.br/financial/v3.0/merchants/<merchant>/sales?beginSalesDate&endSalesDate&page`     | `ctx.credencial('ifood')`         |
-| `pedidos.ts`            | banco do Maestro: `SELECT` em `gia_relatorios.formas_pagamento`                                            | `sql` (`GIA_SERVER_DATABASE_URL`) |
+| Handler (`src/server/`) | Fonte                                                                                                  | Acesso                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| `lojas.ts`              | `ctx.empresas()` (Empresas do escopo) + `ctx.operacoes()` → `integracoes` IFOOD (restaurantes da loja) | —                                 |
+| `pedidos.ts`            | `api-dw.cocobambu.com/Delivery/?loc_ref=<nº loja>&start_date=<dia>&end_date=<dia>`                     | `ctx.credencial('apidw')`         |
+| `vendas.ts`             | `merchant-api.ifood.com.br/financial/v3.0/merchants/<merchant>/sales?beginSalesDate&endSalesDate&page` | `ctx.credencial('ifood')`         |
+| `pedidos.ts`            | banco do Maestro: `SELECT` em `gia_relatorios.formas_pagamento`                                        | `sql` (`GIA_SERVER_DATABASE_URL`) |
 
 ### 2.1 Credenciais / integrações
 
@@ -50,24 +50,24 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
       `ctx.empresas()` e os handlers `pedidos` e `vendas` recebem o `empresaId` e
       chamam `requireEmpresa`. O nº da loja no DW sai do vínculo `BIAPI` ou do começo
       do nome da Empresa ("54.CB MINAS SHOPPING" → `54`).
-- [ ] **Restaurantes do iFood de cada loja:** o SDK não expõe o vínculo iFood das
-      operações (só um por Empresa). Os restaurantes de todas as operações (cb, cbx,
-      pzcb, dani, adgcb, burger, vst, vstss…) estão numa tabela do módulo
-      (`RESTAURANTES_IFOOD`, por nº de loja, em `lojas.ts` e `vendas.ts`), gerada da
-      planilha "GIA - Empresas - Cadastro - 2026-11-09" (aba Integrações das
-      operações, tipo IFOOD, 236 restaurantes em 92 lojas) — provisório. Restaurante
-      novo no iFood precisa entrar na tabela (nova versão do módulo); até lá os
-      pedidos dele ficam Cancelado. Pedido ao time do SDK: expor `locRefs` em
-      `GiaOperacao`.
-- [ ] **Cadastro a corrigir:** a operação `43 cbx` tem duas integrações IFOOD, uma
-      com o UUID com um caractere a menos (`ca22641e-8cfb-43a4-ba8f-2dc803a3bd3`). O
-      módulo usa só a certa (`…2dc803a3bd3d`); a errada deve sair do cadastro.
+- [ ] **Restaurantes do iFood de cada loja (0.2.5):** são os vínculos **IFOOD**
+      ativos das operações da Empresa no cadastro do portal (`gia.operacoes_integracoes`,
+      lidos em `ctx.operacoes()` → `integracoes`, SDK alpha.71) — cb, cbx, pzcb, dani,
+      adgcb, burger, vst, vstss…; uma operação pode ter mais de um. Nada fica fixo no
+      módulo: loja nova ou conta movida de uma operação para outra vale na próxima
+      pesquisa. Conferir que cada operação com iFood tem o vínculo IFOOD (o
+      `locRef` = id do restaurante no iFood). Operação sem vínculo: os pedidos dela
+      ficam Cancelado; loja sem nenhum aparece como "Sem iFood".
+- [ ] **Cadastro a corrigir (com o time GIA):** a operação `43 cbx` tem um 2º vínculo
+      IFOOD com o UUID com um caractere a menos (`ca22641e-8cfb-43a4-ba8f-2dc803a3bd3`).
+      Até sair, o iFood responde 404 para ele e a tela mostra o aviso daquele
+      restaurante; as outras operações da loja seguem normais.
 - [ ] O handler `vendas` também lista os restaurantes da conta no iFood
       (`GET /merchant/v1.0/merchants`, guardado 30 min), só para mostrar o nome do
       restaurante na tabela — mesma credencial `ifood`.
-- [ ] Loja fora da tabela usa a integração **`IFOOD`** da Empresa (`locRefs.IFOOD`),
-      se houver. Loja sem nenhuma aparece no seletor como "Sem iFood" e a pesquisa
-      avisa que os pedidos não foram cruzados.
+- [ ] O vínculo `IFOOD` da **Empresa** (`locRefs.IFOOD`) não é mais lido (o vínculo
+      do iFood é sempre da operação). Loja sem vínculo em nenhuma operação aparece no
+      seletor como "Sem iFood" e a pesquisa avisa que os pedidos não foram cruzados.
 
 ## 3. Posição no menu
 

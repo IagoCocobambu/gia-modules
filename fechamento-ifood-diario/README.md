@@ -22,8 +22,8 @@ npm run pack           # gia pack — gera o .tgz (+ Edge Function)
 
 No `gia dev` os handlers `src/server/pedidos.ts` e `vendas.ts` rodam no Node e chamam
 o DW e o iFood **de verdade**, com os tokens do `.env`. Os restaurantes do iFood de cada
-loja saem da tabela `RESTAURANTES_IFOOD` (em `lojas.ts` e `vendas.ts`), pelo número da
-loja do `gia.config.ts`.
+loja são os vínculos IFOOD das operações dela (`integracoes` em `operacoes` do
+`gia.config.ts`; em produção, `ctx.operacoes()`).
 
 ## Estrutura
 
