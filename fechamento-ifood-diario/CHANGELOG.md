@@ -1,5 +1,52 @@
 # Changelog — Fechamento iFood Diário
 
+## 0.2.4 — 11/11/2026
+
+A loja passa a ser a **Empresa**, com **todas as operações** dela juntas.
+
+- Seletor por **Empresa** (padrão do workspace; era por operação). A pesquisa traz os
+  pedidos dos canais **iFood** e **iFood Vasto** do DW da loja e as vendas de **todos
+  os restaurantes da loja no iFood** (cb, cbx, pzcb, dani, adgcb, burger, vst, vstss…).
+  Handlers recebem `empresaId` e chamam `requireEmpresa`.
+- Restaurantes do iFood de cada loja numa tabela do módulo (`RESTAURANTES_IFOOD`, 236
+  restaurantes em 92 lojas), gerada da planilha "GIA - Empresas - Cadastro -
+  2026-11-09" (integrações IFOOD das operações) — provisória até o SDK expor
+  `locRefs` em `GiaOperacao`. Sai a tabela `OPERACOES_IFOOD_PROPRIO` (Vasto).
+  Descartado o 2º vínculo de `43 cbx`, com UUID de um caractere a menos.
+- **Mudança de regra**: os pedidos de Express, Pizzaria, Dani, Vasto… agora cruzam
+  e entram nos cards (até a 0.2.3, só o restaurante da operação, como no legado —
+  os outros ficavam Cancelado). Os cards deixam de bater com a tela antiga nas lojas
+  com mais de um restaurante.
+- Cruzamento pelo código (n_parceiro = shortId) **e pela hora de criação**: o código
+  se repete entre restaurantes (e no mesmo restaurante em horas diferentes); a hora,
+  idêntica nos pares certos, desempata. Conferido em 08/11/2026 com dados reais: 03,
+  08, 17 e 25 com 100 % dos pedidos iFood do DW cruzados.
+- `vendas` pede uma página de **um restaurante** (o servidor confere que ele é da loja)
+  e devolve o nome dele na página 1. A tela põe numa fila a página 1 de cada
+  restaurante e as demais conforme chegam (até 4 juntas). Falha num restaurante vira
+  aviso com o nome dele e não para os outros.
+- Nova coluna **Operação** (tabela e Excel), ao lado de Restaurante no iFood, que
+  agora mostra o restaurante de cada pedido. Faixa de andamento diz quantos
+  restaurantes.
+- Seletor: nome sempre com o número da loja e, embaixo, as operações no iFood
+  ("3 operações no iFood: cb, pzcb, vst"; "Sem iFood" quando não há). O número da
+  loja sai do nome da Empresa e, na falta, do BIAPI (na 999 o BIAPI é "995 CB L").
+- `gia.config.ts`: Empresas do dev geradas da mesma planilha (ids, nomes e BIAPI de
+  produção; 4 inativas); sai a operação de teste sem número.
+- FAQ, tour, PRD e INTEGRATION atualizados.
+- Erro da pesquisa na nova mensagem padrão (`MensagemErro`): tipo do problema, a
+  frase do servidor e **Ver detalhes técnicos** (Copiar tudo, Baixar diagnóstico).
+- Dado sensível: o texto de erro devolvido pelo DW e pelo iFood e a mensagem do hub de
+  Credenciais ficam só no log do servidor (a tela recebe o status). Os detalhes técnicos
+  ocultam campos de senha, token e dado pessoal, token `Bearer`/JWT e `usuário:senha@`
+  de URL; o diagnóstico baixado traz só as falhas deste módulo (o `baixarFalhas()` do
+  SDK leva as de todas as telas da sessão).
+- Revisão SDK: `vendas.ts` passava de 800 linhas (anti-pattern §13.10) por causa da
+  tabela de restaurantes, repetida em `lojas.ts` porque o handler só importa do SDK. A
+  tabela virou um texto de uma linha por restaurante (mesmo conteúdo, conferido): 694
+  linhas. FAQ trocou a pergunta da tela de erro antiga pela nova e explica os detalhes
+  técnicos.
+
 ## 0.2.3 — 11/11/2026
 
 Reempacotado. Sem mudança de código nem de regra em relação à 0.2.2.

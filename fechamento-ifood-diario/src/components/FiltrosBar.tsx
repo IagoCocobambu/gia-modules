@@ -6,9 +6,32 @@ import { hojeLocal, NOME_MODULO } from '../helpers'
 import type { FechamentoLoja } from '../types'
 import { Dica } from './Dica'
 
+/** Nome da loja sempre com o número na frente ("17.CB RECIFE"), mesmo se o cadastro não tiver. */
+function rotuloLoja(l: FechamentoLoja): string {
+  return l.locRef && !/^\s*\d/.test(l.nome) ? `${l.locRef}.${l.nome}` : l.nome
+}
+
+/**
+ * Operações da loja com iFood, para a descrição do seletor:
+ * "3 operações no iFood: cb, cbx, vst". Sem nenhuma: "Sem iFood".
+ */
+function resumoIfood(l: FechamentoLoja): string {
+  if (l.restaurantes.length === 0) return 'Sem iFood'
+  const ops = [
+    ...new Set(
+      l.restaurantes.map((r) => r.operacao.replace(/^\s*\d+\s*/, '').trim()).filter(Boolean)
+    ),
+  ]
+  if (ops.length === 0) {
+    const n = l.restaurantes.length
+    return `${n} ${n === 1 ? 'restaurante' : 'restaurantes'} no iFood`
+  }
+  return `${ops.length} ${ops.length === 1 ? 'operação' : 'operações'} no iFood: ${ops.join(', ')}`
+}
+
 export interface FiltrosValor {
-  /** `operacao_ref` da operação escolhida. */
-  operacaoRef: string | null
+  /** Empresa (loja) escolhida. */
+  empresaId: number | null
   data: string
 }
 
@@ -68,7 +91,7 @@ export function FiltrosBar({
       className={compacto ? 'h-11 w-full' : undefined}
       onClick={pesquisarERecolher}
       loading={pesquisando}
-      disabled={value.operacaoRef === null || (semAlteracao && !pesquisando)}
+      disabled={value.empresaId === null || (semAlteracao && !pesquisando)}
       data-tour="fechamento-ifood-diario-pesquisar"
     >
       <Search className="h-4 w-4" /> Pesquisar
@@ -76,18 +99,15 @@ export function FiltrosBar({
   )
 
   const seletorLoja = (controle: Record<string, unknown>) => (
-    <SearchableSelect<string>
+    <SearchableSelect<number>
       triggerProps={controle}
       options={lojas.map((l) => ({
-        value: l.ref,
-        label: l.nome,
-        description:
-          [l.ativo ? null : 'Inativa', l.temIfood ? null : 'Sem iFood']
-            .filter(Boolean)
-            .join(' · ') || undefined,
+        value: l.empresaId,
+        label: rotuloLoja(l),
+        description: [l.ativo ? null : 'Inativa', resumoIfood(l)].filter(Boolean).join(' · '),
       }))}
-      value={value.operacaoRef}
-      onChange={(operacaoRef) => set({ operacaoRef })}
+      value={value.empresaId}
+      onChange={(empresaId) => set({ empresaId })}
       placeholder={lojasLoading ? 'Carregando lojas…' : 'Selecione a loja'}
       searchPlaceholder="Buscar loja…"
       emptyLabel="Nenhuma loja disponível"
@@ -149,7 +169,7 @@ export function FiltrosBar({
       <ListHeader
         title={NOME_MODULO}
         titleExtra={tituloExtra}
-        subtitle="Fechamento dos pedidos iFood de uma loja num dia."
+        subtitle="Fechamento dos pedidos iFood de uma loja num dia, com todas as operações dela."
         controlsTourId="fechamento-ifood-diario-filtros"
         className={cn(
           'rounded-lg border border-border bg-surface',

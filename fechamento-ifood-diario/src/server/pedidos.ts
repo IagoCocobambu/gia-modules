@@ -1,25 +1,25 @@
 import { defineHandler, HttpError, sql } from '@gia-cb/sdk/server'
 
-// Pedidos de delivery de UMA operação num dia, da API do DW (`/Delivery/`) — a 1ª
-// metade da `BuscarFechamento` do legado (`MapApiItemToTransaction`) — e a lista de
+// Pedidos de delivery de UMA loja (Empresa) num dia, da API do DW (`/Delivery/`) — a
+// 1ª metade da `BuscarFechamento` do legado (`MapApiItemToTransaction`) — e a lista de
 // formas "ONLINE VR" do cadastro `gia_relatorios.formas_pagamento` do Maestro (só
 // leitura). O cruzamento com o iFood e as contas são feitos na tela, que busca as
-// vendas do iFood em paralelo (handler `vendas`) e mostra o progresso.
+// vendas de cada restaurante do iFood em paralelo (handler `vendas`) e mostra o
+// progresso.
 //
-// O DW junta as operações do mesmo número (ex.: `08 cb` e `08 vst`); aqui ficam só os
-// pedidos do canal da operação — "iFood" na principal, "iFood Vasto" no Vasto — ANTES
-// do cruzamento, porque o shortId do iFood (4 dígitos) de um restaurante pode coincidir
-// com o n_parceiro de um pedido do outro.
+// A loja junta TODAS as operações dela: o DW devolve os pedidos de todas no mesmo
+// `loc_ref` (o número da loja), e aqui ficam os dos canais do iFood — "iFood" (Coco
+// Bambu, Express, Pizzaria, Dani…) e "iFood Vasto" —, cruzados na tela com as vendas de
+// todos os restaurantes do iFood da loja.
 //
-// A loja chega como `operacaoRef` (exceção deste módulo: busca por OPERAÇÃO), validada
-// com `requireOperacao`. O `loc_ref` do DW é o número do `operacao_ref`.
+// A loja chega como `empresaId`, validada com `requireEmpresa`.
 //
 // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server. Validação de data,
-// tabela das operações Vasto e `normalizarOrigem` se repetem em `vendas.ts` e em
+// `numeroDaLoja` e `normalizarOrigem` se repetem em `lojas.ts`, `vendas.ts` e
 // `src/regras.ts` de propósito.
 
 interface Body {
-  operacaoRef: string
+  empresaId: number
   data: string
 }
 
@@ -51,41 +51,24 @@ function validarData(data: unknown): string {
 }
 
 /**
- * Operações que dividem o número de loja com outra e têm canal e merchant próprios no
- * iFood. O DW devolve as duas juntas no mesmo `loc_ref` e as separa pela `origem` do
- * pedido: "iFood" é a operação principal, "iFood Vasto" a do Vasto. O SDK não tem
- * vínculo iFood por operação (só por Empresa, um por Empresa), então o merchant destas
- * fica aqui — PROVISÓRIO até o SDK expor `locRefs` em `GiaOperacao`. Operação nova
- * nessa situação precisa entrar nesta tabela (e na de lojas.ts).
- * Merchants: lista `GET /merchant/v1.0/merchants` da conta iFood da Coco Bambu.
+ * Número da loja com 2 dígitos — o `loc_ref` do DW e a chave de `RESTAURANTES_IFOOD`.
+ * Sai primeiro do nome da Empresa ("01.CB GOIANIA" → "01"; todas as lojas do cadastro
+ * têm o número no nome) e, na falta, do vínculo com a BI do Simphony (`locRefs.BIAPI`
+ * começa pelo número: "01 CB Go", "17. CB R"). O nome vem antes porque o BIAPI pode
+ * divergir: na 999.CB TECH HOMOLOG ele é "995 CB L".
  */
-const OPERACOES_IFOOD_PROPRIO: Record<string, { canal: string; merchant: string }> = {
-  '08 vst': { canal: 'iFood Vasto', merchant: '60a90e35-3568-4ecd-a4b5-8261e5a19c08' }, // Vasto Teresina
-  '17 vst': { canal: 'iFood Vasto', merchant: 'aa5dcb37-dfaf-4442-b5dc-ef69637f73ad' }, // Vasto Recife
-  '25 vst': { canal: 'iFood Vasto', merchant: '591659a8-f40b-4b65-bca7-0999638782ee' }, // Vasto Restaurante - Bh Anchieta
-  '69 vst': { canal: 'iFood Vasto', merchant: '6293b97f-48d6-4325-8d47-d43e970760b0' }, // Vasto São José dos Campos
-  '86 vst': { canal: 'iFood Vasto', merchant: 'c5671839-c503-4032-80cb-e5c4ebb58ac9' }, // Vasto - Barra da Tijuca
-}
-
-/** `operacao_ref` normalizado para a tabela ("08  VST" → "08 vst"). */
-function chaveOperacao(ref: string): string {
-  return ref.trim().toLowerCase().replace(/\s+/g, ' ')
-}
-
-/** Número da loja com 2 dígitos — o `loc_ref` da API do DW ("54 cb" → "54"). */
-function numeroDaOperacao(ref: string): string | null {
-  const m = /^\s*(\d{1,4})/.exec(ref)
+function numeroDaLoja(e: { nome: string; locRefs: Record<string, string> }): string | null {
+  const m = /^\s*(\d{1,4})\s*\./.exec(e.nome) ?? /^\s*(\d{1,4})/.exec(e.locRefs?.BIAPI ?? '')
   return m ? String(Number(m[1])).padStart(2, '0') : null
 }
+
+/** Canais do iFood no DW (`normalizarOrigem`): a loja e o Vasto na loja. */
+const CANAIS_IFOOD = new Set(['ifood', 'ifood_vasto'])
 
 type Json = Record<string, unknown>
 
 function obj(v: unknown): Json | null {
   return v && typeof v === 'object' && !Array.isArray(v) ? (v as Json) : null
-}
-
-function lista(v: unknown): unknown[] {
-  return Array.isArray(v) ? v : []
 }
 
 /**
@@ -146,9 +129,14 @@ async function carregarFormasOnlineVr(): Promise<FormaOnlineVr[]> {
     `
   } catch (e) {
     console.error('[fechamento-ifood-diario] cadastro de formas de pagamento:', e)
+    // Não conectou (banco fora, rede) é passageiro: 503. O resto (senha, permissão,
+    // tabela) é configuração e não passa sozinho: 502, para o suporte.
+    if (ehFalhaDeConexao(e)) {
+      throw new HttpError(503, 'Não conseguimos conectar ao banco do Maestro.')
+    }
     throw new HttpError(
       502,
-      'Não foi possível ler o cadastro de formas de pagamento do Maestro. Tente de novo.'
+      'O banco do Maestro recusou a leitura do cadastro de formas de pagamento.'
     )
   }
   return (
@@ -173,6 +161,8 @@ function doDw(raw: Json, nomeLojaPadrao: string, data: string) {
     n_parceiro: texto(raw.n_parceiro) ?? '',
     data_calc: data,
     data_de_criacao: texto(raw.data_de_criacao_horario_sp) ?? texto(raw.data_de_criacao_utc) ?? '',
+    // Desempata, no cruzamento, pedidos com o mesmo código em dois restaurantes do iFood.
+    criado_utc: texto(raw.data_de_criacao_utc) ?? '',
     origem: texto(raw.origem) ?? texto(raw.channel) ?? 'iFood',
     valor_do_pedido: numero(raw.valor_do_pedido) ?? numero(raw.order_value) ?? totalPagoDw,
     valor_da_entrega: numero(raw.valor_da_entrega) ?? numero(raw.delivery_fee) ?? 0,
@@ -198,82 +188,67 @@ function doDw(raw: Json, nomeLojaPadrao: string, data: string) {
     cancelamento_parcial: '',
     encontrado_no_ifood: false,
     merchant_ifood: '',
+    operacao_ifood: '',
   }
 }
 
 type PedidoDw = ReturnType<typeof doDw>
 
-/** Restaurante do iFood (merchant) da operação, como nas vendas. */
-interface MerchantDaConta {
-  id: string
-  name: string
-  corporateName: string
-}
-
-/** Restaurantes da conta do iFood — mudam pouco: guardados 30 min por instância. */
-let cacheMerchants: { em: number; lista: MerchantDaConta[] } | null = null
-const CACHE_MERCHANTS_MS = 30 * 60_000
-
-async function merchantsDaConta(base: string, token: string): Promise<MerchantDaConta[]> {
-  if (cacheMerchants && Date.now() - cacheMerchants.em < CACHE_MERCHANTS_MS) {
-    return cacheMerchants.lista
-  }
-  const todos: MerchantDaConta[] = []
-  for (let pagina = 1; pagina <= 20; pagina++) {
-    const r = await fetch(`${base}/merchant/v1.0/merchants?page=${pagina}&size=100`, {
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-      signal: AbortSignal.timeout(30_000),
-    })
-    if (r.status === 204) break
-    if (!r.ok) throw new Error(`HTTP ${r.status}`)
-    const itens = lista(await r.json())
-    for (const i of itens) {
-      const m = obj(i)
-      const id = m && texto(m.id)
-      if (m && id) {
-        todos.push({ id, name: texto(m.name) ?? id, corporateName: texto(m.corporateName) ?? '' })
-      }
-    }
-    if (itens.length < 100) break
-  }
-  cacheMerchants = { em: Date.now(), lista: todos }
-  return todos
-}
-
-/**
- * Nome do restaurante no iFood, para a coluna "Restaurante no iFood". Só informativo:
- * se a lista da conta falhar, vai um nome genérico, sem aviso. Fica aqui (e não nas
- * vendas) porque a chamada ao DW é mais lenta: o nome sai sem atrasar o progresso.
- */
-async function nomeDoRestaurante(base: string, token: string, id: string): Promise<string> {
-  try {
-    return (await merchantsDaConta(base, token)).find((m) => m.id === id)?.name ?? 'iFood'
-  } catch (e) {
-    console.error('[fechamento-ifood-diario] lista de restaurantes do iFood:', e)
-    return 'iFood'
-  }
-}
-
 interface Resposta {
-  /** Pedidos do canal da operação, no formato do legado, antes do cruzamento. */
+  /** Pedidos dos canais do iFood da loja, no formato do legado, antes do cruzamento. */
   pedidos: PedidoDw[]
   /** Formas "ONLINE VR" do cadastro, da descrição mais longa para a mais curta. */
   formasVr: FormaOnlineVr[]
-  /** Operação com canal próprio (Vasto na loja do CB): não filtra o canal do iFood. */
-  canalProprio: boolean
-  /** Nome do restaurante da operação no iFood; `null` sem integração ou sem a lista. */
-  restaurante: string | null
 }
 
-/** Mensagem que a API devolve no corpo de um erro, se houver. */
-async function detalheDoErro(r: Response): Promise<string> {
+/**
+ * Registra no log do servidor a mensagem que a API devolveu no corpo do erro. Ela NÃO vai
+ * para a tela: é texto de terceiro, sem controle do que traz (ids, caminhos, eco da
+ * requisição). A tela recebe só o status; o suporte acha o detalhe pelo ID da chamada.
+ */
+async function registrarDetalheDoErro(r: Response): Promise<void> {
   try {
     const corpo = (await r.json()) as { detail?: unknown; message?: unknown }
     const msg = corpo.detail ?? corpo.message
-    return typeof msg === 'string' ? ` ${msg}` : ''
+    if (typeof msg === 'string')
+      console.error('[fechamento-ifood-diario] %s respondeu %d:', 'DW', r.status, msg)
   } catch {
-    return ''
+    // corpo não é JSON: nada a registrar
   }
+}
+
+/** Códigos de "não conectou" — do Node (rede/DNS) e do driver `postgres`. */
+const CODIGOS_CONEXAO = new Set([
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'ENOTFOUND',
+  'EAI_AGAIN',
+  'ETIMEDOUT',
+  'EHOSTUNREACH',
+  'ENETUNREACH',
+  'EPIPE',
+  'CONNECT_TIMEOUT',
+  'CONNECTION_CLOSED',
+  'CONNECTION_ENDED',
+  'CONNECTION_DESTROYED',
+  '57P01', // admin_shutdown
+  '57P03', // cannot_connect_now
+  '53300', // too_many_connections
+])
+
+/** O erro é de conexão (passageiro), não de configuração ou de dado. */
+function ehFalhaDeConexao(e: unknown): boolean {
+  const codigo = (x: unknown) =>
+    x && typeof x === 'object' && 'code' in x ? String((x as { code: unknown }).code) : ''
+  const causa = e && typeof e === 'object' && 'cause' in e ? (e as { cause: unknown }).cause : null
+  // O Node às vezes junta as tentativas (IPv4/IPv6) num AggregateError, em `errors`.
+  const juntos =
+    causa && typeof causa === 'object' && 'errors' in causa
+      ? ((causa as { errors: unknown }).errors as unknown[])
+      : []
+  return [e, causa, ...(Array.isArray(juntos) ? juntos : [])].some((x) =>
+    CODIGOS_CONEXAO.has(codigo(x))
+  )
 }
 
 function ehTimeout(e: unknown): boolean {
@@ -282,38 +257,24 @@ function ehTimeout(e: unknown): boolean {
 
 export default defineHandler<Body, Resposta>(async (ctx) => {
   await ctx.requirePermission('fechamento-ifood-diario.ler')
-  const ref = typeof ctx.body.operacaoRef === 'string' ? ctx.body.operacaoRef.trim() : ''
-  if (!ref) throw new HttpError(422, 'Informe a loja.')
-  // 403 se a operação está fora do escopo do usuário.
-  const operacao = await ctx.requireOperacao(ref)
+  const empresaId = Number(ctx.body.empresaId)
+  if (!Number.isInteger(empresaId) || empresaId <= 0) throw new HttpError(422, 'Informe a loja.')
+  // 403 se a Empresa está fora do escopo do usuário.
+  await ctx.requireEmpresa(empresaId)
   const data = validarData(ctx.body.data)
+  const empresa = (await ctx.empresas()).find((e) => e.id === empresaId)
+  if (!empresa) throw new HttpError(404, 'Loja não encontrada.')
 
-  const locRef = numeroDaOperacao(operacao.ref)
+  const locRef = numeroDaLoja(empresa)
   if (!locRef) {
     throw new HttpError(
       422,
-      `A operação "${operacao.nome}" não tem número de loja no código (${operacao.ref}).`
+      `A loja "${empresa.nome}" não tem número de loja no cadastro (vínculo BIAPI ou número no nome).`
     )
   }
-  const propria = OPERACOES_IFOOD_PROPRIO[chaveOperacao(operacao.ref)]
-  const canal = normalizarOrigem(propria?.canal ?? 'iFood')
 
-  // O cadastro e o nome do restaurante carregam enquanto a API do DW (bem mais lenta)
-  // responde. O restaurante é o da tabela (Vasto na loja do CB) ou o da Empresa.
+  // O cadastro carrega enquanto a API do DW (bem mais lenta) responde.
   const formasVrPromise = carregarFormasOnlineVr()
-  const restaurantePromise = (async (): Promise<string | null> => {
-    const empresa = propria
-      ? undefined
-      : (await ctx.empresas()).find((e) => e.id === operacao.empresaId)
-    const merchantId = propria?.merchant ?? (empresa?.locRefs?.IFOOD?.trim() || null)
-    if (!merchantId) return null
-    try {
-      const cred = await ctx.credencial('ifood')
-      return await nomeDoRestaurante(cred.baseUrl.replace(/\/+$/, ''), cred.token, merchantId)
-    } catch {
-      return null
-    }
-  })()
   // Sem isto, um erro do banco antes da API terminar viraria "unhandled rejection".
   formasVrPromise.catch(() => {})
 
@@ -329,13 +290,16 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
     if (ehTimeout(e)) {
       throw new HttpError(504, 'A API de delivery do DW demorou demais para responder.')
     }
-    throw e
+    // O `fetch` só lança sem resposta: DNS, conexão recusada, rede.
+    console.error('[fechamento-ifood-diario] API de delivery do DW:', e)
+    throw new HttpError(503, 'Não conseguimos conectar à API de delivery do DW.')
+  }
+  if (r.status === 502 || r.status === 503 || r.status === 504) {
+    throw new HttpError(503, `A API de delivery do DW está fora do ar (respondeu ${r.status}).`)
   }
   if (!r.ok) {
-    throw new HttpError(
-      502,
-      `A API de delivery do DW respondeu ${r.status}.${await detalheDoErro(r)}`
-    )
+    await registrarDetalheDoErro(r)
+    throw new HttpError(502, `A API de delivery do DW respondeu ${r.status}.`)
   }
   const json = (await r.json()) as unknown
   // Como no legado: lista na raiz, ou em `results`, `data` ou `orders`.
@@ -349,14 +313,15 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
   const pedidos = (linhas as unknown[])
     .map(obj)
     .filter((l): l is Json => l !== null)
-    .filter((l) => normalizarOrigem(texto(l.origem) ?? texto(l.channel) ?? 'iFood') === canal)
+    .filter((l) =>
+      CANAIS_IFOOD.has(normalizarOrigem(texto(l.origem) ?? texto(l.channel) ?? 'iFood'))
+    )
     .map((l) => doDw(l, `Loja ${locRef}`, data))
 
-  const [formasVr, restaurante] = await Promise.all([formasVrPromise, restaurantePromise])
-  return { pedidos, formasVr, canalProprio: propria !== undefined, restaurante }
+  return { pedidos, formasVr: await formasVrPromise }
 })
 
 export const config = {
-  integracoes: ['apidw', 'ifood'],
+  integracoes: ['apidw'],
   secrets: ['GIA_SERVER_DATABASE_URL'],
 }

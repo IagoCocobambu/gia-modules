@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
-import { AlertTriangle, ChartPie, ReceiptText, RefreshCw, X } from 'lucide-react'
+import { AlertTriangle, ChartPie, ReceiptText, X } from 'lucide-react'
 import {
   Badge,
   Button,
@@ -18,6 +18,7 @@ import { useLojasFechamentoIfood } from '../api/fechamento-ifood-diario'
 import { BadgeTipoPagamento } from '../components/BadgeTipoPagamento'
 import { Dica } from '../components/Dica'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
+import { MensagemErro } from '../components/MensagemErro'
 import { ProgressoConsulta } from '../components/ProgressoConsulta'
 import { Recolhivel } from '../components/Recolhivel'
 import { ResumoCards } from '../components/ResumoCards'
@@ -192,8 +193,9 @@ async function exportarXlsx(
 function Avisos({ resposta }: { resposta: FechamentoResposta }) {
   const linhas = [...resposta.avisos]
   // Como no legado, sem aviso de cruzamento: pedido do DW não achado no iFood fica só
-  // como Cancelado (é o caso normal das outras marcas da loja — Express, Pizzaria…), e
-  // venda do iFood sem pedido no DW o legado só registrava em log de debug.
+  // como Cancelado, e venda do iFood sem pedido no DW o legado só registrava em log de
+  // debug. Com todos os restaurantes da loja no cruzamento, o não achado é cancelamento
+  // de verdade (ou restaurante fora do cadastro).
   if (linhas.length === 0) return null
   return (
     <div
@@ -210,13 +212,20 @@ function Avisos({ resposta }: { resposta: FechamentoResposta }) {
   )
 }
 
+/** De onde veio o erro, em palavras, pelo handler que falhou. */
+const ORIGEM_HANDLER: Record<string, string> = {
+  lojas: 'Lista de lojas',
+  pedidos: 'Pedidos do delivery',
+  vendas: 'Vendas no iFood',
+}
+
 export function FechamentoIfoodDiarioView() {
   const canView = useCanAccess('fechamento-ifood-diario.ler')
   const canExport = useCanAccess('fechamento-ifood-diario.exportar')
   const replayTour = useTourReplayTrigger('fechamento-ifood-diario')
 
   // O dia começa em ontem: o fechamento é do dia que já terminou.
-  const [filtros, setFiltros] = useState<FiltrosValor>({ operacaoRef: null, data: ontemLocal() })
+  const [filtros, setFiltros] = useState<FiltrosValor>({ empresaId: null, data: ontemLocal() })
   // Foto do clique em "Pesquisar".
   const [consulta, setConsulta] = useState<Consulta | null>(null)
   const [filtroTotal, setFiltroTotal] = useState<FiltroTotal | null>(null)
@@ -230,7 +239,7 @@ export function FechamentoIfoodDiarioView() {
   const lojasQuery = useLojasFechamentoIfood(canView)
   const lojas = useMemo(() => lojasQuery.data ?? [], [lojasQuery.data])
   // Sem escolha do usuário, vale a primeira loja da lista (como no legado).
-  const refSelecionada = filtros.operacaoRef ?? lojas[0]?.ref ?? null
+  const empresaSelecionada = filtros.empresaId ?? lojas[0]?.empresaId ?? null
 
   // A consulta em partes (pedidos do DW + páginas do iFood em paralelo), com progresso.
   const {
@@ -238,6 +247,7 @@ export function FechamentoIfoodDiarioView() {
     progresso,
     resultado,
     erro: erroConsulta,
+    erroOriginal,
     consultar,
     cancelar,
   } = useConsultaDiaria()
@@ -262,13 +272,13 @@ export function FechamentoIfoodDiarioView() {
   const semAlteracao =
     consulta !== null &&
     (fase === 'consultando' || fase === 'pronto') &&
-    consulta.operacaoRef === refSelecionada &&
+    consulta.empresaId === empresaSelecionada &&
     consulta.data === filtros.data
 
   /** Dispara a pesquisa. Devolve `false` quando ela foi recusada. */
   function pesquisar(): boolean {
     if (semAlteracao) return false
-    const loja = lojas.find((l) => l.ref === refSelecionada)
+    const loja = lojas.find((l) => l.empresaId === empresaSelecionada)
     if (!loja) {
       toast.error('Não é possível consultar sem ter selecionado uma loja.')
       return false
@@ -279,7 +289,12 @@ export function FechamentoIfoodDiarioView() {
       return false
     }
     setFiltroTotal(null)
-    const nova = { operacaoRef: loja.ref, lojaNome: loja.nome, data: filtros.data }
+    const nova: Consulta = {
+      empresaId: loja.empresaId,
+      lojaNome: loja.nome,
+      restaurantes: loja.restaurantes,
+      data: filtros.data,
+    }
     setConsulta(nova)
     void consultar(nova)
     return true
@@ -392,6 +407,7 @@ export function FechamentoIfoodDiarioView() {
       dataHora('data_de_criacao', 'Data hora pedido'),
       texto('nome_loja', 'Restaurante'),
       texto('merchant_ifood', 'Restaurante no iFood'),
+      texto('operacao_ifood', 'Operação'),
       texto('id_loja', 'ID do restaurante'),
       valor('valor_da_entrega', 'Taxa de entrega'),
       valor('valor_do_pedido', 'Valor dos itens'),
@@ -427,29 +443,25 @@ export function FechamentoIfoodDiarioView() {
 
   const subtitle = consulta
     ? `${consulta.lojaNome} · ${formatDataHora(consulta.data)}`
-    : 'Pedidos iFood da loja no dia, cruzados com a API financeira do iFood.'
+    : 'Pedidos iFood da loja (todas as operações) no dia, cruzados com a API financeira do iFood.'
 
   let emptyState
   if (erro) {
+    const erroDaVez = lojasQuery.error ?? erroOriginal ?? erro
+    const handler = (erroDaVez as { requisicao?: { handler?: string } } | null)?.requisicao?.handler
     emptyState = (
-      <EmptyState
-        // A tabela não quebra linha nas células (e o estado vazio fica numa célula): a
-        // mensagem de erro, que pode ser longa, precisa quebrar.
-        className="whitespace-normal break-words"
-        icon={AlertTriangle}
-        title="Não foi possível consultar os dados"
-        description={erro}
-        action={
-          <Button
-            onClick={() => {
-              if (lojasQuery.isError) void lojasQuery.refetch()
-              if (erroConsulta && consulta) void consultar(consulta)
-            }}
-          >
-            <RefreshCw className="h-4 w-4" /> Tentar de novo
-          </Button>
-        }
-      />
+      <div className="flex max-h-full w-full justify-center overflow-y-auto px-4 py-4">
+        <MensagemErro
+          erro={erroDaVez}
+          origem={
+            handler ? ORIGEM_HANDLER[handler] : (erroDaVez as { origem?: string } | null)?.origem
+          }
+          onTentarDeNovo={() => {
+            if (lojasQuery.isError) void lojasQuery.refetch()
+            if (erroConsulta && consulta) void consultar(consulta)
+          }}
+        />
+      </div>
     )
   } else if (!consulta) {
     emptyState = (
@@ -524,7 +536,7 @@ export function FechamentoIfoodDiarioView() {
       >
         <FiltrosBar
           className="shrink-0"
-          value={{ ...filtros, operacaoRef: refSelecionada }}
+          value={{ ...filtros, empresaId: empresaSelecionada }}
           onValueChange={setFiltros}
           lojas={lojas}
           lojasLoading={lojasQuery.isLoading}

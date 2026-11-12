@@ -21,14 +21,15 @@ npm run pack           # gia pack — gera o .tgz (+ Edge Function)
 ```
 
 No `gia dev` os handlers `src/server/pedidos.ts` e `vendas.ts` rodam no Node e chamam
-o DW e o iFood **de verdade**, com os tokens do `.env`. Para cruzar com o iFood, a loja do
-`gia.config.ts` precisa do UUID do merchant em `locRefs.IFOOD`.
+o DW e o iFood **de verdade**, com os tokens do `.env`. Os restaurantes do iFood de cada
+loja saem da tabela `RESTAURANTES_IFOOD` (em `lojas.ts` e `vendas.ts`), pelo número da
+loja do `gia.config.ts`.
 
 ## Estrutura
 
-- `src/server/lojas.ts` — lojas do escopo (nº da loja e se tem merchant do iFood).
-- `src/server/pedidos.ts` — pedidos do DW do canal da operação + cadastro de formas ONLINE VR.
-- `src/server/vendas.ts` — uma página das vendas do iFood, reduzida ao que o cruzamento usa.
+- `src/server/lojas.ts` — Empresas do escopo (nº da loja e os restaurantes do iFood de todas as operações).
+- `src/server/pedidos.ts` — pedidos iFood e iFood Vasto do DW da loja + cadastro de formas ONLINE VR.
+- `src/server/vendas.ts` — uma página das vendas de um restaurante da loja no iFood, reduzida ao que o cruzamento usa.
 - `src/hooks/use-consulta-diaria.ts` — conduz a consulta em partes, em paralelo, com progresso.
 - `src/regras.ts` — cruzamento e colunas calculadas (regras do legado).
 - `src/api/fechamento-ifood-diario.ts` — hooks React Query que chamam os handlers.

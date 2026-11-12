@@ -88,11 +88,15 @@ lojas no servidor, funciona no celular e mantém as contas iguais às do legado
 
 ### RF-1: Seleção de loja
 
-Seletor com **todas as operações** do escopo do usuário (`ctx.operacoes()`) —
-**exceção** deste módulo, que busca por operação e não por Empresa (decisão de
-2026-11-09). A pesquisa manda o `operacao_ref` e o servidor confere com
-`ctx.requireOperacao`. A primeira já vem selecionada, como no legado. Operação cuja
-Empresa não tem merchant do iFood aparece com a marca **Sem iFood**.
+Seletor com as **Empresas** (lojas, `tipoRegistro = 'empresa'`) do escopo do usuário
+— o padrão do workspace (até a 0.2.3 era por operação). A pesquisa **consolida todas
+as operações da Empresa** (decisão de 2026-11-11): manda o `empresaId` e o servidor
+confere com `ctx.requireEmpresa`. A primeira já vem selecionada, como no legado. Loja
+sem restaurante do iFood aparece com a marca **Sem iFood**; as demais, com as
+operações no iFood ("3 operações no iFood: cb, pzcb, vst"). O nome vem sempre com o
+número da loja na frente. O número da loja sai do nome da Empresa ("17.CB RECIFE") e,
+na falta, do vínculo BIAPI — o nome vem antes porque o BIAPI pode divergir (999.CB
+TECH HOMOLOG tem BIAPI "995 CB L").
 
 ### RF-2: Dia
 
@@ -104,19 +108,23 @@ datas futuras.
 Consulta em partes, conduzida pela tela (como o Fechamento iFood Mensal), para
 mostrar o progresso:
 
-- handler `pedidos`: os pedidos do DW do canal da operação e o cadastro de formas
-  ONLINE VR (uma chamada; sem nova tentativa, porque pode levar até 90 s);
-- handler `vendas`: UMA página (20 vendas) do iFood, já reduzida aos campos do
-  cruzamento; a tela busca a página 1 e depois as demais, até 4 ao mesmo tempo, com
-  nova tentativa em falha. Página "leve" do iFood (vendas sem pagamentos) é pedida de
-  novo até 2 vezes;
+- handler `pedidos`: os pedidos do DW dos canais **iFood** e **iFood Vasto** da loja
+  (todas as operações) e o cadastro de formas ONLINE VR (uma chamada; sem nova
+  tentativa, porque pode levar até 90 s);
+- handler `vendas`: UMA página (20 vendas) de UM restaurante da loja no iFood, já
+  reduzida aos campos do cruzamento; o restaurante vem no body e o servidor confere
+  que é da loja. A tela põe numa fila a página 1 de cada restaurante e, conforme cada
+  uma diz quantas páginas há, as demais, até 4 chamadas ao mesmo tempo, com nova
+  tentativa em falha. Falha num restaurante vira aviso com o nome dele e encerra só
+  as páginas dele. Página "leve" do iFood (vendas sem pagamentos) é pedida de novo até
+  2 vezes;
 - a tela cruza e calcula (RN-1 a RN-7, `src/regras.ts`) e vai **populando**: assim
   que os pedidos do DW chegam a tabela aparece, recalculada a cada página do iFood;
   o pedido ainda não achado fica **Aguardando iFood** (apagado), nunca Cancelado antes
   do fim. Os cards, o filtro pelos cards e o Excel só com as duas partes completas.
   A faixa de progresso fica acima da tabela durante toda a busca; **Cancelar** interrompe.
 
-Os dois handlers conferem a permissão e a operação (`requireOperacao`). O módulo só
+Os dois handlers conferem a permissão e a loja (`requireEmpresa`). O módulo só
 lê: nenhum valor calculado volta ao servidor.
 
 ### RF-4: Cards do dia
@@ -219,28 +227,31 @@ divergiam, vale o fonte; nas contas abaixo os dois são iguais. O
 `DOCS/mapeamento_dados_ifood.md` do pacote está desatualizado (traz fórmulas que o
 código não usa, como `× 0,965`) e não foi seguido.
 
-- **RN-1 — loja**: a loja é a **operação**, e cada operação tem os seus pedidos,
-  mesmo duas do mesmo número (`08 cb` e `08 vst`). `loc_ref` do DW = número do
-  começo do `operacao_ref` ("54 cb" → `54`); o DW junta as operações do número e as
-  separa pela `origem` do pedido: **"iFood"** é a operação principal e **"iFood
-  Vasto"** a do Vasto na loja do CB. Os pedidos são separados pelo canal **antes**
-  do cruzamento.
-  - Operação principal: canal "iFood"; restaurante principal = `locRefs.IFOOD` da
-    Empresa dona da operação (o `gia.empresas_integracoes` tipo `IFOOD` do legado).
-  - Operação Vasto na loja do CB (`08 vst`, `17 vst`, `25 vst`, `69 vst`, `86 vst`):
-    canal "iFood Vasto" e o restaurante do Vasto, numa tabela do módulo
-    (`OPERACOES_IFOOD_PROPRIO`) — provisória: o SDK não tem vínculo iFood por
-    operação (§11). Operação nova nessa situação entra na tabela.
-- **RN-1a — só o restaurante da operação** (decisão de 2026-11-09): o canal "iFood"
-  de uma loja no DW traz os pedidos de **todas as marcas** dela no iFood (Coco
-  Bambu, Express, Pizzaria, Dani…), que são restaurantes diferentes. Como no legado,
-  o cruzamento usa **só o restaurante da operação**: os pedidos das outras marcas
-  não são achados e ficam como **Cancelado** (fora dos cards). Foi testado cruzar
-  também com os restaurantes de mesma razão social (22 lojas em 08/11/2026: 1.777
-  de 1.777 achados, contra 1.486), mas os cards deixavam de bater com a tela antiga
-  — ex.: 01 Goiânia, iFood online R$ 17.364,90 × R$ 12.574,79 do legado — e o
-  usuário escolheu manter a regra do legado. A coluna **Restaurante no iFood**
-  mostra o restaurante em que o pedido foi achado.
+- **RN-1 — loja** (0.2.4, decisão de 2026-11-11): a loja é a **Empresa**, com
+  **todas as operações** dela juntas. `loc_ref` do DW = número da loja (vínculo
+  `locRefs.BIAPI` ou o começo do nome, "54.CB MINAS SHOPPING" → `54`); do DW entram os
+  pedidos dos canais **"iFood"** e **"iFood Vasto"** (`origem`). Os restaurantes do
+  iFood da loja são **um por operação com integração IFOOD** no cadastro (cb, cbx,
+  pzcb, dani, adgcb, burger, vst, vstss…), numa tabela do módulo
+  (`RESTAURANTES_IFOOD`, por número de loja, em `lojas.ts` e `vendas.ts`) gerada da
+  planilha "GIA - Empresas - Cadastro - 2026-11-09" (aba Integrações das operações) —
+  provisória: o SDK não expõe vínculo por operação (§11). Loja fora da tabela usa o
+  `locRefs.IFOOD` da Empresa, se houver. Até a 0.2.3 a loja era a operação, com só o
+  restaurante dela (os pedidos de Express, Pizzaria, Dani… ficavam Cancelado, como no
+  legado); com a consolidação, eles cruzam e entram nos cards — **os cards deixam de
+  bater com a tela antiga** nas lojas com mais de um restaurante, por decisão do
+  usuário.
+- **RN-1a — par pedido × venda**: mesmo código (n_parceiro do DW = `shortId` do
+  iFood) **e** mesma hora de criação (`data_de_criacao_utc` do DW × `createdAt` do
+  iFood, até 10 min de diferença; sem a hora num dos lados, só o código, como no
+  legado). O `shortId` se repete entre restaurantes da loja e até no mesmo restaurante
+  em horas diferentes (08/11/2026: 2 casos na 17 entre cbx e vst; 3 na 03 entre os dois
+  restaurantes cb); a hora desempata — nos pares certos ela é **idêntica** (0 s em
+  todos os pedidos de 03, 08, 17 e 25). Com mais de um candidato fica o par de horas
+  mais próximas; cada venda cruza com um pedido só. Conferido em 08/11/2026 com dados
+  reais: 03 263/263, 08 82/82, 17 132/132, 25 102/102 pedidos iFood do DW cruzados, e
+  nenhuma venda do iFood sem pedido. As colunas **Restaurante no iFood** e **Operação**
+  mostram onde o pedido foi achado.
 - **RN-2 — pedido do DW** (`MapApiItemToTransaction`): `total_pago` do DW,
   `valor_do_pedido` (na falta, o total pago), `valor_da_entrega`,
   `desconto_total`, `incentivo_parceiro`, `incentivo_loja`,
@@ -294,8 +305,12 @@ código não usa, como `× 0,965`) e não foi seguido.
       simulado (concluído, cancelado, não confirmado, não achado, `IFOOD_SHOP`,
       paginação) e formas VR, DESCONHECIDO, sem valor e cartão mascarado
 - [ ] Mesma conferência com a API real do iFood (pendente: credencial `ifood`)
-- [ ] Seletor com todas as operações do escopo; operação sem merchant marcada "Sem iFood"
-- [ ] Operação fora do escopo enviada na mão: 403 (`requireOperacao`)
+- [ ] Seletor com as Empresas do escopo; loja sem restaurante do iFood marcada "Sem iFood"
+- [ ] Empresa fora do escopo enviada na mão: 403 (`requireEmpresa`); restaurante de
+      outra loja enviado na mão: 422
+- [x] Loja com vários restaurantes (03, 08, 17, 25 em 08/11/2026): todos os pedidos
+      iFood do DW cruzados, cada um com o restaurante e a operação certos (mesmo código
+      em dois restaurantes desempatado pela hora)
 - [ ] Loja sem integração iFood: aviso amarelo e pedidos como Cancelado
 - [ ] Erro na API do iFood: aviso amarelo, pesquisa não falha
 - [ ] Clicar num card filtra a tabela pelos pedidos dele; clicar de novo tira
@@ -328,12 +343,12 @@ código não usa, como `× 0,965`) e não foi seguido.
 
 ## 10. Riscos e mitigações
 
-| Risco                                        | Mitigação                                           |
-| -------------------------------------------- | --------------------------------------------------- |
-| Integração `ifood` ainda não existe no hub   | Aviso claro na tela; pendência no INTEGRATION.md    |
-| Merchant (`locRefs.IFOOD`) faltando em lojas | Marca "Sem iFood" no seletor e aviso na pesquisa    |
-| API do iFood instável                        | Aviso na tela; timeout de 60 s por página           |
-| Cadastro de formas ONLINE VR desatualizado   | FAQ orienta pedir a inclusão ao time de TI/Sistemas |
+| Risco                                      | Mitigação                                                                           |
+| ------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Integração `ifood` ainda não existe no hub | Aviso claro na tela; pendência no INTEGRATION.md                                    |
+| Restaurante novo fora da tabela do módulo  | Pedidos dele ficam Cancelado; atualizar `RESTAURANTES_IFOOD` (lojas.ts e vendas.ts) |
+| API do iFood instável                      | Aviso na tela; timeout de 20 s por página                                           |
+| Cadastro de formas ONLINE VR desatualizado | FAQ orienta pedir a inclusão ao time de TI/Sistemas                                 |
 
 ## 11. Dependências
 
@@ -347,9 +362,9 @@ API do DW, Merchant API do iFood, banco do Maestro.
 
 ### Decisões pendentes
 
-- Vínculo iFood por operação: o SDK só tem um por Empresa. As operações Vasto na
-  loja do CB estão numa tabela do módulo (RN-1) até o SDK expor `locRefs` em
-  `GiaOperacao`.
+- Vínculo iFood por operação: o SDK só tem um por Empresa. Os restaurantes de todas
+  as operações estão numa tabela do módulo (RN-1) até o SDK expor `locRefs` em
+  `GiaOperacao`; aí a tabela sai e o cadastro passa a valer sozinho.
 - Se a edição do cadastro de formas de pagamento deve ser portada.
 
 ---

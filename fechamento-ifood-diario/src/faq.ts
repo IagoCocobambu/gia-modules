@@ -2,7 +2,7 @@ import type { ModuleFaq } from '@gia-cb/sdk/modules'
 
 export const faq: ModuleFaq = {
   summary:
-    'O **Fechamento iFood Diário** monta o fechamento dos **pedidos iFood** de uma loja num dia. Ele junta duas fontes: os pedidos de delivery do **DW** (valores, incentivos, formas de pagamento) e as vendas da **API financeira do iFood** (se o pedido foi concluído ou cancelado, quem cancelou, total do parceiro, prazo de contestação). Cada forma de pagamento é classificada em **ONLINE**, **ONLINE VR** (vale-refeição e benefícios) ou **OFFLINE**, e os **cards** somam o que o financeiro precisa para fechar o dia: iFood online, iFood adquirentes, descontos da loja e do iFood e o desconto copart. Nada é gravado: a tela só consulta.',
+    'O **Fechamento iFood Diário** monta o fechamento dos **pedidos iFood** de uma loja num dia, juntando **todas as operações da loja** (Coco Bambu, Express, Pizzaria, Dani, Vasto…). Ele junta duas fontes: os pedidos de delivery do **DW** (valores, incentivos, formas de pagamento) e as vendas de **todos os restaurantes da loja** na **API financeira do iFood** (se o pedido foi concluído ou cancelado, quem cancelou, total do parceiro, prazo de contestação). Cada forma de pagamento é classificada em **ONLINE**, **ONLINE VR** (vale-refeição e benefícios) ou **OFFLINE**, e os **cards** somam o que o financeiro precisa para fechar o dia: iFood online, iFood adquirentes, descontos da loja e do iFood e o desconto copart. Nada é gravado: a tela só consulta.',
   sections: [
     {
       id: 'primeiros-passos',
@@ -11,9 +11,11 @@ export const faq: ModuleFaq = {
 ## Montando o fechamento do dia
 
 1. Escolha a **Loja** no seletor (dá para digitar parte do nome). O seletor lista
-   **todas as operações** do seu escopo — uma loja com duas bandeiras aparece duas
-   vezes (ex.: *08.CB TERESINA* e *08.VST TERESINA*). A primeira da lista já vem
-   selecionada. Loja marcada **Sem iFood** não tem a integração com o iFood no
+   as **lojas** do seu escopo, uma vez cada; a pesquisa junta **todas as operações**
+   da loja (por exemplo, em *08.CB TERESINA*: Coco Bambu, Pizzaria e Vasto). Embaixo
+   do nome aparecem as **operações da loja no iFood** (ex.: *3 operações no iFood: cb,
+   pzcb, vst*); dá para buscar por elas também. A primeira da lista já vem
+   selecionada. Loja marcada **Sem iFood** não tem restaurante do iFood no
    cadastro (veja *Erros comuns*).
 2. Escolha o **Dia**. Ele já vem com *ontem* selecionado e não aceita datas futuras.
 3. Clique em **Pesquisar**.
@@ -23,8 +25,10 @@ export const faq: ModuleFaq = {
 Durante a busca, uma **faixa acima da tabela** mostra o andamento das duas etapas,
 com a barra das páginas do iFood e o botão **Cancelar**:
 
-- **Vendas no iFood** — as vendas do dia vêm do iFood em páginas de 20, várias ao
-  mesmo tempo; a faixa mostra quantas páginas já chegaram e quantas vendas;
+- **Vendas no iFood** — as vendas do dia de **cada restaurante da loja no iFood**
+  vêm em páginas de 20, várias ao mesmo tempo; a faixa mostra quantos restaurantes
+  são, quantas páginas já chegaram (o total cresce à medida que cada restaurante diz
+  quantas páginas tem) e quantas vendas;
 - **Pedidos do delivery** — os pedidos da loja no dia vêm de uma vez só. Em loja
   grande é a parte mais demorada: pode levar até 1 minuto.
 
@@ -157,8 +161,12 @@ O número do cartão mascarado (\`**** 1234 - \`) é ignorado na comparação.
 ## Pedido cruzado com o iFood
 
 O pedido do DW é ligado à venda do iFood pelo **Nº parceiro** do DW, que é o
-código curto do pedido no iFood, procurado no restaurante da loja no iFood. A
-coluna **Restaurante no iFood** mostra esse restaurante. Do iFood vêm: Confirmado (SIM quando concluído),
+código curto do pedido no iFood, procurado em **todos os restaurantes da loja** no
+iFood. O código curto pode se repetir entre restaurantes (e até no mesmo restaurante,
+em horas diferentes): por isso o pedido e a venda também têm que ter a **mesma hora
+de criação**. A coluna **Restaurante no iFood** mostra o restaurante em que o pedido
+foi achado, e a coluna **Operação**, a operação dona dele (ex.: *17 cbx*). Do iFood
+vêm: Confirmado (SIM quando concluído),
 Total do parceiro (soma dos pagamentos no iFood), Tipo de pedido, Canal de venda,
 ID do restaurante, os campos de cancelamento, a data limite de contestação e se
 houve cancelamento parcial.
@@ -167,19 +175,18 @@ Pedido do DW que **não foi achado** no iFood fica com esses campos vazios e,
 como não está confirmado, com **Cancelamento = Cancelado**. Para ver esses pedidos, filtre a coluna **Restaurante no iFood** pelos vazios
 ou a coluna **Cancelamento** por *Cancelado*.
 
-Os pedidos de **outras marcas da loja no iFood** (Coco Bambu Express, Pizzaria,
-Dani...) estão no DW junto com os da loja, mas são de outro restaurante no iFood:
-eles não são achados e aparecem como **Cancelado**, fora dos cards.
+Os pedidos de **todas as marcas da loja no iFood** (Coco Bambu, Express, Pizzaria,
+Dani, Vasto...) entram no fechamento e nos cards. Um pedido só fica sem cruzar
+quando foi de fato cancelado antes de virar venda, ou quando é de um restaurante do
+iFood que não está no cadastro da loja (nesse caso, avise o time do Portal GIA).
 
-## Só pedidos do iFood — e só da operação escolhida
+## Só pedidos do iFood
 
 A tela mostra só os pedidos cujo **canal de venda** é o iFood: o canal que o
 iFood informou, quando o pedido foi cruzado, ou o do DW, quando não foi. Pedidos
-do App Coco Bambu, 99Food e outros canais ficam de fora.
-
-Quando a loja tem duas operações (por exemplo *08.CB TERESINA* e *08.VST
-TERESINA*), cada uma mostra só os seus pedidos: a do CB, os do canal **iFood**; a
-do Vasto, os do canal **iFood Vasto**, cruzados com o restaurante do Vasto no iFood.
+do App Coco Bambu, 99Food e outros canais ficam de fora. Os canais **iFood** e
+**iFood Vasto** do DW entram os dois: a loja vê o dia de todas as operações juntas.
+Para ver uma operação só, filtre a coluna **Operação** ou **Restaurante no iFood**.
 `,
     },
     {
@@ -216,8 +223,9 @@ com os pedidos filtrados e o subtítulo da aba avisa.
       content: `
 - **Pedidos**: API de delivery do DW (\`api-dw.cocobambu.com\`), pela loja e
   pelo dia. A loja é identificada pelo número dela (o "01" de "01.CB GOIANIA").
-- **Vendas do iFood**: API financeira do iFood (Merchant API, vendas do dia), pelo
-  identificador da loja no iFood que fica no cadastro de Empresas do portal.
+- **Vendas do iFood**: API financeira do iFood (Merchant API, vendas do dia) de cada
+  restaurante da loja no iFood — um por operação com integração iFood no cadastro
+  (Coco Bambu, Express, Pizzaria, Dani, Vasto…).
 - **Formas ONLINE VR**: cadastro de formas de pagamento do Maestro
   (\`gia_relatorios.formas_pagamento\`), lido a cada pesquisa.
 
@@ -231,7 +239,7 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
       items: [
         {
           q: 'Por que um pedido entregue aparece como Cancelado?',
-          a: 'O Cancelamento vem do iFood: só é OK quando a API financeira do iFood diz que o pedido foi concluído (CONCLUDED) e não há origem de cancelamento. Se o pedido não foi achado no iFood (o Nº parceiro do DW não bateu com nenhuma venda), ele fica como Cancelado. Nesses pedidos a coluna Restaurante no iFood fica vazia.',
+          a: 'O Cancelamento vem do iFood: só é OK quando a API financeira do iFood diz que o pedido foi concluído (CONCLUDED) e não há origem de cancelamento. Se o pedido não foi achado em nenhum restaurante da loja no iFood (o Nº parceiro e a hora do DW não bateram com nenhuma venda), ele fica como Cancelado. Nesses pedidos as colunas Restaurante no iFood e Operação ficam vazias.',
         },
         {
           q: 'Por que um pedido OK não entrou em iFood online nem em iFood adquirentes?',
@@ -272,7 +280,7 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
         },
         {
           q: 'Por que a pesquisa demora em algumas lojas?',
-          a: 'O tempo é quase todo da etapa Pedidos do delivery, que traz todos os pedidos da loja no dia de uma vez — numa loja grande, até 1 minuto. As vendas do iFood vêm em paralelo, várias páginas ao mesmo tempo, e costumam terminar antes. O andamento de cada etapa aparece na faixa acima da tabela; se precisar, use Cancelar.',
+          a: 'O tempo é quase todo da etapa Pedidos do delivery, que traz todos os pedidos da loja no dia de uma vez — numa loja grande, até 1 minuto. As vendas do iFood de cada restaurante da loja vêm em paralelo, várias páginas ao mesmo tempo, e costumam terminar antes. O andamento de cada etapa aparece na faixa acima da tabela; se precisar, use Cancelar.',
         },
         {
           q: 'Os cards não mudaram quando filtrei a tabela. Está certo?',
@@ -301,7 +309,11 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
         },
         {
           q: 'Por que minha loja não aparece no seletor?',
-          a: 'O seletor lista todas as operações do seu escopo no portal. Se a sua loja não aparece, a operação dela não está no seu escopo — peça ao gestor para conferir.',
+          a: 'O seletor lista as lojas (Empresas) do seu escopo no portal. Se a sua loja não aparece, ela não está no seu escopo — peça ao gestor para conferir.',
+        },
+        {
+          q: 'Quero ver só o Vasto (ou só o Express) da loja. Como faço?',
+          a: 'A pesquisa traz todas as operações da loja juntas. Filtre a coluna Operação (ex.: 08 vst) ou Restaurante no iFood pelo funil, no computador, ou use a busca, no celular. Os cards continuam sendo do dia inteiro da loja.',
         },
       ],
     },
@@ -309,20 +321,28 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
       category: 'Erros comuns',
       items: [
         {
-          q: 'Apareceu "A Empresa desta operação não tem a integração com o iFood no cadastro". O que faço?',
-          a: 'A Empresa dona da operação não tem o identificador da loja no iFood (merchant) no cadastro de Empresas. Sem ele não dá para cruzar com o iFood, e todos os pedidos ficam como Cancelado. Peça ao time do Portal GIA para cadastrar a integração iFood da loja.',
+          q: 'Apareceu "A loja não tem restaurante do iFood no cadastro". O que faço?',
+          a: 'Nenhuma operação da loja tem a integração iFood (o identificador do restaurante no iFood) no cadastro. Sem ela não dá para cruzar com o iFood, e todos os pedidos ficam como Cancelado. Peça ao time do Portal GIA para cadastrar a integração iFood das operações da loja.',
+        },
+        {
+          q: 'O aviso amarelo começa com o nome de um restaurante (ex.: "Coco Bambu Express (17 cbx): …"). O que quer dizer?',
+          a: 'Que a falha foi só na parte do iFood daquele restaurante. Os pedidos dele que não vieram ficam como Cancelado; os dos outros restaurantes da loja estão certos. Pesquise de novo em alguns minutos. Se o aviso for 403, o restaurante não autorizou o aplicativo da Coco Bambu no Portal do Parceiro do iFood: avise o time do Portal GIA.',
         },
         {
           q: 'Apareceu um aviso de que a API do iFood respondeu com erro. Os números valem?',
           a: 'Não confie nos cards desse dia: os pedidos que não vieram do iFood ficam como Cancelado e saem dos cards. Pesquise de novo em alguns minutos. Se o aviso falar de credencial (403/503), avise o administrador do portal.',
         },
         {
-          q: 'A tela mostrou "Não foi possível consultar os dados". O que faço?',
-          a: 'Leia a mensagem: ela diz o motivo. "Demorou demais" ou "respondeu 5xx" é instabilidade da API do DW; "cadastro de formas de pagamento" é falha no banco do Maestro. Nos dois casos, clique em Tentar de novo em alguns minutos.',
+          q: 'A tabela mostrou uma mensagem de erro no lugar dos pedidos. O que faço?',
+          a: 'O título diz o tipo do problema e a primeira frase diz qual sistema falhou (a API de delivery do DW, a API do iFood ou o banco do Maestro). "Um sistema não respondeu agora" costuma passar em alguns minutos: clique em Tentar de novo. "Sem conexão com o portal" é a sua internet ou a VPN: a pesquisa é refeita sozinha quando a conexão volta. "Algo deu errado do nosso lado" é configuração ou resposta inesperada: tente de novo e, se continuar, avise o suporte. "Você não tem acesso a isso" só o gestor resolve.',
         },
         {
-          q: 'Apareceu "A operação não tem número de loja no código". O que faço?',
-          a: 'O DW identifica a loja pelo número (ex.: "54"), que sai do começo do código da operação ("54 cb"). Se o código não começa por um número, peça ao time do Portal GIA para corrigir o cadastro da operação.',
+          q: 'Para que serve "Ver detalhes técnicos"?',
+          a: 'Mostra o que a tela pediu e o que voltou, com a hora e o ID da chamada, para o suporte achar o problema. Use Copiar tudo para colar no chamado ou Baixar diagnóstico para anexar o arquivo. Senhas e tokens nunca aparecem, campos de dado pessoal ficam ocultos e o arquivo traz só as falhas desta tela.',
+        },
+        {
+          q: 'Apareceu "A loja não tem número de loja no cadastro". O que faço?',
+          a: 'O DW identifica a loja pelo número (ex.: "54"), que sai do vínculo com a BI da loja ou do começo do nome dela ("54.CB MINAS SHOPPING"). Se a loja não tem nenhum dos dois, peça ao time do Portal GIA para corrigir o cadastro.',
         },
         {
           q: 'A pesquisa voltou sem nenhum pedido. Está certo?',

@@ -223,6 +223,7 @@ export const COLUNAS_PEDIDO: ColunaExport<PedidoIfood>[] = [
     tipo: 'texto',
     largura: 30,
   },
+  { header: 'Operação', valor: (p) => vazioNulo(p.operacao_ifood), tipo: 'texto', largura: 12 },
   { header: 'ID do restaurante', valor: (p) => vazioNulo(p.id_loja), tipo: 'texto', largura: 12 },
   {
     header: 'Taxa de entrega',

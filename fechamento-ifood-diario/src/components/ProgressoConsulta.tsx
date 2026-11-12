@@ -14,25 +14,31 @@ const plural = (n: number, um: string, varios: string) =>
 
 /** Fração das páginas do iFood concluídas, de 0 a 100. */
 function percentual(p: ProgressoDiario | null): number {
-  if (!p || p.paginasTotal === null) return 0
-  if (p.paginasTotal === 0) return 100
+  if (!p) return 0
+  if (p.paginasTotal === null || p.paginasTotal === 0) return p.vendasProntas ? 100 : 0
   return Math.round((p.paginasConcluidas / p.paginasTotal) * 100)
 }
 
-/** As duas etapas numa linha: "Vendas no iFood: 3 de 9 páginas · Pedidos do delivery: aguardando". */
+/**
+ * As duas etapas numa linha: "Vendas no iFood (5 restaurantes): 3 de 9 páginas ·
+ * Pedidos do delivery: aguardando".
+ */
 function resumo(p: ProgressoDiario | null): string {
   if (!p) return 'Iniciando…'
-  const vendas = p.vendasProntas
-    ? p.paginasTotal === 0
-      ? 'sem vendas'
-      : `pronto (${plural(p.vendas, 'venda', 'vendas')})`
-    : p.paginasTotal === null
-      ? 'buscando a 1ª página'
-      : `${p.paginasConcluidas} de ${plural(p.paginasTotal, 'página', 'páginas')} · ${plural(p.vendas, 'venda', 'vendas')}`
+  const vendas =
+    p.paginasTotal === null
+      ? 'sem restaurante no cadastro'
+      : p.vendasProntas
+        ? p.vendas === 0
+          ? 'sem vendas'
+          : `pronto (${plural(p.vendas, 'venda', 'vendas')})`
+        : `${p.paginasConcluidas} de ${plural(p.paginasTotal, 'página', 'páginas')} · ${plural(p.vendas, 'venda', 'vendas')}`
+  const restaurantes =
+    p.restaurantes > 1 ? ` (${plural(p.restaurantes, 'restaurante', 'restaurantes')})` : ''
   const pedidos = p.pedidosProntos
     ? `pronto (${plural(p.pedidos ?? 0, 'pedido', 'pedidos')})`
     : 'aguardando (em loja grande, até 1 minuto)'
-  return `Vendas no iFood: ${vendas} · Pedidos do delivery: ${pedidos}`
+  return `Vendas no iFood${restaurantes}: ${vendas} · Pedidos do delivery: ${pedidos}`
 }
 
 /**

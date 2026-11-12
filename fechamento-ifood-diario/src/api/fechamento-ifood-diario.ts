@@ -16,12 +16,17 @@ export function useLojasFechamentoIfood(enabled: boolean) {
   })
 }
 
-/** Pedidos do DW da operação no dia e o cadastro de formas ONLINE VR. */
-export function buscarPedidos(body: { operacaoRef: string; data: string }) {
+/** Pedidos iFood do DW da loja (todas as operações) no dia e o cadastro de formas ONLINE VR. */
+export function buscarPedidos(body: { empresaId: number; data: string }) {
   return server.call<RespostaPedidos>('pedidos', body)
 }
 
-/** Uma página (20) das vendas do dia no iFood, já reduzidas ao que o cruzamento usa. */
-export function buscarPaginaVendas(body: { operacaoRef: string; data: string; pagina: number }) {
+/** Uma página (20) das vendas do dia de um restaurante da loja no iFood, já reduzidas ao que o cruzamento usa. */
+export function buscarPaginaVendas(body: {
+  empresaId: number
+  data: string
+  merchant: string
+  pagina: number
+}) {
   return server.call<RespostaVendas>('vendas', body)
 }

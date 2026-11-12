@@ -12,7 +12,9 @@ import type {
 // front antigo (`enrichedTransactions` + `calculateSummary`, este último em
 // `helpers.ts`). Rodam na tela porque a consulta é feita em partes, em paralelo, para
 // mostrar o progresso: os pedidos do DW (handler `pedidos`) e as páginas de vendas do
-// iFood (handler `vendas`) chegam separados e são cruzados aqui. O módulo só lê:
+// iFood (handler `vendas`, por restaurante) chegam separados e são cruzados aqui. A
+// loja junta todas as operações: os pedidos iFood do DW de todas e as vendas de todos
+// os restaurantes do iFood da loja. O módulo só lê:
 // nenhum valor calculado volta ao servidor.
 //
 // A classificação e as contas são as mesmas do legado, conferidas pedido a pedido.
@@ -123,8 +125,29 @@ function calcular(p: PedidoDw, formasVr: FormaOnlineVr[], completo: boolean): Pe
   }
 }
 
+/** Restaurante do iFood já com o nome, para a coluna "Restaurante no iFood". */
+export interface RestauranteNomeado {
+  nome: string
+  operacao: string
+}
+
+/**
+ * Diferença máxima entre a criação do pedido no DW e a da venda no iFood para serem o
+ * mesmo pedido. As duas vêm iguais (medido em 08/11/2026: 0 s em todos os pedidos das
+ * lojas 03, 08, 17 e 25); o código curto (n_parceiro = shortId) se repete entre
+ * restaurantes da loja, e até no mesmo restaurante, em horas diferentes do dia.
+ */
+const TOLERANCIA_CRIACAO_MS = 10 * 60_000
+
+/** Distância entre as criações (ms); `null` quando uma das datas falta. */
+function distancia(p: PedidoDw, v: VendaIfood): number | null {
+  const a = Date.parse(p.criado_utc)
+  const b = Date.parse(v.criadoEm)
+  return Number.isNaN(a) || Number.isNaN(b) ? null : Math.abs(a - b)
+}
+
 /** Campos que a venda do iFood traz para o pedido — a `MergeIfoodData` do legado. */
-function cruzar(p: PedidoDw, v: VendaIfood, restaurante: string): void {
+function cruzar(p: PedidoDw, v: VendaIfood, restaurante: RestauranteNomeado | undefined): void {
   p.encontrado_no_ifood = true
   if (v.idLoja !== null) p.id_loja = v.idLoja
   p.total_parceiro = v.totalParceiro
@@ -138,36 +161,57 @@ function cruzar(p: PedidoDw, v: VendaIfood, restaurante: string): void {
   p.motivo_impossibilidade = v.motivoImpossibilidade
   p.data_limite_contestacao = v.dataLimiteContestacao
   p.cancelamento_parcial = v.cancelamentoParcial
-  p.merchant_ifood = restaurante
+  p.merchant_ifood = restaurante?.nome || 'iFood'
+  p.operacao_ifood = restaurante?.operacao ?? ''
 }
 
 /**
- * O fechamento do dia: cruza os pedidos do DW com as vendas do iFood e calcula cada
- * pedido. Só os pedidos do canal iFood entram (na operação com canal próprio, o
- * servidor já filtrou o canal do DW).
+ * O fechamento do dia: cruza os pedidos do DW com as vendas do iFood (de todos os
+ * restaurantes da loja) e calcula cada pedido.
+ *
+ * Par pedido × venda: o mesmo código (n_parceiro do DW = shortId do iFood) e a mesma
+ * hora de criação (até `TOLERANCIA_CRIACAO_MS`); sem a hora num dos lados, vale só o
+ * código, como no legado. Com mais de um candidato, fica o par de horas mais
+ * próximas; cada venda cruza com um pedido só (no legado, o primeiro levava).
  */
 export function montarFechamento(
   dw: RespostaPedidos,
   vendasDoDia: VendaIfood[],
-  restaurante: string,
+  restaurantes: ReadonlyMap<string, RestauranteNomeado>,
   /** `false` enquanto ainda chegam páginas do iFood: o não achado fica Aguardando. */
   completo = true
 ): PedidoIfood[] {
-  // n_parceiro do DW = shortId do iFood. O legado tirava a venda do dicionário ao
-  // cruzar: dois pedidos com o mesmo n_parceiro, só o primeiro leva.
-  const vendas = new Map<string, VendaIfood>()
-  for (const v of vendasDoDia) vendas.set(v.shortId, v)
-  const pedidos = dw.pedidos.map((p) => ({ ...p }))
-  for (const p of pedidos) {
-    const v = p.n_parceiro ? vendas.get(p.n_parceiro) : undefined
-    if (!v) continue
-    vendas.delete(p.n_parceiro)
-    cruzar(p, v, restaurante)
+  const porCodigo = new Map<string, VendaIfood[]>()
+  for (const v of vendasDoDia) {
+    const lista = porCodigo.get(v.shortId)
+    if (lista) lista.push(v)
+    else porCodigo.set(v.shortId, [v])
   }
-  // Operação principal, como no legado: o canal (do iFood, quando cruzado; senão o do
-  // DW) tem que ser iFood — sai, por exemplo, o IFOOD_SHOP.
+  const pedidos = dw.pedidos.map((p) => ({ ...p }))
+  const pares: { p: PedidoDw; v: VendaIfood; dist: number }[] = []
+  for (const p of pedidos) {
+    for (const v of (p.n_parceiro && porCodigo.get(p.n_parceiro)) || []) {
+      const dist = distancia(p, v)
+      if (dist === null || dist <= TOLERANCIA_CRIACAO_MS) {
+        pares.push({ p, v, dist: dist ?? Number.MAX_SAFE_INTEGER })
+      }
+    }
+  }
+  // `sort` é estável: no empate vale a ordem do DW e a das vendas, como no legado.
+  pares.sort((a, b) => a.dist - b.dist)
+  const pedidosCruzados = new Set<PedidoDw>()
+  const vendasUsadas = new Set<VendaIfood>()
+  for (const { p, v } of pares) {
+    if (pedidosCruzados.has(p) || vendasUsadas.has(v)) continue
+    pedidosCruzados.add(p)
+    vendasUsadas.add(v)
+    cruzar(p, v, restaurantes.get(v.merchant))
+  }
+  // Como no legado, o canal do pedido cruzado (o do iFood) tem que ser iFood — sai,
+  // por exemplo, o IFOOD_SHOP. O não cruzado fica: o servidor já trouxe só os canais
+  // iFood e iFood Vasto do DW.
   return pedidos
-    .filter((p) => dw.canalProprio || normalizarOrigem(p.origem || 'Outros') === 'ifood')
+    .filter((p) => !p.encontrado_no_ifood || normalizarOrigem(p.origem || 'Outros') === 'ifood')
     .map((p) => calcular(p, dw.formasVr, completo))
     .sort((a, b) => a.data_de_criacao.localeCompare(b.data_de_criacao))
 }

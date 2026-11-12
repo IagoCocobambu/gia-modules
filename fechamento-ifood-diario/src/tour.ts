@@ -8,7 +8,7 @@ export const tour = defineTour({
       screen: '/fechamento-ifood-diario',
       target: '[data-tour="fechamento-ifood-diario-filtros"]',
       title: 'Loja e dia',
-      body: 'Escolha a **loja** e o **dia** do fechamento (já vem com *ontem*, sem datas futuras). O seletor lista todas as operações do seu escopo; a marcada *Sem iFood* não tem a integração com o iFood no cadastro.',
+      body: 'Escolha a **loja** e o **dia** do fechamento (já vem com *ontem*, sem datas futuras). A pesquisa junta **todas as operações da loja** (Coco Bambu, Express, Pizzaria, Vasto…); a marcada *Sem iFood* não tem restaurante do iFood no cadastro.',
       placement: 'bottom',
     },
     {
@@ -16,7 +16,7 @@ export const tour = defineTour({
       screen: '/fechamento-ifood-diario',
       target: '[data-tour="fechamento-ifood-diario-pesquisar"]',
       title: 'Pesquisar',
-      body: 'Busca os pedidos do dia e as vendas do iFood ao mesmo tempo. O **andamento** aparece numa faixa acima da tabela (com **Cancelar**), e os pedidos entram na tabela conforme chegam — os que ainda esperam o iFood ficam apagados, com o selo *Aguardando iFood*. Em loja grande pode levar até 1 minuto. No celular, a barra se recolhe depois da pesquisa; a seta do cabeçalho reabre.',
+      body: 'Busca os pedidos do dia e as vendas de cada restaurante da loja no iFood ao mesmo tempo. O **andamento** aparece numa faixa acima da tabela (com **Cancelar**), e os pedidos entram na tabela conforme chegam — os que ainda esperam o iFood ficam apagados, com o selo *Aguardando iFood*. Em loja grande pode levar até 1 minuto. No celular, a barra se recolhe depois da pesquisa; a seta do cabeçalho reabre.',
       placement: 'bottom',
     },
     {

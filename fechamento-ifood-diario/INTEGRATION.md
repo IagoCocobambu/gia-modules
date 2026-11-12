@@ -3,7 +3,7 @@
 ## 1. Identificação
 
 - **Módulo**: `fechamento-ifood-diario` — Fechamento iFood Diário
-- **Versão do pacote**: 0.2.3
+- **Versão do pacote**: 0.2.4
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
 - **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.70 (fixada)
 
@@ -11,12 +11,12 @@
 
 Módulo **read-only** — não cria tabela nem migration no portal e não grava nada.
 
-| Handler (`src/server/`) | Fonte                                                                                                       | Acesso                            |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `lojas.ts`              | `ctx.operacoes()` (todas as operações do escopo — exceção: busca por operação) + `locRefs.IFOOD` da Empresa | —                                 |
-| `pedidos.ts`            | `api-dw.cocobambu.com/Delivery/?loc_ref=<nº loja>&start_date=<dia>&end_date=<dia>`                          | `ctx.credencial('apidw')`         |
-| `vendas.ts`             | `merchant-api.ifood.com.br/financial/v3.0/merchants/<merchant>/sales?beginSalesDate&endSalesDate&page`      | `ctx.credencial('ifood')`         |
-| `pedidos.ts`            | banco do Maestro: `SELECT` em `gia_relatorios.formas_pagamento`                                             | `sql` (`GIA_SERVER_DATABASE_URL`) |
+| Handler (`src/server/`) | Fonte                                                                                                      | Acesso                            |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `lojas.ts`              | `ctx.empresas()` (Empresas do escopo) + tabela `RESTAURANTES_IFOOD` (restaurantes do iFood por nº de loja) | —                                 |
+| `pedidos.ts`            | `api-dw.cocobambu.com/Delivery/?loc_ref=<nº loja>&start_date=<dia>&end_date=<dia>`                         | `ctx.credencial('apidw')`         |
+| `vendas.ts`             | `merchant-api.ifood.com.br/financial/v3.0/merchants/<merchant>/sales?beginSalesDate&endSalesDate&page`     | `ctx.credencial('ifood')`         |
+| `pedidos.ts`            | banco do Maestro: `SELECT` em `gia_relatorios.formas_pagamento`                                            | `sql` (`GIA_SERVER_DATABASE_URL`) |
 
 ### 2.1 Credenciais / integrações
 
@@ -46,21 +46,28 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
 
 ### 2.2 Cadastro de Empresas e operações
 
-- [ ] **Busca por operação (exceção deste módulo):** o seletor lista `ctx.operacoes()`
-      e os handlers `pedidos` e `vendas` recebem o `operacao_ref` e chama `requireOperacao`. O nº
-      da loja no DW é o número do começo do `operacao_ref` ("54 cb" → `54`).
-- [ ] A operação não tem vínculo iFood no SDK: o restaurante principal vem da
-      **Empresa dona da operação**. As operações Vasto na loja do CB (`08 vst`,
-      `17 vst`, `25 vst`, `69 vst`, `86 vst`) têm o restaurante numa tabela do
-      módulo (`OPERACOES_IFOOD_PROPRIO`, em `lojas.ts`, `pedidos.ts` e `vendas.ts`) —
-      provisório. Pedido ao time do SDK: expor `locRefs` em `GiaOperacao`.
+- [ ] **Busca por Empresa, com todas as operações juntas (0.2.4):** o seletor lista
+      `ctx.empresas()` e os handlers `pedidos` e `vendas` recebem o `empresaId` e
+      chamam `requireEmpresa`. O nº da loja no DW sai do vínculo `BIAPI` ou do começo
+      do nome da Empresa ("54.CB MINAS SHOPPING" → `54`).
+- [ ] **Restaurantes do iFood de cada loja:** o SDK não expõe o vínculo iFood das
+      operações (só um por Empresa). Os restaurantes de todas as operações (cb, cbx,
+      pzcb, dani, adgcb, burger, vst, vstss…) estão numa tabela do módulo
+      (`RESTAURANTES_IFOOD`, por nº de loja, em `lojas.ts` e `vendas.ts`), gerada da
+      planilha "GIA - Empresas - Cadastro - 2026-11-09" (aba Integrações das
+      operações, tipo IFOOD, 236 restaurantes em 92 lojas) — provisório. Restaurante
+      novo no iFood precisa entrar na tabela (nova versão do módulo); até lá os
+      pedidos dele ficam Cancelado. Pedido ao time do SDK: expor `locRefs` em
+      `GiaOperacao`.
+- [ ] **Cadastro a corrigir:** a operação `43 cbx` tem duas integrações IFOOD, uma
+      com o UUID com um caractere a menos (`ca22641e-8cfb-43a4-ba8f-2dc803a3bd3`). O
+      módulo usa só a certa (`…2dc803a3bd3d`); a errada deve sair do cadastro.
 - [ ] O handler `vendas` também lista os restaurantes da conta no iFood
       (`GET /merchant/v1.0/merchants`, guardado 30 min), só para mostrar o nome do
       restaurante na tabela — mesma credencial `ifood`.
-- [ ] Cada Empresa precisa da integração **`IFOOD`** com o UUID do merchant no iFood
-      (`locRefs.IFOOD`) — no legado ficava em `gia.empresas_integracoes`
-      (`tipo = 'IFOOD'`, coluna `locref`). Loja sem ela aparece no seletor como
-      "Sem iFood" e a pesquisa avisa que os pedidos não foram cruzados.
+- [ ] Loja fora da tabela usa a integração **`IFOOD`** da Empresa (`locRefs.IFOOD`),
+      se houver. Loja sem nenhuma aparece no seletor como "Sem iFood" e a pesquisa
+      avisa que os pedidos não foram cruzados.
 
 ## 3. Posição no menu
 
@@ -69,7 +76,7 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
 - **Subgrupo**: **iFood** (id `ifood`), que **já existe** na NAV_TREE dentro de
   Plataformas (hoje com a tela Lojas, do `delivery-manager`).
 - [ ] Adicionar a tela abaixo em `screens` do subgrupo `ifood` de `cardapio` na NAV_TREE.
-  Sem isso, o módulo aparece direto em Plataformas (fallback do `navGroup`).
+      Sem isso, o módulo aparece direto em Plataformas (fallback do `navGroup`).
 
 | Tela      | path                       | label                   | ícone (lucide) | permissão                     | faqId                     |
 | --------- | -------------------------- | ----------------------- | -------------- | ----------------------------- | ------------------------- |

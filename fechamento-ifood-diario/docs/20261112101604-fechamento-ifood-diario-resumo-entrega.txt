@@ -1,0 +1,44 @@
+Fechamento iFood Diário 0.2.4 - busca por Empresa, mensagem de erro padrão e revisão SDK - 12/11/2026
+
+Entrega
+- Módulo: fechamento-ifood-diario ("Fechamento iFood Diário")
+- Versão: 0.2.4
+- Pacote: modules-fechamento-ifood-diario-0.2.4.tgz (110,6 kB, 32 arquivos, sem .env nem segredos)
+- Menu: Plataformas › iFood › Fechamento iFood Diário
+- Permissões: fechamento-ifood-diario.ler e fechamento-ifood-diario.exportar (sem chave nova)
+- Validação SDK: gia validate 58/58, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- Tipo: só leitura (não grava nada no portal)
+
+Mudanças da 0.2.4
+1. Seletor por Empresa, com todas as operações da loja juntas (antes: por operação). A pesquisa traz os pedidos dos canais iFood e iFood Vasto do DW e as vendas de todos os restaurantes da loja no iFood (cb, cbx, pzcb, dani, adgcb, burger, vst, vstss...).
+2. Mudança de regra: os pedidos de Express, Pizzaria, Dani, Vasto... passam a cruzar e entrar nos cards. Até a 0.2.3 só o restaurante da operação cruzava; os outros ficavam Cancelado. Nas lojas com mais de um restaurante os cards deixam de bater com a tela antiga (intencional).
+3. Restaurantes do iFood de cada loja numa tabela do módulo: 236 restaurantes em 92 lojas, gerada da planilha "GIA - Empresas - Cadastro - 2026-11-09". Provisória até o SDK expor locRefs em GiaOperacao.
+4. Cruzamento pelo código do pedido e pela hora de criação (o código se repete entre restaurantes). Conferido em 08/11/2026: lojas 03, 08, 17 e 25 com 100% dos pedidos iFood do DW cruzados.
+5. Vendas pedidas por restaurante, até 4 páginas ao mesmo tempo. Falha num restaurante vira aviso com o nome dele e não para os outros.
+6. Nova coluna Operação (tabela e Excel). Restaurante no iFood mostra o restaurante de cada pedido.
+7. Seletor mostra o número da loja e as operações no iFood ("3 operações no iFood: cb, pzcb, vst"; "Sem iFood" quando não há).
+8. Mensagem de erro padrão: tipo do problema (sem conexão, temporário, ajuste na pesquisa, acesso, falha de serviço), a frase do servidor dizendo qual sistema falhou, Tentar de novo e "Ver detalhes técnicos" (Copiar tudo, Baixar diagnóstico). Sem conexão, refaz a pesquisa sozinha quando a internet volta.
+9. Proteção de dado sensível:
+   - texto de erro devolvido pelo DW e pelo iFood e a mensagem do hub de Credenciais ficam só no log do servidor; a tela recebe só o status;
+   - os detalhes técnicos ocultam campos de senha, token e dado pessoal (CPF, e-mail, telefone), token Bearer/JWT e usuário:senha em endereço de banco;
+   - o diagnóstico baixado traz só as falhas desta tela.
+10. Revisão SDK:
+   - vendas.ts passava de 800 linhas (anti-pattern do SDK): a tabela de restaurantes virou um texto de uma linha por restaurante, mesmo conteúdo (conferido); agora 694 linhas;
+   - FAQ atualizada: trocou a pergunta da tela de erro antiga pela nova e explica "Ver detalhes técnicos".
+11. FAQ, tour, PRD e INTEGRATION atualizados. FAQ e tour sem menção ao sistema antigo.
+
+Testes (gia dev, só leitura)
+- Desktop 1440x900: tour (4 passos), Cancelar, faixa de andamento, barra de filtros enxuta, Pesquisar desativado sem mudança, cards à vista e Ver todos os totais, filtro pelo card, Exportar (.xlsx), sem rolagem de página. 01.CB GOIANIA em 11/11/2026: 27 pedidos, consulta em 7 s.
+- Celular (iPhone 13): barra de filtros recolhe ao pesquisar, lista em cards, rótulo visível no Totais, sem tooltip no toque, sem rolagem lateral.
+- Nenhum erro de console.
+- Exportar: as 32 colunas da tabela, inclusive as escondidas; as linhas acompanham o filtro.
+
+Problemas encontrados no ambiente de teste (não são do módulo)
+- O .env local apontava o banco do Maestro para localhost (Postgres de outro projeto): a pesquisa dava "O banco do Maestro recusou a leitura do cadastro de formas de pagamento". Corrigido para o mesmo banco do Fechamento Maestro. O .env do Fechamento iFood Mensal tem o mesmo problema.
+
+Pendências com outros times
+- Time GIA: pôr a tela no subgrupo iFood de Plataformas na instalação; conferir integrações apidw e ifood no hub de Credenciais, a integração IFOOD de cada Empresa e o secret GIA_SERVER_DATABASE_URL (só leitura em gia_relatorios.formas_pagamento).
+- Time do SDK:
+  - expor locRefs em GiaOperacao (tira a tabela fixa de restaurantes);
+  - baixarFalhas() leva as falhas de todas as telas da sessão, com o corpo das chamadas;
+  - acessibilidade: contraste do botão primário (3,28), região rolável do DataReport sem foco por teclado, Tab sai do lugar depois de elemento com Tooltip, botões ‹ › da paginação sem nome acessível.

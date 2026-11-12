@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { buscarPaginaVendas, buscarPedidos } from '../api/fechamento-ifood-diario'
-import { montarFechamento } from '../regras'
+import { montarFechamento, type RestauranteNomeado } from '../regras'
 import type { Consulta, FechamentoResposta, RespostaPedidos, VendaIfood } from '../types'
 
 /**
@@ -15,7 +15,12 @@ export interface ProgressoDiario {
   /** Pedidos do delivery (DW): uma chamada só, a mais demorada em loja grande. */
   pedidosProntos: boolean
   pedidos: number | null
-  /** Vendas do iFood: páginas concluídas / conhecidas (a página 1 diz o total). */
+  /** Restaurantes do iFood da loja (um por operação com iFood). */
+  restaurantes: number
+  /**
+   * Vendas do iFood: páginas concluídas / previstas. A página 1 de cada restaurante diz
+   * quantas ele tem; até ela chegar, o restaurante conta 1. `null` = sem restaurante.
+   */
   paginasConcluidas: number
   paginasTotal: number | null
   vendasProntas: boolean
@@ -55,24 +60,28 @@ async function comNovaTentativa<T>(fn: () => Promise<T>, ativo: () => boolean): 
 /**
  * A consulta do dia em partes, para mostrar o andamento:
  *
- * 1. **Ao mesmo tempo**: os pedidos do DW (uma chamada) e a página 1 das vendas do
- *    iFood; a página 1 diz quantas páginas há, e as demais entram na fila, até
- *    `CONCORRENCIA` chamadas juntas, com nova tentativa em caso de falha.
+ * 1. **Ao mesmo tempo**: os pedidos do DW (uma chamada, a loja inteira) e as vendas do
+ *    iFood de cada restaurante da loja, numa fila com até `CONCORRENCIA` chamadas
+ *    juntas: primeiro a página 1 de cada restaurante (que diz quantas páginas ele
+ *    tem), e as demais entram na fila conforme chegam; nova tentativa em caso de falha.
  * 2. **Aos poucos**: assim que os pedidos do DW chegam, a tabela aparece e vai sendo
  *    cruzada a cada página do iFood (`completo: false`); o pedido ainda não achado fica
  *    Aguardando. Os valores do dia só saem com as duas partes completas — número
  *    parcial não pode ficar na tela como se fosse o do dia.
  *
  * Falha nos pedidos do DW derruba a consulta (sem eles não há fechamento) e não é
- * repetida (a chamada pode levar até 90 s antes de falhar). Falha no
- * iFood não: vira aviso, e os pedidos não achados ficam como Cancelado (como no legado).
- * Uma consulta nova (ou "Cancelar") abandona a anterior.
+ * repetida (a chamada pode levar até 90 s antes de falhar). Falha no iFood não: vira
+ * aviso (com o restaurante), as páginas que faltam daquele restaurante são deixadas, e
+ * os pedidos não achados ficam como Cancelado (como no legado). Uma consulta nova (ou
+ * "Cancelar") abandona a anterior.
  */
 export function useConsultaDiaria() {
   const [fase, setFase] = useState<FaseConsulta>('ocioso')
   const [progresso, setProgresso] = useState<ProgressoDiario | null>(null)
   const [resultado, setResultado] = useState<ResultadoDiario | null>(null)
   const [erro, setErro] = useState<string | null>(null)
+  /** O erro como veio (com o `.requisicao` do SDK), para os detalhes técnicos. */
+  const [erroOriginal, setErroOriginal] = useState<unknown>(null)
   const geracao = useRef(0)
 
   // Saiu da tela: abandona a consulta (os trabalhadores param na próxima página).
@@ -93,13 +102,14 @@ export function useConsultaDiaria() {
   const consultar = useCallback(async (consulta: Consulta) => {
     const minha = ++geracao.current
     const ativo = () => geracao.current === minha
-    const { operacaoRef, data } = consulta
+    const { empresaId, data, restaurantes } = consulta
 
     const estado: ProgressoDiario = {
       pedidosProntos: false,
       pedidos: null,
+      restaurantes: restaurantes.length,
       paginasConcluidas: 0,
-      paginasTotal: null,
+      paginasTotal: restaurantes.length > 0 ? restaurantes.length : null,
       vendasProntas: false,
       vendas: 0,
     }
@@ -108,70 +118,115 @@ export function useConsultaDiaria() {
     }
     setFase('consultando')
     setErro(null)
+    setErroOriginal(null)
     setResultado(null)
     publicar()
 
     const vendas: VendaIfood[] = []
     const avisos: string[] = []
+    // Nome de cada restaurante (vem na página 1 dele); até lá, a operação.
+    const nomes = new Map<string, RestauranteNomeado>(
+      restaurantes.map((r) => [r.merchant, { nome: r.operacao || 'iFood', operacao: r.operacao }])
+    )
     // Pedidos do DW, quando chegarem: daí em diante a tabela aparece e vai sendo cruzada.
     let dwPronto: RespostaPedidos | null = null
     const publicarParcial = () => {
       if (!ativo() || !dwPronto) return
       setResultado({
-        pedidos: montarFechamento(dwPronto, vendas, dwPronto.restaurante ?? 'iFood', false),
+        pedidos: montarFechamento(dwPronto, vendas, nomes, false),
         avisos: [],
         completo: false,
       })
     }
 
-    // Vendas do iFood: página 1, depois a fila com até CONCORRENCIA trabalhadores.
-    const buscarVendas = async () => {
-      const pagina = (n: number) =>
-        comNovaTentativa(() => buscarPaginaVendas({ operacaoRef, data, pagina: n }), ativo)
-      let primeira
-      try {
-        primeira = await pagina(1)
-      } catch (e) {
-        if (e instanceof Cancelada) throw e
-        avisos.push(e instanceof Error ? e.message : 'Falha ao consultar o iFood.')
-        return
-      }
-      if (!ativo()) throw new Cancelada()
-      if (primeira.aviso) avisos.push(primeira.aviso)
-      vendas.push(...primeira.vendas)
-      estado.paginasTotal = primeira.totalPaginas
-      estado.paginasConcluidas = Math.min(1, primeira.totalPaginas)
-      estado.vendas = vendas.length
-      publicar()
-      publicarParcial()
+    if (restaurantes.length === 0) {
+      avisos.push(
+        'A loja não tem restaurante do iFood no cadastro: os pedidos não foram cruzados com o iFood e contam como Cancelado.'
+      )
+    }
 
-      const fila = Array.from({ length: Math.max(0, primeira.totalPaginas - 1) }, (_, i) => i + 2)
-      let falhou = false
-      const trabalhador = async () => {
-        for (let n = fila.shift(); n !== undefined && !falhou; n = fila.shift()) {
+    // Vendas do iFood: fila de páginas (restaurante, página) com até CONCORRENCIA
+    // chamadas juntas. A página 1 de cada restaurante põe as demais dele na fila.
+    const buscarVendas = () =>
+      new Promise<void>((terminou, falhou) => {
+        const fila = restaurantes.map((r) => ({ merchant: r.merchant, pagina: 1 }))
+        const desistiu = new Set<string>()
+        let rodando = 0
+        let encerrada = false
+        const rotulo = (merchant: string) => {
+          const r = nomes.get(merchant)
+          if (!r) return 'iFood'
+          return r.operacao && r.nome !== r.operacao ? `${r.nome} (${r.operacao})` : r.nome
+        }
+        const avisar = (merchant: string, msg: string) => avisos.push(`${rotulo(merchant)}: ${msg}`)
+        const proxima = () => {
+          if (encerrada) return
+          if (!ativo()) {
+            encerrada = true
+            falhou(new Cancelada())
+            return
+          }
+          if (rodando === 0 && fila.length === 0) {
+            encerrada = true
+            terminou()
+            return
+          }
+          while (rodando < CONCORRENCIA && fila.length > 0) {
+            const tarefa = fila.shift()!
+            if (desistiu.has(tarefa.merchant)) {
+              // Restaurante que falhou: as páginas que faltavam saem da previsão.
+              estado.paginasTotal = (estado.paginasTotal ?? 1) - 1
+              continue
+            }
+            rodando += 1
+            void executar(tarefa).finally(() => {
+              rodando -= 1
+              proxima()
+            })
+          }
+          if (rodando === 0 && fila.length === 0) proxima()
+        }
+        const executar = async ({ merchant, pagina }: { merchant: string; pagina: number }) => {
           try {
-            const r = await pagina(n)
-            if (!ativo()) throw new Cancelada()
+            const r = await comNovaTentativa(
+              () => buscarPaginaVendas({ empresaId, data, merchant, pagina }),
+              ativo
+            )
+            if (!ativo()) return
+            if (pagina === 1) {
+              if (r.restaurante) {
+                nomes.set(merchant, {
+                  nome: r.restaurante,
+                  operacao: nomes.get(merchant)?.operacao ?? '',
+                })
+              }
+              if (r.aviso) avisar(merchant, r.aviso)
+              // A previsão contava 1 página para ele; agora sabe o total (0 = sem vendas).
+              estado.paginasTotal = (estado.paginasTotal ?? 0) - 1 + Math.max(1, r.totalPaginas)
+              for (let n = 2; n <= r.totalPaginas; n++) fila.push({ merchant, pagina: n })
+            }
             vendas.push(...r.vendas)
             estado.paginasConcluidas += 1
             estado.vendas = vendas.length
             publicar()
             publicarParcial()
           } catch (e) {
-            if (e instanceof Cancelada) throw e
-            // Como no legado: uma página que falha encerra a busca; o que veio fica.
-            falhou = true
-            avisos.push(e instanceof Error ? e.message : 'Falha ao consultar o iFood.')
+            if (e instanceof Cancelada || !ativo()) return
+            // Como no legado: uma página que falha encerra a busca daquele restaurante;
+            // o que veio fica.
+            desistiu.add(merchant)
+            estado.paginasConcluidas += 1
+            avisar(merchant, e instanceof Error ? e.message : 'Falha ao consultar o iFood.')
+            publicar()
           }
         }
-      }
-      await Promise.all(Array.from({ length: Math.min(CONCORRENCIA, fila.length) }, trabalhador))
-    }
+        proxima()
+      })
 
     try {
       const [dw] = await Promise.all([
         // Sem nova tentativa: a chamada ao DW pode levar até 90 s antes de falhar.
-        buscarPedidos({ operacaoRef, data }).then((r: RespostaPedidos) => {
+        buscarPedidos({ empresaId, data }).then((r: RespostaPedidos) => {
           if (!ativo()) throw new Cancelada()
           estado.pedidosProntos = true
           estado.pedidos = r.pedidos.length
@@ -187,7 +242,7 @@ export function useConsultaDiaria() {
       ])
       if (!ativo()) return
       setResultado({
-        pedidos: montarFechamento(dw, vendas, dw.restaurante ?? 'iFood'),
+        pedidos: montarFechamento(dw, vendas, nomes),
         avisos,
         completo: true,
       })
@@ -198,11 +253,12 @@ export function useConsultaDiaria() {
       setProgresso(null)
       setResultado(null)
       setErro(e instanceof Error ? e.message : 'Falha ao consultar o fechamento.')
+      setErroOriginal(e)
       setFase('erro')
     } finally {
       if (geracao.current === minha) setProgresso(null)
     }
   }, [])
 
-  return { fase, progresso, resultado, erro, consultar, cancelar }
+  return { fase, progresso, resultado, erro, erroOriginal, consultar, cancelar }
 }

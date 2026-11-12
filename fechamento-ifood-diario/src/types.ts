@@ -1,14 +1,20 @@
-/** Loja do seletor (handler `lojas`): uma OPERAÇÃO do escopo do usuário. */
+/** Restaurante do iFood de uma operação da loja. */
+export interface RestauranteIfood {
+  /** `operacao_ref` da operação dona do restaurante (ex.: "17 cbx"); vazio = da Empresa. */
+  operacao: string
+  /** UUID do restaurante (merchant) no iFood. */
+  merchant: string
+}
+
+/** Loja do seletor (handler `lojas`): uma Empresa do escopo do usuário. */
 export interface FechamentoLoja {
-  /** `operacao_ref` (ex.: "54 cb", "08 vst") — a chave da pesquisa. */
-  ref: string
-  /** Empresa dona da operação (de onde vem o merchant do iFood). */
+  /** Empresa — a chave da pesquisa. */
   empresaId: number
   nome: string
   /** Número da loja no DW; `null` quando o cadastro não tem. */
   locRef: string | null
-  /** A Empresa da operação tem o merchant do iFood no cadastro. */
-  temIfood: boolean
+  /** Restaurantes do iFood de todas as operações da loja; vazio = sem iFood. */
+  restaurantes: RestauranteIfood[]
   ativo: boolean
 }
 
@@ -28,6 +34,8 @@ export interface PedidoIfood {
   n_parceiro: string
   data_calc: string
   data_de_criacao: string
+  /** Criação do pedido em UTC (DW): desempata o mesmo código em dois restaurantes. */
+  criado_utc: string
   origem: string
   valor_do_pedido: number
   valor_da_entrega: number
@@ -69,6 +77,8 @@ export interface PedidoIfood {
   encontrado_no_ifood: boolean
   /** Restaurante do iFood em que o pedido foi achado. */
   merchant_ifood: string
+  /** Operação dona desse restaurante (ex.: "17 cbx"). */
+  operacao_ifood: string
 }
 
 export interface FechamentoResposta {
@@ -104,17 +114,18 @@ export interface FormaOnlineVr {
 
 /** Handler `pedidos`. */
 export interface RespostaPedidos {
+  /** Pedidos dos canais do iFood (iFood e iFood Vasto) de todas as operações da loja. */
   pedidos: PedidoDw[]
   formasVr: FormaOnlineVr[]
-  /** Operação com canal próprio (Vasto na loja do CB). */
-  canalProprio: boolean
-  /** Nome do restaurante da operação no iFood. */
-  restaurante: string | null
 }
 
 /** Venda do iFood já reduzida ao que o cruzamento usa (handler `vendas`). */
 export interface VendaIfood {
   shortId: string
+  /** Restaurante do iFood em que a venda está (UUID). */
+  merchant: string
+  /** `createdAt` da venda (UTC). */
+  criadoEm: string
   idLoja: string | null
   totalParceiro: number
   confirmado: 'SIM' | 'NÃO'
@@ -132,14 +143,18 @@ export interface VendaIfood {
 /** Handler `vendas` (uma página). */
 export interface RespostaVendas {
   vendas: VendaIfood[]
+  /** Nome do restaurante no iFood (só na página 1). */
+  restaurante: string | null
   totalPaginas: number
   aviso: string | null
 }
 
 /** Pesquisa feita (foto do clique em Pesquisar). */
 export interface Consulta {
-  operacaoRef: string
+  empresaId: number
   lojaNome: string
+  /** Restaurantes do iFood da loja, na hora da pesquisa. */
+  restaurantes: RestauranteIfood[]
   data: string
 }
 
