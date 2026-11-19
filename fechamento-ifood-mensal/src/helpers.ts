@@ -12,6 +12,17 @@ export const formatNum = (v: number) => NUM.format(v)
 export const formatPct = (v: number) => `${PCT.format(v)}%`
 
 /** `AAAA-MM-DD` → `DD/MM/AAAA` (outro formato volta como veio). */
+/**
+ * O `salvar` recusou porque o ambiente é de teste (trava
+ * `FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE`, só em homologação). É um 403, que a
+ * `MensagemErro` mostraria como falta de acesso ("peça ao seu gestor") — e o gestor não
+ * tem o que liberar. O texto vem de `src/server/salvar.ts` (`travaDeTeste`).
+ */
+export function ehRecusaDeAmbienteDeTeste(erro: unknown): string | null {
+  const m = erro instanceof Error ? erro.message : (erro as { message?: unknown } | null)?.message
+  return typeof m === 'string' && m.includes('Este ambiente é de teste') ? m : null
+}
+
 export function formatData(v: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v)
   return m ? `${m[3]}/${m[2]}/${m[1]}` : v

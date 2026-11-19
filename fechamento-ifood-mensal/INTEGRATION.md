@@ -3,9 +3,9 @@
 ## 1. Identificação
 
 - **Módulo**: `fechamento-ifood-mensal` — Fechamento iFood Mensal
-- **Versão do pacote**: 0.1.0
+- **Versão do pacote**: 0.1.2
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
-- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.70 (fixada)
+- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.71 (fixada; mínimo para `integracoes` em `GiaOperacao`)
 - **Substitui**: tela Fechamento Mensal iFood do GIA legado (`TfrmFechamentoMensalIfood`,
   bundle `files/modules/fechamento_ifood_mensal`).
 
@@ -49,13 +49,13 @@ where c.relnamespace = 'ifood_fechamento'::regnamespace and i.indisunique and no
 
 ### 2.2 Fontes a conectar
 
-| Handler (`src/server/`) | Fonte                                                                     | Acesso                                      |
-| ----------------------- | ------------------------------------------------------------------------- | ------------------------------------------- |
-| `operacoes.ts`          | `ctx.operacoes()` (operações do escopo) + `ctx.empresas()` (merchant)     | —                                           |
-| `ledger.ts`             | `merchant-api.ifood.com.br` — `financial/v3.0/merchants/{merchant}/sales` | `ctx.credencial('ifood')`                   |
-| `manual.ts`             | banco do Maestro: `SELECT` em `bordero.borderos` e `ifood_fechamento.*`   | `sql` (`GIA_SERVER_DATABASE_URL`)           |
-| `salvar.ts`             | banco do Maestro: `INSERT/UPDATE` em `ifood_fechamento.*` (transação)     | `getDbClient()` (`GIA_SERVER_DATABASE_URL`) |
-| `historico.ts`          | banco do Maestro: `SELECT` em `ifood_fechamento.historico`                | `sql` (`GIA_SERVER_DATABASE_URL`)           |
+| Handler (`src/server/`) | Fonte                                                                                          | Acesso                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `lojas.ts`              | `ctx.empresas()` (Empresas do escopo) + `ctx.operacoes()` → `integracoes` IFOOD (restaurantes) | —                                           |
+| `ledger.ts`             | `merchant-api.ifood.com.br` — `financial/v3.0/merchants/{merchant}/sales`                      | `ctx.credencial('ifood')`                   |
+| `manual.ts`             | banco do Maestro: `SELECT` em `bordero.borderos` e `ifood_fechamento.*`                        | `sql` (`GIA_SERVER_DATABASE_URL`)           |
+| `salvar.ts`             | banco do Maestro: `INSERT/UPDATE` em `ifood_fechamento.*` (transação)                          | `getDbClient()` (`GIA_SERVER_DATABASE_URL`) |
+| `historico.ts`          | banco do Maestro: `SELECT` em `ifood_fechamento.historico`                                     | `sql` (`GIA_SERVER_DATABASE_URL`)           |
 
 - [ ] **Hub de Credenciais — integração `ifood`** (a mesma do Fechamento iFood
       Diário): base `https://merchant-api.ifood.com.br`, token do OAuth
@@ -84,28 +84,33 @@ where c.relnamespace = 'ifood_fechamento'::regnamespace and i.indisunique and no
   (Se o Fechamento Maestro usar um usuário só leitura, este módulo precisa de
   outro usuário ou do GRANT acima.)
 
-- [ ] **Busca por OPERAÇÃO (exceção deste módulo)**: o seletor lista as operações
-      do escopo (`ctx.operacoes()`) e os handlers validam com `ctx.requireOperacao`.
-      A lista é a mesma do Fechamento iFood Diário (todas as operações do escopo,
-      inclusive duas da mesma Empresa, como `08 cb` e `08 vst`). O **número do
-      `operacao_ref`** (`"02 cb"` → `"02"`) é a chave da loja no banco do Maestro
-      (`ifood_fechamento.fechamentos_mensais.loc_ref`, como no legado — o fechamento
-      já gravado continua aparecendo) e o `bordero.borderos.property_number`.
-      ⚠️ Operações do mesmo número (`08 cb` e `08 vst`) **dividem o mesmo
-      fechamento** no banco — o legado também juntava. Operação cujo ref não começa
-      pelo número é recusada.
-- [ ] **Cadastro de Empresas**: o merchant do iFood vem da integração **IFOOD** da
-      **Empresa dona da operação** (`locRefs.IFOOD` = merchant UUID — o antigo
-      `gia.empresas_integracoes` tipo IFOOD); todas as operações da Empresa usam o
-      mesmo merchant — menos as do Vasto na loja do CB (`08/17/25/69/86 vst`), cujo
-      merchant está em `OPERACOES_IFOOD_PROPRIO` (`operacoes.ts` e `ledger.ts`, a mesma
-      tabela do Fechamento iFood Diário), até o SDK expor `locRefs` por operação.
-      Operação sem merchant aparece como "Sem iFood" e é recusada ao Consultar.
+- [ ] **Busca por EMPRESA, juntando todas as operações** (como o Fechamento iFood
+      Diário desde a 0.2.4): o seletor lista as Empresas do escopo (`ctx.empresas()`,
+      `tipoRegistro === 'empresa'`) e os handlers validam com `ctx.requireEmpresa`. O
+      **número da loja** — do nome da Empresa ("01.CB GOIANIA" → "01") ou, na falta,
+      do vínculo BIAPI — é a chave no banco do Maestro
+      (`ifood_fechamento.fechamentos_mensais.loc_ref`, como no legado — o fechamento já
+      gravado continua aparecendo) e o `bordero.borderos.property_number`. Loja sem
+      número é recusada.
+- [ ] **Restaurantes do iFood de cada loja**: são os vínculos **IFOOD** ativos das
+      operações da Empresa no cadastro do portal (`gia.operacoes_integracoes`, lidos em
+      `ctx.operacoes()` → `integracoes`, SDK alpha.71) — os mesmos do Fechamento iFood
+      Diário. Nada fica fixo no módulo: loja nova ou conta movida de operação vale na
+      próxima consulta. Conferir que cada operação com iFood tem o vínculo IFOOD (o
+      `locRef` = id do restaurante no iFood); o vínculo IFOOD da Empresa
+      (`locRefs.IFOOD`) não é lido. O `ledger` só aceita restaurante da loja pedida (422
+      para restaurante de outra loja).
+- [ ] **Restaurante negado (403) ou não reconhecido (404) pelo iFood**: fica de fora e a
+      tela avisa qual; os demais restaurantes da loja seguem. 401 (credencial) para a
+      consulta inteira. Caso conhecido: o 2º vínculo IFOOD da `43 cbx`, com o UUID com
+      um caractere a menos — a correção do cadastro é do time GIA.
 
 ## 3. Menu / navegação
 
-- **navGroup**: `cardapio` (Plataformas), junto do Fechamento iFood Diário.
-  Sugestão: subgrupo **iFood** › Fechamento iFood Diário / Fechamento iFood Mensal.
+- **Caminho**: **Plataformas › iFood › Fechamento iFood Mensal**, no subgrupo **iFood**
+  de Plataformas, ao lado do Fechamento iFood Diário.
+- **navGroup**: `cardapio` (Plataformas) — o subgrupo **iFood** já existe na NAV_TREE;
+  na instalação, pôr a tela nele (sem esse passo, ela aparece direto em Plataformas).
 
 | Tela      | path                       | label                   | ícone (lucide)  | permissão                     | faqId                     |
 | --------- | -------------------------- | ----------------------- | --------------- | ----------------------------- | ------------------------- |
@@ -114,18 +119,43 @@ where c.relnamespace = 'ifood_fechamento'::regnamespace and i.indisunique and no
 ## 4. Edge functions & secrets
 
 - `edge-functions/fechamento-ifood-mensal/` — gerada pelo `gia pack` a partir de
-  `src/server/` (`operacoes`, `ledger`, `manual`, `salvar`, `historico`).
+  `src/server/` (`lojas`, `ledger`, `manual`, `salvar`, `historico`).
 - Secrets: `GIA_SERVER_DATABASE_URL`. Integração do hub: `ifood`.
-- `GIA_DEV_IFOOD_MENSAL_DEMO` e `GIA_DEV_IFOOD_MENSAL_DEMO_ATRASO_MS` são só do
-  `gia dev` (dados fictícios; prefixo `GIA_DEV_`, como as demais variáveis do dev
-  shell) — **não** configurar no portal.
+- **Trava de teste — `FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE`** (opcional, id
+  numérico da Empresa no portal). Homologação e produção gravam no **mesmo DW**:
+  - **Homologação**: definir com o id da Empresa `999.CB TECH HOMOLOG` (93 no
+    cadastro usado no `gia dev`; conferir o id no cadastro de homologação). O `salvar`
+    recusa qualquer outra Empresa com **403** ("Este ambiente é de teste…") **antes**
+    de abrir a transação — nem o cabeçalho do mês é criado. Consulta e Histórico
+    continuam em qualquer loja.
+  - **Produção**: **não** definir. Sem a variável nada muda.
+  - Valor que não é um id (ex.: o nome da loja) **recusa toda gravação** (503, com o
+    motivo no log) — erro de configuração não abre a trava.
+  - Fica fora do `config.secrets` (e do `secrets_required` do `_meta.json`) de
+    propósito, para a instalação em produção não exigi-la; é lida com `envOptional`.
+- `GIA_DEV_IFOOD_MENSAL_DEMO`, `GIA_DEV_IFOOD_MENSAL_DEMO_ATRASO_MS` e
+  `GIA_DEV_IFOOD_MENSAL_DEMO_LIMITE` são só do `gia dev` (dados fictícios; o
+  `_LIMITE` simula a instabilidade do iFood — `sempre` e `cota` forçam a falha; prefixo
+  `GIA_DEV_`, como as demais variáveis do dev shell) — **não** configurar no portal. O mesmo vale para
+  `GIA_DEV_IFOOD_MENSAL_POR_OPERACAO` (teste: `1` mostra um seletor para consultar uma
+  operação só; ausente = junta todas as operações da loja, o comportamento de produção).
 - **Erros**: o detalhe técnico (corpo da resposta do iFood, erro do Postgres) vai
   para o **log da Edge Function** com o prefixo `[fechamento-ifood-mensal]`; a tela
   mostra só uma mensagem curta ("o iFood não conseguiu responder agora (código N)",
   "falha no banco de dados"). Para investigar um relato, procure o horário no log.
-  Status usados: 422 (entrada inválida, loja sem iFood), 424 (iFood recusou a
-  credencial ou o acesso à loja — a tela não tenta de novo), 502 (iFood fora — a tela
+  Status usados: 422 (entrada inválida, loja sem iFood, registro que não é Empresa),
+  424 (iFood recusou a credencial, 401 — a tela não tenta de novo; restaurante negado
+  (403) ou não encontrado (404) vira aviso e os outros seguem), 502 (iFood fora — a tela
   tenta de novo até 2 vezes), 504 (o iFood passou de 30 s — sem nova tentativa), 503 (banco do Maestro).
+- **Limite do iFood**: 429 e páginas vazias **não** viram erro HTTP. Página com vendas
+  vazias e 429 com saldo de cota sobrando: o `ledger` repete na hora (até 3 vezes) e,
+  se não passar, responde 200 com `adiar: { motivo: 'incompleta' | 'instavel' }` — a
+  página volta para a fila da tela (até 3 vezes). 429 com a cota esgotada (saldo 0) ou
+  com `Retry-After`: responde na hora `adiar: { motivo: 'cota', esperarMs }` e a tela
+  pausa todas as chamadas pelo `Retry-After` ou pelo `ifood-ratelimit-reset` + 1 s
+  (teto 60 s; até 5 pausas por página); com saldo abaixo de 20 a tela pausa antes do 429. Chamadas ao mesmo tempo: até 3, adaptativo. Toda resposta traz `cota: { restantes, resetS }` (cabeçalhos
+  `ifood-ratelimit-*`) e `repeticoes`. A cota é a mesma para todos os módulos e sistemas
+  que usam a credencial do iFood.
 
 ## 5. Permissões declaradas
 
@@ -142,7 +172,7 @@ Não usa.
 
 ## 7. Pendências / decisões abertas
 
-- [ ] **Regras do legado mantidas** que o financeiro precisa confirmar (PRD §9):
+- [ ] **Regras do legado mantidas** que o financeiro precisa confirmar (PRD §11, Decisões pendentes):
       coluna Extrato do Recebimento sempre zerada, ordenação das datas de
       pagamento, "Desc. LOJA VR", "# Total" sem o desconto da loja, subtotal
       "Recebido Via iFood" e colunas de cancelamento sempre zeradas.
@@ -154,3 +184,10 @@ Não usa.
       desligá-la na virada.
 - [ ] **Desligar a tela do legado** depois da virada, para não haver gravação
       concorrente nas mesmas tabelas.
+- [ ] **Data da virada**: combinar com o financeiro e o time GIA o mês a partir do
+      qual o fechamento é feito só no portal. Até lá, se as duas telas gravarem o
+      mesmo mês da mesma loja, vale a última gravação.
+- [ ] **Ordem da instalação**: (1) instalar a 0.1.2 em homologação com
+      `FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE` definida; (2) só então criar
+      `ifood_fechamento.historico` no DW (`sql-maestro/001_historico.sql`); (3) testar
+      a gravação só na 999.

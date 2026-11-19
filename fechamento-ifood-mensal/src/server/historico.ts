@@ -8,8 +8,8 @@ import { defineHandler, HttpError, sql } from '@gia-cb/sdk/server'
 // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server.
 
 interface Body {
-  /** `operacao_ref` da loja escolhida. */
-  operacaoRef: string
+  /** Empresa (loja) escolhida — o fechamento é da loja inteira (todas as operações). */
+  empresaId: number
   mes: string
 }
 
@@ -29,8 +29,6 @@ interface Gravacao {
   id: string
   gravadoEm: string
   autorNome: string | null
-  /** Operação em que a gravação foi feita (`02 cb` e `02 vst` dividem o fechamento). */
-  operacaoRef: string | null
   alteracoes: Alteracao[]
 }
 
@@ -47,13 +45,18 @@ interface Resposta {
 
 const LIMITE = 100
 
-/** Número da loja com 2 dígitos a partir do `operacao_ref` ("02 cb" → "02"). */
-function numeroDaOperacao(ref: string): string | null {
-  const m = /^\s*(\d{1,4})/.exec(ref)
+/**
+ * Número da loja com 2 dígitos — o `loc_ref` do fechamento no banco e do DW.
+ * Sai primeiro do nome da Empresa ("01.CB GOIANIA" → "01"; todas as lojas do cadastro
+ * têm o número no nome) e, na falta, do vínculo com a BI do Simphony (`locRefs.BIAPI`
+ * começa pelo número: "01 CB Go", "17. CB R"). O nome vem antes porque o BIAPI pode
+ * divergir: na 999.CB TECH HOMOLOG ele é "995 CB L".
+ */
+function numeroDaLoja(e: { nome: string; locRefs: Record<string, string> }): string | null {
+  const m = /^\s*(\d{1,4})\s*\./.exec(e.nome) ?? /^\s*(\d{1,4})/.exec(e.locRefs?.BIAPI ?? '')
   return m ? String(Number(m[1])).padStart(2, '0') : null
 }
 
-/** Erro do banco não vai cru para a tela (detalhe no log do servidor). */
 /**
  * Falha do banco/conexão (o postgres.js põe um `code`: SQLSTATE como "42P01" ou de
  * rede como "ECONNREFUSED"). Outro erro é bug do código e segue como 500.
@@ -62,6 +65,7 @@ function ehFalhaDoBanco(e: unknown): boolean {
   return typeof (e as { code?: unknown } | null)?.code === 'string'
 }
 
+/** Erro do banco não vai cru para a tela (detalhe no log do servidor). */
 function erroDeBanco(e: unknown): never {
   if (e instanceof HttpError || !ehFalhaDoBanco(e)) throw e
   console.error('[fechamento-ifood-mensal] erro ao ler o histórico no banco:', e)
@@ -80,12 +84,24 @@ function erroDeBanco(e: unknown): never {
 export default defineHandler<Body, Resposta>(async (ctx) => {
   try {
     await ctx.requirePermission('fechamento-ifood-mensal.ler')
-    const operacao = await ctx.requireOperacao(String(ctx.body.operacaoRef ?? '').trim())
-    const locRef = numeroDaOperacao(operacao.ref)
+    // A loja é a Empresa: o fechamento junta todas as operações dela. O número da loja
+    // (do nome da Empresa, ou do BIAPI) é a chave no banco do Maestro — o `loc_ref` do
+    // fechamento (como no legado) e o `property_number` do borderô.
+    const empresaId = Number(ctx.body.empresaId)
+    if (!Number.isInteger(empresaId) || empresaId <= 0) throw new HttpError(422, 'Informe a loja.')
+    // 403 se a Empresa está fora do escopo do usuário.
+    await ctx.requireEmpresa(empresaId)
+    const empresa = (await ctx.empresas()).find((e) => e.id === empresaId)
+    if (!empresa) throw new HttpError(404, 'Loja não encontrada.')
+    // Só Empresa (loja) tem fechamento — como no seletor (`lojas.ts`). Uma propriedade
+    // com número no nome apontaria para a loja de mesmo número, talvez fora do escopo.
+    if (empresa.tipoRegistro !== 'empresa')
+      throw new HttpError(422, `"${empresa.nome}" não é uma loja (Empresa).`)
+    const locRef = numeroDaLoja(empresa)
     if (!locRef) {
       throw new HttpError(
         422,
-        `A operação "${operacao.nome}" (${operacao.ref}) não começa pelo número da loja.`
+        `A loja "${empresa.nome}" não tem o número da loja no nome nem no vínculo BIAPI.`
       )
     }
     const mm = /^(\d{4})-(\d{2})$/.exec(String(ctx.body.mes ?? ''))
@@ -106,13 +122,12 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
         id: string
         gravado_em: string
         autor_nome: string | null
-        operacao_ref: string | null
         alteracoes: unknown
       }>
     >`
       SELECT id::text,
         to_char(gravado_em AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS gravado_em,
-        autor_nome, operacao_ref, alteracoes
+        autor_nome, alteracoes
       FROM ifood_fechamento.historico
       WHERE fechamento_id = ${cab.id}::bigint
       ORDER BY gravado_em DESC, id DESC
@@ -127,7 +142,6 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
         id: l.id,
         gravadoEm: l.gravado_em,
         autorNome: l.autor_nome,
-        operacaoRef: l.operacao_ref,
         alteracoes: lista(l.alteracoes),
       })),
       maisAntigas: linhas.length > LIMITE,

@@ -1,0 +1,73 @@
+Fechamento iFood Mensal 0.1.0 - primeira versão, loja inteira e restaurantes pelo cadastro do portal - 12/11/2026
+
+Entrega
+- Módulo: fechamento-ifood-mensal ("Fechamento iFood Mensal")
+- Versão: 0.1.0 (primeira entrega)
+- Pacote: modules-fechamento-ifood-mensal-0.1.0.tgz (391,8 kB, 56 arquivos, sem .env nem segredos)
+- SDK: @gia-cb/* 0.1.0-alpha.71 (mínimo, por causa dos vínculos da operação)
+- Menu: Plataformas › iFood › Fechamento iFood Mensal (sub-grupo iFood, ao lado do Diário)
+- Permissões: fechamento-ifood-mensal.ler (consultar) e fechamento-ifood-mensal.editar (preencher e salvar)
+- Validação SDK: gia validate 58/58, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- Tipo: lê o iFood e o borderô; grava o fechamento no banco do Maestro (mesmas tabelas da tela antiga)
+
+O que o módulo faz
+1. Fechamento do mês do iFood por loja (Empresa), com todas as operações juntas: os
+   lançamentos financeiros de todos os restaurantes da loja no iFood conferidos com o caixa
+   da loja (borderô).
+2. Sete abas: Lançamentos, Online, Adquirentes, Conferência, Extrato, Recebimento e
+   Cancelados pós, com as regras de cálculo da tela antiga.
+3. Edição com .editar: previsão, CB Desc. LOJA e comentário por dia, breakdown da
+   Conferência, extrato e cancelados pós; Salvar grava tudo numa transação.
+4. Histórico de cada gravação (quem, quando, antes → depois), numa tabela nova do Maestro.
+5. Consulta ao iFood em janelas de 8 dias, várias páginas ao mesmo tempo, com andamento,
+   Cancelar e dados entrando aos poucos; totais e Salvar só com o mês completo.
+6. Página "leve" do iFood (vendas sem os lançamentos financeiros) pedida de novo até vir
+   completa; se não vier, erro em vez de mês incompleto.
+7. Totais em cards (nenhum total dentro das tabelas), mensagem de erro padrão com
+   "Ver detalhes técnicos", celular com cartões.
+
+Sem dado fixo no código
+- Os restaurantes do iFood de cada loja são os vínculos IFOOD das operações da Empresa no
+  cadastro do portal, lidos a cada consulta (ctx.operacoes() → integracoes, SDK alpha.71).
+  Saiu a lista fixa de restaurantes que estava no código (a mesma que a devolutiva do
+  Diário 0.2.4 reprovou). Loja nova ou conta movida de operação vale na próxima consulta.
+- Conferido: 0 merchant ID, URL, token ou lista de lojas no código e na função gerada.
+  No gia dev, os 237 vínculos ficam só no gia.config.ts (241 operações, da planilha de
+  cadastro de 09/11/2026, incluindo 999 cb e 999 vst para teste de gravação).
+- Restaurante negado (403) ou não reconhecido (404) pelo iFood fica de fora, com aviso;
+  os outros seguem. Antes, o 404 derrubava a consulta do mês inteiro: com o vínculo
+  incompleto da 43 cbx vindo do cadastro, a loja 43 não consultaria.
+
+Testes (gia dev, só leitura, iFood real e borderô do banco)
+- Seletor: 99 lojas, 237 restaurantes; restaurante de outra loja recusado (422).
+- 43.CB SÃO BERNARDO, out/2026: 11.865 lançamentos em 55 s, um só aviso (43 cbx
+  incompleto), borderô e totais normais, nenhum erro de console.
+- Comparação com a planilha do financeiro "Fechamento mensal iFood 2026_Ciclo
+  Dez25-Mai26.xlsx", loja 69.CB SÃO JOSÉ DOS CAMPOS, dez/2025 a abr/2026:
+  - os 4 restaurantes da loja (69 cb, cbx, dani, vst) são os mesmos, com os mesmos IDs,
+    da lista fixa anterior;
+  - os números do módulo são idênticos aos da comparação anterior (docs/
+    comparacao-planilha-loja69.html): mesmos lançamentos (dez/25: 6.487 - 69 cb 5.626,
+    69 vst 861) e mesmo Valor a depositar nos 5 meses (141.076,92; 118.761,99;
+    110.576,10; 120.327,21; 148.646,64). A troca da lista fixa pelo cadastro não mudou
+    nenhum número;
+  - o caixa da loja (borderô) continua batendo 100% com a planilha nos 5 meses: CB
+    Online, CB Desc. iFood e caixa de adquirentes iguais;
+  - os números que vêm do iFood continuam diferentes da planilha, como já estavam (ex.:
+    dez/25, Valor a depositar 141.076,92 no módulo × 163.319,65 na planilha). Causas
+    levantadas na comparação anterior: a planilha usa o arquivo de conciliação do iFood
+    e o módulo monta os lançamentos a partir das vendas, com o mapeamento da tela antiga
+    (promoções da loja no Valor a depositar, pacote de anúncios e mensalidade que a
+    consulta de vendas não traz, tipos de lançamento sem tradução, ONLINE VR que sai
+    OFFLINE - aba Adquirentes zerada no lado iFood, cancelamentos marcados como venda).
+
+Pendências
+- Financeiro: decidir as regras da tela antiga mantidas (Extrato do Recebimento zerado,
+  # Total sem o desconto da loja, colunas de cancelamento zeradas, Desc. LOJA VR) e as
+  diferenças do lado iFood com a planilha (acima).
+- Time GIA: pôr a tela no sub-grupo iFood de Plataformas; liberar o módulo na integração
+  ifood do hub de Credenciais; secret GIA_SERVER_DATABASE_URL com usuário que lê o borderô
+  e lê e grava ifood_fechamento (diferente do Diário, que só lê); rodar o script
+  001_historico.sql no Maestro e dar leitura e inclusão na tabela de histórico; corrigir o
+  vínculo incompleto da 43 cbx; teste de gravação em homologação só na 999.CB TECH HOMOLOG.
+- Aviso de entrega: fica para depois (há um rascunho da 0.1.0 em entregas/2026-11-12).

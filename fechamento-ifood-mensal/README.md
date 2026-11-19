@@ -32,10 +32,12 @@ vendas e borderô fictícios para ver a tela sem credenciais (o Salvar exige o b
 
 ## Estrutura
 
-- `src/server/` — handlers: `operacoes` (operações do escopo — a busca é por operação), `ledger` (uma página de uma janela
+- `src/server/` — handlers: `lojas` (Empresas do escopo com os restaurantes do iFood — a loja junta todas as operações), `ledger` (uma página de uma janela
   do iFood + mapeamento do legado), `manual` (borderô + o gravado), `salvar`
-  (transação nas tabelas `ifood_fechamento.*`).
-- `src/hooks/use-consulta-mensal.ts` — a consulta janela a janela, com progresso e cancelamento.
+  (transação nas tabelas `ifood_fechamento.*`), `historico` (gravações do mês com o
+  antes → depois).
+- `src/hooks/use-consulta-mensal.ts` — a consulta do mês em paralelo (até 3 páginas,
+  adaptativo), com pausa pela cota do iFood, fila de retentativa, progresso e Cancelar.
 - `src/regras.ts` + `src/conferencia.ts` — cálculos das abas (porte fiel do legado).
 - `src/views/FechamentoIfoodMensalView.tsx` — filtros, estado editável e abas.
 - `src/components/Aba*.tsx` — uma aba por arquivo.

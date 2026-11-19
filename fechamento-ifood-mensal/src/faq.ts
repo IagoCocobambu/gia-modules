@@ -2,7 +2,7 @@ import type { ModuleFaq } from '@gia-cb/sdk/modules'
 
 export const faq: ModuleFaq = {
   summary:
-    'O Fechamento iFood Mensal monta a conciliação do mês de uma loja com o iFood. Ele busca no iFood todos os lançamentos financeiros do mês (vendas, comissões, taxas, promoções, ocorrências) e compara com o que a loja lançou no caixa (borderô): vendas online, vale-refeição pago no iFood (adquirentes), descontos, o DRE de conferência, o repasse × extrato bancário e os cancelados pós-entrega. Você escolhe a loja e o mês, clica em Consultar, confere as abas e, se tiver permissão, preenche os campos manuais e clica em Salvar.',
+    'O Fechamento iFood Mensal monta a conciliação do mês de uma loja com o iFood, juntando todas as operações da loja (Coco Bambu, Express, Pizzaria, Vasto…). Ele busca no iFood todos os lançamentos financeiros do mês de todos os restaurantes da loja (vendas, comissões, taxas, promoções, ocorrências) e compara com o que a loja lançou no caixa (borderô): vendas online, vale-refeição pago no iFood (adquirentes), descontos, o DRE de conferência, o repasse × extrato bancário e os cancelados pós-entrega. Você escolhe a loja e o mês, clica em Consultar, confere as abas e, se tiver permissão, preenche os campos manuais e clica em Salvar.',
 
   sections: [
     {
@@ -11,7 +11,7 @@ export const faq: ModuleFaq = {
       content: `
 ## Consultando um mês
 
-1. Em **Loja**, escolha a loja. A lista é das **operações** do seu escopo — a mesma do Fechamento iFood Diário (por exemplo, **08.CB TERESINA** e **08.VST TERESINA** aparecem separadas). Embaixo do nome aparece **Inativa** ou **Sem iFood** quando for o caso; loja sem iFood não pode ser consultada. Operações com o mesmo número de loja (o CB e o Vasto da mesma loja) dividem o mesmo fechamento gravado.
+1. Em **Loja**, escolha a loja. A lista é das **lojas** do seu escopo (a mesma do Fechamento iFood Diário), e o fechamento junta **todas as operações** da loja. Embaixo do nome aparecem as operações dela no iFood (por exemplo, **3 operações no iFood: cb, pzcb, vst** em 08.CB TERESINA), **Inativa** quando a loja está inativa, ou **Sem iFood** — loja sem iFood não pode ser consultada.
 2. Em **Mês de referência**, escolha o mês (o padrão é o mês anterior, que é o que normalmente se fecha). As setas mudam o mês de um em um.
 3. Clique em **Consultar**.
 
@@ -19,7 +19,7 @@ A consulta busca no iFood os lançamentos do mês **em partes de até 8 dias** (
 
 No computador, depois da consulta a barra de filtros vira **uma linha só** — o título, a loja, o mês e os botões — para sobrar altura para a tabela; os rótulos acima dos campos somem, mas os campos são os mesmos. Se a consulta der erro ou for cancelada, a barra completa volta.
 
-Assim que as abas abrem, no **rodapé** da tela (embaixo da barra de abas) aparece uma linha com a loja, o mês, quantos lançamentos vieram do iFood, quantos dias têm borderô lançado e quando o fechamento foi gravado pela última vez. As **abas** ficam **embaixo da tabela**, numa barra que mostra também o **Total** de registros da aba aberta (com um card filtrando, quantos o filtro mostra) e quantos itens estão **Alterados** (ainda não salvos). Em tela estreita, as abas que não cabem aparecem pelas setas nas pontas da barra.
+As **abas** ficam **embaixo da tabela**, numa barra que mostra também o **Total** de registros da aba aberta (com um card filtrando, quantos o filtro mostra) e quantos itens estão **Alterados** (ainda não salvos). Em tela estreita, as abas que não cabem aparecem pelas setas nas pontas da barra.
 
 ## As abas
 
@@ -44,7 +44,9 @@ Em tela de toque (celular e tablet) não há dicas ao passar o dedo: os botões 
       id: 'lancamentos',
       title: 'Aba Lançamentos — o que vem do iFood',
       content: `
-Cada linha é um lançamento da API Financial do iFood. Um pedido normalmente gera várias linhas (o pagamento, a comissão, a taxa de transação, promoções…).
+Cada linha é um lançamento da API Financial do iFood. Um pedido normalmente gera várias linhas (o pagamento, a comissão, a taxa de transação, promoções…). A aba junta os lançamentos de **todos os restaurantes da loja no iFood**; a coluna **Operação** diz de qual deles veio cada lançamento (ex.: **17 cbx** é o Express de Recife) — use a busca com o nome da operação para ver só um restaurante.
+
+Se o iFood negar o acesso a um dos restaurantes (ele não autorizou o aplicativo da Coco Bambu no Portal do Parceiro), uma faixa amarela acima da tabela diz qual ficou de fora; os outros restaurantes entram normalmente. Peça ao responsável pelo restaurante para autorizar o aplicativo e consulte de novo. Se o aviso disser que o iFood não encontrou o restaurante (404), o identificador dele no cadastro da operação está errado: consultar de novo não resolve, avise o time do Portal GIA.
 
 - **Data**: dia do pedido. Pedido feito **antes das 6h** conta no **dia anterior** (o movimento da madrugada pertence ao dia que começou na véspera). Lançamento sem pedido (ocorrência avulsa, mensalidade…) aparece como **Ocorrências**.
 - **Descrição do lançamento**: o tipo do lançamento em português (Entrada Financeira, Comissão do iFood, Taxa de transação, Promoção custeada pelo iFood, pela rede, pela loja…).
@@ -201,15 +203,15 @@ Pedidos que foram entregues e cancelados depois. Registre data do pedido, valor 
       content: `
 O botão **Salvar** (ao lado de Consultar) grava de uma vez tudo o que é digitado no mês da loja: previsões, CB Desc. LOJA, comentários, breakdown da Conferência, extrato e cancelados pós.
 
-- Ele só se acende quando há **alteração não salva**; nesse caso aparece um ponto laranja no botão, o aviso "Alterações não salvas" no rodapé da tela e o contador **Alterados** da barra de abas fica destacado.
+- Ele só se acende quando há **alteração não salva**; nesse caso aparece um ponto laranja no botão, e o contador **Alterados** da barra de abas fica destacado.
 - Consultar outra loja ou outro mês com alteração pendente pede confirmação antes de descartar.
 - Fechar ou recarregar a aba do navegador com alteração pendente também pede confirmação.
-- Depois de salvar, o rodapé da tela mostra a **última gravação** (data e hora).
+- A data e a hora da **última gravação** aparecem ao passar o mouse no botão **Histórico**, e no próprio histórico.
 - Apagar um comentário ou uma previsão e salvar **limpa** o valor gravado.
 
 ## Histórico
 
-Depois de consultar, o botão **Histórico** (no rodapé da tela, embaixo da barra de abas, ao lado da última gravação) mostra as gravações do mês daquela loja, da mais recente para a primeira (as 100 últimas; o diálogo avisa quando há mais). Cada uma diz **quem salvou**, **quando**, em qual **operação** (CB e Vasto da mesma loja dividem o fechamento) e **o que mudou**, separado por aba:
+Depois de consultar, o botão **Histórico** (na barra de filtros, ao lado do Salvar) mostra as gravações do mês daquela loja, da mais recente para a primeira (as 100 últimas; o diálogo avisa quando há mais). Cada uma diz **quem salvou**, **quando** e **o que mudou**, separado por aba (o fechamento é da loja inteira, com todas as operações):
 
 - campo alterado: o dia (ou o centro de custo, ou a linha do extrato/cancelado editada) e o campo, com o valor **antes** riscado → o valor **depois** (∅ = vazio);
 - linha do Extrato ou dos Cancelados pós **incluída (+)** ou **removida (−)**, com a data, o valor e a descrição.
@@ -231,11 +233,11 @@ O extrato e os cancelados são regravados por inteiro: as linhas anteriores fica
         },
         {
           q: 'Por que a loja que eu queria não aparece no seletor?',
-          a: 'O seletor lista as operações (lojas) das Empresas do seu escopo de acesso. Se a loja aparece com "Sem iFood", ela não tem o merchant do iFood cadastrado — peça ao time GIA para vincular a integração iFood no cadastro da Empresa.',
+          a: 'O seletor lista as lojas (Empresas) do seu escopo de acesso. Se a loja aparece com "Sem iFood", nenhuma operação dela tem restaurante do iFood cadastrado — peça ao time GIA para vincular a integração iFood no cadastro das operações.',
         },
         {
           q: 'Apareceu "fora do escopo" ao consultar. O que é?',
-          a: 'Seu usuário não tem acesso àquela operação (loja). O administrador do portal precisa incluir a Empresa dona dela no seu escopo.',
+          a: 'Seu usuário não tem acesso àquela loja. O administrador do portal precisa incluir a Empresa no seu escopo.',
         },
       ],
     },
@@ -247,8 +249,16 @@ O extrato e os cancelados são regravados por inteiro: as linhas anteriores fica
           a: 'O iFood só devolve os lançamentos em partes de até 8 dias e em páginas. Um mês tem 4 partes e cada parte pode ter várias páginas; elas são buscadas ao mesmo tempo, mas meses de muito movimento ainda levam alguns minutos. As abas abrem antes do fim e os lançamentos vão entrando; a faixa acima da tabela mostra o andamento.',
         },
         {
+          q: 'Apareceu uma mensagem de erro. Como leio?',
+          a: 'O topo da mensagem diz de onde veio (por exemplo, "Lançamentos do iFood" ou "Salvar o fechamento") e o tipo do problema: sem conexão (a consulta refaz sozinha quando a internet volta), um sistema que não respondeu (tente de novo em alguns minutos), algo a ajustar na pesquisa, falta de acesso (fale com o gestor) ou falha do serviço (tente de novo e, se continuar, avise o suporte). Em "Ver detalhes técnicos" estão o que foi pedido e o que voltou, com os botões Copiar tudo e Baixar diagnóstico — mande isso ao suporte. Senhas, tokens e dados pessoais não aparecem ali. Se o erro for ao Salvar, a mensagem abre numa janela e o que você preencheu continua na tela.',
+        },
+        {
           q: 'A consulta deu erro no meio. Perdi alguma coisa?',
-          a: 'Não: nada é gravado na consulta. Cada página que falha por instabilidade (o iFood ou a rede oscilando, limite de requisições) é tentada de novo automaticamente até duas vezes; se continuar falhando, a consulta para e mostra o erro. Página que demora mais de 30 segundos para responder não é repetida: a consulta para na hora e mostra o erro, para você não ficar minutos esperando. Se o iFood devolver uma página incompleta (as vendas sem os lançamentos financeiros, o que acontece às vezes) ou limitar as consultas por excesso de pedidos, a página é pedida de novo sozinha; o mês nunca é mostrado com lançamentos faltando. Erro que não passa sozinho — sem acesso à loja, loja sem iFood, iFood recusando a credencial — aparece na hora. Clique em Tentar de novo depois de resolver.',
+          a: 'Não: nada é gravado na consulta. Se o iFood devolver uma página incompleta (vendas sem os lançamentos financeiros, o que acontece às vezes) ou recusar uma consulta por excesso de pedidos, a página é pedida de novo na hora e, se ainda não vier, volta para o fim da fila e é buscada mais tarde; o mês nunca é mostrado com lançamentos faltando. Falha da rede ou do servidor é tentada de novo até duas vezes. Só se a mesma página continuar falhando a consulta para e mostra o erro. Página que demora mais de 30 segundos para responder não é repetida: a consulta para na hora, para você não ficar minutos esperando. Erro que não passa sozinho — sem acesso à loja, loja sem iFood, iFood recusando a credencial — aparece na hora. Clique em Tentar de novo depois de resolver.',
+        },
+        {
+          q: 'Por que às vezes a consulta fica mais lenta que o normal?',
+          a: 'O iFood aceita um número limitado de consultas por minuto, e esse limite é dividido com outros sistemas que usam o iFood. Quando ele acaba (ou está quase no fim), a consulta espera o minuto virar e continua de onde parou, sem refazer o que já chegou. Quando o iFood está oscilando (páginas incompletas ou recusas), a consulta passa a buscar menos páginas ao mesmo tempo e volta ao ritmo normal sozinha. Nos dois casos não precisa fazer nada: a barra pode ficar parada por até um minuto e depois continua sozinha.',
         },
         {
           q: 'Apareceu "o iFood não conseguiu responder agora" ou "falha no banco de dados". O que faço?',
@@ -285,7 +295,11 @@ O extrato e os cancelados são regravados por inteiro: as linhas anteriores fica
         },
         {
           q: 'Como sei quem alterou um valor do fechamento?',
-          a: 'Consulte a loja e o mês e clique em Histórico, no rodapé da tela (embaixo da barra de abas). Cada gravação mostra quem salvou, quando e o antes → depois de cada campo, e as linhas do Extrato e dos Cancelados pós incluídas ou removidas.',
+          a: 'Consulte a loja e o mês e clique em Histórico, na barra de filtros, ao lado do Salvar. Cada gravação mostra quem salvou, quando e o antes → depois de cada campo, e as linhas do Extrato e dos Cancelados pós incluídas ou removidas.',
+        },
+        {
+          q: 'Ao salvar apareceu "Este ambiente é de teste". O que é?',
+          a: 'Você está no ambiente de teste do portal, e nele o Salvar só grava na loja de teste — os dados das outras lojas são os reais e não podem ser alterados por um teste. Consultar e ver o histórico de qualquer loja funciona normalmente. Para salvar o fechamento de verdade, use o portal oficial.',
         },
         {
           q: 'Recebi um erro dizendo "no máximo N caracteres" ao salvar.',

@@ -1,0 +1,87 @@
+Fechamento iFood Mensal 0.1.1 - revisão SDK, retentativa pelo comportamento medido do iFood e tela sem pulos - 16/11/2026
+
+Entrega
+- Módulo: fechamento-ifood-mensal ("Fechamento iFood Mensal")
+- Versão: 0.1.0 → 0.1.1
+- Pacote: modules-fechamento-ifood-mensal-0.1.1.tgz (401,5 kB, 56 arquivos, sem .env nem segredos)
+- Menu: Plataformas › iFood › Fechamento iFood Mensal (sub-grupo iFood, ao lado do Diário)
+- Permissões: fechamento-ifood-mensal.ler e fechamento-ifood-mensal.editar (sem chave nova)
+- Validação SDK: gia validate 58/58, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- SDK: @gia-cb 0.1.0-alpha.71 (a mesma do Fechamento iFood Diário e do Reports Maestro; os demais módulos estão na alpha.70)
+- Tipo: lê o iFood e o borderô; grava o fechamento no banco do Maestro (sem mudança de banco nesta versão)
+
+O que muda nesta versão
+1. Retentativa refeita a partir de testes com o iFood real (13 e 16/11/2026, relatórios em docs/teste-ifood-*):
+   - o iFood devolve 429 "Too many requests" com a cota sobrando (até 996 de 1.000) e páginas com vendas vazias (sem o evento financeiro e com saldo zero), até com uma chamada por vez;
+   - página vazia e 429 com saldo: repetição imediata no servidor (até 3 vezes); se não passar, a página volta para o fim da fila (até 3 vezes);
+   - cota esgotada (saldo 0) ou Retry-After: todas as chamadas pausam até o iFood renovar (+1 s, teto 60 s); com saldo abaixo de 20, a pausa vem antes do 429;
+   - chamadas ao mesmo tempo: até 3, caindo até 1 quando o iFood oscila e voltando sozinho;
+   - rede e 5xx: 2 novas tentativas; 504 não repete; esgotadas as tentativas, mensagem de erro com origem "Lançamentos do iFood".
+2. A faixa de progresso fica estável: frase, barra, andamento e Cancelar, sem cronômetro nem aviso de pausa ou de ritmo (a pausa pela cota e o ritmo reduzido só deixam a consulta mais lenta).
+3. Tela sem pulos durante a consulta (antes a tela pulava e piscava):
+   - a barra de filtros fica enxuta desde o clique em Consultar (antes trocava no meio da consulta, quando o caixa da loja chegava, e tudo pulava ~100 px), sem a animação que a fazia escorregar mais 18 px;
+   - o botão Histórico aparece desde o clique, desativado até o caixa da loja chegar, para a barra não quebrar de linha no meio (em 1024 px);
+   - a tela de carregamento tem a mesma estrutura da tela com dados: a tabela não é remontada (sumia e voltava em fade) e a barra de totais já aparece carregando (antes a tabela descia 78 px);
+   - enquanto nenhuma página do iFood chegou, a tabela continua carregando (antes mostrava "O iFood não devolveu lançamentos" por um instante);
+   - a faixa de progresso tem altura fixa (uma linha de texto; no celular só a frase principal) e, no fim, recolhe com animação em vez de sumir de uma vez;
+   - descrição da tabela de Lançamentos mais curta, para não passar para duas linhas quando aparece o botão da calculadora.
+4. Botão Histórico na barra de filtros, ao lado do Salvar (sem a linha de informação embaixo da tabela); barra de abas no formato do SDK; mensagem de erro na posição do estado vazio.
+
+Incongruências encontradas e corrigidas
+1. Handlers manual, salvar e historico aceitavam qualquer registro do escopo (inclusive uma "propriedade") e tiravam o número da loja do nome → agora recusam com 422 o que não é Empresa. Uma propriedade com número no nome apontaria para o fechamento da loja de mesmo número, talvez fora do escopo. Fonte: dados-externos.md, "Escopo de loja"; delivery-checklists.md N.
+2. A tela usava useCanAccess e podia piscar "Sem acesso" enquanto as permissões carregavam → useCanAccessState, com carregando nesse intervalo. Fonte: api-reference.md §1.2.
+3. Diálogo do dia (previsão, CB Desc. LOJA, comentário) validava à mão → useGiaForm + Zod (diaSchema em schemas.ts), como os diálogos de Extrato e Cancelados. Fonte: conventions.md §9.
+4. FAQ do Histórico dizia que cada gravação mostra a operação, o que a tela não mostra → texto corrigido; FAQ da consulta mais lenta diz que a barra pode ficar parada até um minuto. Fonte: conventions.md §14; delivery-checklists.md E.
+5. Edge Function em edge-functions/ era a da 0.1.0 (sem a retentativa nova e com requireOperacao antigo) → regerada pelo gia pack. Fonte: conventions.md §17; dados-externos.md, "Dev × Prod".
+6. Documentos descrevendo comportamento antigo → corrigidos. Fonte: conventions.md §14; delivery-checklists.md P.
+   - CHANGELOG: entrada 0.1.1 nova; a 0.1.0 deixou de dizer "seletor por operação" e "4 páginas ao mesmo tempo" e de trazer o que entrou depois de 12/11;
+   - PRD v1.3: 424 é só a credencial recusada (401), RN-1c com fila, limites e ritmo, medição de tempo refeita com o iFood real, dependências com ctx.operacoes(), histórico da versão;
+   - INTEGRATION: versão, GIA_DEV_IFOOD_MENSAL_DEMO_LIMITE, status 424/422, regra de limite do iFood, referência à seção de decisões pendentes do PRD;
+   - README (handler historico, hook da consulta) e .env.example (origem do número da loja e dos restaurantes).
+7. Comentários soltos ou desatualizados no código → removidos ou corrigidos (types.ts com o handler operacoes apagado, blocos duplicados antes de ehFalhaDoBanco em manual/salvar/historico, retentativa no hook, lista das funções repetidas em lojas.ts). Fonte: delivery-checklists.md P.
+
+Conferido e já de acordo
+- Estrutura, nomes, export nomeado, .prettierrc do portal e imports por subpath: conventions.md §1 a §3; delivery-checklists.md B e D.
+- Sem localStorage para dado de negócio; tokens de cor e de motion; Tooltip pelo Dica (sem title= nativo): conventions.md §4, §7, §8 e §13.
+- Mobile com cartões e todas as ações no celular; WidthFrame como raiz: conventions.md §11; delivery-checklists.md I.
+- Manifest, permissões .ler/.editar com o mesmo groupPath: api-reference.md §1.1 e §1.2; conventions.md §18.
+- Histórico de gravação (quem, quando, o quê) com tela para ver: conventions.md §16.
+- Handlers auto-contidos, config literal, requirePermission e requireEmpresa em todos, credencial pelo hub: conventions.md §17; dados-externos.md; api-reference.md §1.12.
+- Arquivos com até 800 linhas, sem any e sem console.log no front: conventions.md §13; delivery-checklists.md K.
+- Padrões do workspace: FAQ e tour sem menção ao sistema antigo (padrão 4), dica só com mouse (2), totais em barra de indicadores e nenhum total na tabela (3), selo 3× (6), abas embaixo no formato do SDK (7), filtros enxutos (8), carregamento massivo (9, opcional, adotado), mensagem de erro padrão na posição do estado vazio (11).
+- Fontes lidas: docs do @gia-cb 0.1.0-alpha.71 (conventions, delivery-checklists, dados-externos, api-reference §1.1, §1.2, §1.7, §1.12), AGENTS.md da raiz e do módulo, memória do projeto.
+
+Não corrigido (decisão ou fora do escopo)
+- Stories e testes automatizados ausentes (conventions.md §12; delivery-checklists.md O) - nenhum módulo do workspace tem e o gia validate não cobra; ficou como pendência, a decidir com o time GIA.
+- hover:bg-muted/40 e /60 em AbaOnline, AbaAdquirentes e BarraIndicadores - a conventions.md §7 proíbe bg-muted/N como sub-superfície, mas não fica claro se vale para hover; o validate não acusa.
+- package.json com nome @modules/… e React em dependencies, e sem scope no manifest - a delivery-checklists.md C.1 e C.3 pede diferente, mas o template da CLI e todos os módulos do workspace seguem o formato atual; contradição do próprio SDK.
+- Regras de cálculo da tela antiga mantidas - decisão registrada (PRD §11, Decisões pendentes).
+- Barra de filtros enxuta desde o clique em Consultar, e não só com resultado na tela como diz o AGENTS.md do workspace (padrão 8) - mudança pedida para a tela não pular; o padrão pode ser atualizado para os outros módulos.
+
+Testes
+- gia validate: 58/58, 0 erros, 0 avisos.
+- gia dev, modo demonstração, desktop e celular (390 px), só leitura:
+   - a tela abre sem piscar "Sem acesso";
+   - manual e historico com a propriedade 99.CD GOIANIA → 422; com a Empresa 01.CB GOIANIA → 200;
+   - diálogo do dia: valor inválido no CB Desc. LOJA mostra "Valor inválido." e não aplica; valor válido aplica na tela e volta ao reabrir (sem Salvar).
+- gia dev, retentativa com instabilidade simulada (GIA_DEV_IFOOD_MENSAL_DEMO_LIMITE): consulta completa com 40% das páginas instáveis (lançamentos iguais aos da consulta sem instabilidade), Cancelar durante a pausa (nenhuma chamada depois), nova consulta no meio de outra, troca de abas durante a consulta, iFood sempre falhando (sempre e cota) terminando em erro com "Tentar de novo"; nenhum travamento e nenhum erro de JavaScript.
+- gia dev, iFood real e borderô do banco, só leitura: 01.CB GOIANIA out/2026, 8.871 lançamentos em 95 s (igual à medição anterior); 20.CB ANHEMBI mai/2026, 10.554 lançamentos em 156 s, 114 páginas sem falha.
+- Depois de tirar o modo de diagnóstico: gia validate 58/58; gia dev com 40% de instabilidade simulada, consulta completa com 3.927 lançamentos (igual à referência), sem botão de diagnóstico nem cronômetro, pausa ou ritmo na faixa, sem erro.
+- Tela sem pulos (gia dev, modo demonstração, posição de cada parte da tela registrada quadro a quadro durante a consulta, em 1440×900, 1024×768 e 390×844): do clique até o fim a tabela não muda de lugar e não é remontada; os únicos movimentos são a faixa recolhendo no fim (~150 ms, animado) e, no celular, a barra de filtros recolhendo no clique (padrão 1). Pacote regerado depois: gia validate 58/58.
+- Falta conferir: o Salvar (gravação) nesta versão, só na 999.CB TECH HOMOLOG com o banco de homologação; a tela sem pulos com o iFood real (medida no modo demonstração); Safari/WebKit; teclado e axe.
+
+Arquivos alterados
+- src/server/ledger.ts, manual.ts, salvar.ts, historico.ts, lojas.ts
+- src/hooks/use-consulta-mensal.ts, src/types.ts, src/schemas.ts
+- src/components/ProgressoConsulta.tsx, EditarDiaDialog.tsx, FiltrosBar.tsx, HistoricoDialog.tsx, AbaLancamentos.tsx
+- src/views/FechamentoIfoodMensalView.tsx, src/api/fechamento-ifood-mensal.ts
+- src/faq.ts, src/tour.ts, src/module.ts
+- CHANGELOG.md, PRD.md, INTEGRATION.md, README.md, .env.example, .gitignore, package.json, package-lock.json
+- edge-functions/ (regerada pelo gia pack)
+
+Pendências com outros times
+- Time GIA (as mesmas da 0.1.0, se ainda não feitas): pôr a tela no sub-grupo iFood de Plataformas; liberar o módulo na integração ifood do hub de Credenciais; secret GIA_SERVER_DATABASE_URL com usuário que lê o borderô e lê e grava ifood_fechamento; rodar sql-maestro/001_historico.sql no Maestro (sem mudança nesta versão); corrigir o vínculo incompleto da 43 cbx; teste de gravação em homologação só na 999.CB TECH HOMOLOG.
+- Time GIA: decidir se stories e testes automatizados são exigidos dos módulos.
+- Time do SDK: delivery-checklists.md C.1 e C.3 contradizem o template da CLI (nome do pacote, peerDependencies, scope).
+- Financeiro: as regras da tela antiga mantidas e as diferenças do lado iFood com a planilha (PRD §11), como na 0.1.0.
+- Enviar modules-fechamento-ifood-mensal-0.1.1.tgz ao time do Portal GIA pelo canal combinado.

@@ -15,8 +15,6 @@ CREATE TABLE IF NOT EXISTS ifood_fechamento.historico (
                 -- pode levar o histórico junto.
                 REFERENCES ifood_fechamento.fechamentos_mensais (id) ON DELETE RESTRICT,
   gravado_em    timestamptz  NOT NULL DEFAULT now(),
-  -- Operação em que foi salvo ("02 cb" e "02 vst" dividem o mesmo fechamento).
-  operacao_ref  varchar(30),
   -- Mesmo id das colunas criado_por/atualizado_por (legacyUserId ou id do portal).
   autor         uuid,
   -- Nome no momento da gravação (o cadastro pode mudar depois).
@@ -25,9 +23,6 @@ CREATE TABLE IF NOT EXISTS ifood_fechamento.historico (
   alteracoes    jsonb        NOT NULL
                 CONSTRAINT historico_alteracoes_array CHECK (jsonb_typeof(alteracoes) = 'array')
 );
-
--- Bancos que rodaram a primeira versão deste arquivo.
-ALTER TABLE ifood_fechamento.historico ADD COLUMN IF NOT EXISTS operacao_ref varchar(30);
 
 CREATE INDEX IF NOT EXISTS idx_historico_fechamento
   ON ifood_fechamento.historico (fechamento_id, gravado_em DESC);

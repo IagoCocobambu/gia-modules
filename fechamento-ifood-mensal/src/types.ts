@@ -3,19 +3,22 @@
 
 export type StatusPagamento = 'ONLINE' | 'ONLINE VR' | 'OFFLINE'
 
-/**
- * Uma operação (loja) que o usuário pode consultar (handler `operacoes`). Exceção
- * deste módulo: a busca é por operação, não por Empresa.
- */
-export interface OperacaoIfood {
-  /** `operacao_ref` ("02 cb") — a chave que a consulta manda ao servidor. */
-  ref: string
-  nome: string
+/** Um restaurante da loja no iFood (um por operação: cb, cbx, pzcb, vst…). */
+export interface RestauranteIfood {
+  /** `operacao_ref` da operação dona do restaurante ("17 cbx"). */
+  operacao: string
+  /** UUID do restaurante (merchant) no iFood. */
+  merchant: string
+}
+
+/** Uma loja (Empresa) do seletor. O fechamento junta todas as operações dela. */
+export interface LojaIfood {
   empresaId: number
+  nome: string
   /** Número da loja ("02"): chave do fechamento no banco do Maestro e do borderô. */
   locRef: string | null
-  /** Há merchant do iFood (o da Empresa ou o próprio da operação, como o Vasto). */
-  temIfood: boolean
+  /** Restaurantes do iFood da loja; vazio = loja sem iFood. */
+  restaurantes: RestauranteIfood[]
   ativo: boolean
 }
 
@@ -41,6 +44,8 @@ export interface LinhaLedger {
   pedidoCurto: string
   metodoPagamento: string
   bandeira: string
+  /** Operação (restaurante no iFood) do lançamento — "17 cbx". Preenchido pela tela. */
+  operacao: string
 }
 
 export interface RespostaLedger {
@@ -51,6 +56,23 @@ export interface RespostaLedger {
   totalPaginas: number
   inicio: string
   fim: string
+  /** O iFood negou este restaurante (403): ele ficou de fora. */
+  aviso: string | null
+  /** Saldo da cota do iFood na última resposta (uma cota só para toda a credencial). */
+  cota: CotaIfood | null
+  /** Repetições imediatas que a página precisou (vendas vazias ou 429 com saldo). */
+  repeticoes: number
+  /**
+   * A página NÃO veio — pedir de novo mais tarde. `cota`: cota esgotada, pausar todas
+   * as chamadas por `esperarMs`; `instavel`/`incompleta`: devolver ao fim da fila.
+   */
+  adiar: { motivo: 'cota' | 'instavel' | 'incompleta'; esperarMs: number } | null
+}
+
+/** `ifood-ratelimit-remaining` e `ifood-ratelimit-reset` (segundos até renovar). */
+export interface CotaIfood {
+  restantes: number
+  resetS: number
 }
 
 export interface OnlineManualDia {
@@ -199,9 +221,17 @@ export interface LinhaRecebimento {
 
 /** O que foi pesquisado (snapshot do clique em Consultar). */
 export interface Consulta {
-  operacaoRef: string
+  /** Empresa (loja) — o fechamento junta todas as operações dela. */
+  empresaId: number
   lojaNome: string
   mes: string
+  /** Restaurantes do iFood da loja que entram na consulta. */
+  restaurantes: RestauranteIfood[]
+  /**
+   * TESTE (`GIA_DEV_IFOOD_MENSAL_POR_OPERACAO=1`): consulta só desta operação;
+   * `null` = todas (o normal). Com operação, o fechamento não é salvo.
+   */
+  operacao: string | null
 }
 
 export type AbaId =
@@ -233,8 +263,6 @@ export interface GravacaoHistorico {
   id: string
   gravadoEm: string
   autorNome: string | null
-  /** Operação em que foi gravado (`02 cb` e `02 vst` dividem o fechamento). */
-  operacaoRef: string | null
   alteracoes: AlteracaoHistorico[]
 }
 

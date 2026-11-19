@@ -1,13 +1,14 @@
 import { History } from 'lucide-react'
-import { AuditDiff, Button, Modal, Skeleton } from '@gia-cb/ui'
+import { AuditDiff, Modal, Skeleton } from '@gia-cb/ui'
 import { useHistorico } from '../api/fechamento-ifood-mensal'
 import { formatBRL, formatData, formatDataHora } from '../helpers'
+import { MensagemErro } from './MensagemErro'
 import type { AlteracaoHistorico, GravacaoHistorico, ValorHistorico } from '../types'
 
 interface Props {
   aberto: boolean
   onOpenChange: (aberto: boolean) => void
-  operacaoRef: string
+  empresaId: number
   mes: string
   lojaNome: string
   rotuloMes: string
@@ -70,7 +71,6 @@ function Gravacao({ g }: { g: GravacaoHistorico }) {
           <span className="font-normal text-muted-foreground">
             {' '}
             · {g.autorNome ?? 'Usuário sem nome no cadastro'}
-            {g.operacaoRef ? ` · ${g.operacaoRef}` : ''}
           </span>
         </p>
         <p className="text-xs text-muted-foreground">
@@ -104,12 +104,12 @@ function Gravacao({ g }: { g: GravacaoHistorico }) {
 export function HistoricoDialog({
   aberto,
   onOpenChange,
-  operacaoRef,
+  empresaId,
   mes,
   lojaNome,
   rotuloMes,
 }: Props) {
-  const q = useHistorico(operacaoRef, mes, aberto)
+  const q = useHistorico(empresaId, mes, aberto)
   const gravacoes = q.data?.gravacoes ?? []
 
   let corpo
@@ -127,14 +127,7 @@ export function HistoricoDialog({
     )
   } else if (q.isError) {
     corpo = (
-      <div className="flex flex-col items-center gap-3 py-8 text-center">
-        <p className="text-sm text-destructive">
-          {q.error instanceof Error ? q.error.message : 'Não foi possível carregar o histórico.'}
-        </p>
-        <Button variant="outline" onClick={() => void q.refetch()}>
-          Tentar de novo
-        </Button>
-      </div>
+      <MensagemErro erro={q.error} origem="Histórico" onTentarDeNovo={() => void q.refetch()} />
     )
   } else if (gravacoes.length === 0) {
     corpo = (

@@ -8,3 +8,11 @@ dist/
 .vite/
 .npmrc
 validation-report.json
+
+# Bodies das respostas do iFood dos testes (pasta grande; o bodies.zip fica versionado)
+docs/**/bodies/
+
+# Respostas cruas da API do iFood (testes de 13 e 16/11/2026): grandes e com dados reais
+docs/teste-ifood-bodies-*/
+docs/teste-ifood-429-*/
+docs/teste-ifood-retentativa-*/

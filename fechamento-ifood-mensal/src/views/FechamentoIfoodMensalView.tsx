@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { AlertTriangle, CalendarRange, History, Lock, RefreshCw } from 'lucide-react'
+import { AlertTriangle, CalendarRange, Lock } from 'lucide-react'
 import {
-  Button,
   ConfirmDialog,
   EmptyState,
+  Spinner,
   GridTabsBar,
+  Modal,
   TourReplayButton,
   WidthFrame,
   toast,
@@ -12,8 +13,8 @@ import {
 import { cn } from '@gia-cb/ui/cn'
 import { logAudit } from '@gia-cb/sdk/audit'
 import { useTourReplayTrigger } from '@gia-cb/sdk/modules'
-import { useCanAccess } from '@gia-cb/sdk/permissions'
-import { useOperacoesIfood, useSalvarFechamento } from '../api/fechamento-ifood-mensal'
+import { useCanAccess, useCanAccessState } from '@gia-cb/sdk/permissions'
+import { useLojasIfood, useSalvarFechamento } from '../api/fechamento-ifood-mensal'
 import { AbaAdquirentes } from '../components/AbaAdquirentes'
 import { AbaCancelados } from '../components/AbaCancelados'
 import { AbaConferencia } from '../components/AbaConferencia'
@@ -23,12 +24,14 @@ import { AbaOnline } from '../components/AbaOnline'
 import { AbaRecebimento } from '../components/AbaRecebimento'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
 import { HistoricoDialog } from '../components/HistoricoDialog'
+import { MensagemErro } from '../components/MensagemErro'
 import { ProgressoConsulta } from '../components/ProgressoConsulta'
+import { Recolhivel } from '../components/Recolhivel'
 import {
   assinatura,
   contarAlterados,
+  ehRecusaDeAmbienteDeTeste,
   formatDataHora,
-  formatNum,
   mesAnterior,
   MODULE_ID,
   paraGravar,
@@ -70,22 +73,6 @@ const SCROLLBAR_ELEGANTE = [
   '[@supports_not_selector(::-webkit-scrollbar)]:[&_*]:[scrollbar-color:color-mix(in_oklab,var(--color-muted-foreground)_50%,transparent)_color-mix(in_oklab,var(--color-border)_50%,transparent)]',
 ].join(' ')
 
-/**
- * Barra de abas inferior (`GridTabsBar`) mais baixa: o componente do portal usa
- * `py-3` nas abas e empilha rótulo e valor dos contadores, o que dá ~64 px. Aqui as
- * abas ficam com `py-1.5` e os contadores numa linha só ("TOTAL 31") — ~36 px,
- * sobrando altura para a tabela em monitor pequeno. Só a partir de `md`: no celular
- * as abas ficam do tamanho original (alvo de toque ≥ 44 px). Só classes, nenhum componente
- * próprio: se o `GridTabsBar` mudar a estrutura, a barra volta ao tamanho original.
- */
-const BARRA_ABAS_COMPACTA = [
-  'md:[&_[role=tab]]:py-1.5',
-  'md:[&_footer>div:last-child]:py-1',
-  'md:[&_footer>div:last-child_.flex-col]:flex-row',
-  'md:[&_footer>div:last-child_.flex-col]:items-baseline',
-  'md:[&_footer>div:last-child_.flex-col]:gap-1.5',
-].join(' ')
-
 const ABAS: Array<{ id: AbaId; label: string }> = [
   { id: 'lancamentos', label: 'Lançamentos' },
   { id: 'online', label: 'Online' },
@@ -119,8 +106,21 @@ function useModoCompacto(el: HTMLElement | null): boolean {
   return compacto
 }
 
+/** De onde veio o erro, em palavras (a mensagem padrão mostra embaixo do título). */
+const ORIGEM_HANDLER: Record<string, string> = {
+  lojas: 'Lista de lojas',
+  ledger: 'Lançamentos do iFood',
+  manual: 'Borderô e fechamento gravado',
+  salvar: 'Salvar o fechamento',
+  historico: 'Histórico',
+}
+
 export function FechamentoIfoodMensalView() {
-  const canView = useCanAccess('fechamento-ifood-mensal.ler')
+  // Com o estado de carregamento: sem ele, a tela piscaria "Sem acesso" até as
+  // permissões chegarem (api-reference §1.2, `useCanAccessState`).
+  const { allowed: canView, loading: carregandoAcesso } = useCanAccessState(
+    'fechamento-ifood-mensal.ler'
+  )
   const canEdit = useCanAccess('fechamento-ifood-mensal.editar')
   const replayTour = useTourReplayTrigger(MODULE_ID)
 
@@ -132,11 +132,19 @@ export function FechamentoIfoodMensalView() {
   const [totaisEscolhidos, setTotaisEscolhidos] = useState<boolean | null>(null)
   const totaisAbertos = totaisEscolhidos ?? (telaAlta && !compacto)
 
-  const [filtros, setFiltros] = useState<FiltrosValor>({ operacaoRef: null, mes: mesAnterior() })
-  const lojasQuery = useOperacoesIfood(canView)
-  const lojas = useMemo(() => lojasQuery.data ?? [], [lojasQuery.data])
-  // Sem escolha do usuário, vale a primeira loja com iFood (como no legado).
-  const refSelecionada = filtros.operacaoRef ?? lojas.find((l) => l.temIfood)?.ref ?? null
+  const [filtros, setFiltros] = useState<FiltrosValor>({
+    empresaId: null,
+    mes: mesAnterior(),
+    operacao: null,
+  })
+  const lojasQuery = useLojasIfood(canView)
+  const lojas = useMemo(() => lojasQuery.data?.lojas ?? [], [lojasQuery.data])
+  // TESTE: `GIA_DEV_IFOOD_MENSAL_POR_OPERACAO=1` no servidor liga a consulta de uma
+  // operação só (o seletor "Operação (teste)"). Sem ela, junta todas as operações.
+  const porOperacao = lojasQuery.data?.testePorOperacao ?? false
+  // Sem escolha do usuário, vale a primeira loja com iFood.
+  const empresaSelecionada =
+    filtros.empresaId ?? lojas.find((l) => l.restaurantes.length > 0)?.empresaId ?? null
 
   const { fase, progresso, resultado, erro, consultar, cancelar } = useConsultaMensal()
   const consulta = resultado?.consulta ?? null
@@ -147,6 +155,8 @@ export function FechamentoIfoodMensalView() {
   const [baseDados, setBaseDados] = useState<DadosManuais>(VAZIO)
   const [gravadoEm, setGravadoEm] = useState<string | null>(null)
   const [historicoAberto, setHistoricoAberto] = useState(false)
+  const [erroSalvar, setErroSalvar] = useState<unknown>(null)
+  const recusaDeTeste = ehRecusaDeAmbienteDeTeste(erroSalvar)
   // Linhas visíveis da aba aberta quando um card filtra a tabela (a aba avisa).
   const [visiveisFiltrados, setVisiveisFiltrados] = useState<{ aba: AbaId; n: number | null }>({
     aba: 'lancamentos',
@@ -193,8 +203,31 @@ export function FechamentoIfoodMensalView() {
   const semAlteracao =
     consulta !== null &&
     fase !== 'erro' &&
-    consulta.operacaoRef === refSelecionada &&
+    consulta.empresaId === empresaSelecionada &&
+    consulta.operacao === (porOperacao ? filtros.operacao : null) &&
     consulta.mes === filtros.mes
+
+  /**
+   * A consulta da loja escolhida: todas as operações dela — ou, com o TESTE por
+   * operação ligado e uma operação escolhida, só ela.
+   */
+  function montarConsulta(loja: (typeof lojas)[number]): Consulta {
+    const operacao =
+      porOperacao &&
+      filtros.operacao &&
+      loja.restaurantes.some((r) => r.operacao === filtros.operacao)
+        ? filtros.operacao
+        : null
+    return {
+      empresaId: loja.empresaId,
+      lojaNome: loja.nome,
+      mes: filtros.mes,
+      restaurantes: operacao
+        ? loja.restaurantes.filter((r) => r.operacao === operacao)
+        : loja.restaurantes,
+      operacao,
+    }
+  }
 
   function iniciar(c: Consulta) {
     void consultar(c)
@@ -203,24 +236,24 @@ export function FechamentoIfoodMensalView() {
   /** Dispara a consulta. `false` = recusada (os filtros ficam abertos no celular). */
   function onConsultar(): boolean {
     if (semAlteracao || fase === 'consultando') return false
-    const loja = lojas.find((l) => l.ref === refSelecionada)
+    const loja = lojas.find((l) => l.empresaId === empresaSelecionada)
     if (!loja) {
       toast.error('Selecione a loja.')
       return false
     }
-    if (!loja.temIfood) {
-      toast.error(`A loja ${loja.nome} não tem integração iFood.`)
+    if (loja.restaurantes.length === 0) {
+      toast.error(`A loja ${loja.nome} não tem restaurante no iFood.`)
       return false
     }
     if (!loja.locRef) {
-      toast.error(`A operação ${loja.nome} (${loja.ref}) não começa pelo número da loja.`)
+      toast.error(`A loja ${loja.nome} não tem o número da loja no nome nem no vínculo BIAPI.`)
       return false
     }
     if (!/^\d{4}-\d{2}$/.test(filtros.mes)) {
       toast.error('Informe o mês de referência.')
       return false
     }
-    const nova: Consulta = { operacaoRef: loja.ref, lojaNome: loja.nome, mes: filtros.mes }
+    const nova = montarConsulta(loja)
     if (pendente) {
       setConfirmarDescarte(nova)
       return false
@@ -251,7 +284,9 @@ export function FechamentoIfoodMensalView() {
     [ledger]
   )
   const dias = diasDoMes(mes)
-  const contexto = consulta ? `${consulta.operacaoRef}|${consulta.mes}` : ''
+  const contexto = consulta
+    ? `${consulta.empresaId}|${consulta.mes}|${consulta.operacao ?? ''}`
+    : ''
 
   const editarOnline = useCallback((dia: string, parcial: Partial<OnlineManualDia>) => {
     setDados((d) => ({ ...d, online: { ...d.online, [dia]: { ...d.online[dia], ...parcial } } }))
@@ -275,11 +310,12 @@ export function FechamentoIfoodMensalView() {
   })
 
   async function onSalvar() {
-    if (!consulta || !pendente) return
+    // TESTE: consulta de uma operação só não grava (o fechamento é da loja inteira).
+    if (!consulta || !pendente || consulta.operacao) return
     const corpo = paraGravar(dados)
     try {
       const r = await salvar.mutateAsync({
-        operacaoRef: consulta.operacaoRef,
+        empresaId: consulta.empresaId,
         mes: consulta.mes,
         ...corpo,
       })
@@ -290,7 +326,7 @@ export function FechamentoIfoodMensalView() {
       void logAudit({
         evento: 'fechamento-ifood-mensal.fechamento.salvo',
         targetType: 'fechamento-ifood-mensal',
-        targetId: `${consulta.operacaoRef}:${consulta.mes}`,
+        targetId: `${consulta.empresaId}:${consulta.mes}`,
         metadata: {
           loja: consulta.lojaNome,
           mes: consulta.mes,
@@ -303,9 +339,8 @@ export function FechamentoIfoodMensalView() {
         },
       })
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Falha ao salvar o fechamento.', {
-        duration: 10_000,
-      })
+      // Mensagem padrão de erro (tipo, frase do servidor, detalhes técnicos) num modal.
+      setErroSalvar(e)
     }
   }
 
@@ -314,6 +349,13 @@ export function FechamentoIfoodMensalView() {
     [aba]
   )
 
+  if (carregandoAcesso) {
+    return (
+      <WidthFrame className="flex h-[calc(100vh-6.5rem)] items-start justify-center py-12 md:h-[calc(100vh-7.5rem)]">
+        <Spinner />
+      </WidthFrame>
+    )
+  }
   if (!canView) {
     return (
       <WidthFrame className="h-[calc(100vh-6.5rem)] md:h-[calc(100vh-7.5rem)]">
@@ -327,8 +369,8 @@ export function FechamentoIfoodMensalView() {
   }
 
   function onConsultarDeNovo() {
-    const loja = lojas.find((l) => l.ref === refSelecionada)
-    if (loja) iniciar({ operacaoRef: loja.ref, lojaNome: loja.nome, mes: filtros.mes })
+    const loja = lojas.find((l) => l.empresaId === empresaSelecionada)
+    if (loja) iniciar(montarConsulta(loja))
   }
 
   const alterados = resultado ? contarAlterados(dados, baseDados) : 0
@@ -349,16 +391,29 @@ export function FechamentoIfoodMensalView() {
   const carregandoLancamentos = fase === 'consultando' && resultado !== null
   if (fase === 'consultando' && !resultado) {
     // Nada chegou ainda: a faixa de progresso acima e a tabela de lançamentos no
-    // carregamento dela (padrão 9) — sem painel no lugar da tabela. Totais fechados,
-    // para não mostrar zeros.
+    // carregamento dela (padrão 9) — sem painel no lugar da tabela. Os totais aparecem
+    // carregando (sem zeros).
+    //
+    // Mesma estrutura do ramo com dados (faixa → avisos → contêiner da aba com a mesma
+    // `key`): quando o caixa da loja chega, o React só atualiza o que já está na tela —
+    // sem remontar a tabela, sem o fade-in do contêiner e sem a tabela pular com a
+    // chegada da barra de totais (que já aparece aqui, carregando).
     conteudo = (
       <>
-        <ProgressoConsulta comDados={false} progresso={progresso} onCancelar={cancelar} />
-        <div className="flex min-h-0 flex-1 flex-col">
+        <Recolhivel visivel>
+          <ProgressoConsulta comDados={false} progresso={progresso} onCancelar={cancelar} />
+        </Recolhivel>
+        {false}
+        <div
+          key={aba}
+          className="flex min-h-0 flex-1 flex-col animate-in fade-in duration-fast"
+          data-tour="fechamento-ifood-mensal-conteudo"
+        >
           <AbaLancamentos
             carregando
-            totaisAbertos={false}
-            onTotaisAbertosChange={() => {}}
+            completo={false}
+            totaisAbertos={totaisAbertos}
+            onTotaisAbertosChange={setTotaisEscolhidos}
             linhas={[]}
             fimDoMes={dias[dias.length - 1]}
             dataMax=""
@@ -368,22 +423,23 @@ export function FechamentoIfoodMensalView() {
       </>
     )
   } else if (fase === 'erro' || lojasQuery.error) {
+    // Mensagem padrão de erro (a mesma do Fechamento iFood Diário): o tipo do problema,
+    // a frase do servidor e "Ver detalhes técnicos" (Copiar tudo, Baixar diagnóstico).
+    const erroDaVez = lojasQuery.error ?? erro
+    const handler = (erroDaVez as { requisicao?: { handler?: string } } | null)?.requisicao?.handler
     conteudo = (
-      <EmptyState
-        icon={AlertTriangle}
-        title="Não foi possível consultar o fechamento"
-        description={erro ?? lojasQuery.error?.message ?? 'Erro desconhecido.'}
-        action={
-          <Button
-            onClick={() => {
-              if (lojasQuery.error) void lojasQuery.refetch()
-              else onConsultarDeNovo()
-            }}
-          >
-            <RefreshCw className="h-4 w-4" /> Tentar de novo
-          </Button>
-        }
-      />
+      // Mesma posição do estado "Escolha a loja e o mês" (EmptyState): no topo da área,
+      // centrada na horizontal, com o mesmo py-12.
+      <div className="flex min-h-0 flex-1 justify-center overflow-y-auto px-4 py-12">
+        <MensagemErro
+          erro={erroDaVez}
+          origem={handler ? ORIGEM_HANDLER[handler] : undefined}
+          onTentarDeNovo={() => {
+            if (lojasQuery.error) void lojasQuery.refetch()
+            else onConsultarDeNovo()
+          }}
+        />
+      </div>
     )
   } else if (!resultado || !consulta) {
     conteudo = (
@@ -404,8 +460,31 @@ export function FechamentoIfoodMensalView() {
   } else {
     conteudo = (
       <>
-        {carregandoLancamentos && (
+        {/* No fim a faixa recolhe (altura + fade) em vez de sumir de uma vez. */}
+        <Recolhivel visivel={carregandoLancamentos}>
           <ProgressoConsulta comDados progresso={progresso} onCancelar={cancelar} />
+        </Recolhivel>
+        {resultado.avisos.length > 0 && (
+          <div
+            role="alert"
+            className="flex shrink-0 items-start gap-2 rounded-md border border-warning-soft-border bg-warning-soft px-3 py-2 text-sm text-warning-soft-foreground"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <div className="min-w-0">
+              <p className="font-medium">
+                {resultado.avisos.length === 1
+                  ? 'Um restaurante ficou de fora do fechamento:'
+                  : `${resultado.avisos.length} restaurantes ficaram de fora do fechamento:`}
+              </p>
+              <ul className="mt-0.5 list-disc pl-4">
+                {resultado.avisos.map((a) => (
+                  <li key={a.operacao}>
+                    <span className="font-medium">{a.operacao}</span> — {a.aviso}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         )}
         <div
           key={aba}
@@ -418,6 +497,9 @@ export function FechamentoIfoodMensalView() {
               completo={resultado.completo}
               onVisiveisChange={informarVisiveis}
               onTotaisAbertosChange={setTotaisEscolhidos}
+              // Caixa da loja chegou e nenhuma página do iFood ainda: a tabela continua
+              // carregando (e não "o iFood não devolveu lançamentos").
+              carregando={carregandoLancamentos && ledger.length === 0}
               linhas={ledger}
               fimDoMes={dias[dias.length - 1]}
               dataMax={resultado.completo ? dataMax : ''}
@@ -495,11 +577,9 @@ export function FechamentoIfoodMensalView() {
           )}
         </div>
         {/* Abas EMBAIXO da tabela (barra inferior do portal): sobra altura para as linhas
-            e, em monitor estreito, as abas rolam com setas em vez de quebrar linha. */}
-        <div
-          className={cn('shrink-0', BARRA_ABAS_COMPACTA)}
-          data-tour="fechamento-ifood-mensal-abas"
-        >
+            e, em monitor estreito, as abas rolam com setas em vez de quebrar linha. O
+            GridTabsBar fica como o SDK entrega — nenhuma classe sobrescreve o formato. */}
+        <div className="shrink-0" data-tour="fechamento-ifood-mensal-abas">
           <GridTabsBar
             tabs={ABAS.map((a) => ({ id: a.id, label: a.label }))}
             activeId={aba}
@@ -507,35 +587,6 @@ export function FechamentoIfoodMensalView() {
             totalRegistros={registrosDaAba}
             itensAlterados={alterados}
           />
-        </div>
-        {/* Rodapé: loja/mês, última gravação e o Histórico — embaixo da barra de abas, para
-            a tabela começar logo abaixo dos filtros. */}
-        <div className="-mt-1 flex min-w-0 shrink-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-          <p className="min-w-0 max-w-full truncate">
-            <span className="font-medium text-foreground">{consulta.lojaNome}</span> ·{' '}
-            {rotuloMes(consulta.mes)} · {formatNum(ledger.length)} lançamentos do iFood ·{' '}
-            {resultado.manual.diasComBordero} dias com borderô
-          </p>
-          <div className="flex shrink-0 items-baseline gap-3">
-            <p>
-              {pendente ? (
-                <span className="font-medium text-warning">Alterações não salvas</span>
-              ) : gravadoEm ? (
-                `Última gravação: ${formatDataHora(gravadoEm)}`
-              ) : (
-                'Ainda não gravado'
-              )}
-            </p>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 self-center rounded-md font-medium text-primary transition-colors duration-fast ease-default hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [@media(hover:none)]:min-h-11"
-              onClick={() => setHistoricoAberto(true)}
-              data-tour="fechamento-ifood-mensal-historico"
-            >
-              <History className="h-3.5 w-3.5" aria-hidden />
-              Histórico
-            </button>
-          </div>
         </div>
       </>
     )
@@ -549,7 +600,8 @@ export function FechamentoIfoodMensalView() {
       )}
     >
       <FiltrosBar
-        value={{ operacaoRef: refSelecionada, mes: filtros.mes }}
+        value={{ empresaId: empresaSelecionada, mes: filtros.mes, operacao: filtros.operacao }}
+        porOperacao={porOperacao}
         onValueChange={setFiltros}
         lojas={lojas}
         lojasLoading={lojasQuery.isLoading}
@@ -557,12 +609,30 @@ export function FechamentoIfoodMensalView() {
         onConsultar={onConsultar}
         semAlteracao={semAlteracao}
         podeSalvar={canEdit}
-        salvarHabilitado={pendente && fase !== 'consultando'}
+        // TESTE: com uma operação só, o fechamento da loja não pode ser gravado pela metade.
+        salvarHabilitado={pendente && fase !== 'consultando' && !consulta?.operacao}
         salvando={salvar.isPending}
         alteracoesPendentes={pendente}
         onSalvar={() => void onSalvar()}
+        // Desde o clique (desativado até o caixa da loja chegar): a barra enxuta já nasce
+        // com a largura final e não quebra de linha no meio da consulta.
+        onHistorico={
+          (consulta && resultado) || fase === 'consultando'
+            ? () => setHistoricoAberto(true)
+            : undefined
+        }
+        historicoDesativado={!(consulta && resultado)}
+        dicaHistorico={
+          pendente
+            ? 'Há alterações não salvas. O histórico mostra o que já foi gravado.'
+            : gravadoEm
+              ? `Última gravação: ${formatDataHora(gravadoEm)}`
+              : 'Este mês ainda não foi gravado para a loja.'
+        }
         compacto={compacto}
-        enxuto={resultado !== null}
+        // Enxuta desde o clique em Consultar: a barra muda junto com o resto da tela, e
+        // não no meio da consulta (quando o caixa da loja chega), o que fazia tudo pular.
+        enxuto={resultado !== null || fase === 'consultando'}
         tituloExtra={<TourReplayButton onClick={replayTour} />}
       />
       <div ref={setArea} className="flex min-h-0 flex-1 flex-col gap-3">
@@ -572,12 +642,33 @@ export function FechamentoIfoodMensalView() {
         <HistoricoDialog
           aberto={historicoAberto}
           onOpenChange={setHistoricoAberto}
-          operacaoRef={consulta.operacaoRef}
+          empresaId={consulta.empresaId}
           mes={consulta.mes}
           lojaNome={consulta.lojaNome}
           rotuloMes={rotuloMes(consulta.mes)}
         />
       )}
+      <Modal open={erroSalvar !== null} onOpenChange={(o) => !o && setErroSalvar(null)}>
+        <Modal.Content size="md">
+          <Modal.Header>
+            <Modal.Title>O fechamento não foi salvo</Modal.Title>
+            <Modal.Description>
+              O que você preencheu continua na tela. Veja o motivo abaixo.
+            </Modal.Description>
+          </Modal.Header>
+          <Modal.Body>
+            <MensagemErro
+              erro={erroSalvar}
+              origem={ORIGEM_HANDLER.salvar}
+              {...(recusaDeTeste ? { titulo: 'Ambiente de teste', descricao: recusaDeTeste } : {})}
+              onTentarDeNovo={() => {
+                setErroSalvar(null)
+                void onSalvar()
+              }}
+            />
+          </Modal.Body>
+        </Modal.Content>
+      </Modal>
       <ConfirmDialog
         open={confirmarDescarte !== null}
         onOpenChange={(o) => !o && setConfirmarDescarte(null)}

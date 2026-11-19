@@ -1,7 +1,7 @@
-import { useState, type ReactNode } from 'react'
-import { Button, DatePicker, Field, Input, Modal } from '@gia-cb/ui'
+import type { ReactNode } from 'react'
+import { Button, DatePicker, Field, FormField, Input, Modal, useGiaForm } from '@gia-cb/ui'
 import { formatData } from '../helpers'
-import { paraNumero } from '../schemas'
+import { diaSchema, paraNumero, type DiaForm } from '../schemas'
 
 export interface ValoresDia {
   previsao: string
@@ -49,16 +49,31 @@ function Conteudo({
   onOpenChange,
   onConfirmar,
 }: Props & { dia: string }) {
-  const [previsao, setPrevisao] = useState(valores.previsao)
-  const [comentario, setComentario] = useState(valores.comentario)
   const temLoja = valores.cbDescontosLoja !== undefined
-  const [loja, setLoja] = useState(
+  const lojaInicial =
     valores.cbDescontosLoja === null || valores.cbDescontosLoja === undefined
       ? ''
       : valores.cbDescontosLoja.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
-  )
-  const lojaNumero = loja.trim() === '' ? null : paraNumero(loja)
-  const lojaInvalida = lojaNumero !== null && !Number.isFinite(lojaNumero)
+  // Formulário padrão do portal (conventions §9): valores como texto, número no envio.
+  const form = useGiaForm<DiaForm>({
+    schema: diaSchema,
+    defaultValues: {
+      previsao: valores.previsao,
+      comentario: valores.comentario,
+      cbDescontosLoja: lojaInicial,
+    },
+  })
+  const aplicar = form.handleSubmit((v) => {
+    const loja = v.cbDescontosLoja.trim()
+    onConfirmar({
+      previsao: v.previsao,
+      comentario: v.comentario,
+      ...(temLoja
+        ? { cbDescontosLoja: loja === '' ? null : Math.round(paraNumero(loja) * 100) / 100 }
+        : {}),
+    })
+    onOpenChange(false)
+  })
 
   return (
     <>
@@ -74,45 +89,71 @@ function Conteudo({
       </Modal.Header>
       <Modal.Body className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Previsão de pagamento">
-            {(c) =>
-              podeEditar ? (
-                <DatePicker {...c} value={previsao} onChange={setPrevisao} />
-              ) : (
-                <span className="text-sm">{previsao ? formatData(previsao) : '—'}</span>
-              )
-            }
-          </Field>
-          {temLoja && (
-            <Field
-              label="CB Descontos LOJA (R$)"
-              error={lojaInvalida ? 'Valor inválido.' : undefined}
-            >
-              {(c) =>
-                podeEditar ? (
-                  <Input
-                    {...c}
-                    inputMode="decimal"
-                    className="text-right tabular-nums"
-                    value={loja}
-                    onChange={(e) => setLoja(e.target.value)}
-                  />
-                ) : (
-                  <span className="text-sm tabular-nums">{loja || '—'}</span>
-                )
-              }
+          {podeEditar ? (
+            <FormField
+              control={form.control}
+              name="previsao"
+              render={({ field, fieldState }) => (
+                <Field label="Previsão de pagamento" error={fieldState.error?.message}>
+                  {(c) => (
+                    <DatePicker
+                      {...c}
+                      value={String(field.value ?? '')}
+                      onChange={(v) => field.onChange(v)}
+                    />
+                  )}
+                </Field>
+              )}
+            />
+          ) : (
+            <Field label="Previsão de pagamento">
+              {() => (
+                <span className="text-sm">
+                  {valores.previsao ? formatData(valores.previsao) : '—'}
+                </span>
+              )}
             </Field>
           )}
-        </div>
-        <Field label="Comentário">
-          {(c) =>
-            podeEditar ? (
-              <Input {...c} value={comentario} onChange={(e) => setComentario(e.target.value)} />
+          {temLoja &&
+            (podeEditar ? (
+              <FormField
+                control={form.control}
+                name="cbDescontosLoja"
+                render={({ field, fieldState }) => (
+                  <Field label="CB Descontos LOJA (R$)" error={fieldState.error?.message}>
+                    {(c) => (
+                      <Input
+                        {...c}
+                        {...field}
+                        value={String(field.value ?? '')}
+                        inputMode="decimal"
+                        className="text-right tabular-nums"
+                      />
+                    )}
+                  </Field>
+                )}
+              />
             ) : (
-              <span className="text-sm">{comentario || '—'}</span>
-            )
-          }
-        </Field>
+              <Field label="CB Descontos LOJA (R$)">
+                {() => <span className="text-sm tabular-nums">{lojaInicial || '—'}</span>}
+              </Field>
+            ))}
+        </div>
+        {podeEditar ? (
+          <FormField
+            control={form.control}
+            name="comentario"
+            render={({ field, fieldState }) => (
+              <Field label="Comentário" error={fieldState.error?.message}>
+                {(c) => <Input {...c} {...field} value={String(field.value ?? '')} />}
+              </Field>
+            )}
+          />
+        ) : (
+          <Field label="Comentário">
+            {() => <span className="text-sm">{valores.comentario || '—'}</span>}
+          </Field>
+        )}
         <dl className="grid grid-cols-1 gap-x-6 gap-y-1.5 rounded-md border border-border p-3 text-sm sm:grid-cols-2">
           {detalhes.map(([rotulo, valor]) => (
             <div key={rotulo} className="flex items-baseline justify-between gap-3">
@@ -127,23 +168,7 @@ function Conteudo({
           {podeEditar ? 'Cancelar' : 'Fechar'}
         </Button>
         {podeEditar && (
-          <Button
-            className="h-11"
-            disabled={lojaInvalida}
-            onClick={() => {
-              onConfirmar({
-                previsao,
-                comentario,
-                ...(temLoja
-                  ? {
-                      cbDescontosLoja:
-                        lojaNumero === null ? null : Math.round(lojaNumero * 100) / 100,
-                    }
-                  : {}),
-              })
-              onOpenChange(false)
-            }}
-          >
+          <Button className="h-11" onClick={() => void aplicar()}>
             Aplicar
           </Button>
         )}

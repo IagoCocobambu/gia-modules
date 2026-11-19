@@ -8,10 +8,10 @@
 | **Label visível**      | Fechamento iFood Mensal                   |
 | **Categoria**          | `vendas`                                  |
 | **Autor**              | Iago Pereira (iago.pereira@cocobambu.com) |
-| **Versão do PRD**      | `1.1`                                     |
+| **Versão do PRD**      | `1.4`                                     |
 | **Status**             | `em-dev`                                  |
-| **Última atualização** | 2026-11-10                                |
-| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.70`              |
+| **Última atualização** | 2026-11-17                                |
+| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.71`              |
 
 ---
 
@@ -72,15 +72,22 @@ iFood está escrita no código-fonte Delphi e a tela não funciona no celular.
 
 - **Sem `.editar`**: os campos aparecem como texto; não há Nova linha, lápis,
   lixeira nem Salvar; o handler `salvar` responde 403.
-- **Operação fora do escopo**: todos os handlers respondem 403 (`requireOperacao`).
-- **Operação sem iFood** (Empresa sem `locRefs.IFOOD` e fora de
-  `OPERACOES_IFOOD_PROPRIO`): aparece "Sem iFood" e Consultar é recusado (422).
+- **Loja fora do escopo**: todos os handlers respondem 403 (`requireEmpresa`).
+- **Loja sem iFood** (nenhuma operação com vínculo IFOOD no cadastro): aparece
+  "Sem iFood" e Consultar é recusado.
+- **Restaurante que o iFood não reconhece (404)**: identificador errado no cadastro da
+  operação; fica de fora, com aviso na tela, como o 403.
+- **Restaurante negado pelo iFood (403)**: fica de fora, com aviso na tela; os outros
+  restaurantes da loja seguem.
 - **Mês ainda aberto**: aviso de que os lançamentos vão só até o último dia que
   veio do iFood.
-- **iFood fora ou com limite (429)**: a página é tentada de novo até 2 vezes; página que passa de 30 s (504) não é repetida;
-  depois a consulta para com mensagem curta e "Tentar de novo".
-- **iFood recusa a credencial ou a loja (401/403)**: erro na hora (424), sem nova
-  tentativa, com a orientação de quem resolver.
+- **iFood instável ou com limite (429)**: página vazia ou 429 com saldo é repetida na
+  hora e, se não passar, volta para a fila (até 3 vezes); cota esgotada pausa a consulta
+  até o iFood renovar; 5xx/rede: 2 novas tentativas; página que passa de 30 s (504) não
+  é repetida. Esgotadas as tentativas, a consulta para com mensagem curta e "Tentar de novo".
+- **iFood recusa a credencial (401)**: erro na hora (424), sem nova tentativa, com a
+  orientação de quem resolver. Restaurante negado (403) ou não encontrado (404) fica de
+  fora com aviso; os outros seguem.
 - **Banco do Maestro fora**: mensagem curta "falha no banco de dados"; o detalhe vai
   para o log. O que estava preenchido continua na tela.
 - **Troca de loja/mês ou fechar a aba com alteração pendente**: pede confirmação.
@@ -94,13 +101,15 @@ iFood está escrita no código-fonte Delphi e a tela não funciona no celular.
 
 ### RF-1: Consultar o mês de uma loja
 
-**Descrição**: escolher a operação (loja) e o mês de referência e buscar os
+**Descrição**: escolher a loja (Empresa) e o mês de referência e buscar os
 lançamentos do iFood do mês, o borderô e o que já foi gravado.
 
 **Critério de pronto**:
 
-- [ ] O seletor lista as operações do escopo (busca por **operação**, exceção deste
-      módulo); "Inativa" e "Sem iFood" aparecem embaixo do nome.
+- [ ] O seletor lista as Empresas (lojas) do escopo, com as operações no iFood
+      embaixo do nome ("3 operações no iFood: cb, pzcb, vst"); o fechamento junta os
+      lançamentos de **todos os restaurantes da loja** (decisão do produto em
+      12/11/2026, igual ao Fechamento iFood Diário 0.2.4), com a coluna **Operação**.
 - [ ] O padrão é o mês anterior; o seletor não passa do mês atual.
 - [ ] O mês é dividido em janelas de até 8 dias, paginadas; até 3 páginas ao mesmo
       tempo, com faixa de progresso e Cancelar.
@@ -164,8 +173,12 @@ dentro da grade), com dica no mouse e filtro por clique.
 - [ ] Extrato e cancelados regravados por inteiro, com exclusão lógica das linhas
       anteriores.
 - [ ] Autor e data nas colunas `criado_por`/`atualizado_por` + `logAudit`.
-- [ ] Aviso de alteração não salva (ponto no botão, aviso no rodapé, contador
+- [ ] Aviso de alteração não salva (ponto no botão, contador
       Alterados, confirmação ao trocar e ao fechar a aba).
+- [ ] **Trava de teste**: com `FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE` definida
+      (homologação), o `salvar` recusa com 403 qualquer outra Empresa antes de abrir a
+      transação; valor que não é id recusa toda gravação (503). Sem a variável
+      (produção), nada muda.
 
 **Prioridade**: must-have
 
@@ -187,7 +200,7 @@ monitor pequeno.
 
 **Critério de pronto**:
 
-- [ ] Botão **Histórico** no rodapé (linha de informação embaixo da barra de abas), depois da consulta (`.ler`).
+- [ ] Botão **Histórico** na barra de filtros, ao lado do Salvar, depois da consulta (`.ler`); a última gravação aparece na dica dele.
 - [ ] Gravações da mais recente para a primeira, com autor, data/hora e o antes →
       depois por aba (`AuditDiff` do `@gia-cb/ui`); linhas incluídas (+) e removidas (−).
 - [ ] Mês sem gravação e gravações anteriores ao histórico explicados no diálogo.
@@ -242,14 +255,14 @@ Sem migrations: o schema `ifood_fechamento` já existe no banco do Maestro
 (`SQL/create_fechamento_mensal_schema.sql` do pacote legado). As restrições
 únicas que a gravação exige estão no `INTEGRATION.md` §2.1.
 
-| Tabela                                                 | Acesso           | Uso                                                                                                           |
-| ------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------- |
-| `bordero.borderos`                                     | leitura          | CB Online, CB Desc. iFood, Adquirentes caixa por dia (versão vigente: última alteração ou o original)         |
-| `ifood_fechamento.fechamentos_mensais`                 | leitura/gravação | cabeçalho loja (`loc_ref` = número do `operacao_ref`, "02 cb" → "02"; `08 cb` e `08 vst` dividem) + ano + mês |
-| `ifood_fechamento.online_dia` / `adquirente_dia`       | leitura/gravação | previsão, CB Desc. LOJA, comentário por dia                                                                   |
-| `ifood_fechamento.conferencia_breakdown`               | leitura/gravação | `valor_site_cc1..4`                                                                                           |
-| `ifood_fechamento.extrato_bancario` / `cancelados_pos` | leitura/gravação | listas, regravadas a cada Salvar (as anteriores recebem `deletado_em`)                                        |
-| `ifood_fechamento.historico` (**nova**)                | leitura/inclusão | uma linha por Salvar com mudança: autor, data, antes → depois (`sql-maestro/001_historico.sql`)               |
+| Tabela                                                 | Acesso           | Uso                                                                                                   |
+| ------------------------------------------------------ | ---------------- | ----------------------------------------------------------------------------------------------------- |
+| `bordero.borderos`                                     | leitura          | CB Online, CB Desc. iFood, Adquirentes caixa por dia (versão vigente: última alteração ou o original) |
+| `ifood_fechamento.fechamentos_mensais`                 | leitura/gravação | cabeçalho loja (`loc_ref` = número da loja, do nome da Empresa: "02.CB …" → "02") + ano + mês         |
+| `ifood_fechamento.online_dia` / `adquirente_dia`       | leitura/gravação | previsão, CB Desc. LOJA, comentário por dia                                                           |
+| `ifood_fechamento.conferencia_breakdown`               | leitura/gravação | `valor_site_cc1..4`                                                                                   |
+| `ifood_fechamento.extrato_bancario` / `cancelados_pos` | leitura/gravação | listas, regravadas a cada Salvar (as anteriores recebem `deletado_em`)                                |
+| `ifood_fechamento.historico` (**nova**)                | leitura/inclusão | uma linha por Salvar com mudança: autor, data, antes → depois (`sql-maestro/001_historico.sql`)       |
 
 ### 5.2 Permissões (obrigatório)
 
@@ -260,15 +273,15 @@ Sem migrations: o schema `ifood_fechamento` já existe no banco do Maestro
 
 No legado as telas diária e mensal ficavam atrás de uma permissão só
 (`gia / relfechamentoifood`). O filtro de loja por usuário do legado
-(`UsuarioTemAcessoLocRef`) virou `ctx.requireOperacao` em todos os handlers.
+(`UsuarioTemAcessoLocRef`) virou `ctx.requireEmpresa` em todos os handlers.
 
 ### 5.3 Integrações externas
 
-| Integração                                                         | Propósito           | Camada                              | Credencial                             |
-| ------------------------------------------------------------------ | ------------------- | ----------------------------------- | -------------------------------------- |
-| API Financial do iFood `financial/v3.0/merchants/{merchant}/sales` | Lançamentos do mês  | handler `ledger`                    | hub de Credenciais, integração `ifood` |
-| Banco do Maestro (`bordero`, `ifood_fechamento`)                   | Borderô e o gravado | handlers `manual` e `salvar`        | secret `GIA_SERVER_DATABASE_URL`       |
-| Operações do escopo e Empresa da operação (`locRefs.IFOOD`)        | Lojas e merchant    | `ctx.operacoes()`, `ctx.empresas()` | —                                      |
+| Integração                                                         | Propósito            | Camada                              | Credencial                             |
+| ------------------------------------------------------------------ | -------------------- | ----------------------------------- | -------------------------------------- |
+| API Financial do iFood `financial/v3.0/merchants/{merchant}/sales` | Lançamentos do mês   | handler `ledger`                    | hub de Credenciais, integração `ifood` |
+| Banco do Maestro (`bordero`, `ifood_fechamento`)                   | Borderô e o gravado  | handlers `manual` e `salvar`        | secret `GIA_SERVER_DATABASE_URL`       |
+| Empresas e operações do escopo (`integracoes` IFOOD)               | Lojas e restaurantes | `ctx.empresas()`, `ctx.operacoes()` | —                                      |
 
 **Leitura do iFood**: cada `orderEvents[].fullCode = FINANCIAL_BILLED_ORDER_ENTRY` →
 `metadata.entries[]` vira uma linha, com o mapeamento do legado
@@ -276,22 +289,23 @@ No legado as telas diária e mensal ficavam atrás de uma permissão só
 
 ### 5.4 BFF / processamento em segundo plano
 
-| Endpoint (handler) | Propósito                                   | Segundo plano? | Email ao concluir? |
-| ------------------ | ------------------------------------------- | -------------- | ------------------ |
-| `operacoes`        | Operações do escopo com o status do iFood   | Não            | —                  |
-| `ledger`           | Uma página de uma janela de 8 dias do iFood | Não            | —                  |
-| `manual`           | Borderô vigente + o que foi gravado no mês  | Não            | —                  |
-| `salvar`           | Grava o fechamento do mês (transação)       | Não            | —                  |
-| `historico`        | Gravações do mês com o antes → depois       | Não            | —                  |
+| Endpoint (handler) | Propósito                                       | Segundo plano? | Email ao concluir? |
+| ------------------ | ----------------------------------------------- | -------------- | ------------------ |
+| `lojas`            | Empresas do escopo com os restaurantes do iFood | Não            | —                  |
+| `ledger`           | Uma página de uma janela de 8 dias do iFood     | Não            | —                  |
+| `manual`           | Borderô vigente + o que foi gravado no mês      | Não            | —                  |
+| `salvar`           | Grava o fechamento do mês (transação)           | Não            | —                  |
+| `historico`        | Gravações do mês com o antes → depois           | Não            | —                  |
 
 Sem job em segundo plano: a consulta é de **uma loja**, em chamadas curtas (uma por
-página, ~4 s cada), até 3 ao mesmo tempo, com progresso e Cancelar. Medido no dev
-com 8 páginas de 1,5 s: 16,3 s uma a uma × 4,6 s em paralelo. Não é multi-loja nem
+página, ~4 s cada), até 3 ao mesmo tempo (menos quando o iFood oscila), com progresso
+e Cancelar. Medido com o iFood real em 16/11/2026 (3 ao mesmo tempo): 01.CB GOIANIA
+out/2026, 77 páginas em 95 s; 20.CB ANHEMBI mai/2026, 114 páginas em 156 s. Não é multi-loja nem
 export volumoso (conventions §15) — mesma escolha do Fechamento Maestro.
 
 **Erros**: o detalhe técnico vai para o log do servidor; a tela recebe mensagem
-curta. 422 (entrada inválida, loja sem iFood), 424 (iFood recusou credencial/loja —
-sem nova tentativa), 502 (iFood fora — até 2 novas tentativas), 504 (página passou de 30 s — sem nova tentativa), 503
+curta. 422 (entrada inválida, loja sem iFood, registro que não é Empresa), 424 (iFood
+recusou a credencial, 401 — sem nova tentativa), 502 (iFood fora — até 2 novas tentativas), 504 (página passou de 30 s — sem nova tentativa), 503
 (banco). O modo de demonstração (`GIA_DEV_IFOOD_MENSAL_DEMO`) é só do `gia dev`.
 
 ### 5.5 Realtime
@@ -309,10 +323,19 @@ portadas em `src/regras.ts` e `src/conferencia.ts`.
   pedido antes das 6h conta no dia anterior. Lançamento sem pedido = "Ocorrências".
 - **RN-1b — Página completa**: o iFood às vezes devolve a página "leve" (as vendas
   sem os eventos financeiros, e portanto sem lançamentos). O handler `ledger` pede a
-  página de novo (até 4 vezes) enquanto houver venda sem evento financeiro e, se não
-  completar, responde erro — a tela tenta de novo. Medido em 11/11/2026 (loja 01,
-  out/2026): 19 de 49 páginas vieram leves na 1ª chamada; aceitar essas páginas fazia o
-  mês sair com cerca de metade dos lançamentos. No 429 (limite) espera o `Retry-After`.
+  página de novo na hora (até 3 vezes) enquanto houver venda sem evento financeiro e, se
+  não completar, responde `adiar` — a tela devolve a página ao fim da fila. Medido em
+  11/11/2026 (loja 01, out/2026): 19 de 49 páginas vieram leves na 1ª chamada; aceitar
+  essas páginas fazia o mês sair com cerca de metade dos lançamentos.
+- **RN-1c — Limite do iFood**: a cota é de 1.000 chamadas por 60 s para a credencial
+  inteira, informada em `ifood-ratelimit-remaining`/`-reset`. 429 com saldo sobrando
+  (medido: até 996) é instabilidade — repete na hora; 429 com saldo 0 (ou `Retry-After`)
+  pausa todas as chamadas até o `Retry-After` ou o reset + 1 s (teto 60 s); saldo abaixo
+  de 20 pausa antes do 429. A página que não passa nas repetições imediatas volta para a
+  fila até 3 vezes; a mesma página aguenta até 5 pausas pela cota. Esgotado, a consulta
+  para com erro. Chamadas ao mesmo tempo: de 3 a 1 — baixa 1 (no máximo a cada 3 s)
+  quando uma página precisa de 2 ou mais repetições ou volta para a fila; sobe 1 a cada
+  8 páginas seguidas sem repetição.
 - **RN-2 — TOTAL**: o valor só conta como venda em Venda/Cancelamento Total e só
   para Entrada Financeira, promoções iFood/rede/indústria, taxa de serviço e taxa de
   conveniência; nas outras linhas é zero.
@@ -338,9 +361,14 @@ portadas em `src/regras.ts` e `src/conferencia.ts`.
 - **RN-10 — Recebimento**: lançamentos com impacto no repasse agrupados pela data de
   pagamento; Extrato = malote num raio de 1 dia; Diferença = Site − Extrato; data
   repetida desconta o Site vizinho para não contar o malote em dobro.
-- **RN-11 — Chave da loja**: número do `operacao_ref` ("02 cb" → "02") é o
-  `loc_ref` do fechamento e o `property_number` do borderô; operações de mesmo
-  número dividem o fechamento. Ref que não começa pelo número é recusado.
+- **RN-11 — Chave da loja**: o número da loja (do nome da Empresa, "02.CB …" → "02",
+  ou do BIAPI) é o `loc_ref` do fechamento e o `property_number` do borderô. A loja
+  inteira (todas as operações) tem um fechamento só por mês.
+- **RN-11b — Restaurantes da loja**: o fechamento soma os lançamentos de todos os
+  restaurantes da loja no iFood: os vínculos IFOOD ativos das operações da Empresa no
+  cadastro do portal (`ctx.operacoes()` → `integracoes`), sem lista fixa no módulo. O
+  servidor só consulta restaurante da loja pedida. Restaurante negado (403) ou não
+  reconhecido pelo iFood (404) fica de fora com aviso.
 - **RN-12 — Cards que filtram**: Lançamentos (repasse, online, VR, offline, taxas,
   promoções, ocorrências); Online (# online, # desc. iFood, # desc. loja, # total →
   dias com diferença na coluna); Adquirentes (# total e divergência absoluta → dias
@@ -355,7 +383,7 @@ portadas em `src/regras.ts` e `src/conferencia.ts`.
   `ifood_fechamento.historico`, **na mesma transação**: autor (id e nome), data e o
   antes → depois de cada campo (Online/Adquirentes por dia, breakdown, anulação) e
   cada linha do Extrato/Cancelados incluída, removida ou editada (a editada mostra só os
-  campos que mudaram). Registra também a operação em que foi salvo (`02 cb`/`02 vst`). Salvar sem mudança não gera linha. A tabela é só de inclusão. Além
+  campos que mudaram). Salvar sem mudança não gera linha. A tabela é só de inclusão. Além
   disso: `criado_por`/`atualizado_por`/`deletado_por` nas tabelas (id do usuário no
   GIA antigo, via `legacyUserId`, ou o id do portal) e `logAudit`
   (`fechamento-ifood-mensal.fechamento.salvo`, com o número de alterações). A tela
@@ -370,10 +398,10 @@ portadas em `src/regras.ts` e `src/conferencia.ts`.
 - [ ] C2: Salvar grava tudo numa transação; apagar um valor e salvar limpa o valor
       gravado; trocar de loja/mês com alteração pendente pede confirmação.
 - [ ] C3: sem `.editar`, nenhum campo é digitável e não há Salvar; o handler
-      `salvar` responde 403. Operação fora do escopo responde 403 em todos os
+      `salvar` responde 403. Loja fora do escopo responde 403 em todos os
       handlers.
-- [ ] Erro do iFood ou do banco mostra mensagem curta, sem detalhe técnico; recusa
-      do iFood (424) aparece sem nova tentativa.
+- [ ] Erro do iFood ou do banco mostra mensagem curta, sem detalhe técnico; credencial
+      recusada pelo iFood (424) aparece sem nova tentativa.
 - [ ] **Celular — filtros (padrão 1)**: ao Consultar, a barra de filtros **recolhe**;
       a seta do cabeçalho reabre; pesquisa recusada (loja não escolhida, nada mudou)
       deixa a barra aberta.
@@ -386,8 +414,8 @@ portadas em `src/regras.ts` e `src/conferencia.ts`.
       card escondido que filtra abre a parte de baixo e desativa o botão; os cards da
       RN-12 filtram a tabela, com o botão do filtro e o X.
 - [ ] **Selo de quantidade (padrão 6)**: `3×` antes do R$ nas colunas de quantidade + valor; sem selo quando é zero; a calculadora lê só o R$.
-- [ ] **Abas embaixo (padrão 7)**: `GridTabsBar` embaixo da tabela, compacta a
-      partir de `md`, com Total da aba e Alterados.
+- [ ] **Abas embaixo (padrão 7)**: `GridTabsBar` embaixo da tabela, no formato do SDK
+      (sem classes que o mudem), com Total da aba e Alterados.
 - [ ] **Filtros enxutos (padrão 8)**: fora do celular, depois da consulta a barra vira
       uma linha só, com `aria-label` nos campos; erro ou cancelamento volta à barra
       completa.
@@ -396,6 +424,10 @@ portadas em `src/regras.ts` e `src/conferencia.ts`.
       tour com 6 passos.
 - [ ] **Histórico**: cada Salvar com mudança aparece no botão Histórico com autor,
       data/hora e o antes → depois; Salvar sem mudança não gera linha.
+- [ ] **Trava de teste**: com `FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE=93` (Empresa
+      999), Salvar na 999 grava e Salvar em outra loja mostra "Este ambiente é de
+      teste…" (403), sem criar o cabeçalho do mês; sem a variável, qualquer loja do
+      escopo grava.
 - [ ] `gia validate` passa sem erros nem avisos.
 
 ---
@@ -421,13 +453,14 @@ portadas em `src/regras.ts` e `src/conferencia.ts`.
 
 ## 10. Riscos e mitigações
 
-| Risco                                     | Probabilidade | Impacto | Mitigação                                                                                              |
-| ----------------------------------------- | ------------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| Mês grande → muitas páginas do iFood      | Médio         | Médio   | 3 chamadas em paralelo, espera do `Retry-After` no 429, progresso, Cancelar, nova tentativa em 429/5xx |
-| Hub entrega token do iFood vencido        | Médio         | Alto    | Hub renova o token (6 h, sem refresh); erro 424 orienta avisar o admin                                 |
-| Gravação concorrente com a tela do legado | Médio         | Alto    | Desligar a tela do legado na virada (`INTEGRATION.md` §7)                                              |
-| Índices únicos ausentes no Maestro        | Baixo         | Alto    | Conferência listada no `INTEGRATION.md` §2.1                                                           |
-| Falha do banco no meio do Salvar          | Baixo         | Médio   | Transação única; nada parcial; mensagem curta e o preenchido fica na tela                              |
+| Risco                                     | Probabilidade | Impacto | Mitigação                                                                                                  |
+| ----------------------------------------- | ------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| Mês grande → muitas páginas do iFood      | Médio         | Médio   | Até 3 chamadas em paralelo (adaptativo), pausa pela cota do iFood, repetição imediata, progresso, Cancelar |
+| Hub entrega token do iFood vencido        | Médio         | Alto    | Hub renova o token (6 h, sem refresh); erro 424 orienta avisar o admin                                     |
+| Gravação concorrente com a tela do legado | Médio         | Alto    | Desligar a tela do legado na virada (`INTEGRATION.md` §7)                                                  |
+| Teste em homologação grava no DW real     | Alto          | Alto    | `FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE` em homologação: o Salvar só grava na Empresa de teste (999)        |
+| Índices únicos ausentes no Maestro        | Baixo         | Alto    | Conferência listada no `INTEGRATION.md` §2.1                                                               |
+| Falha do banco no meio do Salvar          | Baixo         | Médio   | Transação única; nada parcial; mensagem curta e o preenchido fica na tela                                  |
 
 ---
 
@@ -435,8 +468,8 @@ portadas em `src/regras.ts` e `src/conferencia.ts`.
 
 ### Outros módulos do GIA
 
-Nenhum. Usa o cadastro de operações/Empresas do portal (`ctx.operacoes()`,
-`ctx.empresas()`) e o hub de Credenciais.
+Nenhum. Usa o cadastro de Empresas e Operações do portal (`ctx.empresas()` e
+`ctx.operacoes()`) e o hub de Credenciais.
 
 ### Serviços externos
 
@@ -520,7 +553,7 @@ Passos cujo alvo ainda não está na tela aguardam em silêncio até ele aparece
 ### 2026-11-10 — v1.1
 
 - PRD no formato do template do SDK (Metadata, cenários, RF, RN, histórico).
-- Consulta em paralelo com exibição aos poucos; busca por operação; barra de totais
+- Consulta em paralelo com exibição aos poucos; busca por operação (até 12/11/2026); barra de totais
   com 4 principais + "Ver todos"; selo `3×`; abas embaixo; filtros enxutos.
 - Cards de diferença filtram a tabela em Online, Adquirentes, Recebimento e
   Cancelados pós; rótulo visível nos botões de ícone em tela de toque.
@@ -528,3 +561,34 @@ Passos cujo alvo ainda não está na tela aguardam em silêncio até ele aparece
   tentativa; modo de demonstração só no `gia dev`.
 - Histórico das gravações (RF-7, RN-14): tabela nova `ifood_fechamento.historico`
   no Maestro, gravada pelo Salvar na mesma transação, e o botão **Histórico**.
+
+### 2026-11-12 — v1.2
+
+- Loja = **Empresa**, juntando todas as operações (decisão do produto, igual ao
+  Fechamento iFood Diário): restaurantes dos vínculos IFOOD das operações no cadastro
+  do portal (SDK alpha.71; nada fixo no código, como pediu a devolutiva do Diário
+  0.2.4), 404 do iFood como aviso do restaurante, coluna Operação nos lançamentos, aviso de restaurante
+  negado pelo iFood. Chave no banco sem mudança (número da loja).
+- Mensagem padrão de erro (`MensagemErro`, a mesma do Diário) na consulta, no Salvar
+  (em modal) e no Histórico, com "Ver detalhes técnicos".
+
+### 2026-11-16 — v1.3 (módulo 0.1.1)
+
+- Retentativa pelo comportamento medido do iFood (RN-1b, RN-1c; testes em
+  `docs/teste-ifood-*`): repetição imediata da página vazia e do 429 com saldo, fila de
+  retentativa, pausa de todas as chamadas pela cota esgotada (com freio em saldo baixo)
+  e concorrência adaptativa de 3 a 1.
+- Faixa de progresso estável: sem cronômetro e sem aviso de pausa ou de ritmo.
+- Histórico na barra de filtros, sem linha de informação; mensagem de erro na posição
+  do estado vazio.
+- Revisão contra o SDK alpha.71: handlers recusam registro que não é Empresa (422),
+  carregando enquanto as permissões chegam, diálogo do dia com `useGiaForm` + Zod.
+
+### 2026-11-17 — v1.4 (módulo 0.1.2)
+
+- Devolutiva da 0.1.1: **trava de teste na gravação** (RF-5, C-trava).
+  Homologação e produção gravam no mesmo DW; com
+  `FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE` definida, o `salvar` só aceita a Empresa
+  de teste (403 para as outras, antes da transação).
+- Pendente antes de produção: criar `ifood_fechamento.historico` no DW (depois da
+  trava no ar) e combinar a data da virada do legado.

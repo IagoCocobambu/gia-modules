@@ -1,0 +1,29 @@
+{
+  "name": "fechamento-ifood-mensal",
+  "handlers": [
+    "historico",
+    "ledger",
+    "lojas",
+    "manual",
+    "salvar"
+  ],
+  "secrets_required": [
+    "GIA_SERVER_DATABASE_URL"
+  ],
+  "integracoes": [
+    "ifood"
+  ],
+  "public_routes": [],
+  "leitura_ampla": {
+    "permissao": "fechamento-ifood-mensal.ler-rede",
+    "handlers": []
+  },
+  "escrita_ecs": {
+    "permissao": "fechamento-ifood-mensal.ecs-tipo",
+    "handlers": []
+  },
+  "verify_jwt": true,
+  "auth_enforced_by": "generated-wrapper (GoTrue /auth/v1/user)",
+  "generated_by": "gia pack (server-codegen)",
+  "routing": "POST /functions/v1/<moduleId>/<handler> (fallback: body.__handler)"
+}

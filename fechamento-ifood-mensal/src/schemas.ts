@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
-// Formulários de linha das abas Extrato e Cancelados pós. Os valores ficam como
-// texto no formulário (é o que o input devolve) e viram número no envio. Os
-// limites de tamanho são os das colunas do banco do Maestro (schema
+// Formulários do diálogo do dia e das linhas das abas Extrato e Cancelados pós. Os
+// valores ficam como texto no formulário (é o que o input devolve) e viram número no
+// envio. Os limites de tamanho são os das colunas do banco do Maestro (schema
 // ifood_fechamento) — o handler `salvar` confere de novo.
 
 const dataObrigatoria = (rotulo: string) =>
@@ -23,6 +23,17 @@ export function paraNumero(v: string): number {
   const normal = t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t
   return Number(normal)
 }
+
+/**
+ * O dia de uma grade diária (Online / Adquirentes), no diálogo do dia. A previsão vem
+ * do DatePicker (AAAA-MM-DD ou vazia); o CB Desc. LOJA só existe na aba Online.
+ */
+export const diaSchema = z.object({
+  previsao: z.string(),
+  comentario: z.string(),
+  cbDescontosLoja: valor(false),
+})
+export type DiaForm = z.infer<typeof diaSchema>
 
 export const extratoSchema = z.object({
   dataMovimento: dataObrigatoria('a data do movimento'),

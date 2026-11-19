@@ -1,21 +1,46 @@
 import { useRef, type ReactNode } from 'react'
-import { Save, Search } from 'lucide-react'
+import { History, Save, Search } from 'lucide-react'
 import { Button, DatePicker, Field, ListHeader, SearchableSelect } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
 import { mesAtual, NOME_MODULO } from '../helpers'
-import type { OperacaoIfood } from '../types'
+import type { LojaIfood } from '../types'
 import { Dica } from './Dica'
 
+/**
+ * Operações da loja com iFood, para a descrição do seletor (igual ao Fechamento iFood
+ * Diário): "3 operações no iFood: cb, cbx, vst". Sem nenhuma: "Sem iFood".
+ */
+function resumoIfood(l: LojaIfood): string {
+  if (l.restaurantes.length === 0) return 'Sem iFood'
+  const ops = [
+    ...new Set(
+      l.restaurantes.map((r) => r.operacao.replace(/^\s*\d+\s*/, '').trim()).filter(Boolean)
+    ),
+  ]
+  if (ops.length === 0) {
+    const n = l.restaurantes.length
+    return `${n} ${n === 1 ? 'restaurante' : 'restaurantes'} no iFood`
+  }
+  return `${ops.length} ${ops.length === 1 ? 'operação' : 'operações'} no iFood: ${ops.join(', ')}`
+}
+
 export interface FiltrosValor {
-  /** `operacao_ref` da loja escolhida. */
-  operacaoRef: string | null
+  /** Empresa (loja) escolhida — o fechamento junta todas as operações dela. */
+  empresaId: number | null
   mes: string
+  /** TESTE: só esta operação da loja ("01 cb"); `null` = todas. */
+  operacao: string | null
 }
 
 interface FiltrosBarProps {
   value: FiltrosValor
   onValueChange: (value: FiltrosValor) => void
-  lojas: OperacaoIfood[]
+  lojas: LojaIfood[]
+  /**
+   * TESTE (`GIA_DEV_IFOOD_MENSAL_POR_OPERACAO=1` no servidor): mostra o seletor de UMA
+   * operação da loja, para comparar com o legado. Sem isso, a consulta junta todas.
+   */
+  porOperacao?: boolean
   lojasLoading: boolean
   consultando: boolean
   /** Dispara a consulta; `false` = recusada (loja não escolhida, nada mudou), os filtros ficam abertos. */
@@ -28,6 +53,15 @@ interface FiltrosBarProps {
   salvando: boolean
   alteracoesPendentes: boolean
   onSalvar: () => void
+  /**
+   * Abre o histórico das gravações do mês (só com o fechamento na tela). `undefined`
+   * = sem consulta: o botão não aparece.
+   */
+  onHistorico?: () => void
+  /** Histórico visível, mas desativado (consulta em andamento, nada chegou ainda). */
+  historicoDesativado?: boolean
+  /** Texto da dica do Histórico (ex.: "Última gravação: 10/11/2026, 17:46"). */
+  dicaHistorico?: string
   /** Layout de celular: campos empilhados, ocupando a largura toda. */
   compacto: boolean
   /**
@@ -42,6 +76,7 @@ export function FiltrosBar({
   value,
   onValueChange,
   lojas,
+  porOperacao = false,
   lojasLoading,
   consultando,
   onConsultar,
@@ -51,11 +86,37 @@ export function FiltrosBar({
   salvando,
   alteracoesPendentes,
   onSalvar,
+  onHistorico,
+  historicoDesativado = false,
+  dicaHistorico,
   compacto,
   enxuto = false,
   tituloExtra,
 }: FiltrosBarProps) {
   const set = (parcial: Partial<FiltrosValor>) => onValueChange({ ...value, ...parcial })
+  // TESTE: operações da loja escolhida, para consultar uma só.
+  const operacoesDaLoja = [
+    ...new Set(
+      (lojas.find((l) => l.empresaId === value.empresaId)?.restaurantes ?? []).map(
+        (r) => r.operacao
+      )
+    ),
+  ].filter(Boolean)
+  const seletorOperacao = (controle: Record<string, unknown>) => (
+    <SearchableSelect<string>
+      triggerProps={controle}
+      options={[
+        { value: '', label: 'Todas as operações' },
+        ...operacoesDaLoja.map((o) => ({ value: o, label: o })),
+      ]}
+      value={value.operacao ?? ''}
+      onChange={(o) => set({ operacao: o || null })}
+      placeholder="Todas as operações"
+      searchPlaceholder="Buscar operação…"
+      emptyLabel="Nenhuma operação"
+      disabled={lojasLoading || operacoesDaLoja.length === 0}
+    />
+  )
 
   // No celular, a consulta que começou recolhe os filtros (padrão dos módulos —
   // AGENTS.md da raiz): a tela fica para o resultado; a seta do cabeçalho reabre.
@@ -70,14 +131,12 @@ export function FiltrosBar({
     if (recolher && recolher.offsetParent !== null) recolher.click()
   }
 
-  // Mesma lista do Fechamento iFood Diário: todas as operações do escopo, com a
-  // situação embaixo do nome. A operação sem iFood é recusada ao Consultar.
+  // Mesma lista do Fechamento iFood Diário: as Empresas (lojas) do escopo, com as
+  // operações no iFood embaixo do nome. Loja sem iFood é recusada ao Consultar.
   const opcoes = lojas.map((l) => ({
-    value: l.ref,
+    value: l.empresaId,
     label: l.nome,
-    description:
-      [l.ativo ? null : 'Inativa', l.temIfood ? null : 'Sem iFood'].filter(Boolean).join(' · ') ||
-      undefined,
+    description: [l.ativo ? null : 'Inativa', resumoIfood(l)].filter(Boolean).join(' · '),
   }))
 
   const botaoConsultar = (
@@ -85,7 +144,7 @@ export function FiltrosBar({
       className={compacto ? 'h-11 w-full' : undefined}
       onClick={consultarERecolher}
       loading={consultando}
-      disabled={value.operacaoRef === null || (semAlteracao && !consultando)}
+      disabled={value.empresaId === null || (semAlteracao && !consultando)}
       data-tour="fechamento-ifood-mensal-consultar"
     >
       <Search className="h-4 w-4" /> Consultar
@@ -93,11 +152,11 @@ export function FiltrosBar({
   )
 
   const seletorLoja = (controle: Record<string, unknown>) => (
-    <SearchableSelect<string>
+    <SearchableSelect<number>
       triggerProps={controle}
       options={opcoes}
-      value={value.operacaoRef}
-      onChange={(operacaoRef) => set({ operacaoRef })}
+      value={value.empresaId}
+      onChange={(empresaId) => set({ empresaId, operacao: null })}
       placeholder={lojasLoading ? 'Carregando lojas…' : 'Selecione a loja'}
       searchPlaceholder="Buscar loja…"
       emptyLabel="Nenhuma loja disponível"
@@ -149,11 +208,26 @@ export function FiltrosBar({
     </Button>
   )
 
+  // Histórico das gravações do mês: ao lado do Salvar, só com o fechamento na tela.
+  const historico = onHistorico && (
+    <Dica content={dicaHistorico ?? 'Quem salvou o fechamento do mês, quando e o que mudou'}>
+      <Button
+        variant="ghost"
+        className={cn(compacto && 'h-11 w-full')}
+        onClick={onHistorico}
+        disabled={historicoDesativado}
+        data-tour="fechamento-ifood-mensal-historico"
+      >
+        <History className="h-4 w-4" /> Histórico
+      </Button>
+    </Dica>
+  )
+
   // Forma enxuta (depois da consulta, fora do celular): título e campos numa linha.
   if (enxuto && !compacto) {
     return (
       <div
-        className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border bg-surface px-3 py-2 transition-all duration-default ease-default"
+        className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border bg-surface px-3 py-2"
         data-tour="fechamento-ifood-mensal-filtros"
       >
         <div className="flex min-w-0 items-center gap-1">
@@ -162,9 +236,15 @@ export function FiltrosBar({
         </div>
         <div className="ml-auto flex min-w-0 items-center gap-2">
           <div className="w-56 min-w-0 shrink">{seletorLoja({ 'aria-label': 'Loja' })}</div>
+          {porOperacao && (
+            <div className="w-40 shrink-0">
+              {seletorOperacao({ 'aria-label': 'Operação (teste)' })}
+            </div>
+          )}
           <div className="w-44 shrink-0">{seletorMes({ 'aria-label': 'Mês de referência' })}</div>
           {consultar}
           {salvar}
+          {historico}
         </div>
       </div>
     )
@@ -187,6 +267,12 @@ export function FiltrosBar({
             {(controle) => seletorLoja(controle)}
           </Field>
 
+          {porOperacao && (
+            <Field label="Operação (teste)" className={compacto ? 'w-full' : 'w-48'}>
+              {(controle) => seletorOperacao(controle)}
+            </Field>
+          )}
+
           <Field label="Mês de referência" className={compacto ? 'w-full' : 'w-48'}>
             {(controle) => seletorMes(controle)}
           </Field>
@@ -194,6 +280,7 @@ export function FiltrosBar({
           <div className={compacto ? 'grid grid-cols-1 gap-2' : 'flex items-end gap-2'}>
             {consultar}
             {salvar}
+            {historico}
           </div>
         </div>
       </ListHeader>

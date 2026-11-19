@@ -1,0 +1,3699 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Comparação Fechamento iFood</title>
+    <style>
+      :root {
+        --bg: #f7f7f8;
+        --sup: #fff;
+        --tx: #18181b;
+        --mu: #6b7280;
+        --bd: #e4e4e7;
+        --ok: #15803d;
+        --okbg: #dcfce7;
+        --er: #b91c1c;
+        --erbg: #fef2f2;
+        --ac: #2563eb;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --bg: #0b0f17;
+          --sup: #121826;
+          --tx: #e5e7eb;
+          --mu: #9ca3af;
+          --bd: #263041;
+          --ok: #4ade80;
+          --okbg: #14532d55;
+          --er: #f87171;
+          --erbg: #7f1d1d33;
+          --ac: #60a5fa;
+        }
+      }
+      :root[data-theme='dark'] {
+        --bg: #0b0f17;
+        --sup: #121826;
+        --tx: #e5e7eb;
+        --mu: #9ca3af;
+        --bd: #263041;
+        --ok: #4ade80;
+        --okbg: #14532d55;
+        --er: #f87171;
+        --erbg: #7f1d1d33;
+        --ac: #60a5fa;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--tx);
+        font:
+          14px/1.5 system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
+      }
+      main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 24px 16px 64px;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 17px;
+        margin: 28px 0 8px;
+      }
+      h3 {
+        font-size: 15px;
+        margin: 20px 0 6px;
+      }
+      h4 {
+        font-size: 13px;
+        margin: 14px 0 4px;
+        color: var(--mu);
+      }
+      small {
+        color: var(--mu);
+        font-weight: 400;
+        font-size: 12px;
+      }
+      p,
+      li {
+        max-width: 75ch;
+      }
+      .card {
+        background: var(--sup);
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin: 12px 0;
+      }
+      .tw {
+        overflow-x: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        background: var(--sup);
+        border: 1px solid var(--bd);
+        border-radius: 8px;
+        font-variant-numeric: tabular-nums;
+      }
+      th,
+      td {
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--bd);
+        text-align: left;
+        white-space: nowrap;
+      }
+      th {
+        font-size: 12px;
+        color: var(--mu);
+        font-weight: 600;
+      }
+      .n {
+        text-align: right;
+      }
+      tr.ruim td {
+        background: var(--erbg);
+      }
+      .ok {
+        color: var(--ok);
+        font-weight: 600;
+      }
+      .dif {
+        color: var(--er);
+        font-weight: 600;
+      }
+      .na {
+        color: var(--mu);
+      }
+      details {
+        background: var(--sup);
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin: 10px 0;
+      }
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+      }
+      code {
+        font-size: 12px;
+        background: var(--bg);
+        padding: 1px 4px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fechamento iFood Mensal × planilha do financeiro</h1>
+      <p>
+        <small
+          >Loja 69.CB SÃO JOSÉ DOS CAMPOS · dezembro/2025 a abril/2026 · planilha "Fechamento mensal
+          iFood 2026_Ciclo Dez25-Mai26.xlsx" · módulo com o iFood real e o borderô do banco de
+          produção (só leitura) · gerado em 12/11/2026</small
+        >
+      </p>
+      <div class="card">
+        <b>Resumo.</b> O caixa da loja (borderô) bate 100% com a planilha em todos os dias dos 5
+        meses. Os números que vêm do iFood não batem: a planilha usa o
+        <b>arquivo de conciliação do iFood</b> (as linhas e a soma de abril do 69 cb são idênticas a
+        ele: 5.630 linhas, R$ 128.378,05) e o módulo monta os lançamentos a partir das vendas, com o
+        mapeamento do sistema antigo.
+      </div>
+      <h2>Visão geral por mês</h2>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="n">Valores iguais</th>
+              <th class="n">CB Online planilha</th>
+              <th class="n">CB Online módulo</th>
+              <th class="n">A depositar planilha</th>
+              <th class="n">A depositar módulo</th>
+              <th class="n">Diferença</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dezembro/2025</td>
+              <td class="n">7 de 43</td>
+              <td class="n">R$ 187.596,94</td>
+              <td class="n">R$ 187.596,94</td>
+              <td class="n">R$ 163.319,65</td>
+              <td class="n">R$ 141.076,92</td>
+              <td class="n dif">−R$ 22.242,73</td>
+            </tr>
+            <tr>
+              <td>Janeiro/2026</td>
+              <td class="n">6 de 43</td>
+              <td class="n">R$ 154.854,67</td>
+              <td class="n">R$ 154.854,67</td>
+              <td class="n">R$ 133.895,29</td>
+              <td class="n">R$ 118.761,99</td>
+              <td class="n dif">−R$ 15.133,30</td>
+            </tr>
+            <tr>
+              <td>Fevereiro/2026</td>
+              <td class="n">7 de 43</td>
+              <td class="n">R$ 136.353,81</td>
+              <td class="n">R$ 136.353,81</td>
+              <td class="n">R$ 118.302,14</td>
+              <td class="n">R$ 110.576,10</td>
+              <td class="n dif">−R$ 7.726,04</td>
+            </tr>
+            <tr>
+              <td>Março/2026</td>
+              <td class="n">7 de 43</td>
+              <td class="n">R$ 153.769,36</td>
+              <td class="n">R$ 153.769,36</td>
+              <td class="n">R$ 129.951,88</td>
+              <td class="n">R$ 120.327,21</td>
+              <td class="n dif">−R$ 9.624,67</td>
+            </tr>
+            <tr>
+              <td>Abril/2026</td>
+              <td class="n">9 de 43</td>
+              <td class="n">R$ 180.217,29</td>
+              <td class="n">R$ 180.217,29</td>
+              <td class="n">R$ 153.836,15</td>
+              <td class="n">R$ 148.646,64</td>
+              <td class="n dif">−R$ 5.189,51</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h2>Por que os números diferem</h2>
+      <ol>
+        <li>
+          <b>Promoções pagas pela loja descontadas do repasse.</b> O módulo põe "Incentivos
+          Promocionais Loja" no Valor a depositar (−R$ 27.175,53 em dez/25); na planilha essa linha
+          é zero, porque essas promoções não alteram o repasse (impacto no repasse = NÃO). É a maior
+          parte da diferença no Valor a depositar.
+        </li>
+        <li>
+          <b>Pacote de anúncios e Mensalidade não chegam ao módulo.</b> São lançamentos sem pedido,
+          que a consulta de vendas do iFood não devolve (dez/25: 64 lançamentos, −R$ 4.845,15).
+          Deixam "Taxas e Comissões" menor.
+        </li>
+        <li>
+          <b>Seis tipos de lançamento sem tradução</b> (<code>REFUND</code>,
+          <code>COMMISSION</code>, <code>BENEFIT_CHAIN</code>, <code>IFOOD_BENEFICES_FEE</code>,
+          <code>INDUSTRY_SUBSIDY</code>, <code>CONVENIENCE_FEE</code>): ficam fora de "Outros
+          Lançamentos", da promoção da rede e da indústria e da taxa de conveniência.
+        </li>
+        <li>
+          <b>ONLINE / ONLINE VR viram OFFLINE.</b> Em dez/25, 186 lançamentos ONLINE VR e 113 ONLINE
+          da planilha saem OFFLINE no módulo: a aba Adquirentes fica zerada e "iFood Online" fica
+          menor.
+        </li>
+        <li>
+          <b>"Promoção custeada pela loja no delivery"</b> é separada na planilha e juntada com
+          "pela loja" no módulo (504 lançamentos em dez/25): troca os valores de Descontos LOJA
+          Online e Offline.
+        </li>
+        <li>
+          <b>Cancelamento total/parcial</b>: o módulo marca tudo como Venda (as colunas de
+          cancelados ficam zeradas).
+        </li>
+      </ol>
+      <p>
+        <small
+          >Os restaurantes 69 cbx e 69 dani não tiveram vendas no período; juntar as operações da
+          loja não muda nada aqui. Não há fechamento gravado da loja 69 no banco nesses meses
+          (extrato, cancelados, breakdown), por isso Recebimento e Extrato não foram
+          comparados.</small
+        >
+      </p>
+      <h2>Detalhe por mês</h2>
+      <details open>
+        <summary>
+          Dezembro/2025
+          <small
+            >7 de 43 valores iguais · 6.487 lançamentos do iFood (69 cb: 5.626, 69 cbx: 0, 69 dani:
+            0, 69 vst: 861)</small
+          >
+        </summary>
+        <h3>Aba Online <small>2 de 18 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 187.786,94</td>
+                <td class="n">R$ 184.521,53</td>
+                <td class="n">−R$ 3.265,41</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (qtd)</td>
+                <td class="n">845</td>
+                <td class="n">831</td>
+                <td class="n">-14</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 4.164,89</td>
+                <td class="n">R$ 4.091,63</td>
+                <td class="n">−R$ 73,26</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Cancelados Total (R$)</td>
+                <td class="n">R$ 1.007,97</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 1.007,97</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Cancelados Parcial (R$)</td>
+                <td class="n">R$ 123,11</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 123,11</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção (rede)</td>
+                <td class="n">R$ 189,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 189,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD iFood Online</td>
+                <td class="n">R$ 187.786,94</td>
+                <td class="n">R$ 184.521,53</td>
+                <td class="n">−R$ 3.265,41</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online (borderô)</td>
+                <td class="n">R$ 187.596,94</td>
+                <td class="n">R$ 187.596,94</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 190,00</td>
+                <td class="n">−R$ 3.075,41</td>
+                <td class="n">−R$ 3.265,41</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos OFFLINE (R$)</td>
+                <td class="n">R$ 299,11</td>
+                <td class="n">R$ 527,19</td>
+                <td class="n">R$ 228,08</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos ONLINE VR (R$)</td>
+                <td class="n">R$ 154,82</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 154,82</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD Desconto iFood</td>
+                <td class="n">R$ 453,93</td>
+                <td class="n">R$ 527,19</td>
+                <td class="n">R$ 73,26</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Descontos iFood (borderô)</td>
+                <td class="n">R$ 453,93</td>
+                <td class="n">R$ 453,93</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Desconto iFood</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 73,26</td>
+                <td class="n">R$ 73,26</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online (R$)</td>
+                <td class="n">R$ 25.363,31</td>
+                <td class="n">R$ 24.581,28</td>
+                <td class="n">−R$ 782,03</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Offline e VR (R$)</td>
+                <td class="n">R$ 1.003,99</td>
+                <td class="n">R$ 2.594,25</td>
+                <td class="n">R$ 1.590,26</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD Desconto LOJA</td>
+                <td class="n">R$ 26.367,30</td>
+                <td class="n">R$ 27.175,53</td>
+                <td class="n">R$ 808,23</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Total</td>
+                <td class="n">R$ 190,00</td>
+                <td class="n">−R$ 3.002,15</td>
+                <td class="n">−R$ 3.192,15</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Aba Adquirentes <small>1 de 6 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 6.233,31</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 6.233,31</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 154,82</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 154,82</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA VR (R$)</td>
+                <td class="n">R$ 154,82</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 154,82</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD iFood ONLINE VR</td>
+                <td class="n">R$ 6.078,49</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 6.078,49</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Adquirentes online caixa (borderô)</td>
+                <td class="n">R$ 6.083,49</td>
+                <td class="n">R$ 6.083,49</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Total</td>
+                <td class="n">−R$ 5,00</td>
+                <td class="n">−R$ 6.083,49</td>
+                <td class="n">−R$ 6.078,49</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Aba Conferência <small>4 de 19 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>Recebido Via iFood</td>
+                <td class="n">R$ 188.104,28</td>
+                <td class="n">R$ 187.693,28</td>
+                <td class="n">−R$ 411,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Pedidos com pagamento via iFood</td>
+                <td class="n">R$ 184.968,59</td>
+                <td class="n">R$ 184.968,59</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Promoção custeada pelo iFood</td>
+                <td class="n">R$ 4.618,82</td>
+                <td class="n">R$ 4.618,82</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela rede</td>
+                <td class="n">R$ 196,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 196,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela Indústria</td>
+                <td class="n">R$ 215,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 215,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Taxa de serviço iFood cobrada do cliente</td>
+                <td class="n">−R$ 1.894,13</td>
+                <td class="n">−R$ 1.894,13</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Incentivos Promocionais Loja</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 27.175,53</td>
+                <td class="n">−R$ 27.175,53</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela loja</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 27.175,53</td>
+                <td class="n">−R$ 27.175,53</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxas e Comissões</td>
+                <td class="n">−R$ 24.712,26</td>
+                <td class="n">−R$ 19.440,83</td>
+                <td class="n">R$ 5.271,43</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Comissão iFood (7%)</td>
+                <td class="n">−R$ 13.825,30</td>
+                <td class="n">−R$ 13.815,71</td>
+                <td class="n">R$ 9,59</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxa de transação (3%)</td>
+                <td class="n">−R$ 5.634,30</td>
+                <td class="n">−R$ 5.625,12</td>
+                <td class="n">R$ 9,18</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Comissão o iFood</td>
+                <td class="n">−R$ 407,51</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 407,51</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Pacote de anúncios</td>
+                <td class="n">−R$ 4.645,15</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 4.645,15</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Mensalidade</td>
+                <td class="n">−R$ 200,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 200,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Outros Lançamentos</td>
+                <td class="n">−R$ 72,37</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 72,37</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Ressarcimento de pedido cancelado</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Reembolso taxa de serviço iFood cobrada do cliente</td>
+                <td class="n">R$ 4,83</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 4,83</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxa de conveniência por pagamento parcelado</td>
+                <td class="n">−R$ 86,38</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 86,38</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Valor a depositar</td>
+                <td class="n">R$ 163.319,65</td>
+                <td class="n">R$ 141.076,92</td>
+                <td class="n">−R$ 22.242,73</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Amostra de dias</h3>
+        <h4>01/12/2025</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>iFood Online</td>
+                <td class="n">R$ 4.325,42</td>
+                <td class="n">R$ 4.325,42</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 4.325,42</td>
+                <td class="n">R$ 4.325,42</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 36,00</td>
+                <td class="n">R$ 36,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 385,29</td>
+                <td class="n">R$ 385,29</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 119,90</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 119,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 119,90</td>
+                <td class="n">R$ 119,90</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>08/12/2025</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>iFood Online</td>
+                <td class="n">R$ 4.452,84</td>
+                <td class="n">R$ 4.452,84</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 4.459,84</td>
+                <td class="n">R$ 4.459,84</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td># Online</td>
+                <td class="n">−R$ 7,00</td>
+                <td class="n">−R$ 7,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 156,91</td>
+                <td class="n">R$ 156,91</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 318,86</td>
+                <td class="n">R$ 318,86</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>15/12/2025</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 4.259,87</td>
+                <td class="n">R$ 4.131,91</td>
+                <td class="n">−R$ 127,96</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 4.259,87</td>
+                <td class="n">R$ 4.259,87</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 127,96</td>
+                <td class="n">−R$ 127,96</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 205,23</td>
+                <td class="n">R$ 194,77</td>
+                <td class="n">−R$ 10,46</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 1.404,32</td>
+                <td class="n">R$ 1.286,38</td>
+                <td class="n">−R$ 117,94</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>22/12/2025</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 6.423,45</td>
+                <td class="n">R$ 6.197,48</td>
+                <td class="n">−R$ 225,97</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 6.423,45</td>
+                <td class="n">R$ 6.423,45</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 225,97</td>
+                <td class="n">−R$ 225,97</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 279,83</td>
+                <td class="n">R$ 266,38</td>
+                <td class="n">−R$ 13,45</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 992,55</td>
+                <td class="n">R$ 982,11</td>
+                <td class="n">−R$ 10,44</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 449,25</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 449,25</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 441,80</td>
+                <td class="n">R$ 441,80</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>31/12/2025</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 19.136,17</td>
+                <td class="n">R$ 18.557,27</td>
+                <td class="n">−R$ 578,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 18.799,17</td>
+                <td class="n">R$ 18.799,17</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 337,00</td>
+                <td class="n">−R$ 241,90</td>
+                <td class="n">−R$ 578,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 26,00</td>
+                <td class="n">R$ 26,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 858,90</td>
+                <td class="n">R$ 816,90</td>
+                <td class="n">−R$ 42,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 486,91</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 486,91</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 486,91</td>
+                <td class="n">R$ 486,91</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <details>
+        <summary>
+          Janeiro/2026
+          <small
+            >6 de 43 valores iguais · 4.974 lançamentos do iFood (69 cb: 4.308, 69 cbx: 0, 69 dani:
+            0, 69 vst: 666)</small
+          >
+        </summary>
+        <h3>Aba Online <small>2 de 18 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 154.517,67</td>
+                <td class="n">R$ 151.810,38</td>
+                <td class="n">−R$ 2.707,29</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (qtd)</td>
+                <td class="n">530</td>
+                <td class="n">518</td>
+                <td class="n">-12</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 2.678,37</td>
+                <td class="n">R$ 2.604,21</td>
+                <td class="n">−R$ 74,16</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Cancelados Total (R$)</td>
+                <td class="n">R$ 2.281,53</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 2.281,53</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Cancelados Parcial (R$)</td>
+                <td class="n">R$ 645,66</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 645,66</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção (rede)</td>
+                <td class="n">R$ 182,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 182,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD iFood Online</td>
+                <td class="n">R$ 154.517,67</td>
+                <td class="n">R$ 151.810,38</td>
+                <td class="n">−R$ 2.707,29</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online (borderô)</td>
+                <td class="n">R$ 154.854,67</td>
+                <td class="n">R$ 154.854,67</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">−R$ 337,00</td>
+                <td class="n">−R$ 3.044,29</td>
+                <td class="n">−R$ 2.707,29</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos OFFLINE (R$)</td>
+                <td class="n">R$ 7,95</td>
+                <td class="n">R$ 176,96</td>
+                <td class="n">R$ 169,01</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos ONLINE VR (R$)</td>
+                <td class="n">R$ 94,85</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 94,85</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD Desconto iFood</td>
+                <td class="n">R$ 102,80</td>
+                <td class="n">R$ 176,96</td>
+                <td class="n">R$ 74,16</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Descontos iFood (borderô)</td>
+                <td class="n">R$ 102,80</td>
+                <td class="n">R$ 102,80</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Desconto iFood</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 74,16</td>
+                <td class="n">R$ 74,16</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online (R$)</td>
+                <td class="n">R$ 18.645,49</td>
+                <td class="n">R$ 18.126,27</td>
+                <td class="n">−R$ 519,22</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Offline e VR (R$)</td>
+                <td class="n">R$ 28,85</td>
+                <td class="n">R$ 1.609,41</td>
+                <td class="n">R$ 1.580,56</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD Desconto LOJA</td>
+                <td class="n">R$ 18.674,34</td>
+                <td class="n">R$ 19.735,68</td>
+                <td class="n">R$ 1.061,34</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Total</td>
+                <td class="n">−R$ 337,00</td>
+                <td class="n">−R$ 2.970,13</td>
+                <td class="n">−R$ 2.633,13</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Aba Adquirentes <small>1 de 6 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 6.181,88</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 6.181,88</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 94,85</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 94,85</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA VR (R$)</td>
+                <td class="n">R$ 94,85</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 94,85</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD iFood ONLINE VR</td>
+                <td class="n">R$ 6.087,03</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 6.087,03</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Adquirentes online caixa (borderô)</td>
+                <td class="n">R$ 6.087,03</td>
+                <td class="n">R$ 6.087,03</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Total</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 6.087,03</td>
+                <td class="n">−R$ 6.087,03</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Aba Conferência <small>3 de 19 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>Recebido Via iFood</td>
+                <td class="n">R$ 154.422,04</td>
+                <td class="n">R$ 154.238,24</td>
+                <td class="n">−R$ 183,80</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Pedidos com pagamento via iFood</td>
+                <td class="n">R$ 153.006,00</td>
+                <td class="n">R$ 153.006,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Promoção custeada pelo iFood</td>
+                <td class="n">R$ 2.781,17</td>
+                <td class="n">R$ 2.781,17</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela rede</td>
+                <td class="n">R$ 182,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 182,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela Indústria</td>
+                <td class="n">R$ 1,80</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 1,80</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Taxa de serviço iFood cobrada do cliente</td>
+                <td class="n">−R$ 1.548,93</td>
+                <td class="n">−R$ 1.548,93</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Incentivos Promocionais Loja</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 19.757,68</td>
+                <td class="n">−R$ 19.757,68</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela loja</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 19.757,68</td>
+                <td class="n">−R$ 19.757,68</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxas e Comissões</td>
+                <td class="n">−R$ 20.756,07</td>
+                <td class="n">−R$ 15.718,57</td>
+                <td class="n">R$ 5.037,50</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Comissão iFood (7%)</td>
+                <td class="n">−R$ 11.143,05</td>
+                <td class="n">−R$ 11.092,82</td>
+                <td class="n">R$ 50,23</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxa de transação (3%)</td>
+                <td class="n">−R$ 4.628,97</td>
+                <td class="n">−R$ 4.625,75</td>
+                <td class="n">R$ 3,22</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Comissão o iFood</td>
+                <td class="n">−R$ 134,05</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 134,05</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Pacote de anúncios</td>
+                <td class="n">−R$ 4.650,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 4.650,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Mensalidade</td>
+                <td class="n">−R$ 200,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 200,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Outros Lançamentos</td>
+                <td class="n">R$ 229,32</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 229,32</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Ressarcimento de pedido cancelado</td>
+                <td class="n">R$ 306,64</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 306,64</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Reembolso taxa de serviço iFood cobrada do cliente</td>
+                <td class="n">R$ 2,22</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 2,22</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxa de conveniência por pagamento parcelado</td>
+                <td class="n">−R$ 71,80</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 71,80</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Valor a depositar</td>
+                <td class="n">R$ 133.895,29</td>
+                <td class="n">R$ 118.761,99</td>
+                <td class="n">−R$ 15.133,30</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Amostra de dias</h3>
+        <h4>01/01/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 12.305,75</td>
+                <td class="n">R$ 11.768,59</td>
+                <td class="n">−R$ 537,16</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 12.642,75</td>
+                <td class="n">R$ 12.642,75</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">−R$ 337,00</td>
+                <td class="n">−R$ 874,16</td>
+                <td class="n">−R$ 537,16</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 294,62</td>
+                <td class="n">R$ 279,22</td>
+                <td class="n">−R$ 15,40</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 746,30</td>
+                <td class="n">R$ 692,90</td>
+                <td class="n">−R$ 53,40</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 490,95</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 490,95</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 483,50</td>
+                <td class="n">R$ 483,50</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>08/01/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 3.286,29</td>
+                <td class="n">R$ 3.124,48</td>
+                <td class="n">−R$ 161,81</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 3.286,29</td>
+                <td class="n">R$ 3.286,29</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 161,81</td>
+                <td class="n">−R$ 161,81</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 45,90</td>
+                <td class="n">R$ 40,89</td>
+                <td class="n">−R$ 5,01</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 811,92</td>
+                <td class="n">R$ 710,93</td>
+                <td class="n">−R$ 100,99</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 180,90</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 180,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 180,90</td>
+                <td class="n">R$ 180,90</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>15/01/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 4.326,71</td>
+                <td class="n">R$ 4.195,01</td>
+                <td class="n">−R$ 131,70</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 4.326,71</td>
+                <td class="n">R$ 4.326,71</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 131,70</td>
+                <td class="n">−R$ 131,70</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 105,05</td>
+                <td class="n">R$ 105,05</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 568,70</td>
+                <td class="n">R$ 568,70</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 175,90</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 175,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 175,90</td>
+                <td class="n">R$ 175,90</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>22/01/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 4.710,52</td>
+                <td class="n">R$ 4.441,91</td>
+                <td class="n">−R$ 268,61</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 4.710,52</td>
+                <td class="n">R$ 4.710,52</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 268,61</td>
+                <td class="n">−R$ 268,61</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 210,94</td>
+                <td class="n">R$ 202,94</td>
+                <td class="n">−R$ 8,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 373,78</td>
+                <td class="n">R$ 348,79</td>
+                <td class="n">−R$ 24,99</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>31/01/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 6.790,43</td>
+                <td class="n">R$ 6.754,53</td>
+                <td class="n">−R$ 35,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 6.790,43</td>
+                <td class="n">R$ 6.790,43</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 35,90</td>
+                <td class="n">−R$ 35,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 126,02</td>
+                <td class="n">R$ 126,02</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 3.137,18</td>
+                <td class="n">R$ 3.137,18</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 278,90</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 278,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 261,90</td>
+                <td class="n">R$ 261,90</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <details>
+        <summary>
+          Fevereiro/2026
+          <small
+            >7 de 43 valores iguais · 4.700 lançamentos do iFood (69 cb: 3.939, 69 cbx: 0, 69 dani:
+            0, 69 vst: 761)</small
+          >
+        </summary>
+        <h3>Aba Online <small>2 de 18 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 136.353,81</td>
+                <td class="n">R$ 134.467,16</td>
+                <td class="n">−R$ 1.886,65</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (qtd)</td>
+                <td class="n">598</td>
+                <td class="n">585</td>
+                <td class="n">-13</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 3.273,94</td>
+                <td class="n">R$ 3.188,38</td>
+                <td class="n">−R$ 85,56</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Cancelados Total (R$)</td>
+                <td class="n">R$ 1.351,13</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 1.351,13</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Cancelados Parcial (R$)</td>
+                <td class="n">R$ 87,21</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 87,21</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção (rede)</td>
+                <td class="n">R$ 119,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 119,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD iFood Online</td>
+                <td class="n">R$ 136.353,81</td>
+                <td class="n">R$ 134.467,16</td>
+                <td class="n">−R$ 1.886,65</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online (borderô)</td>
+                <td class="n">R$ 136.353,81</td>
+                <td class="n">R$ 136.353,81</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 1.886,65</td>
+                <td class="n">−R$ 1.886,65</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos OFFLINE (R$)</td>
+                <td class="n">R$ 7,00</td>
+                <td class="n">R$ 177,97</td>
+                <td class="n">R$ 170,97</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos ONLINE VR (R$)</td>
+                <td class="n">R$ 85,41</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 85,41</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD Desconto iFood</td>
+                <td class="n">R$ 92,41</td>
+                <td class="n">R$ 177,97</td>
+                <td class="n">R$ 85,56</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Descontos iFood (borderô)</td>
+                <td class="n">R$ 92,41</td>
+                <td class="n">R$ 92,41</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Desconto iFood</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 85,56</td>
+                <td class="n">R$ 85,56</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online (R$)</td>
+                <td class="n">R$ 11.692,26</td>
+                <td class="n">R$ 11.486,47</td>
+                <td class="n">−R$ 205,79</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Offline e VR (R$)</td>
+                <td class="n">R$ 17,00</td>
+                <td class="n">R$ 666,23</td>
+                <td class="n">R$ 649,23</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD Desconto LOJA</td>
+                <td class="n">R$ 11.709,26</td>
+                <td class="n">R$ 12.152,70</td>
+                <td class="n">R$ 443,44</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Total</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 1.801,09</td>
+                <td class="n">−R$ 1.801,09</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Aba Adquirentes <small>1 de 6 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 4.032,68</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 4.032,68</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 85,41</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 85,41</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA VR (R$)</td>
+                <td class="n">R$ 85,41</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 85,41</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD iFood ONLINE VR</td>
+                <td class="n">R$ 3.947,27</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 3.947,27</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Adquirentes online caixa (borderô)</td>
+                <td class="n">R$ 3.947,27</td>
+                <td class="n">R$ 3.947,27</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Total</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 3.947,27</td>
+                <td class="n">−R$ 3.947,27</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Aba Conferência <small>4 de 19 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>Recebido Via iFood</td>
+                <td class="n">R$ 136.626,32</td>
+                <td class="n">R$ 136.507,32</td>
+                <td class="n">−R$ 119,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Pedidos com pagamento via iFood</td>
+                <td class="n">R$ 134.513,81</td>
+                <td class="n">R$ 134.513,81</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Promoção custeada pelo iFood</td>
+                <td class="n">R$ 3.366,35</td>
+                <td class="n">R$ 3.366,35</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela rede</td>
+                <td class="n">R$ 119,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 119,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Promoção custeada pela Indústria</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Taxa de serviço iFood cobrada do cliente</td>
+                <td class="n">−R$ 1.372,84</td>
+                <td class="n">−R$ 1.372,84</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Incentivos Promocionais Loja</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 12.152,70</td>
+                <td class="n">−R$ 12.152,70</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela loja</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 12.152,70</td>
+                <td class="n">−R$ 12.152,70</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxas e Comissões</td>
+                <td class="n">−R$ 18.513,76</td>
+                <td class="n">−R$ 13.778,52</td>
+                <td class="n">R$ 4.735,24</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Comissão iFood (7%)</td>
+                <td class="n">−R$ 9.564,83</td>
+                <td class="n">−R$ 9.684,24</td>
+                <td class="n">−R$ 119,41</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxa de transação (3%)</td>
+                <td class="n">−R$ 4.097,45</td>
+                <td class="n">−R$ 4.094,28</td>
+                <td class="n">R$ 3,17</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Comissão o iFood</td>
+                <td class="n">−R$ 283,58</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 283,58</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Pacote de anúncios</td>
+                <td class="n">−R$ 4.200,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 4.200,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Mensalidade</td>
+                <td class="n">−R$ 200,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 200,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Outros Lançamentos</td>
+                <td class="n">R$ 189,58</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 189,58</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Ressarcimento de pedido cancelado</td>
+                <td class="n">R$ 383,82</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 383,82</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Reembolso taxa de serviço iFood cobrada do cliente</td>
+                <td class="n">R$ 1,35</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 1,35</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxa de conveniência por pagamento parcelado</td>
+                <td class="n">−R$ 202,76</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 202,76</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Valor a depositar</td>
+                <td class="n">R$ 118.302,14</td>
+                <td class="n">R$ 110.576,10</td>
+                <td class="n">−R$ 7.726,04</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Amostra de dias</h3>
+        <h4>01/02/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 8.093,01</td>
+                <td class="n">R$ 7.768,11</td>
+                <td class="n">−R$ 324,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 8.093,01</td>
+                <td class="n">R$ 8.093,01</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 324,90</td>
+                <td class="n">−R$ 324,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 87,00</td>
+                <td class="n">R$ 65,00</td>
+                <td class="n">−R$ 22,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 711,50</td>
+                <td class="n">R$ 649,70</td>
+                <td class="n">−R$ 61,80</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>08/02/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>iFood Online</td>
+                <td class="n">R$ 6.939,20</td>
+                <td class="n">R$ 6.939,20</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 6.939,20</td>
+                <td class="n">R$ 6.939,20</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 183,37</td>
+                <td class="n">R$ 183,37</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 314,03</td>
+                <td class="n">R$ 314,03</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>15/02/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 5.952,29</td>
+                <td class="n">R$ 5.968,34</td>
+                <td class="n">R$ 16,05</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 5.952,29</td>
+                <td class="n">R$ 5.952,29</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 16,05</td>
+                <td class="n">R$ 16,05</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 20,00</td>
+                <td class="n">R$ 20,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 169,00</td>
+                <td class="n">R$ 169,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>22/02/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>iFood Online</td>
+                <td class="n">R$ 5.582,24</td>
+                <td class="n">R$ 5.582,24</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 5.582,24</td>
+                <td class="n">R$ 5.582,24</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 112,31</td>
+                <td class="n">R$ 112,31</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 391,78</td>
+                <td class="n">R$ 391,78</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 51,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 51,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 49,00</td>
+                <td class="n">R$ 49,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>28/02/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>iFood Online</td>
+                <td class="n">R$ 6.844,17</td>
+                <td class="n">R$ 6.844,17</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 6.844,17</td>
+                <td class="n">R$ 6.844,17</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 289,45</td>
+                <td class="n">R$ 289,45</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 1.125,94</td>
+                <td class="n">R$ 1.125,94</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 420,21</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 420,21</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 397,65</td>
+                <td class="n">R$ 397,65</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <details>
+        <summary>
+          Março/2026
+          <small
+            >7 de 43 valores iguais · 5.713 lançamentos do iFood (69 cb: 4.939, 69 cbx: 0, 69 dani:
+            0, 69 vst: 774)</small
+          >
+        </summary>
+        <h3>Aba Online <small>2 de 18 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 153.769,36</td>
+                <td class="n">R$ 151.255,73</td>
+                <td class="n">−R$ 2.513,63</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (qtd)</td>
+                <td class="n">778</td>
+                <td class="n">763</td>
+                <td class="n">-15</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 4.867,31</td>
+                <td class="n">R$ 4.791,69</td>
+                <td class="n">−R$ 75,62</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Cancelados Total (R$)</td>
+                <td class="n">R$ 2.458,76</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 2.458,76</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Cancelados Parcial (R$)</td>
+                <td class="n">R$ 288,75</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 288,75</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção (rede)</td>
+                <td class="n">R$ 147,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 147,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD iFood Online</td>
+                <td class="n">R$ 153.769,36</td>
+                <td class="n">R$ 151.255,73</td>
+                <td class="n">−R$ 2.513,63</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online (borderô)</td>
+                <td class="n">R$ 153.769,36</td>
+                <td class="n">R$ 153.769,36</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 2.513,63</td>
+                <td class="n">−R$ 2.513,63</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos OFFLINE (R$)</td>
+                <td class="n">R$ 15,31</td>
+                <td class="n">R$ 185,88</td>
+                <td class="n">R$ 170,57</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos ONLINE VR (R$)</td>
+                <td class="n">R$ 94,95</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 94,95</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD Desconto iFood</td>
+                <td class="n">R$ 110,26</td>
+                <td class="n">R$ 185,88</td>
+                <td class="n">R$ 75,62</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Descontos iFood (borderô)</td>
+                <td class="n">R$ 110,26</td>
+                <td class="n">R$ 110,26</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Desconto iFood</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 75,62</td>
+                <td class="n">R$ 75,62</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online (R$)</td>
+                <td class="n">R$ 17.196,13</td>
+                <td class="n">R$ 17.031,17</td>
+                <td class="n">−R$ 164,96</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Offline e VR (R$)</td>
+                <td class="n">R$ 4,99</td>
+                <td class="n">R$ 728,92</td>
+                <td class="n">R$ 723,93</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD Desconto LOJA</td>
+                <td class="n">R$ 17.201,12</td>
+                <td class="n">R$ 17.760,09</td>
+                <td class="n">R$ 558,97</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Total</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 2.438,01</td>
+                <td class="n">−R$ 2.438,01</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Aba Adquirentes <small>1 de 6 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 4.290,43</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 4.290,43</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 94,95</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 94,95</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA VR (R$)</td>
+                <td class="n">R$ 94,95</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 94,95</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD iFood ONLINE VR</td>
+                <td class="n">R$ 4.195,48</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 4.195,48</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Adquirentes online caixa (borderô)</td>
+                <td class="n">R$ 4.195,48</td>
+                <td class="n">R$ 4.195,48</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Total</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 4.195,48</td>
+                <td class="n">−R$ 4.195,48</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Aba Conferência <small>4 de 19 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>Recebido Via iFood</td>
+                <td class="n">R$ 153.750,28</td>
+                <td class="n">R$ 153.589,28</td>
+                <td class="n">−R$ 161,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Pedidos com pagamento via iFood</td>
+                <td class="n">R$ 150.303,05</td>
+                <td class="n">R$ 150.303,05</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Promoção custeada pelo iFood</td>
+                <td class="n">R$ 4.977,57</td>
+                <td class="n">R$ 4.977,57</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela rede</td>
+                <td class="n">R$ 161,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 161,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Promoção custeada pela Indústria</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Taxa de serviço iFood cobrada do cliente</td>
+                <td class="n">−R$ 1.691,34</td>
+                <td class="n">−R$ 1.691,34</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Incentivos Promocionais Loja</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 17.760,09</td>
+                <td class="n">−R$ 17.760,09</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela loja</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 17.760,09</td>
+                <td class="n">−R$ 17.760,09</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxas e Comissões</td>
+                <td class="n">−R$ 23.860,21</td>
+                <td class="n">−R$ 15.501,98</td>
+                <td class="n">R$ 8.358,23</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Comissão iFood (7%)</td>
+                <td class="n">−R$ 10.918,68</td>
+                <td class="n">−R$ 10.896,22</td>
+                <td class="n">R$ 22,46</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxa de transação (3%)</td>
+                <td class="n">−R$ 4.608,74</td>
+                <td class="n">−R$ 4.605,76</td>
+                <td class="n">R$ 2,98</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Comissão o iFood</td>
+                <td class="n">−R$ 135,75</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 135,75</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Pacote de anúncios</td>
+                <td class="n">−R$ 7.997,04</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 7.997,04</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Mensalidade</td>
+                <td class="n">−R$ 200,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 200,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Outros Lançamentos</td>
+                <td class="n">R$ 61,81</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 61,81</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Ressarcimento de pedido cancelado</td>
+                <td class="n">R$ 136,62</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 136,62</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Reembolso taxa de serviço iFood cobrada do cliente</td>
+                <td class="n">R$ 1,47</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 1,47</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxa de conveniência por pagamento parcelado</td>
+                <td class="n">−R$ 79,26</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 79,26</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Valor a depositar</td>
+                <td class="n">R$ 129.951,88</td>
+                <td class="n">R$ 120.327,21</td>
+                <td class="n">−R$ 9.624,67</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Amostra de dias</h3>
+        <h4>01/03/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>iFood Online</td>
+                <td class="n">R$ 9.450,39</td>
+                <td class="n">R$ 9.450,39</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 9.450,39</td>
+                <td class="n">R$ 9.450,39</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 344,59</td>
+                <td class="n">R$ 344,59</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 649,72</td>
+                <td class="n">R$ 649,72</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 558,70</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 558,70</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 547,70</td>
+                <td class="n">R$ 547,70</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>08/03/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>iFood Online</td>
+                <td class="n">R$ 11.690,64</td>
+                <td class="n">R$ 11.690,64</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 11.690,64</td>
+                <td class="n">R$ 11.690,64</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 253,73</td>
+                <td class="n">R$ 253,73</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 668,70</td>
+                <td class="n">R$ 668,70</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 503,90</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 503,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 496,51</td>
+                <td class="n">R$ 496,51</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>15/03/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 9.646,66</td>
+                <td class="n">R$ 9.310,17</td>
+                <td class="n">−R$ 336,49</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 9.646,66</td>
+                <td class="n">R$ 9.646,66</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 336,49</td>
+                <td class="n">−R$ 336,49</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 357,41</td>
+                <td class="n">R$ 348,41</td>
+                <td class="n">−R$ 9,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 688,45</td>
+                <td class="n">R$ 651,45</td>
+                <td class="n">−R$ 37,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>22/03/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 8.540,54</td>
+                <td class="n">R$ 8.372,89</td>
+                <td class="n">−R$ 167,65</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 8.540,54</td>
+                <td class="n">R$ 8.540,54</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 167,65</td>
+                <td class="n">−R$ 167,65</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 241,70</td>
+                <td class="n">R$ 241,70</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 614,87</td>
+                <td class="n">R$ 614,87</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 128,90</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 128,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 126,90</td>
+                <td class="n">R$ 126,90</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>31/03/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 4.712,82</td>
+                <td class="n">R$ 4.578,12</td>
+                <td class="n">−R$ 134,70</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 4.712,82</td>
+                <td class="n">R$ 4.712,82</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 134,70</td>
+                <td class="n">−R$ 134,70</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 116,17</td>
+                <td class="n">R$ 116,17</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 195,59</td>
+                <td class="n">R$ 175,59</td>
+                <td class="n">−R$ 20,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 202,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 202,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 200,00</td>
+                <td class="n">R$ 200,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <details>
+        <summary>
+          Abril/2026
+          <small
+            >9 de 43 valores iguais · 6.561 lançamentos do iFood (69 cb: 5.599, 69 cbx: 0, 69 dani:
+            0, 69 vst: 962)</small
+          >
+        </summary>
+        <h3>Aba Online <small>3 de 18 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 180.217,29</td>
+                <td class="n">R$ 177.852,38</td>
+                <td class="n">−R$ 2.364,91</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (qtd)</td>
+                <td class="n">871</td>
+                <td class="n">860</td>
+                <td class="n">-11</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 5.363,72</td>
+                <td class="n">R$ 5.282,72</td>
+                <td class="n">−R$ 81,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Cancelados Total (R$)</td>
+                <td class="n">R$ 1.882,08</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 1.882,08</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Cancelados Parcial (R$)</td>
+                <td class="n">R$ 371,71</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 371,71</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Promoção (rede)</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD iFood Online</td>
+                <td class="n">R$ 180.217,29</td>
+                <td class="n">R$ 177.852,38</td>
+                <td class="n">−R$ 2.364,91</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online (borderô)</td>
+                <td class="n">R$ 180.217,29</td>
+                <td class="n">R$ 180.217,29</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 2.364,91</td>
+                <td class="n">−R$ 2.364,91</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos OFFLINE (R$)</td>
+                <td class="n">R$ 21,06</td>
+                <td class="n">R$ 285,08</td>
+                <td class="n">R$ 264,02</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos ONLINE VR (R$)</td>
+                <td class="n">R$ 183,02</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 183,02</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD Desconto iFood</td>
+                <td class="n">R$ 204,08</td>
+                <td class="n">R$ 285,08</td>
+                <td class="n">R$ 81,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Descontos iFood (borderô)</td>
+                <td class="n">R$ 204,08</td>
+                <td class="n">R$ 204,08</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Desconto iFood</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 81,00</td>
+                <td class="n">R$ 81,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online (R$)</td>
+                <td class="n">R$ 12.616,33</td>
+                <td class="n">R$ 12.413,65</td>
+                <td class="n">−R$ 202,68</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Offline e VR (R$)</td>
+                <td class="n">R$ 67,84</td>
+                <td class="n">R$ 831,18</td>
+                <td class="n">R$ 763,34</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD Desconto LOJA</td>
+                <td class="n">R$ 12.684,17</td>
+                <td class="n">R$ 13.244,83</td>
+                <td class="n">R$ 560,66</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Total</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 2.283,91</td>
+                <td class="n">−R$ 2.283,91</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Aba Adquirentes <small>1 de 6 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 6.592,18</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 6.592,18</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 183,02</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 183,02</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA VR (R$)</td>
+                <td class="n">R$ 183,02</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 183,02</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>SD iFood ONLINE VR</td>
+                <td class="n">R$ 6.409,16</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 6.409,16</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Adquirentes online caixa (borderô)</td>
+                <td class="n">R$ 6.409,16</td>
+                <td class="n">R$ 6.409,16</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Total</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 6.409,16</td>
+                <td class="n">−R$ 6.409,16</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Aba Conferência <small>5 de 19 iguais</small></h3>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do mês</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>Recebido Via iFood</td>
+                <td class="n">R$ 180.515,61</td>
+                <td class="n">R$ 180.134,71</td>
+                <td class="n">−R$ 380,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Pedidos com pagamento via iFood</td>
+                <td class="n">R$ 176.453,91</td>
+                <td class="n">R$ 176.453,91</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Promoção custeada pelo iFood</td>
+                <td class="n">R$ 5.567,80</td>
+                <td class="n">R$ 5.567,80</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Promoção custeada pela rede</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela Indústria</td>
+                <td class="n">R$ 380,90</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 380,90</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Taxa de serviço iFood cobrada do cliente</td>
+                <td class="n">−R$ 1.887,00</td>
+                <td class="n">−R$ 1.887,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Incentivos Promocionais Loja</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 13.244,83</td>
+                <td class="n">−R$ 13.244,83</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Promoção custeada pela loja</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 13.244,83</td>
+                <td class="n">−R$ 13.244,83</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxas e Comissões</td>
+                <td class="n">−R$ 26.532,33</td>
+                <td class="n">−R$ 18.293,17</td>
+                <td class="n">R$ 8.239,16</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Comissão iFood (7%)</td>
+                <td class="n">−R$ 12.561,29</td>
+                <td class="n">−R$ 12.837,12</td>
+                <td class="n">−R$ 275,83</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxa de transação (3%)</td>
+                <td class="n">−R$ 5.461,51</td>
+                <td class="n">−R$ 5.456,05</td>
+                <td class="n">R$ 5,46</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Comissão o iFood</td>
+                <td class="n">−R$ 570,84</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 570,84</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Pacote de anúncios</td>
+                <td class="n">−R$ 7.337,92</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 7.337,92</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Mensalidade</td>
+                <td class="n">−R$ 200,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 200,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Outros Lançamentos</td>
+                <td class="n">−R$ 147,13</td>
+                <td class="n">R$ 49,93</td>
+                <td class="n">R$ 197,06</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Ressarcimento de pedido cancelado</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Reembolso taxa de serviço iFood cobrada do cliente</td>
+                <td class="n">R$ 2,40</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 2,40</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Taxa de conveniência por pagamento parcelado</td>
+                <td class="n">−R$ 205,92</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 205,92</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Valor a depositar</td>
+                <td class="n">R$ 153.836,15</td>
+                <td class="n">R$ 148.646,64</td>
+                <td class="n">−R$ 5.189,51</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Amostra de dias</h3>
+        <h4>01/04/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>iFood Online</td>
+                <td class="n">R$ 2.268,73</td>
+                <td class="n">R$ 2.268,73</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 2.268,73</td>
+                <td class="n">R$ 2.268,73</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 87,96</td>
+                <td class="n">R$ 87,96</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 264,86</td>
+                <td class="n">R$ 264,86</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 138,80</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 138,80</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 138,80</td>
+                <td class="n">R$ 138,80</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>08/04/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 2.330,51</td>
+                <td class="n">R$ 2.335,50</td>
+                <td class="n">R$ 4,99</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 2.330,51</td>
+                <td class="n">R$ 2.330,51</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 4,99</td>
+                <td class="n">R$ 4,99</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 54,37</td>
+                <td class="n">R$ 54,37</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 128,99</td>
+                <td class="n">R$ 128,99</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 428,60</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 428,60</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 411,87</td>
+                <td class="n">R$ 411,87</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>15/04/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 4.137,31</td>
+                <td class="n">R$ 4.094,15</td>
+                <td class="n">−R$ 43,16</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 4.137,31</td>
+                <td class="n">R$ 4.137,31</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 43,16</td>
+                <td class="n">−R$ 43,16</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 165,98</td>
+                <td class="n">R$ 165,98</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 322,00</td>
+                <td class="n">R$ 322,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 90,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 90,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 83,00</td>
+                <td class="n">R$ 83,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>22/04/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 2.951,24</td>
+                <td class="n">R$ 2.960,58</td>
+                <td class="n">R$ 9,34</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 2.951,24</td>
+                <td class="n">R$ 2.951,24</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 9,34</td>
+                <td class="n">R$ 9,34</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 109,33</td>
+                <td class="n">R$ 109,33</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 209,99</td>
+                <td class="n">R$ 209,99</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>30/04/2026</h4>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Valor do dia</th>
+                <th class="n">Planilha</th>
+                <th class="n">Módulo</th>
+                <th class="n">Diferença</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ruim">
+                <td>iFood Online</td>
+                <td class="n">R$ 6.119,98</td>
+                <td class="n">R$ 5.856,55</td>
+                <td class="n">−R$ 263,43</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>CB Online</td>
+                <td class="n">R$ 6.119,98</td>
+                <td class="n">R$ 6.119,98</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+              <tr class="ruim">
+                <td># Online</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 263,43</td>
+                <td class="n">−R$ 263,43</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos Online (R$)</td>
+                <td class="n">R$ 183,54</td>
+                <td class="n">R$ 168,54</td>
+                <td class="n">−R$ 15,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>Descontos LOJA Online</td>
+                <td class="n">R$ 353,87</td>
+                <td class="n">R$ 334,87</td>
+                <td class="n">−R$ 19,00</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="ruim">
+                <td>iFood ONLINE VR</td>
+                <td class="n">R$ 276,80</td>
+                <td class="n">R$ 0,00</td>
+                <td class="n">−R$ 276,80</td>
+                <td><span class="dif">diferente</span></td>
+              </tr>
+              <tr class="">
+                <td>Caixa adquirentes</td>
+                <td class="n">R$ 265,91</td>
+                <td class="n">R$ 265,91</td>
+                <td class="n"></td>
+                <td><span class="ok">igual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </main>
+  </body>
+</html>

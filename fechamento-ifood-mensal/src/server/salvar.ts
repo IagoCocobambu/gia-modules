@@ -1,4 +1,4 @@
-import { defineHandler, getDbClient, HttpError } from '@gia-cb/sdk/server'
+import { defineHandler, envOptional, getDbClient, HttpError } from '@gia-cb/sdk/server'
 
 // Grava o que o usuário digitou no fechamento do mês, nas mesmas tabelas do legado
 // (`ifood_fechamento.*` no banco do Maestro), numa transação só
@@ -68,8 +68,8 @@ interface LinhaCancelado {
   dataReembolso: string
 }
 interface Body {
-  /** `operacao_ref` da loja escolhida. */
-  operacaoRef: string
+  /** Empresa (loja) escolhida — o fechamento é da loja inteira (todas as operações). */
+  empresaId: number
   mes: string
   online: Record<string, OnlineDia>
   adquirente: Record<string, AdquirenteDia>
@@ -126,13 +126,14 @@ function texto(v: unknown, max: number | null, campo: string): string {
 }
 
 /**
- * Número da loja com 2 dígitos a partir do `operacao_ref` ("02 cb" → "02"): a chave
- * do fechamento no banco do Maestro (`loc_ref`, como no legado) e o
- * `property_number` do borderô. "08 cb" e "08 vst" dividem o mesmo fechamento —
- * o legado também juntava.
+ * Número da loja com 2 dígitos — o `loc_ref` do fechamento no banco e do DW.
+ * Sai primeiro do nome da Empresa ("01.CB GOIANIA" → "01"; todas as lojas do cadastro
+ * têm o número no nome) e, na falta, do vínculo com a BI do Simphony (`locRefs.BIAPI`
+ * começa pelo número: "01 CB Go", "17. CB R"). O nome vem antes porque o BIAPI pode
+ * divergir: na 999.CB TECH HOMOLOG ele é "995 CB L".
  */
-function numeroDaOperacao(ref: string): string | null {
-  const m = /^\s*(\d{1,4})/.exec(ref)
+function numeroDaLoja(e: { nome: string; locRefs: Record<string, string> }): string | null {
+  const m = /^\s*(\d{1,4})\s*\./.exec(e.nome) ?? /^\s*(\d{1,4})/.exec(e.locRefs?.BIAPI ?? '')
   return m ? String(Number(m[1])).padStart(2, '0') : null
 }
 
@@ -368,11 +369,6 @@ const resumoCancelado = (c: Record<string, unknown>) =>
     .join(' · ')
 
 /**
- * Erro inesperado do banco (conexão, constraint, coluna…) não vai cru para a tela:
- * o detalhe fica no log do servidor e o usuário recebe uma mensagem curta. Os
- * `HttpError` (validação) passam como estão.
- */
-/**
  * Falha do banco/conexão (o postgres.js põe um `code`: SQLSTATE como "42P01" ou de
  * rede como "ECONNREFUSED"). Outro erro é bug do código e segue como 500.
  */
@@ -380,6 +376,11 @@ function ehFalhaDoBanco(e: unknown): boolean {
   return typeof (e as { code?: unknown } | null)?.code === 'string'
 }
 
+/**
+ * Erro inesperado do banco (conexão, constraint, coluna…) não vai cru para a tela:
+ * o detalhe fica no log do servidor e o usuário recebe uma mensagem curta. Os
+ * `HttpError` (validação) passam como estão.
+ */
 function erroDeBanco(e: unknown): never {
   if (e instanceof HttpError || !ehFalhaDoBanco(e)) throw e
   console.error('[fechamento-ifood-mensal] erro ao gravar o fechamento no banco:', e)
@@ -397,18 +398,66 @@ function erroDeBanco(e: unknown): never {
   )
 }
 
+/**
+ * Trava de teste da gravação. Homologação e produção gravam no MESMO banco (o DW,
+ * `GIA_SERVER_DATABASE_URL`): sem trava, um Salvar de teste em homologação altera o
+ * fechamento real da loja.
+ *
+ * `FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE` (opcional, id da Empresa no portal):
+ * - ausente ou vazia (produção): nada muda;
+ * - definida (homologação, com a Empresa 999): o `salvar` recusa qualquer outra
+ *   Empresa com 403, antes de abrir a transação;
+ * - definida com valor que não é um id (ex.: o nome da loja): recusa TODA gravação
+ *   (503) — erro de configuração não pode abrir a trava.
+ *
+ * Fica fora do `config.secrets` de propósito: lá ela vira `secrets_required` e a
+ * instalação em produção passaria a exigi-la.
+ */
+function travaDeTeste(empresaId: number): void {
+  const valor = envOptional('FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE')?.trim()
+  if (!valor) return
+  const permitida = /^\d+$/.test(valor) ? Number(valor) : NaN
+  if (!Number.isSafeInteger(permitida) || permitida <= 0) {
+    console.error(
+      '[fechamento-ifood-mensal/salvar] FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE inválida (esperado o id numérico da Empresa); gravação recusada.'
+    )
+    throw new HttpError(
+      503,
+      'Gravação desativada neste ambiente: a loja de teste está mal configurada. Avise o time do Portal GIA.'
+    )
+  }
+  if (empresaId !== permitida) {
+    throw new HttpError(
+      403,
+      'Este ambiente é de teste: o Salvar só grava na loja de teste. Escolha a loja de teste para gravar; as outras lojas podem ser consultadas, mas não salvas aqui.'
+    )
+  }
+}
+
 export default defineHandler<Body, Resposta>(async (ctx) => {
   try {
     await ctx.requirePermission('fechamento-ifood-mensal.editar')
-    // Exceção deste módulo: a busca é por OPERAÇÃO (não por Empresa). O número do
-    // `operacao_ref` ("02 cb" → "02") é a chave da loja no banco do Maestro — o
-    // `loc_ref` do fechamento (como no legado) e o `property_number` do borderô.
-    const operacao = await ctx.requireOperacao(String(ctx.body.operacaoRef ?? '').trim())
-    const locRef = numeroDaOperacao(operacao.ref)
+    // A loja é a Empresa: o fechamento junta todas as operações dela. O número da loja
+    // (do nome da Empresa, ou do BIAPI) é a chave no banco do Maestro — o `loc_ref` do
+    // fechamento (como no legado) e o `property_number` do borderô.
+    const empresaId = Number(ctx.body.empresaId)
+    if (!Number.isInteger(empresaId) || empresaId <= 0) throw new HttpError(422, 'Informe a loja.')
+    // 403 se a Empresa está fora do escopo do usuário.
+    await ctx.requireEmpresa(empresaId)
+    // Trava de teste: antes de qualquer acesso ao banco (o cabeçalho do mês é criado
+    // na transação, mesmo num Salvar sem alteração).
+    travaDeTeste(empresaId)
+    const empresa = (await ctx.empresas()).find((e) => e.id === empresaId)
+    if (!empresa) throw new HttpError(404, 'Loja não encontrada.')
+    // Só Empresa (loja) tem fechamento — como no seletor (`lojas.ts`). Uma propriedade
+    // com número no nome apontaria para a loja de mesmo número, talvez fora do escopo.
+    if (empresa.tipoRegistro !== 'empresa')
+      throw new HttpError(422, `"${empresa.nome}" não é uma loja (Empresa).`)
+    const locRef = numeroDaLoja(empresa)
     if (!locRef) {
       throw new HttpError(
         422,
-        `A operação "${operacao.nome}" (${operacao.ref}) não começa pelo número da loja.`
+        `A loja "${empresa.nome}" não tem o número da loja no nome nem no vínculo BIAPI.`
       )
     }
 
@@ -668,10 +717,8 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
       // e o banco guarda um texto JSON, não o array.
       if (alteracoes.length > 0) {
         await tx`
-        INSERT INTO ifood_fechamento.historico
-          (fechamento_id, operacao_ref, autor, autor_nome, alteracoes)
-        VALUES (${fid}::bigint, ${operacao.ref.trim().slice(0, 30)}, ${autor}::uuid, ${autorNome},
-          ${JSON.stringify(alteracoes)}::text::jsonb)
+        INSERT INTO ifood_fechamento.historico (fechamento_id, autor, autor_nome, alteracoes)
+        VALUES (${fid}::bigint, ${autor}::uuid, ${autorNome}, ${JSON.stringify(alteracoes)}::text::jsonb)
       `
       }
       return { agora, alteracoes: alteracoes.length }

@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>GIA — Fechamento iFood Mensal 0.1.1 — Aviso de entrega</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --accent: #14577a;
+        --ink: #16202b;
+        --ink-2: #3f4a57;
+        --muted: #5a6874;
+        --amber: #7a4a12;
+        --amber-bg: #fbf0e0;
+        --rule: #dae0e6;
+        --rule-2: #c3ccd5;
+        --chip: #e4eef4;
+        --box: #e8f0f5;
+        --roxo: #4a3a6b;
+        --roxo-bg: #ece8f4;
+        --verde: #2f5a3f;
+        --verde-bg: #e4efe7;
+      }
+
+      @page {
+        size: A4;
+        margin: 16mm 16mm 14mm;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      body {
+        margin: 0;
+        background: #fff;
+        font-family: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+        font-size: 11.9pt;
+        line-height: 1.594;
+        color: var(--ink-2);
+      }
+
+      /* Na tela (fora da impressão), a folha tem a largura do A4 e fica centrada. */
+      @media screen {
+        body {
+          max-width: 210mm;
+          margin: 0 auto;
+          padding: 16mm;
+        }
+      }
+
+      .sans {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+      }
+
+      /* ── cabeçalho ─────────────────────────────────────────────────────── */
+      .sobrancelha {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 8.3pt;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 14pt;
+      }
+
+      h1 {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 25.2pt;
+        line-height: 1.12;
+        letter-spacing: -0.015em;
+        color: var(--ink);
+        margin: 0 0 8pt;
+      }
+
+      .resumo {
+        font-size: 12.6pt;
+        line-height: 1.45;
+        color: var(--ink-2);
+        margin: 0 0 18pt;
+        max-width: 44em;
+      }
+
+      .regua-forte {
+        border: 0;
+        border-top: 1.5pt solid var(--rule-2);
+        margin: 0 0 14pt;
+      }
+
+      /* ── ficha ─────────────────────────────────────────────────────────── */
+      .meta {
+        display: flex;
+        gap: 0 14pt;
+        margin: 0 0 20pt;
+      }
+      .meta > div {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+      .meta dt {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 8.2pt;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 4pt;
+      }
+      .meta dd {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 400;
+        font-size: 11.1pt;
+        color: var(--ink);
+        margin: 0;
+      }
+      .seta {
+        color: var(--muted);
+        padding: 0 1pt;
+      }
+
+      /* ── seções ────────────────────────────────────────────────────────── */
+      section {
+        border-top: 0.75pt solid var(--rule);
+        padding-top: 14pt;
+        margin-top: 18pt;
+      }
+      section:first-of-type {
+        margin-top: 0;
+      }
+
+      h2 {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 9.6pt;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 10pt;
+      }
+
+      p {
+        margin: 0 0 9pt;
+        max-width: 46em;
+      }
+      p:last-child {
+        margin-bottom: 0;
+      }
+      b,
+      strong {
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      /* ── telas ─────────────────────────────────────────────────────────── */
+      .tela {
+        margin: 0 0 18pt;
+        break-inside: avoid;
+      }
+      .tela:last-child {
+        margin-bottom: 0;
+      }
+      .tela h3 {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 12.6pt;
+        color: var(--ink);
+        margin: 0 0 3pt;
+      }
+      .caminho {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-size: 9.6pt;
+        color: var(--muted);
+        margin: 0 0 8pt;
+      }
+      .caminho b {
+        font-weight: 500;
+        color: var(--ink-2);
+      }
+      .caminho .sep {
+        padding: 0 3pt;
+        color: var(--rule-2);
+      }
+
+      .quem {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-size: 10.4pt;
+        color: var(--muted);
+        margin: 9pt 0 0;
+        display: flex;
+        align-items: center;
+        gap: 5pt;
+        flex-wrap: wrap;
+      }
+
+      /* ── públicos: uma cor por público, a mesma em todo aviso ──────────── */
+      /* A classe de cada público está em references/publicos.md. Público novo
+     ganha a próxima cor livre e entra no registro. */
+      .chip {
+        display: inline-block;
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 8.9pt;
+        letter-spacing: 0.02em;
+        border-radius: 2.5pt;
+        padding: 1.5pt 6pt;
+        margin: 0 3pt 3pt 0;
+        color: var(--accent);
+        background: var(--chip);
+      }
+      .p-diretores {
+        color: #135779;
+        background: #e3eef4;
+      }
+      .p-auditoria {
+        color: #3f4a57;
+        background: #e8ecf0;
+      }
+      .p-assistentes {
+        color: #794a12;
+        background: #f6ecde;
+      }
+      .p-padrinhos {
+        color: #4a3a6a;
+        background: #ece8f3;
+      }
+      .p-fundadores {
+        color: #2f5a3f;
+        background: #e4efe7;
+      }
+      .p-admin {
+        color: #6a3a3a;
+        background: #f3e7e7;
+      }
+      .p-gerentes {
+        color: #3b5a6e;
+        background: #e6eef2;
+      }
+      .p-auxiliarrh {
+        color: #5a4a2f;
+        background: #f0ebe1;
+      }
+      .p-suporte {
+        color: #5a3a55;
+        background: #f1e6ef;
+      }
+      .p-financeiro {
+        color: #34584f;
+        background: #e3efeb;
+      }
+
+      /* ── listas ────────────────────────────────────────────────────────── */
+      .resolve {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .resolve li {
+        margin: 0 0 9pt;
+        padding-left: 12pt;
+        position: relative;
+        max-width: 46em;
+      }
+      .resolve li:last-child {
+        margin-bottom: 0;
+      }
+      .resolve li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.62em;
+        width: 4pt;
+        height: 4pt;
+        border-radius: 50%;
+        background: var(--rule-2);
+      }
+      /* Subtítulo dentro de "O que muda" (ex.: "Pedidos do Davi Nascimento"). */
+      .bloco {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 10.4pt;
+        color: var(--ink);
+        margin: 14pt 0 7pt;
+      }
+      .bloco:first-of-type {
+        margin-top: 0;
+      }
+
+      /* ── tabela de permissões ──────────────────────────────────────────── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+      }
+      thead th {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 8.2pt;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        text-align: left;
+        padding: 0 8pt 6pt 0;
+        border-bottom: 0.75pt solid var(--rule-2);
+      }
+      thead th:last-child {
+        padding-right: 0;
+      }
+      tbody tr {
+        break-inside: avoid;
+      }
+      tbody td {
+        padding: 8pt 8pt 8pt 0;
+        border-bottom: 0.75pt solid var(--rule);
+        vertical-align: top;
+        font-size: 10.4pt;
+        line-height: 1.4;
+      }
+      tbody td:last-child {
+        padding-right: 0;
+      }
+      tbody tr.grupo td {
+        border-bottom: 0.75pt solid var(--rule-2);
+        padding-top: 12pt;
+        padding-bottom: 5pt;
+      }
+      .grupo-rotulo {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 8.9pt;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--roxo);
+        background: var(--roxo-bg);
+        border-radius: 2.5pt;
+        padding: 2pt 6pt;
+        margin-right: 7pt;
+      }
+      .grupo-caminho {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-size: 9.6pt;
+        color: var(--muted);
+      }
+      code {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 500;
+        font-size: 9.8pt;
+        color: var(--ink);
+        word-break: break-word;
+      }
+      .col-chave {
+        width: 40%;
+      }
+      .col-libera {
+        width: 36%;
+      }
+      .col-para {
+        width: 24%;
+      }
+      /* Chave que entrou nesta versão. */
+      .nova {
+        display: inline-block;
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 7.6pt;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--verde);
+        background: var(--verde-bg);
+        border-radius: 2pt;
+        padding: 0.5pt 4pt;
+        margin-left: 5pt;
+        vertical-align: 1pt;
+      }
+
+      /* ── caixas ────────────────────────────────────────────────────────── */
+      .caixa {
+        background: var(--box);
+        border-left: 2.5pt solid var(--accent);
+        padding: 11pt 13pt;
+        margin: 14pt 0 0;
+        break-inside: avoid;
+      }
+      .caixa p {
+        max-width: none;
+      }
+      .caixa p:last-child {
+        margin-bottom: 0;
+      }
+
+      .atencao {
+        background: var(--amber-bg);
+        border-left: 2.5pt solid var(--amber);
+        padding: 11pt 13pt;
+        margin: 14pt 0 0;
+        color: var(--amber);
+        break-inside: avoid;
+      }
+      .atencao b {
+        color: var(--amber);
+      }
+      .atencao p {
+        max-width: none;
+      }
+      .atencao p:last-child {
+        margin-bottom: 0;
+      }
+      .atencao li {
+        break-inside: avoid;
+      }
+
+      /* ── passos ────────────────────────────────────────────────────────── */
+      ol.passos {
+        margin: 0 0 12pt;
+        padding-left: 16pt;
+        break-inside: avoid;
+      }
+      section.junta {
+        break-inside: avoid;
+      }
+      section.nova-pagina {
+        break-before: page;
+      }
+      ol.passos li {
+        margin: 0 0 5pt;
+        max-width: 46em;
+      }
+
+      /* ── permissões por perfil (gerado pelo perfis.mjs) ────────────────── */
+      /* O título, a abertura e o primeiro perfil ficam juntos: sem isso, o título caía
+     sozinho no pé da página (aviso do App CB, 23/10/2026). */
+      .perfis-abertura {
+        break-inside: avoid;
+      }
+      .perfil {
+        border-top: 0.75pt solid var(--rule);
+        padding: 10pt 0 4pt;
+        break-inside: avoid;
+      }
+      .perfil:first-of-type {
+        border-top: 0;
+        padding-top: 2pt;
+      }
+      .perfil-cab {
+        display: flex;
+        align-items: center;
+        gap: 8pt;
+        margin: 0 0 7pt;
+      }
+      .perfil-cab .chip {
+        font-size: 10pt;
+        padding: 2pt 8pt;
+        margin: 0;
+      }
+      .perfil-conta {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-size: 9.2pt;
+        color: var(--muted);
+      }
+      /* Uma coluna por módulo, a mesma em todos os perfis: o módulo sem chave fica "—". */
+      .perfil-modulos {
+        display: grid;
+        grid-template-columns: repeat(var(--colunas, 3), minmax(0, 1fr));
+        gap: 2pt 20pt;
+      }
+      .perfil-rotulo {
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 8.2pt;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--roxo);
+        margin: 0 0 3pt;
+      }
+      .perfil-chaves {
+        list-style: none;
+        margin: 0 0 6pt;
+        padding: 0;
+      }
+      .perfil-chaves li {
+        margin: 0 0 2pt;
+        line-height: 1.35;
+      }
+      .perfil-chaves code {
+        font-size: 9.4pt;
+      }
+      .perfil-nenhuma {
+        color: var(--muted);
+      }
+      /* ── fim das permissões por perfil ── */
+      .perfil-nenhuma {
+        color: var(--muted);
+      }
+      /* ── fim das permissões por perfil ── */
+      .perfil-nenhuma {
+        color: var(--muted);
+      }
+      /* ── fim das permissões por perfil ── */
+      .perfil-nenhuma {
+        color: var(--muted);
+      }
+      /* ── fim das permissões por perfil ── */
+      .perfil-nenhuma {
+        color: var(--muted);
+      }
+      /* ── fim das permissões por perfil ── */
+      .perfil-nenhuma {
+        color: var(--muted);
+      }
+      /* ── fim das permissões por perfil ── */
+
+      /* ── rodapé ────────────────────────────────────────────────────────── */
+      footer {
+        border-top: 0.75pt solid var(--rule);
+        margin-top: 20pt;
+        padding-top: 9pt;
+        display: flex;
+        justify-content: space-between;
+        gap: 16pt;
+        font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+        font-size: 9.2pt;
+        color: var(--muted);
+      }
+      footer b {
+        font-weight: 500;
+        color: var(--ink-2);
+      }
+    </style>
+  </head>
+  <body>
+    <p class="sobrancelha">Aviso de entrega · Portal GIA</p>
+    <h1>Fechamento iFood Mensal 0.1.1</h1>
+    <p class="resumo">
+      O fechamento do mês do iFood passa a ser feito no portal, loja a loja: os lançamentos de todos
+      os restaurantes da loja no iFood conferidos dia a dia com o caixa da loja, o resultado do mês,
+      o repasse contra o extrato bancário e os cancelados depois da entrega, no mesmo fechamento que
+      o financeiro já vinha gravando.
+    </p>
+
+    <hr class="regua-forte" />
+
+    <dl class="meta">
+      <div>
+        <dt>Entregue em</dt>
+        <dd>16/11/2026</dd>
+      </div>
+      <div>
+        <dt>Onde já está</dt>
+        <dd>Ainda não instalado</dd>
+      </div>
+      <div>
+        <dt>Onde encontrar</dt>
+        <dd>
+          Plataformas <span class="seta">→</span> iFood <span class="seta">→</span> Fechamento iFood
+          Mensal
+        </dd>
+      </div>
+      <div>
+        <dt>Responsável</dt>
+        <dd>Iago Pereira</dd>
+      </div>
+    </dl>
+
+    <section>
+      <h2>O que muda nesta versão</h2>
+      <p>
+        A 0.1.1 substitui a 0.1.0, que não chegou a ser instalada. Este aviso traz o módulo inteiro;
+        as mudanças da versão são quatro.
+      </p>
+      <ul class="resolve">
+        <li>
+          <b>A consulta se ajusta ao iFood.</b> Em testes com o iFood, ele às vezes recusou
+          consultas por “muitas requisições” com o limite de consultas por minuto ainda sobrando
+          (até 996 de 1.000) e às vezes devolveu vendas sem os valores. A consulta pede de novo na
+          hora e, se o problema continuar, deixa aquela parte para o fim, sem refazer o que já
+          chegou. Quando o iFood oscila, ela busca menos partes ao mesmo tempo e volta ao ritmo
+          normal sozinha; quando o limite de consultas por minuto acaba de verdade, ela espera o
+          minuto virar e continua.
+        </li>
+        <li>
+          <b>A tela não pula durante a consulta.</b> A barra do topo vira uma linha só já no
+          <b>Consultar</b>, a tabela fica no mesmo lugar enquanto os lançamentos chegam e a faixa do
+          andamento se recolhe suavemente no fim. Enquanto nenhum lançamento chegou, a tabela mostra
+          que está carregando, e não que o iFood não devolveu nada.
+        </li>
+        <li>
+          <b>O Histórico ao lado do Salvar.</b> O botão <b>Histórico</b> passou para a barra do
+          topo, ao lado do <b>Salvar</b>, com a data da última gravação ao passar o mouse. A linha
+          de informação que ficava embaixo da tabela saiu: a loja e o mês já estão na barra, e o
+          total, na barra de abas.
+        </li>
+        <li>
+          <b>Acesso mais firme.</b> O módulo só aceita lojas do cadastro de Empresas, e não outros
+          registros do acesso da pessoa, como propriedades. Ao abrir, a tela espera as permissões
+          carregarem em vez de mostrar “Sem acesso” por um instante.
+        </li>
+      </ul>
+    </section>
+
+    <section class="nova-pagina">
+      <h2>O que é</h2>
+      <p>
+        Todo mês, o financeiro fecha o iFood loja a loja: confere o que o iFood registrou — vendas,
+        comissões, taxas, promoções e ocorrências — contra o que a loja lançou no caixa (o borderô),
+        monta o resultado do mês, confere o repasse do iFood com o extrato bancário e registra os
+        pedidos cancelados depois da entrega. Sem essa conferência, diferença de caixa e cobrança
+        indevida do iFood passam sem ninguém ver. Até agora, isso se fazia na tela Fechamento Mensal
+        iFood do GIA antigo, que acessava o iFood com uma credencial gravada no próprio sistema e
+        não funcionava no celular.
+      </p>
+      <p>
+        O módulo traz essa tela para o portal, com as mesmas regras de cálculo, e fecha a loja
+        inteira: escolhe-se a loja e o mês, que já vem no mês anterior, e entram os lançamentos de
+        todas as operações da loja e de todos os restaurantes dela no iFood — Coco Bambu, Express,
+        Pizzaria, Vasto e os demais. O que é digitado no mês fica gravado nas mesmas tabelas que a
+        tela antiga usava: o fechamento continua de onde parou. A versão entregue é a 0.1.1.
+      </p>
+    </section>
+
+    <section>
+      <h2>Onde fica, e quem usa</h2>
+
+      <div class="tela" style="break-inside: auto">
+        <h3>Fechamento iFood Mensal</h3>
+        <p class="caminho">
+          <b>Plataformas</b><span class="sep">›</span><b>iFood</b><span class="sep">›</span
+          ><b>Fechamento iFood Mensal</b>
+        </p>
+        <p>
+          No topo, a <b>Loja</b> (só as lojas do acesso da pessoa; embaixo do nome, as operações da
+          loja no iFood), o <b>Mês de referência</b> e os botões <b>Consultar</b> e <b>Salvar</b>.
+          Enquanto a consulta roda, uma faixa acima da tabela mostra o andamento, com o botão
+          <b>Cancelar</b>. O resultado fica em 7 abas, na barra embaixo da tabela:
+          <b>Lançamentos</b> (cada lançamento financeiro do iFood no mês, com a <b>Operação</b> de
+          onde veio), <b>Online</b> e <b>Adquirentes</b> (dia a dia, o iFood contra o caixa da
+          loja), <b>Conferência</b> (o resultado do mês e o valor a depositar), <b>Extrato</b> (o
+          extrato bancário do mês), <b>Recebimento</b> (o repasse previsto contra o extrato) e
+          <b>Cancelados pós</b>. O botão <b>Totais</b> abre os valores do mês de cada aba. Depois do
+          <b>Consultar</b>, a barra do topo vira uma linha só, com o botão <b>Histórico</b> ao lado
+          do <b>Salvar</b>. No celular, as tabelas viram cartões e a barra da loja e do mês se
+          recolhe ao consultar.
+        </p>
+        <p class="quem">
+          Quem usa: <span class="chip p-diretores">Diretores</span
+          ><span class="chip p-gerentes">Gerentes</span
+          ><span class="chip p-auditoria">Auditoria</span
+          ><span class="chip p-admin">Administração/GIA</span>
+        </p>
+      </div>
+
+      <div class="caixa">
+        <p>
+          <b>Quem consulta não altera nada.</b> O que vem do iFood e do borderô é só leitura: o que
+          estiver errado no caixa é corrigido no borderô. Quem tem a permissão de edição digita a
+          previsão de pagamento, o <b>CB Desc. LOJA</b> e o comentário de cada dia, o valor de cada
+          centro de custo na <b>Conferência</b>, as linhas do <b>Extrato</b> e os
+          <b>Cancelados pós</b>, e grava tudo de uma vez em <b>Salvar</b>.
+        </p>
+        <p>
+          <b>Um fechamento por loja e por mês.</b> Os lançamentos de todos os restaurantes da loja
+          no iFood entram juntos, e todas as operações da loja — Coco Bambu, Express, Vasto… —
+          dividem o mesmo fechamento.
+        </p>
+        <p>
+          <b>Algumas regras da tela antiga aguardam o financeiro.</b> As contas são as mesmas da
+          tela antiga, para os números baterem. Alguns pontos parecem engano e ficaram como estavam
+          até o financeiro decidir: a coluna <b>Extrato</b> do Recebimento, que fica zerada, o
+          <b># Total</b> da aba Online sem o desconto da loja e as colunas de cancelamento sempre
+          zeradas.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>O que a entrega resolve</h2>
+      <ul class="resolve">
+        <li>
+          <b>O mês conferido dia a dia.</b> Nas abas <b>Online</b> e <b>Adquirentes</b>, cada dia
+          mostra o que o iFood registrou, o que a loja lançou no caixa e a diferença de cada conta.
+          Diferença zerada fica cinza; diferente de zero fica em destaque, para conferir.
+        </li>
+        <li>
+          <b>A loja inteira, num fechamento só.</b> Os lançamentos de todos os restaurantes da loja
+          no iFood entram na mesma consulta, e a coluna <b>Operação</b> diz de qual deles veio cada
+          um. Na loja 01, em outubro/2026, foram 5.090 lançamentos do Coco Bambu e 3.781 do Express.
+        </li>
+        <li>
+          <b>Os restaurantes vêm do cadastro do portal.</b> Os restaurantes de cada loja são as
+          integrações IFOOD das operações dela no cadastro de Empresas, lidas a cada consulta. Loja
+          nova, restaurante novo ou conta trocada de operação passam a valer na consulta seguinte,
+          sem versão nova do módulo.
+        </li>
+        <li>
+          <b>O fechamento continua de onde parou.</b> O módulo lê e grava nas mesmas tabelas da tela
+          antiga: o que já foi digitado lá aparece aqui.
+        </li>
+        <li>
+          <b>Nenhum lançamento faltando.</b> O iFood às vezes devolve uma página sem os lançamentos
+          financeiros. Na loja 01, em outubro/2026, 19 de 49 páginas vieram assim na primeira
+          chamada. A consulta confere cada página e pede de novo na hora a que vier incompleta; se
+          ela continuar assim, volta para o fim da fila e é pedida mais tarde. Se mesmo assim não
+          vier completa, a tela mostra o erro em vez de um mês com lançamentos a menos.
+        </li>
+        <li>
+          <b>Nenhum número parcial.</b> As abas abrem antes de a consulta acabar, e os lançamentos
+          vão entrando; o dia que ainda pode mudar fica apagado, com <b>Aguardando iFood</b>. Os
+          totais e o <b>Salvar</b> só liberam com o mês completo, mas dá para ir digitando enquanto
+          isso. Em mês de muito movimento, a consulta leva alguns minutos, e dá para cancelar a
+          qualquer momento.
+        </li>
+        <li>
+          <b>Um restaurante com problema não derruba os outros.</b> Se o iFood negar o acesso a um
+          restaurante, ou não reconhecer o restaurante cadastrado, um aviso amarelo diz qual ficou
+          de fora; os lançamentos dos outros restaurantes da loja entram normalmente.
+        </li>
+        <li>
+          <b>Quem mudou o quê.</b> O botão <b>Histórico</b> mostra cada gravação do mês da loja:
+          quem salvou, quando e o valor de antes e o de depois de cada campo, com as linhas do
+          extrato e dos cancelados incluídas ou removidas.
+        </li>
+        <li>
+          <b>Nada se perde sem aviso.</b> O <b>Salvar</b> se acende só com alteração pendente, e
+          trocar de loja ou de mês, fechar ou recarregar a página com alteração pendente pede
+          confirmação. Um campo apagado e salvo é limpo no fechamento, e o “Vale no cofre?” dos
+          cancelados é gravado e lido no mesmo lugar — na tela antiga, os dois se perdiam.
+        </li>
+        <li>
+          <b>Os totais do mês, com um clique.</b> Cada aba tem os totais do mês em cartões acima da
+          tabela, sem linha de total dentro dela. Clicar num total que aponta linhas a conferir —
+          por exemplo, os dias com diferença — mostra só essas linhas.
+        </li>
+        <li>
+          <b>Quando algo falha, a tela diz o quê.</b> No lugar da tabela, ou numa janela ao salvar,
+          aparece o tipo do problema, qual sistema falhou e o que fazer, com <b>Tentar de novo</b>.
+          O que foi digitado continua na tela. <b>Ver detalhes técnicos</b> traz o que o suporte
+          precisa, sem senha, token ou dado pessoal.
+        </li>
+        <li>
+          <b>Sem credencial gravada no sistema.</b> O portal acessa o iFood e o banco do fechamento
+          com credenciais cadastradas e controladas pelo time do Portal GIA.
+        </li>
+        <li>
+          <b>Funciona no celular.</b> Consulta, edição do dia e Salvar funcionam no celular; tocar
+          no cartão de um dia abre o dia completo.
+        </li>
+      </ul>
+    </section>
+
+    <section class="nova-pagina">
+      <h2>Permissões</h2>
+      <p>
+        Cada chave libera uma coisa só: a primeira é de consulta, e a segunda grava o fechamento do
+        mês. A coluna da direita é sugestão: o gestor decide conforme a necessidade real de uso.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th class="col-chave">Chave</th>
+            <th class="col-libera">O que libera</th>
+            <th class="col-para">Sugerido para</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="grupo">
+            <td colspan="3">
+              <span class="grupo-rotulo">Fechamento iFood Mensal</span>
+              <span class="grupo-caminho">Plataformas › iFood › Fechamento iFood Mensal</span>
+            </td>
+          </tr>
+          <tr>
+            <td><code>fechamento-ifood-mensal.ler</code></td>
+            <td>
+              Abrir a tela e consultar o fechamento do mês das lojas do próprio acesso, em todas as
+              abas, e ver o Histórico das gravações
+            </td>
+            <td>
+              <span class="chip p-diretores">Diretores</span
+              ><span class="chip p-gerentes">Gerentes</span
+              ><span class="chip p-auditoria">Auditoria</span
+              ><span class="chip p-admin">Administração/GIA</span>
+            </td>
+          </tr>
+          <tr>
+            <td><code>fechamento-ifood-mensal.editar</code></td>
+            <td>
+              Preencher e salvar o fechamento do mês: previsão de pagamento, CB Desc. LOJA,
+              comentários, valores da Conferência, extrato e cancelados pós
+            </td>
+            <td>
+              <span class="chip p-diretores">Diretores</span
+              ><span class="chip p-gerentes">Gerentes</span
+              ><span class="chip p-auditoria">Auditoria</span
+              ><span class="chip p-admin">Administração/GIA</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="caixa">
+        <p>
+          <b
+            ><code>fechamento-ifood-mensal.editar</code> só vale junto de
+            <code>fechamento-ifood-mensal.ler</code>.</b
+          >
+          Sozinha, ela não abre a tela: a pessoa vê o aviso de acesso negado. Com a de leitura e sem
+          a de edição, a pessoa consulta todas as abas, mas os campos aparecem como texto e não há
+          <b>Nova linha</b>, lápis, lixeira nem <b>Salvar</b>. Quem tinha acesso à tela de
+          fechamento do iFood no GIA antigo recebe a de leitura, e também a de edição se preenchia o
+          mês.
+        </p>
+      </div>
+
+      <div class="atencao" style="break-inside: auto">
+        <p>
+          <b>O que conferir no ambiente.</b> Sem estes pontos, a tela abre e a consulta falha, ou a
+          consulta funciona e o <b>Salvar</b> é recusado.
+        </p>
+        <ul>
+          <li>
+            <b>Menu.</b> A tela vai no sub-grupo <b>iFood</b> de Plataformas, ao lado do Fechamento
+            iFood Diário. Sem esse passo na instalação, ela aparece direto em Plataformas.
+          </li>
+          <li>
+            A integração <code>ifood</code> do hub de Credenciais — a mesma do Fechamento iFood
+            Diário — precisa ter o módulo liberado. O acesso do iFood vale 6 horas e o hub tem de
+            renová-lo antes de vencer. Sem isso, a consulta responde que o iFood recusou a
+            credencial.
+          </li>
+          <li>
+            A integração <code>ifood</code> tem um limite de consultas por minuto, dividido entre
+            todos os módulos que a usam — este e o Fechamento iFood Diário. Quando ele acaba, a
+            consulta espera e continua sozinha: com muitos fechamentos ao mesmo tempo, ela só fica
+            mais lenta.
+          </li>
+          <li>
+            Os restaurantes do iFood de cada loja são as integrações <b>IFOOD</b> das operações dela
+            no cadastro de Empresas, uma por restaurante (uma operação pode ter mais de uma). Cada
+            operação que vende no iFood precisa da sua: sem ela, os lançamentos daquela operação
+            ficam de fora, e a loja sem nenhuma aparece no seletor como <b>Sem iFood</b> e não pode
+            ser consultada.
+          </li>
+          <li>
+            A operação 43 cbx tem 2 integrações IFOOD no cadastro, uma com o identificador
+            incompleto (um caractere a menos). Até ela ser corrigida, a consulta da loja 43 mostra
+            um aviso amarelo para esse restaurante; a outra integração da 43 cbx e as demais
+            operações seguem normais.
+          </li>
+          <li>
+            A função do módulo precisa do secret <code>GIA_SERVER_DATABASE_URL</code>, apontando
+            para o banco do Maestro, com um usuário que <b>lê o borderô</b> e <b>lê e grava</b> as
+            tabelas do fechamento do iFood (<code>ifood_fechamento</code>). Diferente do Fechamento
+            iFood Diário e do Fechamento Maestro, que só leem: com um usuário só de leitura, a
+            consulta funciona e o <b>Salvar</b> responde “falha no banco de dados”.
+          </li>
+          <li>
+            O <b>Histórico</b> precisa de uma tabela nova no banco do Maestro: rodar o script
+            <code>001_historico.sql</code>, que vai no pacote, antes de ligar o módulo, e dar ao
+            usuário do módulo leitura e inclusão nela. Sem ela, o <b>Salvar</b> e o
+            <b>Histórico</b> avisam que o banco não está preparado para o histórico.
+          </li>
+          <li>
+            O banco do fechamento é o mesmo que a tela antiga usa. Em homologação, teste de gravação
+            só na <b>999.CB TECH HOMOLOG</b>: o que se grava numa loja real aparece para quem
+            trabalha com ela.
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- PERFIS:INICIO — gerado pelo perfis.mjs a partir da tabela de permissões; não edite à mão -->
+    <section class="perfis" style="--colunas: 1">
+      <div class="perfis-abertura">
+        <h2>Permissões por perfil</h2>
+        <p>
+          A mesma tabela, vista ao contrário: cada perfil com todas as chaves que deve receber. É a
+          lista para marcar no grupo de cada um no portal.
+        </p>
+        <div class="perfil">
+          <p class="perfil-cab">
+            <span class="chip p-diretores">Diretores Gerentes Auditoria Administração/GIA</span
+            ><span class="perfil-conta">2 chaves</span>
+          </p>
+          <div class="perfil-modulos">
+            <div class="perfil-modulo">
+              <ul class="perfil-chaves">
+                <li><code>fechamento-ifood-mensal.ler</code></li>
+                <li><code>fechamento-ifood-mensal.editar</code></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- PERFIS:FIM -->
+
+    <section class="junta">
+      <h2>Como atribuir</h2>
+      <ol class="passos">
+        <li>
+          Portal <span class="seta">→</span> Cadastros › Grupos (ou Papéis, para função que
+          atravessa departamentos).
+        </li>
+        <li>
+          Abra o grupo que vai receber o acesso — Diretores, Gerentes, Auditoria, Administração/GIA…
+        </li>
+        <li>
+          Na aba de permissões, procure por <code>fechamento-ifood-mensal</code> e marque as chaves.
+        </li>
+        <li>Salve. Quem já estiver logado enxerga a mudança sem precisar sair e entrar.</li>
+      </ol>
+      <p>
+        O acesso continua limitado às lojas que a pessoa já enxerga no portal, sem exceção: o
+        seletor só lista essas lojas, e cada consulta e cada gravação é conferida de novo. Quem
+        confere a rede inteira — a Auditoria — precisa ter essas lojas no próprio acesso.
+      </p>
+    </section>
+
+    <footer>
+      <span>Dúvidas sobre o módulo: <b>time do Portal GIA</b></span>
+      <span>Ajuda dentro da tela: <b>botão ? no topo</b></span>
+    </footer>
+  </body>
+</html>

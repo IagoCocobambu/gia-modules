@@ -5,7 +5,7 @@ import { fechamentoIfoodMensalRoutes } from './routes'
 export const fechamentoIfoodMensalModule = defineModule({
   id: 'fechamento-ifood-mensal',
   label: 'Fechamento iFood Mensal',
-  version: '0.1.0',
+  version: '0.1.2',
   description:
     'Fechamento mensal do iFood por loja: busca os lançamentos financeiros do mês na API do iFood e confere com o caixa da loja (borderô) — vendas online, adquirentes (vale-refeição), descontos, DRE de conferência, recebimento × extrato bancário e cancelados pós-entrega.',
   icon: 'CalendarRange',

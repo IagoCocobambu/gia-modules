@@ -1,0 +1,66 @@
+Fechamento iFood Mensal 0.1.2 - revisão SDK e trava de teste na gravação - 17/11/2026
+
+Entrega
+- Módulo: fechamento-ifood-mensal ("Fechamento iFood Mensal")
+- Versão: 0.1.1 → 0.1.2
+- Pacote: modules-fechamento-ifood-mensal-0.1.2.tgz (404,4 kB, 56 arquivos, sem .env nem segredos)
+- Menu: Plataformas › iFood › Fechamento iFood Mensal (sub-grupo iFood, ao lado do Diário)
+- Permissões: fechamento-ifood-mensal.ler e fechamento-ifood-mensal.editar (sem chave nova)
+- Validação SDK: gia validate 58/58, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- SDK: @gia-cb 0.1.0-alpha.71 (a mesma do Fechamento iFood Diário e do Reports Maestro; os demais módulos estão na alpha.70)
+- Tipo: lê o iFood e o borderô; grava o fechamento no DW (ifood_fechamento.*), sem mudança de banco nesta versão
+
+O que muda nesta versão
+1. Trava de teste na gravação (bloqueante da devolutiva de 16/11/2026):
+   - variável opcional FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE, com o id da Empresa;
+   - definida (homologação, com a 999.CB TECH HOMOLOG): o salvar recusa qualquer outra Empresa com 403 e a mensagem "Este ambiente é de teste: o Salvar só grava na loja de teste…";
+   - a recusa vem logo depois do requireEmpresa e antes de abrir a transação: nem o cabeçalho do mês é criado (antes, um Salvar sem alteração num mês novo criava o cabeçalho antes de chegar ao histórico);
+   - ausente (produção): nada muda;
+   - valor que não é um id (ex.: o nome da loja): recusa toda gravação (503, motivo no log da Edge Function), para um erro de configuração não abrir a trava;
+   - fica fora do config.secrets (e do secrets_required do _meta.json), para a instalação em produção não exigi-la; é lida com envOptional.
+2. Modal "O fechamento não foi salvo": na recusa da trava, título "Ambiente de teste" e o texto do servidor, sem o "peça ao seu gestor" do tipo acesso. A MensagemErro continua igual à dos outros módulos (ajuste pelas props titulo/descricao).
+3. FAQ: pergunta "Ao salvar apareceu 'Este ambiente é de teste'. O que é?" no bloco de perguntas e respostas.
+4. Documentos: INTEGRATION.md com a variável (§4), a ordem da instalação e a data da virada a combinar (§7); PRD v1.4 com critério de pronto, critério de aceite e risco; .env.example com a variável (Empresa 999 = id 93).
+
+Incongruências encontradas e corrigidas
+1. A recusa da trava (403) aparecia no modal do Salvar como falta de acesso, com "Peça ao seu gestor para liberar no seu cadastro do portal" → título "Ambiente de teste" e o texto do servidor. O gestor não tem o que liberar; a orientação tem de dizer o que fazer. Fonte: AGENTS.md da raiz, padrão 11 (a mensagem mostra o tipo do problema e o que fazer; componente igual entre os módulos, por isso o ajuste fica na view).
+
+Conferido e já de acordo
+- Fontes sem mudança desde a revisão da 0.1.1 (docs do SDK de 12/11, AGENTS.md da raiz de 16/11 antes do resumo da 0.1.1, AGENTS.md do módulo de 11/11); o que mudou no módulo desde o pacote 0.1.1 é só o desta versão (salvar.ts, view, helpers.ts, faq.ts, módulo, documentos).
+- Handler da trava: só importa de @gia-cb/sdk/server, envOptional do catálogo, config literal, sem segredo no código: dados-externos.md, "Regras (o codegen depende delas)" e "Helpers"; conventions.md §17.
+- requirePermission e requireEmpresa antes da trava no salvar: delivery-checklists.md N; dados-externos.md, "Escopo de loja".
+- Edge Function regerada pelo gia pack: a trava lê Deno.env, Deno.serve, esbuild sem erro, secrets_required só com GIA_SERVER_DATABASE_URL: packaging.md §4.2 e §4.3; delivery-checklists.md M.
+- FAQ: bloco qa no fim (já existia, 17 perguntas agora; atende a sugestão 1 da devolutiva), pergunta nova termina com "?", resposta com mais de 50 caracteres, sem menção ao sistema antigo: conventions.md §14; delivery-checklists.md E; AGENTS.md da raiz, padrão 4.
+- Versão 0.1.2 igual em package.json, package-lock.json, module.ts, INTEGRATION.md e CHANGELOG (patch: produção sem mudança de comportamento): packaging.md §7.1 e §7.4.
+- 999.CB TECH HOMOLOG e operações 999 cb e 999 vst no gia.config.ts: AGENTS.md da raiz, padrão 5.
+- Pacote sem .env, node_modules e .git; validation-report.json na raiz: packaging.md §1; delivery-checklists.md Q.
+- Fontes lidas: docs do @gia-cb 0.1.0-alpha.71 (dados-externos, delivery-checklists E, M, N, O, P, Q, packaging §1, §4, §7, conventions §17, api-reference §1.12), AGENTS.md da raiz e do módulo, memória do projeto, resumo da 0.1.1.
+
+Não corrigido (decisão ou fora do escopo)
+- Nome da variável sem o prefixo MOD_<MODULE_ID>_ da convenção de secrets (packaging.md §4.2) - nome pedido na devolutiva, e a variável não entra no secrets_required.
+- Pendências da 0.1.1 que continuam: stories e testes automatizados ausentes (conventions.md §12; delivery-checklists.md O), hover:bg-muted/N (conventions.md §7), package.json e manifest fora da delivery-checklists.md C.1 e C.3, barra de filtros enxuta desde o clique em Consultar (padrão 8), regras de cálculo da tela antiga mantidas (PRD §11).
+- MensagemErro, ProgressoConsulta e Recolhivel copiados do Fechamento iFood Diário (sugestão 2 da devolutiva) - a MensagemErro vai para o SDK; a troca entra quando o time GIA avisar a versão.
+
+Testes
+- gia validate: 58/58, 0 erros, 0 avisos (antes e depois do pack); tsc sem erros; esbuild da Edge Function sem erro.
+- gia dev: a chamada ao salvar não foi feita - o .env aponta para um banco de verdade e o teste foi bloqueado no ambiente de desenvolvimento.
+- Falta conferir, no gia dev com FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE=93 (já no .env local):
+   - Salvar em outra loja (ex.: 01.CB GOIANIA) → modal "Ambiente de teste", nada gravado, nenhum cabeçalho criado;
+   - Salvar na 999.CB TECH HOMOLOG → grava (só com a tabela ifood_fechamento.historico criada);
+   - variável com valor inválido → recusa toda gravação.
+- Falta conferir também (da 0.1.1): Safari/WebKit; teclado e axe.
+
+Arquivos alterados
+- src/server/salvar.ts (trava)
+- src/views/FechamentoIfoodMensalView.tsx, src/helpers.ts (modal da recusa)
+- src/faq.ts, src/module.ts
+- CHANGELOG.md, PRD.md, INTEGRATION.md, .env.example, package.json, package-lock.json
+- edge-functions/ (regerada pelo gia pack)
+
+Pendências com outros times
+- Time GIA, homologação: instalar a 0.1.2 com FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE definida com o id da 999.CB TECH HOMOLOG no cadastro de homologação (93 no gia.config.ts; conferir); só depois criar ifood_fechamento.historico no DW com sql-maestro/001_historico.sql; testar a gravação só na 999.
+- Time GIA, produção: não definir FECHAMENTO_IFOOD_MENSAL_EMPRESA_TESTE.
+- Time GIA e financeiro: combinar a data da virada a partir da qual o fechamento é feito só no portal; até lá, se as duas telas gravarem o mesmo mês da mesma loja, vale a última gravação; depois, desligar a tela antiga.
+- Time GIA (da 0.1.1, se ainda não feitas): sub-grupo iFood de Plataformas, módulo liberado na integração ifood do hub de Credenciais, secret GIA_SERVER_DATABASE_URL com os GRANTs, vínculo incompleto da 43 cbx.
+- Time do SDK: avisar a versão com a MensagemErro, para trocar a cópia pelo componente.
+- Enviar modules-fechamento-ifood-mensal-0.1.2.tgz ao time do Portal GIA pelo canal combinado.

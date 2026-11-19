@@ -214,6 +214,11 @@ export function AbaLancamentos({
           </Badge>
         ),
       },
+      {
+        accessorKey: 'operacao',
+        header: 'Operação',
+        meta: { calculadora: false },
+      },
       { accessorKey: 'classificacao', header: 'Classificação' },
       { accessorKey: 'fatoGerador', header: 'Fato gerador' },
       { accessorKey: 'pedidoCurto', header: 'Pedido' },
@@ -288,7 +293,7 @@ export function AbaLancamentos({
         className="[&_td]:whitespace-nowrap"
         fillHeight
         title="Lançamentos do iFood"
-        subtitle="Cada linha é um lançamento financeiro da API do iFood — a base das outras abas."
+        subtitle="Cada linha é um lançamento financeiro do iFood — a base das outras abas."
         columns={colunas}
         data={visiveis}
         actions={
@@ -302,7 +307,7 @@ export function AbaLancamentos({
         initialColumnVisibility={INICIAIS_OCULTAS}
         columnVisibilityToggle
         globalSearch
-        searchPlaceholder="Buscar lançamento, pedido, descrição…"
+        searchPlaceholder="Buscar lançamento, pedido, operação…"
         countNoun="lançamentos"
         pageSize={50}
         calculadora={{ contexto }}

@@ -8,7 +8,7 @@ export const tour = defineTour({
       screen: '/fechamento-ifood-mensal',
       target: '[data-tour="fechamento-ifood-mensal-filtros"]',
       title: 'Loja e mês',
-      body: 'Escolha a **loja** e o **mês de referência** (o padrão é o mês anterior). Loja sem iFood aparece com o aviso **Sem iFood**.',
+      body: 'Escolha a **loja** e o **mês de referência** (o padrão é o mês anterior). O fechamento junta **todas as operações da loja** (Coco Bambu, Express, Pizzaria, Vasto…); embaixo do nome aparecem as operações no iFood, ou **Sem iFood**.',
       placement: 'bottom',
     },
     {
@@ -40,8 +40,8 @@ export const tour = defineTour({
       screen: '/fechamento-ifood-mensal',
       target: '[data-tour="fechamento-ifood-mensal-historico"]',
       title: 'Histórico',
-      body: 'No rodapé, com a loja, o mês e a última gravação. Mostra cada gravação do mês: quem salvou, quando e o antes → depois de cada campo e de cada linha do extrato e dos cancelados.',
-      placement: 'top',
+      body: 'Na barra de filtros, ao lado do Salvar, depois de consultar. Mostra cada gravação do mês: quem salvou, quando e o antes → depois de cada campo e de cada linha do extrato e dos cancelados.',
+      placement: 'bottom',
     },
     {
       id: 'salvar',
