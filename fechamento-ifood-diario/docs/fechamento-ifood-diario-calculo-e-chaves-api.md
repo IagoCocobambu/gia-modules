@@ -17,7 +17,7 @@ Referências no código: `src/server/pedidos.ts` e `src/server/vendas.ts` (leitu
 
 1. O usuário escolhe a **loja (Empresa)** e o **dia**.
 2. **Pedidos do DW**: chegam numa chamada só, com todos os pedidos da loja no dia. Ficam só os dos canais **iFood** e **iFood Vasto**.
-3. **Vendas do iFood**: a tela busca as vendas do dia de **cada restaurante da loja no iFood** (um por operação com integração iFood: cb, cbx, pzcb, dani, adgcb, burger, vst, vstss…). Vêm em páginas de 20, até 4 páginas ao mesmo tempo.
+3. **Vendas do iFood**: a tela busca as vendas do dia de **cada restaurante da loja no iFood** (um por operação com integração iFood: cb, cbx, pzcb, dani, adgcb, burger, vst, vstss…). Vêm em páginas de 20, até 3 páginas ao mesmo tempo (menos quando o iFood oscila).
 4. **Cruzamento**: cada pedido do DW é ligado à venda do iFood correspondente (seção 4).
 5. **Colunas calculadas**: Total do pedido, Desconto copart, Status, Cancelamento… (seção 5).
 6. **Cards**: os 9 totais do dia (seção 6). Saem só depois que todas as partes chegaram.
@@ -91,12 +91,15 @@ Authorization: Bearer {token}
 - **`page`**: começa em 1. A página 1 diz o total em `pageCount`; cada página traz 20 vendas.
 - **Respostas tratadas:**
   - `204` (ou corpo vazio): o restaurante não teve vendas.
-  - `401`: token vencido → aviso.
+  - `401`: token vencido ou inválido → erro `424` do handler, sem nova tentativa; a tela encerra a pesquisa e mostra a mensagem de erro (a falha vale para todos os restaurantes). O mesmo para o hub sem a credencial `ifood`.
   - `403`: o restaurante não autorizou o aplicativo → aviso.
   - `404`: o iFood não reconhece o restaurante (identificador errado no cadastro da operação) → aviso.
-  - `429`: limite de requisições → espera e tenta de novo.
-- **Tempo limite**: 20 s por página.
-- **Página "leve"**: o iFood às vezes devolve vendas sem `payments`. Nesse caso a página é pedida de novo até 2 vezes, e fica a resposta mais completa.
+  - `429` com saldo de cota sobrando: repetição imediata (até 3); depois, `adiar` (`instavel`) e a página volta para o fim da fila da tela.
+  - `429` com a cota esgotada (`ifood-ratelimit-remaining` = 0) ou com `Retry-After`: `adiar` (`cota`) e a tela pausa todas as chamadas até o `Retry-After` ou o `ifood-ratelimit-reset` + 1 s (teto 60 s).
+  - `5xx` ou sem conexão: erro `503`/`502`; a tela tenta de novo (1,5 s e 4 s).
+- **Cota**: toda resposta traz `ifood-ratelimit-limit` (1.000), `ifood-ratelimit-remaining` e `ifood-ratelimit-reset` (segundos). A cota é uma só para a credencial inteira; com saldo abaixo de 20, a tela pausa antes do 429.
+- **Tempo limite**: 20 s por página (`504`, sem nova tentativa).
+- **Página "leve"**: o iFood às vezes devolve vendas sem nenhum evento financeiro (sem o `FINANCIAL_BILLED_ORDER_ENTRY`, quase sempre sem `payments`). A página é repetida na hora até 3 vezes; depois, `adiar` (`incompleta`) e ela volta para a fila. Cada página volta para a fila até 3 vezes e aguenta 5 pausas de cota; passou disso, a pesquisa termina em erro.
 
 #### Chaves lidas de cada venda (`sales[]`)
 
@@ -238,10 +241,10 @@ where coalesce(is_deleted, false) = false and tipo = 'ONLINE VR'
 
 ## 8. API do próprio módulo (handlers)
 
-| Handler   | Body                                      | Devolve                                                                                               |
-| --------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `lojas`   | —                                         | Empresas do escopo: `empresaId`, `nome`, `locRef`, `restaurantes[]` (`operacao`, `merchant`), `ativo` |
-| `pedidos` | `empresaId`, `data`                       | `pedidos[]` (DW, canais iFood e iFood Vasto) e `formasVr[]`                                           |
-| `vendas`  | `empresaId`, `data`, `merchant`, `pagina` | `vendas[]`, `totalPaginas`, `restaurante` (nome, na página 1) e `aviso`                               |
+| Handler   | Body                                      | Devolve                                                                                                |
+| --------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `lojas`   | —                                         | Empresas do escopo: `empresaId`, `nome`, `locRef`, `restaurantes[]` (`operacao`, `merchant`), `ativo`  |
+| `pedidos` | `empresaId`, `data`                       | `pedidos[]` (DW, canais iFood e iFood Vasto) e `formasVr[]`                                            |
+| `vendas`  | `empresaId`, `data`, `merchant`, `pagina` | `vendas[]`, `totalPaginas`, `restaurante` (nome, na página 1), `aviso`, `cota`, `repeticoes` e `adiar` |
 
 Todos os handlers exigem a permissão `fechamento-ifood-diario.ler`. Os que recebem loja conferem o escopo com `requireEmpresa`. O `vendas` recusa (422) um `merchant` que não seja da loja.

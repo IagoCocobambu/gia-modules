@@ -1,0 +1,58 @@
+Fechamento iFood Diário 0.2.5 - conferência final: sem merchant ID no código, Excel exportado × chamadas e planilha do financeiro × regras - 12/11/2026
+
+Entrega
+- Módulo: fechamento-ifood-diario ("Fechamento iFood Diário")
+- Versão: 0.2.5 (reempacotada; mesma versão)
+- Pacote: modules-fechamento-ifood-diario-0.2.5.tgz (99,7 kB, 32 arquivos, sem .env nem segredos)
+- Menu: Plataformas › iFood › Fechamento iFood Diário
+- Validação SDK: gia validate 58/58, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- Mudança desde o pacote anterior da 0.2.5: só o INTEGRATION.md (texto); código igual
+
+1. Nenhum merchant ID fora do gia.config.ts
+- Varredura do módulo inteiro (código, função gerada, scripts, docs, avisos de entrega) e do
+  pacote: os 237 merchant IDs do iFood estão só no gia.config.ts.
+- O único que sobrava fora era o UUID incompleto da 43 cbx, citado no INTEGRATION.md; saiu
+  do texto (o INTEGRATION descreve o caso sem o identificador).
+- Em produção os restaurantes vêm do cadastro de operações do portal (ctx.operacoes() →
+  integracoes); o gia.config.ts alimenta só o gia dev.
+
+2. Excel do Diário × chamadas aos handlers (gia dev, iFood e DW reais, só leitura, 11/11/2026)
+- Na tela: Pesquisar e Exportar. Por fora: as chamadas lojas, pedidos e vendas (todas as
+  páginas de cada restaurante), com as mesmas regras da tela. Comparados pedido a pedido
+  (ID, Total do pedido, Desconto copart, Cancelamento, Status, iFood reembolsa?,
+  Restaurante no iFood, Operação) e os 9 valores da aba Resumo.
+- 01.CB GOIANIA (01 burger, 01 cb, 01 cbx): 27 pedidos no Excel e nas chamadas, 27 iguais;
+  9 de 9 valores iguais; 20 pedidos do 01 cb e 7 do 01 cbx.
+- 03.CB JK (03 adgcb, 03 cb ×2, 03 plus, 03 pzcb): 67 pedidos, 67 iguais; 9 de 9 valores
+  iguais; 3 cancelados.
+- 43.CB SÃO BERNARDO (43 cbx ×2, 43 conc): 27 pedidos, 27 iguais; 9 de 9 valores iguais;
+  aviso só para o vínculo incompleto da 43 cbx (404), o outro vínculo da 43 cbx e a 43
+  conc normais.
+- Nenhum erro de console nas três pesquisas.
+
+3. Planilha "Fechamento diário iFood v(13-08-2025).xlsx" (loja 41, 13/08/2025, 25 pedidos)
+- O dia não pode ser consultado de novo: a API do iFood não aceita data com mais de 390
+  dias (hoje o limite é 18/10/2025) e o DW tem só 1 ou 2 pedidos por dia da loja 41 em
+  agosto/2025. Por isso a comparação foi das contas: as fórmulas do Excel × as regras do
+  módulo, com os 25 pedidos do Excel passados pelas funções do módulo.
+- Iguais ao Excel (25 de 25 pedidos): Total do pedido (taxa de entrega + itens −
+  incentivo da loja), iFood reembolsa? (pelo incentivo da loja: 0, 12, até 10, acima) e
+  Cancelamento (OK sem origem de cancelamento e com Confirmado = SIM).
+- Cards: as contas do módulo são as mesmas das fórmulas do Excel. Com o Status e o
+  Desconto copart de cada pedido iguais aos do Excel, os 8 valores do topo batem (8 de 8:
+  iFood Online 3.502,51; Descontos OFFLINE e VR 14,70; iFood Adquirentes 252,91; Desc.
+  LOJA 35,00 / 9,99 / 5,00; Copart 63,00; sem classificação 0,00).
+- DIFERENTE: a regra do Desconto copart. Excel = taxa de entrega + itens − incentivo
+  iFood − incentivo loja + taxa de serviço − total do pedido (o que o cliente deixou de
+  pagar além dos incentivos). Módulo = incentivo iFood − taxa de serviço (regra da tela
+  antiga, descrita no PRD e na FAQ). Nos 25 pedidos do Excel, 0 iguais (ex.: pedido
+  8685: Excel 7,00 × módulo 1,01). Com a regra do módulo, 3 valores do topo mudam:
+  iFood Online +6,02, iFood Adquirentes +7,98, Copart −6,28.
+- Não comparável com esse arquivo: o Status de cada pedido. O Excel classifica pela aba
+  Legendas, com o texto do portal do iFood ("Crédito (Visa) pelo app"); o módulo, pelo
+  texto do DW ("CREDIT ONLINE VISA - PRE PAGO") e pelo cadastro de formas do Maestro.
+- A regra do módulo não foi mudada: qual Copart vale é decisão do financeiro.
+
+Sugestão (não feita)
+- Pesquisar um dia com mais de 390 dias mostra só "A API do iFood respondeu 400". Dá para
+  recusar a data no filtro com uma mensagem clara.

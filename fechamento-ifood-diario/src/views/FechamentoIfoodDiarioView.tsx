@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { useLayoutEffect, useMemo, useState, type ReactNode } from 'react'
 import { AlertTriangle, ChartPie, ReceiptText, X } from 'lucide-react'
 import {
   Badge,
@@ -19,9 +19,9 @@ import { BadgeTipoPagamento } from '../components/BadgeTipoPagamento'
 import { Dica } from '../components/Dica'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
 import { MensagemErro } from '../components/MensagemErro'
-import { ProgressoConsulta } from '../components/ProgressoConsulta'
 import { Recolhivel } from '../components/Recolhivel'
 import { ResumoCards } from '../components/ResumoCards'
+import { useCabemTotais } from '../hooks/use-cabem-totais'
 import { useConsultaDiaria } from '../hooks/use-consulta-diaria'
 import {
   COLUNAS_PEDIDO,
@@ -43,23 +43,6 @@ import type { Consulta, FechamentoResposta, FiltroTotal, PedidoIfood, TotaisDia 
 /** Abaixo desta largura (px) a tela usa o layout de celular — o mesmo corte do
  *  `DataReport` (`@3xl` = 48rem), que vira lista de cards nesse ponto. */
 const LARGURA_COMPACTA = 768
-
-/** Em telas com esta altura (px) ou mais a barra de totais nasce aberta. */
-const MQ_TELA_ALTA = '(min-height: 700px)'
-
-function assinarTelaAlta(aoMudar: () => void) {
-  const mq = window.matchMedia(MQ_TELA_ALTA)
-  mq.addEventListener('change', aoMudar)
-  return () => mq.removeEventListener('change', aoMudar)
-}
-
-function useTelaAlta(): boolean {
-  return useSyncExternalStore(
-    assinarTelaAlta,
-    () => window.matchMedia(MQ_TELA_ALTA).matches,
-    () => false
-  )
-}
 
 /** Mede a ÁREA do módulo (não a janela), como o `DataReport`. */
 function useModoCompacto(el: HTMLElement | null): boolean {
@@ -232,31 +215,34 @@ export function FechamentoIfoodDiarioView() {
 
   const [area, setArea] = useState<HTMLDivElement | null>(null)
   const compacto = useModoCompacto(area)
-  const telaAlta = useTelaAlta()
-  const [totaisEscolhidos, setTotaisEscolhidos] = useState<boolean | null>(null)
-  const totaisAbertos = totaisEscolhidos ?? (telaAlta && !compacto)
 
   const lojasQuery = useLojasFechamentoIfood(canView)
   const lojas = useMemo(() => lojasQuery.data ?? [], [lojasQuery.data])
   // Sem escolha do usuário, vale a primeira loja da lista (como no legado).
   const empresaSelecionada = filtros.empresaId ?? lojas[0]?.empresaId ?? null
 
-  // A consulta em partes (pedidos do DW + páginas do iFood em paralelo), com progresso.
-  const {
-    fase,
-    progresso,
-    resultado,
-    erro: erroConsulta,
-    erroOriginal,
-    consultar,
-    cancelar,
-  } = useConsultaDiaria()
+  // A consulta em partes (pedidos do DW + páginas do iFood em paralelo); a tabela
+  // aparece quando os pedidos chegam e vai sendo cruzada com o iFood.
+  const { fase, resultado, erro: erroConsulta, erroOriginal, consultar } = useConsultaDiaria()
   const pedidos = useMemo(() => resultado?.pedidos ?? [], [resultado])
   const carregando = fase === 'consultando'
   const erro = lojasQuery.error?.message ?? erroConsulta
   const painelDisponivel = resultado !== null && !erro
   // Resultado parcial: os pedidos já estão na tabela, o iFood ainda está chegando.
   const parcial = resultado !== null && !resultado.completo
+
+  // Cards (Totais): abertos enquanto a tabela, com eles abertos, ainda mostra umas 5
+  // linhas (padrão 10), até o usuário usar o botão Totais; daí vale a escolha dele. No
+  // celular começam fechados (padrão 3). A conta é refeita quando a tabela aparece ou
+  // troca (pesquisa, carregamento, erro).
+  const [painelTotais, setPainelTotais] = useState<HTMLDivElement | null>(null)
+  const cabemTotais = useCabemTotais(
+    area,
+    painelTotais,
+    `${consulta !== null}|${carregando && !resultado}|${pedidos.length > 0}|${Boolean(erro)}`
+  )
+  const [totaisEscolhidos, setTotaisEscolhidos] = useState<boolean | null>(null)
+  const totaisAbertos = totaisEscolhidos ?? (cabemTotais && !compacto)
 
   // Os valores do dia só com o resultado completo: parcial não vira número na tela.
   const totais = useMemo(
@@ -268,7 +254,7 @@ export function FechamentoIfoodDiarioView() {
     [pedidos, filtroTotal]
   )
 
-  // Depois de um erro ou de cancelar, a mesma pesquisa pode ser repetida.
+  // Depois de um erro, a mesma pesquisa pode ser repetida.
   const semAlteracao =
     consulta !== null &&
     (fase === 'consultando' || fase === 'pronto') &&
@@ -450,7 +436,9 @@ export function FechamentoIfoodDiarioView() {
     const erroDaVez = lojasQuery.error ?? erroOriginal ?? erro
     const handler = (erroDaVez as { requisicao?: { handler?: string } } | null)?.requisicao?.handler
     emptyState = (
-      <div className="flex max-h-full w-full justify-center overflow-y-auto px-4 py-4">
+      // Mesma posição do estado "Aguardando consulta" (EmptyState): no topo da área,
+      // centrada na horizontal, com o mesmo py-12.
+      <div className="flex max-h-full w-full justify-center overflow-y-auto px-4 py-12">
         <MensagemErro
           erro={erroDaVez}
           origem={
@@ -462,14 +450,6 @@ export function FechamentoIfoodDiarioView() {
           }}
         />
       </div>
-    )
-  } else if (!consulta) {
-    emptyState = (
-      <EmptyState
-        icon={ReceiptText}
-        title="Aguardando consulta"
-        description="Selecione a loja e o dia e clique em Pesquisar para ver o fechamento iFood."
-      />
     )
   } else if (pedidos.length > 0) {
     emptyState = (
@@ -551,66 +531,74 @@ export function FechamentoIfoodDiarioView() {
         {resultado && !erro && <Avisos resposta={resultado} />}
 
         <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos}>
-          <ResumoCards
-            totais={totais}
-            carregando={carregando || parcial}
-            filtro={filtroTotal}
-            onFiltroChange={setFiltroTotal}
-          />
+          {/* Medido pelo useCabemTotais: a altura natural da seção, mesmo fechada. */}
+          <div ref={setPainelTotais}>
+            <ResumoCards
+              totais={totais}
+              carregando={carregando || parcial}
+              filtro={filtroTotal}
+              onFiltroChange={setFiltroTotal}
+            />
+          </div>
         </Recolhivel>
 
-        {/* A faixa de progresso fica acima da tabela durante toda a busca (como no
-            Fechamento iFood Mensal); a tabela carrega até os pedidos chegarem. */}
-        {carregando && consulta && (
-          <ProgressoConsulta
-            progresso={progresso}
-            comPedidos={resultado !== null}
-            onCancelar={() => {
-              cancelar()
-              setConsulta(null)
-            }}
+        {/* Antes da primeira pesquisa, só o aviso (como no Fechamento iFood Mensal): a
+            tabela vazia, com título e barra, não diz nada a quem chega. Erro continua
+            dentro da tabela. */}
+        {!consulta && !erro ? (
+          // Os passos "Cards do dia" e "Colunas e Excel" do tour apontam para o botão
+          // Totais e a barra da tabela; sem tabela, para este aviso (só um dos dois
+          // existe por vez).
+          <div className="shrink-0" data-tour="fechamento-ifood-diario-totais">
+            <div data-tour="fechamento-ifood-diario-toolbar">
+              <EmptyState
+                icon={ReceiptText}
+                title="Aguardando consulta"
+                description="Selecione a loja e o dia e clique em Pesquisar para ver o fechamento iFood."
+              />
+            </div>
+          </div>
+        ) : (
+          <DataReport<PedidoIfood>
+            loading={carregando && !resultado}
+            className={cn('[&_td]:whitespace-nowrap', compacto ? 'shrink-0' : 'min-h-0 flex-1')}
+            fillHeight={!compacto}
+            title="Pedidos iFood"
+            subtitle={subtitle}
+            actions={acoes}
+            globalSearch={compacto}
+            columnVisibilityToggle
+            initialColumnVisibility={COLUNAS_INATIVAS}
+            fullscreenToggle={!compacto}
+            emptyState={emptyState}
+            toolbarTourId="fechamento-ifood-diario-toolbar"
+            data={erro ? [] : pedidosVisao}
+            columns={!carregando && (erro || pedidosVisao.length === 0) ? SEM_COLUNAS : colunas}
+            getRowId={(p) => p.id || `${p.n_pedido}-${p.data_de_criacao}`}
+            searchPlaceholder="Buscar pedido, forma de pagamento…"
+            countNoun="pedidos"
+            pageSize={50}
+            rowClassName={(p) =>
+              p.venda_concluida === 'Cancelado'
+                ? 'bg-destructive/5'
+                : p.venda_concluida === 'Aguardando'
+                  ? 'opacity-60 transition-opacity duration-default'
+                  : undefined
+            }
+            onExport={
+              canExport && consulta && resultado?.completo && totais
+                ? (visiveis) =>
+                    exportarXlsx(
+                      visiveis,
+                      totais,
+                      consulta,
+                      pedidos.length,
+                      filtroTotal ? NOME_DO_TOTAL[filtroTotal] : null
+                    )
+                : undefined
+            }
           />
         )}
-
-        <DataReport<PedidoIfood>
-          loading={carregando && !resultado}
-          className={cn('[&_td]:whitespace-nowrap', compacto ? 'shrink-0' : 'min-h-0 flex-1')}
-          fillHeight={!compacto}
-          title="Pedidos iFood"
-          subtitle={subtitle}
-          actions={acoes}
-          globalSearch={compacto}
-          columnVisibilityToggle
-          initialColumnVisibility={COLUNAS_INATIVAS}
-          fullscreenToggle={!compacto}
-          emptyState={emptyState}
-          toolbarTourId="fechamento-ifood-diario-toolbar"
-          data={erro ? [] : pedidosVisao}
-          columns={!carregando && (erro || pedidosVisao.length === 0) ? SEM_COLUNAS : colunas}
-          getRowId={(p) => p.id || `${p.n_pedido}-${p.data_de_criacao}`}
-          searchPlaceholder="Buscar pedido, forma de pagamento…"
-          countNoun="pedidos"
-          pageSize={50}
-          rowClassName={(p) =>
-            p.venda_concluida === 'Cancelado'
-              ? 'bg-destructive/5'
-              : p.venda_concluida === 'Aguardando'
-                ? 'opacity-60 transition-opacity duration-default'
-                : undefined
-          }
-          onExport={
-            canExport && consulta && resultado?.completo && totais
-              ? (visiveis) =>
-                  exportarXlsx(
-                    visiveis,
-                    totais,
-                    consulta,
-                    pedidos.length,
-                    filtroTotal ? NOME_DO_TOTAL[filtroTotal] : null
-                  )
-              : undefined
-          }
-        />
       </div>
     </WidthFrame>
   )

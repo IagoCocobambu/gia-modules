@@ -22,13 +22,13 @@ export const faq: ModuleFaq = {
 
 ## Enquanto a pesquisa roda
 
-Durante a busca, uma **faixa acima da tabela** mostra o andamento das duas etapas,
-com a barra das páginas do iFood e o botão **Cancelar**:
+A pesquisa busca duas coisas ao mesmo tempo:
 
-- **Vendas no iFood** — as vendas do dia de **cada restaurante da loja no iFood**
-  vêm em páginas de 20, várias ao mesmo tempo; a faixa mostra quantos restaurantes
-  são, quantas páginas já chegaram (o total cresce à medida que cada restaurante diz
-  quantas páginas tem) e quantas vendas;
+- **Vendas no iFood** — as vendas do dia de **cada restaurante da loja no iFood**,
+  em páginas de 20, várias ao mesmo tempo. Quando o iFood oscila (devolve uma página
+  incompleta ou recusa por excesso de consultas), a tela pede aquela página de novo e
+  diminui o ritmo; quando o limite de consultas do iFood acaba, ela espera ele renovar
+  (até 1 minuto) e continua sozinha. Nesses casos a pesquisa só fica mais lenta;
 - **Pedidos do delivery** — os pedidos da loja no dia vêm de uma vez só. Em loja
   grande é a parte mais demorada: pode levar até 1 minuto.
 
@@ -42,8 +42,8 @@ chegam, a **tabela já aparece**, mesmo com vendas do iFood ainda chegando:
   esperando: só aparecem com as duas etapas completas, para nenhum número parcial
   ser tomado pelo fechamento do dia.
 
-Dá para continuar usando o portal enquanto isso. **Cancelar** interrompe a pesquisa
-e volta a tela para o começo.
+Dá para continuar usando o portal enquanto isso. Para desistir da pesquisa, escolha
+outra loja ou outro dia e clique em **Pesquisar**: a pesquisa anterior é abandonada.
 
 Depois de pesquisar, a tela mostra, de cima para baixo:
 
@@ -112,9 +112,12 @@ mapeadas**. Sem nenhuma, ele mostra **0** em verde.
 
 ## Mostrar e esconder os cards
 
-O botão **Totais**, na barra da tabela, mostra e esconde os cards. Eles nascem
-abertos no computador com tela de 700 px de altura ou mais e fechados nas telas
-mais baixas e no celular, para sobrar espaço para a tabela.
+O botão **Totais**, na barra da tabela, mostra e esconde os cards a qualquer momento.
+No computador, eles ficam abertos enquanto a tabela ainda mostra umas **5 linhas** de
+pedidos; numa tela mais baixa (ou ao diminuir a janela), eles se recolhem sozinhos, e
+abrem de novo quando o espaço volta. Depois que você usa o botão Totais, vale a sua
+escolha até recarregar a página. **Ver todos os totais** não recolhe os cards. No
+celular eles começam fechados, para sobrar espaço para a lista.
 
 Na barra ficam **sempre à vista 4 cards**: **iFood online**, **iFood adquirentes**,
 **desconto copart** e **pagamentos sem classificação** (o que deveria ser zero). Os
@@ -280,7 +283,7 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
         },
         {
           q: 'Por que a pesquisa demora em algumas lojas?',
-          a: 'O tempo é quase todo da etapa Pedidos do delivery, que traz todos os pedidos da loja no dia de uma vez — numa loja grande, até 1 minuto. As vendas do iFood de cada restaurante da loja vêm em paralelo, várias páginas ao mesmo tempo, e costumam terminar antes. O andamento de cada etapa aparece na faixa acima da tabela; se precisar, use Cancelar.',
+          a: 'O tempo é quase todo da etapa Pedidos do delivery, que traz todos os pedidos da loja no dia de uma vez — numa loja grande, até 1 minuto. As vendas do iFood de cada restaurante da loja vêm em paralelo, várias páginas ao mesmo tempo, e costumam terminar antes. Enquanto isso a tabela fica carregando; os pedidos aparecem assim que o delivery responde.',
         },
         {
           q: 'Os cards não mudaram quando filtrei a tabela. Está certo?',
@@ -326,15 +329,15 @@ A consulta é feita na hora do clique. Nada é gravado no portal.
         },
         {
           q: 'O aviso amarelo começa com o nome de um restaurante (ex.: "Coco Bambu Express (17 cbx): …"). O que quer dizer?',
-          a: 'Que a falha foi só na parte do iFood daquele restaurante. Os pedidos dele que não vieram ficam como Cancelado; os dos outros restaurantes da loja estão certos. Pesquise de novo em alguns minutos. Se o aviso for 403, o restaurante não autorizou o aplicativo da Coco Bambu no Portal do Parceiro do iFood. Se for 404, o iFood não reconhece o identificador do restaurante que está no cadastro da operação (ele está errado ou incompleto). Nos dois casos, pesquisar de novo não resolve: avise o time do Portal GIA.',
+          a: 'Que o iFood recusou aquele restaurante, e os pedidos dele ficam como Cancelado; os dos outros restaurantes da loja estão certos. Se o aviso for 403, o restaurante não autorizou o aplicativo da Coco Bambu no Portal do Parceiro do iFood. Se for 404, o iFood não reconhece o identificador do restaurante que está no cadastro da operação (ele está errado ou incompleto). Nos dois casos, pesquisar de novo não resolve: avise o time do Portal GIA.',
         },
         {
-          q: 'Apareceu um aviso de que a API do iFood respondeu com erro. Os números valem?',
-          a: 'Não confie nos cards desse dia: os pedidos que não vieram do iFood ficam como Cancelado e saem dos cards. Pesquise de novo em alguns minutos. Se o aviso falar de credencial (403/503), avise o administrador do portal.',
+          q: 'A API do iFood falhou no meio da pesquisa. Os números valem?',
+          a: 'A tela não mostra número pela metade. Quando o iFood oscila, ela pede a página de novo, diminui o ritmo e, se o limite de consultas do iFood acabou, espera ele renovar — a pesquisa só demora mais. Se mesmo assim uma página não vier, a pesquisa termina com a mensagem de erro no lugar da tabela ("Vendas no iFood"), em vez de deixar pedidos como Cancelado por falta de resposta. Clique em Tentar de novo em alguns minutos.',
         },
         {
           q: 'A tabela mostrou uma mensagem de erro no lugar dos pedidos. O que faço?',
-          a: 'O título diz o tipo do problema e a primeira frase diz qual sistema falhou (a API de delivery do DW, a API do iFood ou o banco do Maestro). "Um sistema não respondeu agora" costuma passar em alguns minutos: clique em Tentar de novo. "Sem conexão com o portal" é a sua internet ou a VPN: a pesquisa é refeita sozinha quando a conexão volta. "Algo deu errado do nosso lado" é configuração ou resposta inesperada: tente de novo e, se continuar, avise o suporte. "Você não tem acesso a isso" só o gestor resolve.',
+          a: 'O título diz o tipo do problema e a primeira frase diz qual sistema falhou (a API de delivery do DW, a API do iFood ou o banco do Maestro). "Um sistema não respondeu agora" costuma passar em alguns minutos: clique em Tentar de novo. "Algo deu errado do nosso lado" é configuração, resposta inesperada ou a pesquisa que nem chegou ao portal (internet ou VPN caiu): tente de novo e, se continuar, avise o suporte; quando foi a internet, a pesquisa é refeita sozinha assim que a conexão volta. Se a frase disser que o iFood recusou a credencial (token vencido ou inválido), a falha vale para todos os restaurantes da loja e a pesquisa não mostra pedidos: avise o administrador do portal. "Você não tem acesso a isso" só o gestor resolve.',
         },
         {
           q: 'Para que serve "Ver detalhes técnicos"?',

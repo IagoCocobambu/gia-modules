@@ -1,15 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react'
-import {
-  Check,
-  Clock,
-  CloudOff,
-  Copy,
-  Download,
-  Info,
-  Lock,
-  RefreshCw,
-  WifiOff,
-} from 'lucide-react'
+import { Check, Clock, CloudOff, Copy, Download, Info, Lock, RefreshCw } from 'lucide-react'
 import { Button, Modal } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
 import { ultimasFalhas, type FalhaDeChamada } from '@gia-cb/sdk/server-client'
@@ -22,19 +12,18 @@ import { ultimasFalhas, type FalhaDeChamada } from '@gia-cb/sdk/server-client'
  * "Detalhes técnicos", com o que foi enviado (o `.requisicao` que o server-client do
  * SDK anexa ao erro) e o que voltou.
  *
- * - `conexao` (sem resposta: internet caiu, portal fora do alcance): refaz sozinho
- *   quando a conexão volta.
  * - `temporario` (408, 429, 503, 504): um sistema demorou ou está fora do ar; tentar de
  *   novo resolve. O servidor responde 503 quando não conseguiu conectar a um banco ou API.
  * - `ajuste` (400, 404, 422): a pesquisa precisa mudar.
  * - `acesso` (401, 403): só o gestor resolve.
- * - `servico` (500, 502 e o resto): configuração ou resposta inesperada; tentar de novo
- *   e, se continuar, suporte.
+ * - `servico` (500, 502, sem resposta e o resto): configuração, resposta inesperada ou
+ *   chamada que nem chegou ao portal ("Failed to fetch"); tentar de novo e, se continuar,
+ *   suporte. Sem resposta, a pesquisa também é refeita sozinha quando a internet volta.
  *
  * O texto é a primeira frase da mensagem do servidor (que diz QUAL sistema falhou) mais a
  * orientação do tipo. A mensagem inteira fica no modal.
  */
-export type TipoErro = 'conexao' | 'temporario' | 'ajuste' | 'acesso' | 'servico'
+export type TipoErro = 'temporario' | 'ajuste' | 'acesso' | 'servico'
 
 interface Props {
   erro: unknown
@@ -62,16 +51,6 @@ const TIPOS: Record<
     tentar: boolean
   }
 > = {
-  conexao: {
-    rotulo: 'sem conexão',
-    titulo: 'Sem conexão com o portal',
-    texto:
-      'Verifique a internet (ou a VPN). Assim que a conexão voltar, a pesquisa é refeita sozinha.',
-    icone: WifiOff,
-    caixa: 'bg-warning/10 border-warning/30 text-warning',
-    selo: 'bg-warning/10 border-warning/30 text-warning',
-    tentar: true,
-  },
   temporario: {
     rotulo: 'temporário',
     titulo: 'Um sistema não respondeu agora',
@@ -140,20 +119,28 @@ const BANCO_FORA: Record<string, string> = {
   PGRST003: 'O banco do portal está ocupado e não atendeu a tempo.',
 }
 
+/**
+ * Sem status e com a mensagem do navegador ("Failed to fetch"): a resposta nem chegou
+ * (internet do usuário ou portal fora do alcance). Mostra como erro genérico (`servico`).
+ */
+function semResposta(erro: unknown): boolean {
+  const status = falhaDe(erro)?.status ?? (erro as { status?: number } | null)?.status
+  return (
+    status == null &&
+    ((typeof navigator !== 'undefined' && navigator.onLine === false) ||
+      /failed to fetch|fetch failed|networkerror|load failed|network request failed/.test(
+        mensagemDe(erro).toLowerCase()
+      ))
+  )
+}
+
 /** O tipo pelo status HTTP (e pela mensagem, quando o status não diz o bastante). */
 function classificarErro(erro: unknown): TipoErro {
   const falha = falhaDe(erro)
   const status = falha?.status ?? (erro as { status?: number } | null)?.status
   const msg = mensagemDe(erro).toLowerCase()
   if (BANCO_FORA[codigoDe(erro)]) return 'temporario'
-  // Sem status = a resposta nem chegou: internet do usuário ou portal fora do alcance.
-  if (
-    status == null &&
-    ((typeof navigator !== 'undefined' && navigator.onLine === false) ||
-      /failed to fetch|fetch failed|networkerror|load failed|network request failed/.test(msg))
-  ) {
-    return 'conexao'
-  }
+  if (semResposta(erro)) return 'servico'
   if (
     status === 408 ||
     status === 429 ||
@@ -277,23 +264,24 @@ export function MensagemErro({
   const mensagem = ocultarTexto(mensagemDe(erro))
   const falha = falhaDe(erro)
   // A frase do servidor diz o que houve (e em qual sistema); o tipo diz o que fazer.
-  // Sem conexão, a mensagem é a do navegador ("Failed to fetch"): só o texto do tipo.
+  // Sem resposta, a mensagem é a do navegador ("Failed to fetch"): só o texto do tipo
+  // (sem status, `frase` já fica nula).
   // Erro do banco do portal vem em inglês: a frase é a da tabela `BANCO_FORA`.
   const codigo = codigoDe(erro)
-  const frase =
-    BANCO_FORA[codigo] ?? (tipo !== 'conexao' && falha?.status ? primeiraFrase(mensagem) : null)
+  const frase = BANCO_FORA[codigo] ?? (falha?.status ? primeiraFrase(mensagem) : null)
   const texto = descricao ?? (frase ? `${frase} ${t.texto}` : t.texto)
   const statusErro = falha?.status ?? (erro as { status?: number } | null)?.status
   const consulta = (erro as { consulta?: unknown } | null)?.consulta
 
-  // Sem conexão: refaz sozinho quando o navegador avisa que a internet voltou.
+  // Sem resposta: refaz sozinho quando o navegador avisa que a internet voltou.
   const raiz = useRef<HTMLDivElement>(null)
   const tentarRef = useRef(onTentarDeNovo)
   useEffect(() => {
     tentarRef.current = onTentarDeNovo
   })
+  const refazAoVoltar = semResposta(erro)
   useEffect(() => {
-    if (tipo !== 'conexao') return
+    if (!refazAoVoltar) return
     // A tabela pode desenhar o estado vazio duas vezes (tabela e cards, um escondido):
     // só a mensagem visível refaz, senão a pesquisa sairia em dobro.
     const aoVoltar = () => {
@@ -301,7 +289,7 @@ export function MensagemErro({
     }
     window.addEventListener('online', aoVoltar)
     return () => window.removeEventListener('online', aoVoltar)
-  }, [tipo])
+  }, [refazAoVoltar])
 
   const resumo: [string, string][] = [
     ['Status', statusErro != null ? String(statusErro) : 'sem resposta'],

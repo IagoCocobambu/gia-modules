@@ -1,5 +1,67 @@
 # Changelog — Fechamento iFood Diário
 
+## 0.2.6 — 16/11/2026
+
+Ajustes de tela e de erro, retentativa do iFood igual à do Fechamento iFood Mensal e
+revisão contra o SDK alpha.71.
+
+- **Mensagem de erro** da pesquisa na mesma posição do estado vazio "Aguardando
+  consulta" (`EmptyState`): no alto da área, centrada na horizontal, com o mesmo
+  `py-12` (era `py-4`). Continua rolando se não couber.
+- **Sem resposta do portal** ("Failed to fetch": internet, VPN ou portal fora do
+  alcance) mostrado como **erro genérico** (`servico`: vermelho, "Algo deu errado do nosso
+  lado", Tentar de novo), no lugar do alerta amarelo "Sem conexão com o portal". Sai o tipo
+  `conexao` da `MensagemErro`; a pesquisa continua sendo refeita sozinha quando a
+  internet volta. FAQ atualizada.
+- **Falha da credencial do iFood** (token vencido ou inválido, 401, ou o hub sem a
+  credencial `ifood`) vira **erro da pesquisa**, com a mensagem de erro genérica no
+  centro da tabela, no lugar dos avisos amarelos repetidos por restaurante. O handler
+  `vendas` responde **424** nesse caso (antes: resposta OK com `aviso`); a tela não tenta
+  de novo e encerra a pesquisa. 403 e 404 de um restaurante continuam como aviso. FAQ,
+  PRD, INTEGRATION e o doc de cálculo e chaves atualizados.
+- **Sai a faixa de andamento** acima da tabela (`ProgressoConsulta`: spinner, barra de
+  progresso, detalhe das etapas e Cancelar), a pedido do usuário — diverge do padrão 9
+  do workspace. Durante a pesquisa a tabela fica no carregamento do `DataReport` até os
+  pedidos do delivery chegarem e depois vai sendo cruzada com o iFood (selo
+  _Aguardando iFood_), como antes. Sem o Cancelar, pesquisar outra loja ou outro dia
+  abandona a pesquisa em andamento. Sai também o estado de progresso do
+  `use-consulta-diaria` (`ProgressoDiario`, `cancelar`). FAQ, tour e PRD atualizados.
+- **Antes da primeira pesquisa, sem a tabela**: só o aviso "Aguardando consulta" abaixo
+  dos filtros, como no Fechamento iFood Mensal (era a tabela vazia, com título e barra).
+  O `DataReport` aparece com a pesquisa; o erro continua dentro dela. Os passos _Cards
+  do dia_ e _Colunas e Excel_ do tour apontam para o aviso enquanto a tabela não existe
+  (ele leva os `data-tour` do botão Totais e da barra; só um dos dois existe por vez).
+- **Retentativa do iFood igual à do Fechamento iFood Mensal 0.1.1**, pelo comportamento
+  medido da API (testes de 13 e 16/11/2026, `fechamento-ifood-mensal/docs/teste-ifood-*`):
+  - o handler `vendas` lê `ifood-ratelimit-remaining`/`-reset` em toda resposta e
+    devolve o saldo da cota (`cota`), as repetições (`repeticoes`) e `adiar`;
+  - página com vendas vazias (agora: sem o `FINANCIAL_BILLED_ORDER_ENTRY`; antes: sem
+    `payments`) e 429 com saldo de cota sobrando: repetição **imediata**, até 3 vezes;
+    depois, `adiar` e a página volta para o fim da fila da tela, até 3 vezes. Antes: a
+    página leve era pedida de novo até 2 vezes e a tela **aceitava** a mais completa
+    (Total do parceiro e Data limite de contestação podiam sair vazios); no 429 o
+    handler esperava o `Retry-After` ou 1,5/3/6 s;
+  - 429 com a cota esgotada (saldo 0) ou com `Retry-After`: `adiar` na hora e a tela
+    **pausa todas as chamadas** até o `Retry-After` ou o reset + 1 s (teto 60 s); com
+    saldo abaixo de 20, a pausa vem antes (freio); 5 pausas por página;
+  - **concorrência adaptativa**: até 3 páginas ao mesmo tempo (eram 4 fixas); baixa 1
+    (no máximo a cada 3 s) quando uma página precisa de 2 ou mais repetições ou volta
+    para a fila, e sobe 1 a cada 8 páginas seguidas sem repetição;
+  - rede/5xx: 2 novas tentativas (1,5 s e 4 s) com variação aleatória; tempo esgotado
+    (504, 20 s) e recusas (4xx) não repetem (antes, toda falha era repetida).
+- **Página do iFood que esgota as tentativas encerra a pesquisa em erro** (mensagem de
+  erro com origem "Vendas no iFood", a frase do motivo e os detalhes técnicos), a pedido
+  do usuário. Antes, virava aviso do restaurante e os pedidos dele ficavam Cancelado sem
+  ser. Só 403/404 de um restaurante continuam como aviso. FAQ, PRD, INTEGRATION e o doc
+  de cálculo e chaves atualizados.
+- **Cards (Totais) abertos pela regra das 5 linhas** (padrão 10 do workspace), no lugar
+  do `matchMedia('(min-height: 700px)')`: fora do celular, a barra fica aberta enquanto
+  a tabela, com ela aberta, ainda mostra 5 linhas, e recolhe sozinha quando não cabe;
+  reabre quando o espaço abaixo dos filtros cresce 24 px além do que tinha ao fechar
+  (sem pisca-pisca). A parte de "Ver todos os totais" fica fora da conta. Depois do
+  clique em **Totais**, vale a escolha do usuário. Hook `use-cabem-totais.ts`, com a
+  conta do `useCabemTotais` do Fechamento Maestro 0.4.2. FAQ e PRD atualizados.
+
 ## 0.2.5 — 12/11/2026
 
 Restaurantes do iFood vindos do cadastro do portal — sai a tabela fixa do código

@@ -1,31 +1,38 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { buscarPaginaVendas, buscarPedidos } from '../api/fechamento-ifood-diario'
 import { montarFechamento, type RestauranteNomeado } from '../regras'
-import type { Consulta, FechamentoResposta, RespostaPedidos, VendaIfood } from '../types'
+import type {
+  Consulta,
+  FechamentoResposta,
+  RespostaPedidos,
+  RespostaVendas,
+  VendaIfood,
+} from '../types'
 
 /**
- * Páginas do iFood buscadas ao mesmo tempo (o mesmo do Fechamento iFood Mensal). Cada
- * página leva 3–4 s e tem 20 vendas; teto baixo porque o iFood limita requisições.
+ * Páginas do iFood buscadas ao mesmo tempo — **adaptativo**, como no Fechamento iFood
+ * Mensal 0.1.1. Medido no Mensal em 16/11/2026: com carga alta o iFood devolve cada vez
+ * mais páginas vazias (18% → 50% em 2 min com 8 ao mesmo tempo). Por isso começa em 3,
+ * baixa 1 quando uma página precisa de várias repetições ou volta para a fila, e sobe 1
+ * depois de `LIMPAS_PARA_SUBIR` páginas seguidas sem nenhuma repetição.
  */
-const CONCORRENCIA = 4
-/** Esperas antes de cada nova tentativa (a API oscila e pode responder 429). */
+const CONCORRENCIA_MAX = 3
+const CONCORRENCIA_MIN = 1
+const LIMPAS_PARA_SUBIR = 8
+/** Intervalo mínimo entre duas reduções (uma rajada de falhas reduz uma vez só). */
+const INTERVALO_REDUCAO_MS = 3000
+/**
+ * Freio: com o saldo da cota do iFood abaixo disto, todas as chamadas param até a cota
+ * renovar (`ifood-ratelimit-reset`) — antes de levar o 429 de cota esgotada. A cota é
+ * uma só para a credencial inteira (outros módulos e usuários também usam).
+ */
+const SALDO_MINIMO = 20
+/** Vezes que a mesma página pode voltar para a fila (vendas vazias / 429 com saldo). */
+const ADIAMENTOS_MAX = 3
+/** Pausas por cota esgotada que a mesma página aguenta antes de a pesquisa desistir. */
+const PAUSAS_COTA_MAX = 5
+/** Esperas antes de cada nova tentativa em falha de rede ou do servidor (5xx). */
 const ESPERAS_NOVA_TENTATIVA_MS = [1500, 4000]
-
-export interface ProgressoDiario {
-  /** Pedidos do delivery (DW): uma chamada só, a mais demorada em loja grande. */
-  pedidosProntos: boolean
-  pedidos: number | null
-  /** Restaurantes do iFood da loja (um por operação com iFood). */
-  restaurantes: number
-  /**
-   * Vendas do iFood: páginas concluídas / previstas. A página 1 de cada restaurante diz
-   * quantas ele tem; até ela chegar, o restaurante conta 1. `null` = sem restaurante.
-   */
-  paginasConcluidas: number
-  paginasTotal: number | null
-  vendasProntas: boolean
-  vendas: number
-}
 
 export type FaseConsulta = 'ocioso' | 'consultando' | 'pronto' | 'erro'
 
@@ -39,10 +46,58 @@ export interface ResultadoDiario extends FechamentoResposta {
 }
 
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms))
+/** ±30% de variação: trabalhadores que falham juntos não repetem no mesmo instante. */
+const comVariacao = (ms: number) => Math.round(ms * (0.7 + Math.random() * 0.6))
 
 class Cancelada extends Error {}
 
-/** Tenta de novo com espera crescente — cobre oscilação e o 429 do iFood. */
+function statusDoErro(e: unknown): number | undefined {
+  const erro = e as { status?: unknown; requisicao?: { status?: unknown } } | null
+  const status = erro?.status ?? erro?.requisicao?.status
+  return typeof status === 'number' ? status : undefined
+}
+
+/**
+ * Vale tentar de novo? Só o que pode passar sozinho e é rápido: rede, limite (429) e
+ * falha do servidor (5xx). Tempo esgotado (408/504) NÃO se repete — a chamada já esperou
+ * 20 s, e repetir prenderia o usuário (padrão 9 do workspace). Recusa (4xx: permissão,
+ * restaurante de outra loja, credencial do iFood — 424, o `STATUS_FALHA_CREDENCIAL` de
+ * `server/vendas.ts`) também não muda tentando de novo.
+ */
+function valeTentarDeNovo(e: unknown): boolean {
+  const status = statusDoErro(e)
+  if (status === 408 || status === 504) return false
+  return status === undefined || status === 429 || status >= 500
+}
+
+/**
+ * Erro decidido pela tela (a página de `vendas` foi adiada vezes demais). Leva a
+ * `requisicao` no mesmo formato que o server-client do SDK anexa às falhas, para a
+ * `MensagemErro` mostrar a origem ("Vendas no iFood"), a frase e os detalhes.
+ */
+function erroDaPagina(status: number, mensagem: string, body: Record<string, unknown>): Error {
+  const corpo = JSON.stringify(body)
+  return Object.assign(new Error(mensagem), {
+    status,
+    requisicao: {
+      quando: new Date().toISOString(),
+      moduleId: 'fechamento-ifood-diario',
+      handler: 'vendas',
+      tela: typeof location !== 'undefined' ? location.pathname : undefined,
+      status,
+      mensagem,
+      resumo: { chaves: Object.keys(body), listas: {}, bytes: corpo.length },
+      amostra: {},
+      corpoEnviado: corpo,
+    },
+  })
+}
+
+/**
+ * Tenta de novo com espera crescente (1,5 s e 4 s, com variação) — cobre falha de rede
+ * e 5xx; 504 e recusas (4xx) não repetem. O 429 e a página vazia não chegam aqui: o
+ * handler `vendas` responde `adiar` e a fila trata.
+ */
 async function comNovaTentativa<T>(fn: () => Promise<T>, ativo: () => boolean): Promise<T> {
   for (let tentativa = 0; ; tentativa++) {
     try {
@@ -50,34 +105,42 @@ async function comNovaTentativa<T>(fn: () => Promise<T>, ativo: () => boolean): 
     } catch (e) {
       if (!ativo()) throw new Cancelada()
       const espera = ESPERAS_NOVA_TENTATIVA_MS[tentativa]
-      if (espera === undefined) throw e
-      await esperar(espera)
+      if (espera === undefined || !valeTentarDeNovo(e)) throw e
+      await esperar(comVariacao(espera))
       if (!ativo()) throw new Cancelada()
     }
   }
 }
 
 /**
- * A consulta do dia em partes, para mostrar o andamento:
+ * A consulta do dia em partes, para a tabela aparecer antes do fim:
  *
  * 1. **Ao mesmo tempo**: os pedidos do DW (uma chamada, a loja inteira) e as vendas do
- *    iFood de cada restaurante da loja, numa fila com até `CONCORRENCIA` chamadas
- *    juntas: primeiro a página 1 de cada restaurante (que diz quantas páginas ele
- *    tem), e as demais entram na fila conforme chegam; nova tentativa em caso de falha.
+ *    iFood de cada restaurante da loja, numa fila com até `CONCORRENCIA_MAX` chamadas
+ *    juntas (menos quando o iFood oscila): primeiro a página 1 de cada restaurante (que
+ *    diz quantas páginas ele tem), e as demais entram na fila conforme chegam.
  * 2. **Aos poucos**: assim que os pedidos do DW chegam, a tabela aparece e vai sendo
  *    cruzada a cada página do iFood (`completo: false`); o pedido ainda não achado fica
  *    Aguardando. Os valores do dia só saem com as duas partes completas — número
  *    parcial não pode ficar na tela como se fosse o do dia.
+ * 3. **Retentativa** (a do Fechamento iFood Mensal 0.1.1, medida em 13 e 16/11/2026):
+ *    - vendas vazias ou 429 com saldo: o servidor repete na hora; se não passar, a
+ *      página volta para o fim da fila (até `ADIAMENTOS_MAX` vezes);
+ *    - cota esgotada (saldo 0): TODAS as chamadas pausam até o `ifood-ratelimit-reset`
+ *      + 1 s, e a página volta para o começo da fila; com saldo abaixo de
+ *      `SALDO_MINIMO`, a pausa vem antes do 429 (freio);
+ *    - rede ou servidor (5xx): até 2 novas tentativas (1,5 s e 4 s, com variação);
+ *      tempo esgotado (504) não se repete.
  *
  * Falha nos pedidos do DW derruba a consulta (sem eles não há fechamento) e não é
- * repetida (a chamada pode levar até 90 s antes de falhar). Falha no iFood não: vira
- * aviso (com o restaurante), as páginas que faltam daquele restaurante são deixadas, e
- * os pedidos não achados ficam como Cancelado (como no legado). Uma consulta nova (ou
- * "Cancelar") abandona a anterior.
+ * repetida (a chamada pode levar até 90 s antes de falhar). Página do iFood que esgota
+ * as tentativas, ou a credencial do iFood recusada, também derruba: um pedido não pode
+ * aparecer como Cancelado porque o iFood não respondeu. Só a recusa definitiva de UM
+ * restaurante (403/404) vira aviso, e os outros seguem. Uma consulta nova abandona a
+ * anterior.
  */
 export function useConsultaDiaria() {
   const [fase, setFase] = useState<FaseConsulta>('ocioso')
-  const [progresso, setProgresso] = useState<ProgressoDiario | null>(null)
   const [resultado, setResultado] = useState<ResultadoDiario | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   /** O erro como veio (com o `.requisicao` do SDK), para os detalhes técnicos. */
@@ -92,35 +155,15 @@ export function useConsultaDiaria() {
     []
   )
 
-  const cancelar = useCallback(() => {
-    geracao.current += 1
-    setProgresso(null)
-    setResultado(null)
-    setFase('ocioso')
-  }, [])
-
   const consultar = useCallback(async (consulta: Consulta) => {
     const minha = ++geracao.current
     const ativo = () => geracao.current === minha
     const { empresaId, data, restaurantes } = consulta
 
-    const estado: ProgressoDiario = {
-      pedidosProntos: false,
-      pedidos: null,
-      restaurantes: restaurantes.length,
-      paginasConcluidas: 0,
-      paginasTotal: restaurantes.length > 0 ? restaurantes.length : null,
-      vendasProntas: false,
-      vendas: 0,
-    }
-    const publicar = () => {
-      if (ativo()) setProgresso({ ...estado })
-    }
     setFase('consultando')
     setErro(null)
     setErroOriginal(null)
     setResultado(null)
-    publicar()
 
     const vendas: VendaIfood[] = []
     const avisos: string[] = []
@@ -145,100 +188,157 @@ export function useConsultaDiaria() {
       )
     }
 
-    // Vendas do iFood: fila de páginas (restaurante, página) com até CONCORRENCIA
-    // chamadas juntas. A página 1 de cada restaurante põe as demais dele na fila.
-    const buscarVendas = () =>
-      new Promise<void>((terminou, falhou) => {
-        const fila = restaurantes.map((r) => ({ merchant: r.merchant, pagina: 1 }))
-        const desistiu = new Set<string>()
-        let rodando = 0
-        let encerrada = false
-        const rotulo = (merchant: string) => {
-          const r = nomes.get(merchant)
-          if (!r) return 'iFood'
-          return r.operacao && r.nome !== r.operacao ? `${r.nome} (${r.operacao})` : r.nome
+    // Vendas do iFood: fila de páginas (restaurante, página), com trabalhadores que
+    // respeitam a pausa compartilhada e o limite de chamadas ao mesmo tempo (adaptativo).
+    // A página 1 de cada restaurante põe as demais dele na fila.
+    const buscarVendas = async () => {
+      const rotulo = (merchant: string) => {
+        const r = nomes.get(merchant)
+        if (!r) return 'iFood'
+        return r.operacao && r.nome !== r.operacao ? `${r.nome} (${r.operacao})` : r.nome
+      }
+      type Item = { merchant: string; pagina: number; adiamentos: number; pausas: number }
+      const fila: Item[] = restaurantes.map((r) => ({
+        merchant: r.merchant,
+        pagina: 1,
+        adiamentos: 0,
+        pausas: 0,
+      }))
+      const concorrenciaMax = Math.max(1, Math.min(CONCORRENCIA_MAX, restaurantes.length))
+      let limite = concorrenciaMax
+      let limpasSeguidas = 0
+      let ultimaReducao = 0
+      let pausa: { ate: number } | null = null
+      let emAndamento = 0
+      // Primeira falha: os outros trabalhadores param sem pedir mais nada.
+      let falha: unknown = null
+
+      /** Pausa TODAS as chamadas até `ms` daqui (a maior pausa pedida vale). */
+      const pausar = (ms: number) => {
+        const ate = Date.now() + ms + Math.round(Math.random() * 500)
+        if (!pausa || pausa.ate < ate) pausa = { ate }
+      }
+      const aguardarPausa = async () => {
+        while (pausa && pausa.ate > Date.now()) {
+          if (!ativo() || falha) return
+          await esperar(Math.min(250, pausa.ate - Date.now()))
         }
-        const avisar = (merchant: string, msg: string) => avisos.push(`${rotulo(merchant)}: ${msg}`)
-        const proxima = () => {
-          if (encerrada) return
-          if (!ativo()) {
-            encerrada = true
-            falhou(new Cancelada())
-            return
+        pausa = null
+      }
+      /** Concorrência adaptativa: cai quando o iFood oscila, volta quando normaliza. */
+      const ajustarRitmo = (resp: RespostaVendas) => {
+        const ruim = resp.repeticoes >= 2 || (resp.adiar !== null && resp.adiar.motivo !== 'cota')
+        if (ruim) {
+          limpasSeguidas = 0
+          if (limite > CONCORRENCIA_MIN && Date.now() - ultimaReducao >= INTERVALO_REDUCAO_MS) {
+            limite -= 1
+            ultimaReducao = Date.now()
           }
-          if (rodando === 0 && fila.length === 0) {
-            encerrada = true
-            terminou()
-            return
+        } else if (resp.repeticoes === 0 && !resp.adiar) {
+          limpasSeguidas += 1
+          if (limpasSeguidas >= LIMPAS_PARA_SUBIR && limite < concorrenciaMax) {
+            limite += 1
+            limpasSeguidas = 0
           }
-          while (rodando < CONCORRENCIA && fila.length > 0) {
-            const tarefa = fila.shift()!
-            if (desistiu.has(tarefa.merchant)) {
-              // Restaurante que falhou: as páginas que faltavam saem da previsão.
-              estado.paginasTotal = (estado.paginasTotal ?? 1) - 1
-              continue
-            }
-            rodando += 1
-            void executar(tarefa).finally(() => {
-              rodando -= 1
-              proxima()
+        }
+      }
+
+      const buscar = async (item: Item) => {
+        const { merchant, pagina } = item
+        const resp = await comNovaTentativa(
+          () => buscarPaginaVendas({ empresaId, data, merchant, pagina }),
+          ativo
+        )
+        if (!ativo()) throw new Cancelada()
+        ajustarRitmo(resp)
+        if (resp.adiar) {
+          // A página não veio: pede de novo depois. Nada do que já chegou é refeito.
+          const body = { empresaId, data, merchant, pagina }
+          if (resp.adiar.motivo === 'cota') {
+            item.pausas += 1
+            if (item.pausas > PAUSAS_COTA_MAX)
+              throw erroDaPagina(
+                429,
+                'O limite de consultas do iFood continuou esgotado por vários minutos. Tente pesquisar de novo mais tarde.',
+                body
+              )
+            fila.unshift(item)
+            pausar(resp.adiar.esperarMs)
+          } else {
+            item.adiamentos += 1
+            if (item.adiamentos > ADIAMENTOS_MAX)
+              throw erroDaPagina(
+                502,
+                resp.adiar.motivo === 'incompleta'
+                  ? `O iFood devolveu as vendas de ${rotulo(merchant)} sem os dados financeiros várias vezes seguidas. Tente pesquisar de novo em alguns minutos.`
+                  : 'O iFood recusou as consultas várias vezes seguidas (muitas requisições). Tente pesquisar de novo em alguns minutos.',
+                body
+              )
+            fila.push(item)
+          }
+          return
+        }
+        // Freio: saldo da cota quase no fim — para todos até renovar, antes do 429.
+        if (resp.cota && resp.cota.restantes < SALDO_MINIMO) pausar(resp.cota.resetS * 1000 + 1000)
+        if (pagina === 1) {
+          if (resp.restaurante) {
+            nomes.set(merchant, {
+              nome: resp.restaurante,
+              operacao: nomes.get(merchant)?.operacao ?? '',
             })
           }
-          if (rodando === 0 && fila.length === 0) proxima()
+          // Recusa definitiva deste restaurante (403/404): aviso; os outros seguem.
+          if (resp.aviso) avisos.push(`${rotulo(merchant)}: ${resp.aviso}`)
+          for (let n = 2; n <= resp.totalPaginas; n++)
+            fila.push({ merchant, pagina: n, adiamentos: 0, pausas: 0 })
         }
-        const executar = async ({ merchant, pagina }: { merchant: string; pagina: number }) => {
+        vendas.push(...resp.vendas)
+        publicarParcial()
+      }
+
+      const trabalhador = async () => {
+        for (;;) {
+          // Pesquisa trocada por outra ou com erro: para sem pedir mais nada.
+          if (!ativo() || falha) return
+          await aguardarPausa()
+          if (!ativo() || falha) return
+          if (emAndamento >= limite) {
+            await esperar(50)
+            continue
+          }
+          const proxima = fila.shift()
+          if (!proxima) {
+            if (emAndamento === 0) return
+            await esperar(50) // outro trabalhador pode estar para colocar páginas na fila
+            continue
+          }
+          emAndamento += 1
           try {
-            const r = await comNovaTentativa(
-              () => buscarPaginaVendas({ empresaId, data, merchant, pagina }),
-              ativo
-            )
-            if (!ativo()) return
-            if (pagina === 1) {
-              if (r.restaurante) {
-                nomes.set(merchant, {
-                  nome: r.restaurante,
-                  operacao: nomes.get(merchant)?.operacao ?? '',
-                })
-              }
-              if (r.aviso) avisar(merchant, r.aviso)
-              // A previsão contava 1 página para ele; agora sabe o total (0 = sem vendas).
-              estado.paginasTotal = (estado.paginasTotal ?? 0) - 1 + Math.max(1, r.totalPaginas)
-              for (let n = 2; n <= r.totalPaginas; n++) fila.push({ merchant, pagina: n })
-            }
-            vendas.push(...r.vendas)
-            estado.paginasConcluidas += 1
-            estado.vendas = vendas.length
-            publicar()
-            publicarParcial()
+            await buscar(proxima)
           } catch (e) {
-            if (e instanceof Cancelada || !ativo()) return
-            // Como no legado: uma página que falha encerra a busca daquele restaurante;
-            // o que veio fica.
-            desistiu.add(merchant)
-            estado.paginasConcluidas += 1
-            avisar(merchant, e instanceof Error ? e.message : 'Falha ao consultar o iFood.')
-            publicar()
+            falha ??= e
+            return
+          } finally {
+            emAndamento -= 1
           }
         }
-        proxima()
-      })
+      }
+
+      await Promise.all(Array.from({ length: concorrenciaMax }, trabalhador))
+      if (!ativo()) throw new Cancelada()
+      if (falha) throw falha
+    }
 
     try {
       const [dw] = await Promise.all([
         // Sem nova tentativa: a chamada ao DW pode levar até 90 s antes de falhar.
         buscarPedidos({ empresaId, data }).then((r: RespostaPedidos) => {
           if (!ativo()) throw new Cancelada()
-          estado.pedidosProntos = true
-          estado.pedidos = r.pedidos.length
-          publicar()
           dwPronto = r
           publicarParcial()
           return r
         }),
-        buscarVendas().then(() => {
-          estado.vendasProntas = true
-          publicar()
-        }),
+        buscarVendas(),
       ])
       if (!ativo()) return
       setResultado({
@@ -250,15 +350,12 @@ export function useConsultaDiaria() {
     } catch (e) {
       if (e instanceof Cancelada || !ativo()) return
       geracao.current += 1 // para os trabalhadores que ainda estão rodando
-      setProgresso(null)
       setResultado(null)
       setErro(e instanceof Error ? e.message : 'Falha ao consultar o fechamento.')
       setErroOriginal(e)
       setFase('erro')
-    } finally {
-      if (geracao.current === minha) setProgresso(null)
     }
   }, [])
 
-  return { fase, progresso, resultado, erro, erroOriginal, consultar, cancelar }
+  return { fase, resultado, erro, erroOriginal, consultar }
 }

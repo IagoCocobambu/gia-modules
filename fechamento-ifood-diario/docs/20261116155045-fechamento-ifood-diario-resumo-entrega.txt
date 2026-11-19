@@ -1,0 +1,111 @@
+Fechamento iFood Diário 0.2.6 - revisão SDK, retentativa do iFood igual à do Mensal e cards pela regra das 5 linhas - 16/11/2026
+
+Entrega
+- Módulo: fechamento-ifood-diario ("Fechamento iFood Diário")
+- Versão: 0.2.5 → 0.2.6
+- Pacote: modules-fechamento-ifood-diario-0.2.6.tgz (110,9 kB, 32 arquivos, sem .env nem segredos)
+- Menu: Plataformas › iFood › Fechamento iFood Diário
+- Permissões: fechamento-ifood-diario.ler e fechamento-ifood-diario.exportar (sem chave nova)
+- Validação SDK: gia validate 58/58, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- SDK: @gia-cb 0.1.0-alpha.71 (a mesma do Fechamento iFood Mensal e do Reports Maestro; dashboard-contas, fechamento-maestro, pagamento-echeck e validacao-fiscal estão na alpha.70)
+- Tipo: só leitura (DW, API do iFood e banco do Maestro)
+
+O que muda para quem usa
+1. Retentativa do iFood igual à do Fechamento iFood Mensal 0.1.1, pelo comportamento medido
+   da API (testes de 13 e 16/11/2026 no Mensal):
+   - o handler vendas lê a cota do iFood (ifood-ratelimit-remaining/-reset) em toda resposta;
+   - venda vazia (sem o FINANCIAL_BILLED_ORDER_ENTRY) e 429 com cota sobrando: repetição
+     imediata no servidor, até 3 vezes; depois a página volta para o fim da fila da tela,
+     até 3 vezes;
+   - cota esgotada (saldo 0 ou Retry-After): todas as chamadas pausam até a cota renovar
+     (teto 60 s); com saldo abaixo de 20, a pausa vem antes; 5 pausas por página;
+   - até 3 páginas ao mesmo tempo (eram 4 fixas), com ritmo que cai quando o iFood oscila
+     e volta depois de 8 páginas sem repetição;
+   - rede e 5xx: 2 novas tentativas (1,5 s e 4 s); tempo esgotado (504) e recusas não
+     repetem.
+2. Página do iFood que esgota as tentativas encerra a pesquisa com a mensagem de erro
+   (origem "Vendas no iFood", Tentar de novo), a pedido do usuário. Antes virava aviso do
+   restaurante e os pedidos dele ficavam como Cancelado sem ser. 403 e 404 de um
+   restaurante continuam como aviso.
+3. Venda vazia não é mais aceita: antes, depois de 2 tentativas a tela ficava com a
+   página mais completa, e Total do parceiro e Data limite de contestação podiam sair
+   vazios.
+4. Os demais itens da 0.2.6 já estavam no CHANGELOG: mensagem de erro no lugar do estado
+   vazio (py-12), sem resposta do portal como erro genérico, credencial do iFood como
+   erro da pesquisa (424), sem a faixa de andamento e, antes da primeira pesquisa, só o
+   aviso "Aguardando consulta".
+
+Incongruências encontradas e corrigidas
+1. Cards (Totais) abriam e fechavam pela altura da janela (matchMedia "min-height:
+   700px") → hook use-cabem-totais.ts com a conta do useCabemTotais do Fechamento Maestro
+   0.4.2: a barra fica aberta enquanto a tabela, com ela aberta, ainda mostra 5 linhas, e
+   recolhe sozinha quando não cabe; reabre só com 24 px de folga; a parte de "Ver todos
+   os totais" fica fora da conta; o clique em Totais manda. Feito com o ok do usuário,
+   porque muda quando os cards aparecem abertos. Cada navegador conta a altura da janela
+   de um jeito. Fonte: AGENTS.md da raiz, padrão 10 (e padrão 3, botão Totais).
+   - Diferença do Diário: a tabela só existe depois da primeira pesquisa, então a conta é
+     refeita quando ela aparece ou troca (pesquisa, carregamento, erro).
+2. FAQ dizia "abertos com tela de 700 px de altura ou mais" → explica a regra das 5
+   linhas, o botão Totais e o celular. Fonte: AGENTS.md, padrão 10 (FAQ); conventions.md
+   §14 (atualizar FAQ junto com o código).
+3. PRD (RF-4 e critérios de aceite) sem a regra de abertura dos cards → regra descrita e
+   critério de aceite do teste de altura. Fonte: AGENTS.md, padrão 10 (teste).
+4. Versão divergente: CHANGELOG já em 0.2.6 "em andamento", os outros arquivos em 0.2.5
+   → 0.2.6 em package.json, package-lock.json, module.ts, INTEGRATION.md e a entrada do
+   CHANGELOG datada. Fonte: packaging.md, Parte 7.
+5. INTEGRATION.md dizia 60 s de tempo limite por página do iFood → 20 s, o valor do
+   handler. Fonte: delivery-checklists.md P (documentação coerente com a entrega).
+
+Conferido e já de acordo
+- Handlers: requirePermission e requireEmpresa em todos; vendas confere o restaurante nos
+  vínculos IFOOD das operações da loja; só importa de @gia-cb/sdk/server (dados-externos.md;
+  conventions.md §17; delivery-checklists.md N).
+- Nenhum segredo nem merchant ID no código além do gia.config.ts (delivery-checklists.md N).
+- MensagemErro na posição dos estados vazios (py-12, centrada na horizontal) e com o erro
+  inteiro (AGENTS.md, padrão 11).
+- Filtros: recolhem no celular ao pesquisar e ficam enxutos depois da pesquisa
+  (AGENTS.md, padrões 1 e 8).
+- Tooltip só pelo Dica, com (hover: hover) (AGENTS.md, padrão 2).
+- Barra de indicadores com 4 principais + "Ver todos os totais", cards que filtram,
+  nenhum total dentro da tabela (AGENTS.md, padrão 3).
+- FAQ e tour sem menção ao sistema anterior (grep vazio) (AGENTS.md, padrão 4).
+- Tokens de cor e de motion, sem title= nativo (conventions.md §7, §8 e §13).
+- Não se aplicam: padrão 5 (módulo não grava), 6 (sem par quantidade/valor), 7 (sem abas),
+  §16 histórico e migrations (só leitura).
+- Fontes lidas: docs do @gia-cb 0.1.0-alpha.71 (delivery-checklists.md inteiro;
+  conventions.md §8, §13, §14, §15 e §17; packaging.md Parte 7), AGENTS.md da raiz e do
+  módulo, memória do projeto (decisões do Diário e instabilidade da API do iFood).
+
+Não corrigido (decisão ou fora do escopo)
+- Padrão 9 (faixa de andamento acima da tabela): retirada na 0.2.6 a pedido do usuário; o
+  padrão é opcional e o CHANGELOG e o PRD registram a decisão.
+- MensagemErro diferente da do Fechamento iFood Mensal (o padrão 11 pede o mesmo arquivo
+  nos módulos): o Diário tirou o tipo "sem conexão" a pedido do usuário. Levar a mudança
+  ao Mensal fica para a próxima versão dele.
+- Pesquisar um dia com mais de 390 dias continua mostrando "A API do iFood respondeu
+  400" (sugestão da 0.2.5, não feita).
+
+Testes
+- gia validate: 58/58, 0 erros, 0 avisos.
+- gia dev (iFood e DW reais, só leitura, 1440×900): 01.CB GOIANIA, 15/11/2026, 93
+  pedidos em 8 a 10 s; 6 chamadas a vendas, todas 200, sem repetição, cota lida (999 →
+  988); sem erro na tela.
+- Cards pela regra das 5 linhas (Chromium): descendo a janela de 900 a 480 px de 15 em
+  15 px, uma troca só (fecha em 675 px); com a janela parada, não se mexe; subindo, uma
+  troca só (abre em 705 px). Em 760 px, "Ver todos os totais" abre os demais sem recolher
+  a barra. Em 390×844 os cards começam fechados.
+- Falta conferir: o mesmo teste de altura no Safari/WebKit; a retentativa com o iFood
+  instável de verdade (429, vendas vazias, cota esgotada) e a mensagem de erro de página
+  que esgota as tentativas — o Diário não tem o modo de demonstração do Mensal para
+  simular.
+
+Arquivos alterados
+- src/server/vendas.ts, src/hooks/use-consulta-diaria.ts, src/types.ts (retentativa)
+- src/hooks/use-cabem-totais.ts (novo), src/views/FechamentoIfoodDiarioView.tsx,
+  src/components/ResumoCards.tsx (regra das 5 linhas)
+- src/faq.ts, PRD.md, INTEGRATION.md, CHANGELOG.md,
+  docs/fechamento-ifood-diario-calculo-e-chaves-api.md
+- package.json, package-lock.json, src/module.ts (versão)
+
+Pendências com outros times
+- Enviar modules-fechamento-ifood-diario-0.2.6.tgz ao time do Portal GIA pelo canal combinado.

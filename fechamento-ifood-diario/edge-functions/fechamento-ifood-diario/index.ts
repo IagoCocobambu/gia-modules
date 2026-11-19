@@ -1329,9 +1329,18 @@ __giaHandlers["vendas"] = (() => {
   // Pizzaria, Dani, Vasto…), no cadastro do portal (vínculos IFOOD das operações); a tela
   // pede as páginas de cada um. O restaurante chega no body, mas só vale se for da loja —
   // o servidor confere nos vínculos das operações da Empresa.
-  // Falha do iFood não derruba o fechamento (como no legado): o que é definitivo
-  // (credencial, 401/403) volta como `aviso`; o que é passageiro (5xx, demora) volta como
-  // erro, e a tela tenta de novo.
+  // O que é definitivo de UM restaurante (403/404) volta como `aviso`, e os outros seguem.
+  // Falha da CREDENCIAL (token vencido ou inválido, 401, ou o hub sem a credencial) vale
+  // para todos os restaurantes: volta como erro `STATUS_FALHA_CREDENCIAL`, e a tela encerra
+  // a pesquisa e mostra a mensagem de erro.
+  //
+  // Instabilidade do iFood (a mesma tratativa do Fechamento iFood Mensal 0.1.1, medida em
+  // 13 e 16/11/2026 — `fechamento-ifood-mensal/docs/teste-ifood-*`): 429 com saldo de cota
+  // sobrando e página com vendas vazias (sem o FINANCIAL_BILLED_ORDER_ENTRY) são repetidos
+  // na hora, até `REPETICOES_IMEDIATAS`; depois, a resposta diz `adiar` e a tela pede a
+  // página de novo mais tarde. Cota esgotada (saldo 0 ou `Retry-After`): `adiar` com a
+  // espera, e a tela pausa todas as chamadas. Rede e 5xx voltam como erro e a tela tenta de
+  // novo; tempo esgotado (504) não se repete.
   //
   // REGRA: handler auto-contido — só importa de @gia-cb/sdk/server.
 
@@ -1348,9 +1357,29 @@ __giaHandlers["vendas"] = (() => {
    * conectar no iFood, ~47 s até desistir). Melhor desistir cedo: a tela tenta de novo.
    */
   const TIMEOUT_IFOOD_MS = 20_000
+  /**
+   * Repetições IMEDIATAS (sem espera) da mesma página quando o iFood devolve vendas vazias
+   * ou um 429 com saldo de cota sobrando. Medido no Mensal em 16/11/2026 (540 chamadas): a
+   * repetição passa em ~metade das vezes com 0 ms, 250 ms ou 1 s de espera — esperar não
+   * ajuda, só atrasa. Esgotadas, a página volta para a fila da tela (`adiar`).
+   */
+  const REPETICOES_IMEDIATAS = 3
+  /**
+   * Cota esgotada de verdade: a tela pausa até o `ifood-ratelimit-reset` + esta folga (o
+   * reset vem em segundos inteiros, arredondado). Teto de 60 s = a janela da cota.
+   */
+  const FOLGA_COTA_MS = 1000
+  const ESPERA_COTA_MAX_S = 60
   /** Proteção contra laço: um dia de uma loja nunca chega perto disto. */
   const MAX_PAGINAS_IFOOD = 200
   const DATA_RE = /^\d{4}-\d{2}-\d{2}$/
+  /**
+   * Status do erro de credencial do iFood (424 Failed Dependency: o portal depende da
+   * credencial do iFood, que falhou). Só este handler usa: a tela o reconhece por ele, não
+   * tenta de novo e encerra a pesquisa (`use-consulta-diaria.ts`). Não é 401/403 de
+   * propósito: esses dizem que o USUÁRIO não tem acesso.
+   */
+  const STATUS_FALHA_CREDENCIAL = 424
 
   /** Hoje em São Paulo, `AAAA-MM-DD`. */
   function hojeSp(): string {
@@ -1535,18 +1564,25 @@ __giaHandlers["vendas"] = (() => {
   }
 
   /**
-   * Mensagem para a recusa do iFood. 401 = token vencido ou inválido (quem renova é o
-   * hub de Credenciais do portal; no `gia dev`, o script `npm run token:ifood`). 403 =
-   * a loja não autorizou o aplicativo de vocês no Portal do Parceiro do iFood. 404 = o
-   * restaurante não existe no iFood (identificador errado no cadastro).
+   * Erro para o token do iFood recusado (401: vencido ou inválido). Quem renova é o hub de
+   * Credenciais do portal; no `gia dev`, o script `npm run token:ifood`.
    */
-  function recusaIfood(status: number): string | null {
+  function tokenRecusado(): HttpError {
     const dev = envOptional('GIA_DEV_CRED_IFOOD_TOKEN') !== undefined
-    if (status === 401) {
-      return dev
+    return new HttpError(
+      STATUS_FALHA_CREDENCIAL,
+      dev
         ? 'O token do iFood venceu ou é inválido (401). Rode `npm run token:ifood` e reinicie o gia dev.'
         : 'O iFood recusou a credencial (401: token vencido ou inválido). Avise o administrador do portal (hub de Credenciais, integração ifood).'
-    }
+    )
+  }
+
+  /**
+   * Aviso para a recusa do iFood que é só deste restaurante. 403 = a loja não autorizou o
+   * aplicativo de vocês no Portal do Parceiro do iFood. 404 = o restaurante não existe no
+   * iFood (identificador errado no cadastro).
+   */
+  function recusaIfood(status: number): string | null {
     if (status === 403) {
       return 'O iFood negou o acesso a este restaurante (403): ele não autorizou o aplicativo da Coco Bambu no Portal do Parceiro do iFood.'
     }
@@ -1562,25 +1598,35 @@ __giaHandlers["vendas"] = (() => {
     return e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')
   }
 
-  /** Espera `ms` milissegundos. */
-  function esperar(ms: number): Promise<void> {
-    return new Promise((ok) => setTimeout(ok, ms))
+  interface Cota {
+    /** Chamadas que ainda restam na janela (`ifood-ratelimit-remaining`). */
+    restantes: number
+    /** Segundos até a cota voltar ao limite (`ifood-ratelimit-reset`). */
+    resetS: number
   }
 
-  /**
-   * GET na API do iFood. No 429 (limite de requisições) espera o `Retry-After` — ou
-   * 1,5 s, 3 s, 6 s — e tenta de novo, até 3 vezes.
-   */
-  async function getIfood(url: string, token: string): Promise<Response> {
-    for (let tentativa = 0; ; tentativa++) {
-      const r = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-        signal: AbortSignal.timeout(TIMEOUT_IFOOD_MS),
-      })
-      if (r.status !== 429 || tentativa >= 3) return r
-      const retry = Number(r.headers.get('retry-after'))
-      await esperar(Number.isFinite(retry) && retry > 0 ? retry * 1000 : 1500 * 2 ** tentativa)
-    }
+  interface Adiar {
+    motivo: 'cota' | 'instavel' | 'incompleta'
+    esperarMs: number
+  }
+
+  /** Saldo da cota nos cabeçalhos do iFood (vem em toda resposta, inclusive no 429). */
+  function lerCota(r: Response): Cota | null {
+    const restantes = r.headers.get('ifood-ratelimit-remaining')
+    if (restantes === null || restantes.trim() === '' || !Number.isFinite(Number(restantes)))
+      return null
+    const reset = Number(r.headers.get('ifood-ratelimit-reset'))
+    return { restantes: Number(restantes), resetS: Number.isFinite(reset) && reset >= 0 ? reset : 60 }
+  }
+
+  /** `Retry-After` em segundos (número ou data HTTP); `null` quando não veio. */
+  function segundosRetryAfter(r: Response): number | null {
+    const v = r.headers.get('retry-after')
+    if (!v) return null
+    const n = Number(v)
+    if (Number.isFinite(n) && n >= 0) return n
+    const data = Date.parse(v)
+    return Number.isNaN(data) ? null : Math.max(0, Math.ceil((data - Date.now()) / 1000))
   }
 
   /** Restaurantes da conta do iFood (id → nome) — mudam pouco: 30 min por instância. */
@@ -1625,8 +1671,22 @@ __giaHandlers["vendas"] = (() => {
     restaurante: string | null
     /** Páginas do dia (a página 1 é que diz); 0 = sem vendas ou sem consulta. */
     totalPaginas: number
-    /** Problema definitivo da parte do iFood (sem integração, credencial, 401/403). */
+    /** Problema definitivo deste restaurante no iFood (403/404). */
     aviso: string | null
+    /**
+     * Saldo da cota do iFood na última resposta. A cota é uma só para a credencial inteira
+     * (1.000 chamadas por janela de 60 s, dividida com outros módulos e usuários).
+     */
+    cota: Cota | null
+    /** Repetições imediatas que esta página precisou (vendas vazias ou 429 com saldo). */
+    repeticoes: number
+    /**
+     * A página NÃO veio: a tela deve pedi-la de novo mais tarde. `cota` = cota esgotada
+     * (pausar TODAS as chamadas por `esperarMs`); `instavel` (429 com saldo) e `incompleta`
+     * (vendas sem o evento financeiro) = repetições imediatas esgotadas (a página volta
+     * para o fim da fila, sem pausa).
+     */
+    adiar: Adiar | null
   }
 
   function lerCorpo(bruto: string): Json | null {
@@ -1637,19 +1697,18 @@ __giaHandlers["vendas"] = (() => {
     }
   }
 
-  /** Vendas da página que vieram sem os pagamentos (a resposta "leve" do iFood). */
+  /**
+   * Vendas da página sem nenhum evento financeiro (a resposta "leve" do iFood): vêm sem o
+   * FINANCIAL_BILLED_ORDER_ENTRY e quase sempre sem os pagamentos — Total do parceiro e
+   * Data limite de contestação sairiam vazios. Pedindo de novo, vem completa (medido no
+   * Mensal: nenhuma venda com eventos veio sem o FBOE, inclusive as canceladas).
+   */
   function vendasLeves(corpo: Json): number {
-    return lista(corpo.sales)
-      .map(obj)
-      .filter((v) => lista(obj(v?.payments)?.methods).length === 0).length
+    return lista(corpo.sales).filter(
+      (s) =>
+        !lista(obj(s)?.orderEvents).some((e) => obj(e)?.fullCode === 'FINANCIAL_BILLED_ORDER_ENTRY')
+    ).length
   }
-
-  const vazio = (aviso: string | null, restaurante: string | null = null): Resposta => ({
-    vendas: [],
-    restaurante,
-    totalPaginas: 0,
-    aviso,
-  })
 
   const __giaHandler = defineHandler<Body, Resposta>(async (ctx) => {
     await ctx.requirePermission('fechamento-ifood-diario.ler')
@@ -1676,7 +1735,8 @@ __giaHandlers["vendas"] = (() => {
     } catch (e) {
       console.error('[fechamento-ifood-diario] credencial do iFood:', e)
       // A mensagem do hub fica só no log: pode trazer detalhe da integração.
-      return vazio(
+      throw new HttpError(
+        STATUS_FALHA_CREDENCIAL,
         'Não foi possível obter a credencial da API do iFood. Avise o administrador do portal (hub de Credenciais, integração ifood).'
       )
     }
@@ -1687,68 +1747,116 @@ __giaHandlers["vendas"] = (() => {
       page: String(pagina),
     })
     const url = `${base}/financial/v3.0/merchants/${encodeURIComponent(merchantId)}/sales?${qs}`
-    const pedir = () =>
-      getIfood(url, cred.token).catch((e: unknown) => {
+    // `as`: o valor muda dentro de `pedir()` (closure), e o TS não acompanha.
+    let cota = null as Cota | null
+    let repeticoes = 0
+    const responder = (r: Partial<Resposta>): Resposta => ({
+      vendas: [],
+      restaurante: null,
+      totalPaginas: 0,
+      aviso: null,
+      cota,
+      repeticoes,
+      adiar: null,
+      ...r,
+    })
+    /** A página não veio: a tela pede de novo mais tarde (ver `Resposta.adiar`). */
+    const adiar = (motivo: Adiar['motivo'], esperarMs = 0) =>
+      responder({ adiar: { motivo, esperarMs } })
+
+    /** Uma chamada à API (sem repetir). Guarda o saldo da cota que veio nos cabeçalhos. */
+    const pedir = async (): Promise<Response> => {
+      let r: Response
+      try {
+        r = await fetch(url, {
+          headers: { Authorization: `Bearer ${cred.token}`, Accept: 'application/json' },
+          signal: AbortSignal.timeout(TIMEOUT_IFOOD_MS),
+        })
+      } catch (e) {
         console.error('[fechamento-ifood-diario] API do iFood:', e)
-        // O `fetch` só lança sem resposta: tempo esgotado (504) ou não conectou (503).
+        // O `fetch` só lança sem resposta: tempo esgotado (504, a tela não repete) ou não
+        // conectou (503, a tela tenta de novo).
         throw new HttpError(
           ehTimeout(e) ? 504 : 503,
           ehTimeout(e)
             ? `A API do iFood demorou demais para responder (página ${pagina}).`
             : `Não conseguimos conectar à API do iFood (página ${pagina}).`
         )
-      })
+      }
+      cota = lerCota(r) ?? cota
+      return r
+    }
+
     // O nome do restaurante só na página 1 (lista da conta em cache), junto com ela.
     const nomePromise =
       pagina === 1 ? nomeDoRestaurante(base, cred.token, merchantId) : Promise.resolve(null)
-    const r = await pedir()
+    // Duas instabilidades do iFood, medidas no Mensal em 13 e 16/11/2026:
+    // - 429 "Too many requests" com saldo de cota sobrando (até 996 de 1.000), mesmo com uma
+    //   chamada por vez — não é a cota; repetir na hora passa em ~metade das vezes;
+    // - página "leve": vendas sem nenhum evento (sem o FINANCIAL_BILLED_ORDER_ENTRY) e quase
+    //   sempre sem pagamentos. Pedindo de novo, vem completa.
+    // As duas: repete na hora (até REPETICOES_IMEDIATAS); depois, a página volta para a fila
+    // da tela. Cota esgotada de verdade (saldo 0): a tela pausa até o reset.
+    let corpo: Json
+    for (;;) {
+      const r = await pedir()
+      if (r.status === 429) {
+        const retryAfter = segundosRetryAfter(r)
+        await r.body?.cancel()
+        if (cota?.restantes === 0 || retryAfter !== null) {
+          const s = Math.min(ESPERA_COTA_MAX_S, retryAfter ?? cota?.resetS ?? ESPERA_COTA_MAX_S)
+          return adiar('cota', s * 1000 + FOLGA_COTA_MS)
+        }
+        if (repeticoes >= REPETICOES_IMEDIATAS) return adiar('instavel')
+        repeticoes += 1
+        continue
+      }
+      // 204 = restaurante sem vendas no dia.
+      if (r.status === 204) return responder({ restaurante: await nomePromise })
+      if (!r.ok) {
+        if (r.status === 401) throw tokenRecusado()
+        const recusa = recusaIfood(r.status)
+        if (recusa) return responder({ aviso: recusa, restaurante: await nomePromise })
+        if (r.status === 502 || r.status === 503 || r.status === 504) {
+          await r.body?.cancel()
+          throw new HttpError(
+            503,
+            `A API do iFood está fora do ar (respondeu ${r.status}, página ${pagina}).`
+          )
+        }
+        await registrarDetalheDoErro(r)
+        throw new HttpError(502, `A API do iFood respondeu ${r.status} (página ${pagina}).`)
+      }
+      const bruto = await r.text()
+      if (!bruto.trim()) return responder({ restaurante: await nomePromise })
+      const lido = lerCorpo(bruto)
+      if (!lido) {
+        throw new HttpError(502, `A API do iFood devolveu um formato inesperado (página ${pagina}).`)
+      }
+      if (vendasLeves(lido) > 0) {
+        if (repeticoes >= REPETICOES_IMEDIATAS) {
+          console.warn(
+            `[fechamento-ifood-diario] página com vendas vazias (página ${pagina}) após ${repeticoes + 1} pedidos — volta para a fila`
+          )
+          return adiar('incompleta')
+        }
+        repeticoes += 1
+        continue
+      }
+      corpo = lido
+      break
+    }
     const restaurante = await nomePromise
-    // 204 = restaurante sem vendas no dia.
-    if (r.status === 204) return vazio(null, restaurante)
-    if (!r.ok) {
-      const recusa = recusaIfood(r.status)
-      if (recusa) return vazio(recusa, restaurante)
-      if (r.status === 502 || r.status === 503 || r.status === 504) {
-        throw new HttpError(
-          503,
-          `A API do iFood está fora do ar (respondeu ${r.status}, página ${pagina}).`
-        )
-      }
-      await registrarDetalheDoErro(r)
-      throw new HttpError(502, `A API do iFood respondeu ${r.status} (página ${pagina}).`)
-    }
-    const bruto = await r.text()
-    if (!bruto.trim()) return vazio(null, restaurante)
-    let corpo = lerCorpo(bruto)
-    // O iFood às vezes devolve a página "leve": vendas sem pagamentos nem eventos
-    // financeiros, todas ou parte delas (medido em 10/11/2026: 2 de 6 pedidos seguidos da
-    // mesma página). O status vem igual — os valores do fechamento não mudam —, mas Total
-    // do parceiro e Data limite de contestação sairiam vazios. Pede de novo, até 2 vezes,
-    // e fica com a resposta mais completa.
-    for (let tentativa = 0; tentativa < 2 && corpo && vendasLeves(corpo) > 0; tentativa++) {
-      try {
-        const r2 = await pedir()
-        if (!r2.ok) break
-        const outro = lerCorpo(await r2.text())
-        if (outro && vendasLeves(outro) < vendasLeves(corpo)) corpo = outro
-      } catch {
-        break
-      }
-    }
-    if (!corpo) {
-      throw new HttpError(502, `A API do iFood devolveu um formato inesperado (página ${pagina}).`)
-    }
     const vendas = lista(corpo.sales)
       .map(obj)
       .filter((v): v is Json => v !== null)
       .map((v) => extrair(v, merchantId))
       .filter((v): v is VendaIfood => v !== null)
-    return {
+    return responder({
       vendas,
       restaurante,
       totalPaginas: Math.max(1, Math.trunc(numero(corpo.pageCount) ?? 1)),
-      aviso: null,
-    }
+    })
   })
 
 

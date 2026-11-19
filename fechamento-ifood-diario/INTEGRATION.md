@@ -3,7 +3,7 @@
 ## 1. Identificação
 
 - **Módulo**: `fechamento-ifood-diario` — Fechamento iFood Diário
-- **Versão do pacote**: 0.2.5
+- **Versão do pacote**: 0.2.6
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
 - **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.71 (fixada; mínimo para `integracoes` em `GiaOperacao`)
 
@@ -35,8 +35,9 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
       token novo com o mesmo `client_credentials`. O módulo **não renova nada** (contrato
       do `ctx.credencial()`): o hub tem de entregar sempre um token válido, renovando
       antes de vencer (sugestão: com folga de 30 min ou quando faltar < 10 % do prazo).
-      Se o hub entregar token vencido, a tela mostra "O iFood recusou a credencial
-      (401)…" e pede para avisar o administrador do portal. Em dev, o script
+      Se o hub entregar token vencido, o handler `vendas` responde **424** e a tela
+      encerra a pesquisa com a mensagem de erro "O iFood recusou a credencial (401)…"
+      no lugar da tabela (desde a 0.2.6; antes era um aviso por restaurante). Em dev, o script
       `../scripts/token-ifood.mjs` (`npm run token:ifood`, e o `predev`) faz esse
       papel com o client id/secret do `.env`.
 - [ ] **Secret `GIA_SERVER_DATABASE_URL`** da Edge Function: connection string do
@@ -59,8 +60,8 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
       `locRef` = id do restaurante no iFood). Operação sem vínculo: os pedidos dela
       ficam Cancelado; loja sem nenhum aparece como "Sem iFood".
 - [ ] **Cadastro a corrigir (com o time GIA):** a operação `43 cbx` tem um 2º vínculo
-      IFOOD com o UUID com um caractere a menos (`ca22641e-8cfb-43a4-ba8f-2dc803a3bd3`).
-      Até sair, o iFood responde 404 para ele e a tela mostra o aviso daquele
+      IFOOD com o UUID com um caractere a menos (o identificador está no cadastro e, para
+      o `gia dev`, no `gia.config.ts`). Até sair, o iFood responde 404 para ele e a tela mostra o aviso daquele
       restaurante; as outras operações da loja seguem normais.
 - [ ] O handler `vendas` também lista os restaurantes da conta no iFood
       (`GET /merchant/v1.0/merchants`, guardado 30 min), só para mostrar o nome do
@@ -96,7 +97,9 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
   literal do código antigo sobre pedidos reais do DW.
 - **Cadastro de formas só leitura**: a janela de manutenção (Admin/TI) do legado
   não foi portada — o cadastro é do Maestro.
-- **Falha no iFood não derruba a pesquisa** (como no legado), mas aparece como
-  aviso na tela.
-- **Volume/latência**: uma loja × um dia (~4 s no DW; iFood paginado, 60 s de
+- **Recusa do iFood a um restaurante (403/404) não derruba a pesquisa**, mas aparece
+  como aviso na tela. Instabilidade do iFood (429, vendas vazias, cota esgotada, 5xx)
+  é repetida pela tela, com a mesma regra do Fechamento iFood Mensal 0.1.1; se não
+  passar, a pesquisa termina em erro (desde a 0.2.6; antes, aviso do restaurante).
+- **Volume/latência**: uma loja × um dia (~4 s no DW; iFood paginado, 20 s de
   timeout por página).

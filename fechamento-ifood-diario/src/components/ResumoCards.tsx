@@ -291,7 +291,9 @@ export function ResumoCards({
           />
         </button>
       </div>
+      {/* Fora da conta do `useCabemTotais`: abrir os demais não recolhe a seção. */}
       <div
+        data-fora-da-conta
         inert={!aberta}
         aria-hidden={!aberta}
         className={cn(

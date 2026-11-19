@@ -147,6 +147,15 @@ export interface RespostaVendas {
   restaurante: string | null
   totalPaginas: number
   aviso: string | null
+  /** Saldo da cota do iFood (uma só para a credencial inteira). */
+  cota: { restantes: number; resetS: number } | null
+  /** Repetições imediatas que a página precisou no servidor. */
+  repeticoes: number
+  /**
+   * A página não veio: pedir de novo mais tarde. `cota` = pausar todas as chamadas por
+   * `esperarMs`; `instavel`/`incompleta` = a página volta para o fim da fila.
+   */
+  adiar: { motivo: 'cota' | 'instavel' | 'incompleta'; esperarMs: number } | null
 }
 
 /** Pesquisa feita (foto do clique em Pesquisar). */
