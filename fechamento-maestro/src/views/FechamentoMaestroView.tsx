@@ -1,5 +1,5 @@
-import { useLayoutEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
-import { AlertTriangle, ChartPie, ListFilter, ReceiptText, RefreshCw, X } from 'lucide-react'
+import { useMemo, useState, type ReactNode } from 'react'
+import { ChartPie, FileText, ListFilter, ReceiptText, X } from 'lucide-react'
 import {
   Button,
   DataReport,
@@ -23,6 +23,7 @@ import { PainelCanais } from '../components/PainelCanais'
 import { DetalhePedidoDialog } from '../components/DetalhePedidoDialog'
 import { Dica } from '../components/Dica'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
+import { MensagemErro } from '../components/MensagemErro'
 import { Recolhivel } from '../components/Recolhivel'
 import { ResumoCards } from '../components/ResumoCards'
 import {
@@ -40,39 +41,16 @@ import {
   preencherPlanilha,
   resumirPorDia,
   resumirTotais,
-  TOTAIS_PRINCIPAIS,
   rotuloTiposDoPedido,
   somarDias,
   tiposDoPedido,
   vendasPorCanal,
   validarPeriodo,
 } from '../helpers'
+import { useCabemTotais, useLarguraArea } from '../hooks/use-medidas-tela'
+import { exportarPdfCanais } from '../pdf-canais'
 import { statusPedido } from '../status-pedido'
 import type { Consulta, FiltroTotal, PedidoFechamento } from '../types'
-
-/** Abaixo desta largura (px) a tela usa o layout de celular — o mesmo corte do
- *  `DataReport` (`@3xl` = 48rem), que vira lista de cards nesse ponto. */
-const LARGURA_COMPACTA = 768
-
-/** Em telas com esta altura (px) ou mais a barra de totais fica aberta; abaixo,
- *  fechada, para sobrar espaço para a tabela — até o usuário usar o botão Totais. */
-const ALTURA_TOTAIS_ABERTOS = 700
-const MQ_TELA_ALTA = `(min-height: ${ALTURA_TOTAIS_ABERTOS}px)`
-
-function assinarTelaAlta(aoMudar: () => void) {
-  const mq = window.matchMedia(MQ_TELA_ALTA)
-  mq.addEventListener('change', aoMudar)
-  return () => mq.removeEventListener('change', aoMudar)
-}
-
-/** `true` enquanto a janela tem altura ≥ `ALTURA_TOTAIS_ABERTOS` (segue o resize). */
-function useTelaAlta(): boolean {
-  return useSyncExternalStore(
-    assinarTelaAlta,
-    () => window.matchMedia(MQ_TELA_ALTA).matches,
-    () => false
-  )
-}
 
 /**
  * Sem linhas, a tabela vai sem colunas: o `DataReport` desenha o estado vazio numa
@@ -170,24 +148,6 @@ const SCROLLBAR_ELEGANTE = [
   '[@supports_not_selector(::-webkit-scrollbar)]:[&_*]:[scrollbar-color:color-mix(in_oklab,var(--color-muted-foreground)_50%,transparent)_color-mix(in_oklab,var(--color-border)_50%,transparent)]',
 ].join(' ')
 
-/**
- * `true` quando a ÁREA da tela é estreita. Mede o elemento — não a janela — pelo
- * mesmo motivo do `DataReport`: o seletor de Viewport do dev-shell e painéis
- * estreitos do portal limitam a largura do módulo sem mudar a janela.
- */
-function useModoCompacto(el: HTMLElement | null): boolean {
-  const [compacto, setCompacto] = useState(false)
-  useLayoutEffect(() => {
-    if (!el || typeof ResizeObserver === 'undefined') return
-    const medir = (largura: number) => setCompacto(largura > 0 && largura < LARGURA_COMPACTA)
-    medir(el.getBoundingClientRect().width)
-    const ro = new ResizeObserver((entries) => medir(entries[0]?.contentRect.width ?? 0))
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [el])
-  return compacto
-}
-
 const moeda = (v: number) => <span className="whitespace-nowrap tabular-nums">{formatBRL(v)}</span>
 const vazio = <span className="text-muted-foreground">—</span>
 
@@ -264,6 +224,12 @@ async function exportarXlsx(
   URL.revokeObjectURL(url)
 }
 
+/** De onde veio o erro, pelo handler que falhou (aparece na mensagem de erro). */
+const ORIGEM_HANDLER: Record<string, string> = {
+  lojas: 'Lista de lojas',
+  fechamento: 'Pedidos do delivery (Maestro)',
+}
+
 export function FechamentoMaestroView() {
   const canView = useCanAccess('fechamento-maestro.ler')
   const canExport = useCanAccess('fechamento-maestro.exportar')
@@ -277,7 +243,7 @@ export function FechamentoMaestroView() {
   const [consulta, setConsulta] = useState<Consulta | null>(null)
 
   const [area, setArea] = useState<HTMLDivElement | null>(null)
-  const compacto = useModoCompacto(area)
+  const { compacto, cabeLinhaFiltros } = useLarguraArea(area)
 
   const lojasQuery = useLojasFechamentoMaestro(canView)
   const lojas = useMemo(() => lojasQuery.data ?? [], [lojasQuery.data])
@@ -295,6 +261,7 @@ export function FechamentoMaestroView() {
   // "Só divergências" mostra só os pedidos com algum check reprovado.
   const [soDivergencias, setSoDivergencias] = useState(false)
   const [pedidoAberto, setPedidoAberto] = useState<PedidoFechamento | null>(null)
+  const [gerandoPdf, setGerandoPdf] = useState(false)
   // Indicador da barra de totais que filtra a tabela (clique no indicador).
   const [filtroTotal, setFiltroTotal] = useState<FiltroTotal | null>(null)
   // Canal (origem) escolhido no seletor da barra de filtros ou no anel da seção
@@ -303,11 +270,13 @@ export function FechamentoMaestroView() {
   // entre pesquisas como a loja e o período — o `canal` efetivo (abaixo) volta a
   // todos quando a pesquisa nova não tem aquele canal.
   const [canalEscolhido, setCanal] = useState<string | null>(null)
-  // Seção de totais: segue a altura da tela até o usuário clicar em "Totais";
-  // daí em diante vale a escolha dele. No celular começa fechada (padrão 3).
-  const telaAlta = useTelaAlta()
+  // Seção de totais: abre sozinha enquanto a tabela, com ela aberta, ainda mostra
+  // umas 5 linhas, até o usuário clicar em "Totais"; daí em diante vale a escolha
+  // dele. No celular começa fechada (padrão 3).
+  const [painelTotais, setPainelTotais] = useState<HTMLDivElement | null>(null)
+  const cabemTotais = useCabemTotais(area, painelTotais)
   const [totaisEscolhidos, setTotaisEscolhidos] = useState<boolean | null>(null)
-  const totaisAbertos = totaisEscolhidos ?? (telaAlta && !compacto)
+  const totaisAbertos = totaisEscolhidos ?? (cabemTotais && !compacto)
 
   // Venda de cada canal da pesquisa inteira (o anel não muda com o canal escolhido).
   const canais = useMemo(() => vendasPorCanal(pedidos), [pedidos])
@@ -519,22 +488,21 @@ export function FechamentoMaestroView() {
 
   let emptyState
   if (erro) {
+    // Mensagem padrão de erro (padrão 11 do ../AGENTS.md): o tipo do problema, de
+    // onde veio, a frase do servidor e "Ver detalhes técnicos". Mesma posição do
+    // "Escolha a loja e o período" (EmptyState): no alto, centrada, com o mesmo py-12.
+    const handler = (erro as { requisicao?: { handler?: string } } | null)?.requisicao?.handler
     emptyState = (
-      <EmptyState
-        icon={AlertTriangle}
-        title="Não foi possível consultar os dados"
-        description={erro.message}
-        action={
-          <Button
-            onClick={() => {
-              if (lojasQuery.isError) void lojasQuery.refetch()
-              if (fechamentoQuery.isError) void fechamentoQuery.refetch()
-            }}
-          >
-            <RefreshCw className="h-4 w-4" /> Tentar de novo
-          </Button>
-        }
-      />
+      <div className="flex min-h-0 flex-1 justify-center overflow-y-auto px-4 py-12">
+        <MensagemErro
+          erro={erro}
+          origem={handler ? ORIGEM_HANDLER[handler] : undefined}
+          onTentarDeNovo={() => {
+            if (lojasQuery.isError) void lojasQuery.refetch()
+            if (fechamentoQuery.isError) void fechamentoQuery.refetch()
+          }}
+        />
+      </div>
     )
   } else if (!consulta) {
     emptyState = (
@@ -567,6 +535,23 @@ export function FechamentoMaestroView() {
   }
 
   const qtdDivergentes = totais?.divergentes ?? 0
+
+  // PDF com um painel por canal (0.4.5): da pesquisa inteira, sem os filtros da tela.
+  // O botão só aparece com os pedidos carregados (some durante a pesquisa e sem pedidos).
+  const pdfDisponivel =
+    canExport && painelDisponivel && !carregando && consulta !== null && pedidos.length > 0
+  async function gerarPdf() {
+    if (!consulta || gerandoPdf) return
+    setGerandoPdf(true)
+    try {
+      await exportarPdfCanais(pedidos, consulta)
+    } catch (e) {
+      console.error('[fechamento-maestro] PDF por canal:', e)
+      toast.error('Não foi possível gerar o PDF. Tente de novo.')
+    } finally {
+      setGerandoPdf(false)
+    }
+  }
 
   const acoes = (
     <>
@@ -631,6 +616,24 @@ export function FechamentoMaestroView() {
           <span className={ROTULO_TOOLBAR}>Totais</span>
         </Button>
       </Dica>
+      {/* PDF por canal: um painel (anel + 12 totais) por canal, da pesquisa inteira.
+          Separado do Exportar, que baixa a planilha da tabela como está na tela.
+          Oculto até os pedidos carregarem. */}
+      {pdfDisponivel && (
+        <Dica content="Baixar um PDF com os totais de cada canal da pesquisa">
+          <Button
+            variant="ghost"
+            className={cn(BOTAO_TOOLBAR, 'animate-in fade-in duration-default', compacto && 'h-11')}
+            aria-label="PDF por canal"
+            loading={gerandoPdf}
+            onClick={() => void gerarPdf()}
+            data-tour="fechamento-maestro-pdf"
+          >
+            <FileText className="h-4 w-4" />
+            <span className={ROTULO_TOOLBAR}>PDF por canal</span>
+          </Button>
+        </Dica>
+      )}
     </>
   )
 
@@ -660,6 +663,10 @@ export function FechamentoMaestroView() {
           onPesquisar={pesquisar}
           semAlteracao={semAlteracao}
           compacto={compacto}
+          // Barra enxuta (uma linha) só com resultado na tela: antes da 1ª pesquisa,
+          // durante uma pesquisa nova ou com erro, a barra completa orienta. Em área
+          // estreita (tablet) a linha não cabe e fica a barra completa.
+          enxuto={painelDisponivel && fechamentoQuery.data !== undefined && cabeLinhaFiltros}
           tituloExtra={<TourReplayButton onClick={replayTour} />}
           seletorCanal={
             // Vale na hora (não precisa de Pesquisar); antes do resultado, ou com
@@ -686,27 +693,29 @@ export function FechamentoMaestroView() {
         />
 
         <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos}>
-          <ResumoCards
-            tourPrefixo={
-              painelDisponivel && totaisAbertos && !carregando
-                ? 'fechamento-maestro-totais'
-                : undefined
-            }
-            lateral={
-              <PainelCanais
-                canais={canais}
-                canal={canal}
-                onCanalChange={setCanal}
-                carregando={carregando}
-              />
-            }
-            totais={totais}
-            carregando={carregando}
-            recorte={recorteTotais}
-            filtro={filtroTotal}
-            onFiltroChange={setFiltroTotal}
-            principais={TOTAIS_PRINCIPAIS}
-          />
+          {/* Medido pelo useCabemTotais: a altura natural da seção, mesmo fechada. */}
+          <div ref={setPainelTotais}>
+            <ResumoCards
+              tourPrefixo={
+                painelDisponivel && totaisAbertos && !carregando
+                  ? 'fechamento-maestro-totais'
+                  : undefined
+              }
+              lateral={
+                <PainelCanais
+                  canais={canais}
+                  canal={canal}
+                  onCanalChange={setCanal}
+                  carregando={carregando}
+                />
+              }
+              totais={totais}
+              carregando={carregando}
+              recorte={recorteTotais}
+              filtro={filtroTotal}
+              onFiltroChange={setFiltroTotal}
+            />
+          </div>
         </Recolhivel>
 
         <DataReport<PedidoFechamento>

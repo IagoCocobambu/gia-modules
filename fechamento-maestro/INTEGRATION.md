@@ -3,9 +3,9 @@
 ## 1. Identificação
 
 - **Módulo**: `fechamento-maestro` — Fechamento Maestro
-- **Versão do pacote**: 0.2.1
+- **Versão do pacote**: 0.4.5
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
-- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.70 (fixada)
+- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.71 (fixada)
 
 ## 2. Fontes de dados externas
 
@@ -40,7 +40,8 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
 ## 4. Permissões
 
 - `fechamento-maestro.ler` — consultar o fechamento.
-- `fechamento-maestro.exportar` — exportar em Excel.
+- `fechamento-maestro.exportar` — exportar em Excel e baixar o PDF de totais por
+  canal (0.4.5).
 - `fechamento-maestro.ver-dados-cliente` — ver CPF, e-mail, telefone e endereço
   completos do cliente. Sem ela, esses campos chegam mascarados do servidor.
   Dado sensível: conceder só a quem precisa (ex.: atendimento).
@@ -58,3 +59,8 @@ Módulo **read-only** — não cria tabela nem migration no portal e não grava 
   função `numeroDaLoja` está nos handlers `lojas` e `fechamento`. O seletor lista
   todas as lojas com CNPJ; a que não tem número recebe 422 na pesquisa.
 - **Volume/latência**: uma loja × até 31 dias (≈ 25 s / 3 MB no pior caso medido).
+- **Dependências de navegador**: `exceljs` (Excel) e, desde a 0.4.5, `jspdf` 4.x
+  (PDF por canal, `src/pdf-canais.ts`). As duas carregam por `import()` dinâmico,
+  só no clique em Exportar ou em PDF por canal, e ficam fora do bundle inicial. O
+  PDF é gerado no navegador, sem chamada nova ao servidor nem permissão nova (usa
+  `fechamento-maestro.exportar`).

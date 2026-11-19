@@ -1,0 +1,62 @@
+Fechamento Maestro 0.4.5 - revisão SDK e PDF com os totais por canal - 18/11/2026
+
+Entrega
+- Módulo: fechamento-maestro ("Fechamento Maestro")
+- Versão: 0.4.4 → 0.4.5
+- Pacote: modules-fechamento-maestro-0.4.5.tgz (104,1 kB, 37 arquivos, sem .env nem segredos)
+- Menu: Plataformas › Maestro › Fechamento Maestro
+- Permissões: fechamento-maestro.ler, fechamento-maestro.exportar, fechamento-maestro.ver-dados-cliente (sem chave nova; a descrição de fechamento-maestro.exportar passa a citar o PDF)
+- Validação SDK: gia validate 58/58, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- SDK: @gia-cb 0.1.0-alpha.71 (a mesma do Fechamento iFood Diário, do Fechamento iFood Mensal, do Fechamento 99Food Mensal e do Reports Maestro)
+- Tipo: só leitura (sem mudança de banco)
+
+Pedido do usuário
+1. Pedido da diretoria (17/11/2026): os painéis da seção de totais separados por canal, num PDF.
+   - Botão PDF por canal na barra da tabela, logo antes do Exportar (ghost, ícone de documento, 44 px de altura no celular), com a permissão de exportação. Fica oculto até os pedidos carregarem.
+   - PDF A4 retrato: cabeçalho "Fechamento Maestro" com loja, período, pedidos e hora em que foi gerado; uma seção por canal (do que mais vendeu para o que menos vendeu), com o anel (canal da seção aceso, os outros apagados), total pago, % e pedidos, o aviso "Totais só de <canal> · X de Y pedidos" e os 12 indicadores do canal.
+   - Sempre da pesquisa inteira: canal escolhido, clique num indicador, Só divergências e filtros de coluna não mudam o arquivo. O Exportar continua só com o Excel da tabela.
+   - Gerado no navegador com o jsPDF (dependência nova, carregada só no clique), em vetor, e baixado direto - funciona igual no celular.
+2. Rosca do PDF com as cores de cada canal, como na tela (iFood rosa, App Coco Bambu azul, 99Food âmbar, os outros cinza) - exceção às cores do padrão 17, pedida pelo usuário.
+3. Anel da seção de totais centralizado na vertical: na tela do diretor (Safari) o anel ficava no alto da seção, com espaço sobrando embaixo, porque a coluna dos indicadores ficava mais alta (rótulos em 2 linhas) e o anel não era centralizado no espaço dele. Agora o espaço do anel centraliza o conteúdo com flex, igual em todos os navegadores.
+
+Incongruências encontradas e corrigidas
+1. PDF no visual da primeira versão (título na cor do texto, margem de 14 mm, rodapé sem "GIA ·") → visual do padrão 17: margem de 12,7 mm, título 15 pt no azul de acento com subtítulo, linha de contexto, linha de acento fechando o cabeçalho, faixa azul-clara com o nome de cada canal, linha de continuação nas páginas seguintes, seção que não cabe vai inteira para a página seguinte e rodapé "GIA · Fechamento Maestro · <loja> · <período>" com "Página X de Y". Fonte: AGENTS.md da raiz, padrão 17.
+2. Botão do PDF outline, ao lado do Totais → ghost, logo antes do Exportar, h-11 no celular. Fonte: AGENTS.md da raiz, padrão 17 ("Na tela e na documentação").
+3. Dependência nova sem registro para quem instala → INTEGRATION.md §5 diz que o módulo usa exceljs e jspdf, os dois por import() dinâmico, e que o PDF não tem chamada ao servidor nem permissão nova. Fonte: packaging.md (revisão das dependências do package.json pelo time GIA).
+
+Conferido e já de acordo
+- Versões iguais em package.json, package-lock.json, module.ts, INTEGRATION.md e CHANGELOG.md (0.4.5). Fonte: gia validate (manifesto × package.json).
+- jsPDF e exceljs por import() dinâmico, fora do bundle inicial. Fonte: conventions.md §15 (planilhas) e AGENTS.md da raiz, padrão 17.
+- PDF: Helvetica, espaço fino trocado antes de escrever, texto que não cabe cortado com "…", sempre claro, nome pelo nomeArquivoExport, setProperties com título e criador. Fonte: AGENTS.md da raiz, padrão 17.
+- PDF de teste com loja de nome comprido, 7 canais e canal de nome longo: nada passa da margem, nenhum título sozinho no pé da página, "Página 1 de 2" e "Página 2 de 2" certos. Fonte: AGENTS.md da raiz, padrão 17.
+- FAQ explica o que vai no PDF e que ele não segue os filtros da tela; tour com o passo do PDF; PRD com RF-8a, critérios de aceite e histórico. Fonte: conventions.md §14, AGENTS.md da raiz, padrão 17.
+- FAQ e tour sem menção ao sistema antigo (grep sem ocorrências). Fonte: AGENTS.md da raiz, padrão 4.
+- Botões com rótulo visível no toque e dica só com mouse (Dica). Fonte: AGENTS.md da raiz, padrão 2.
+- Sem title= nativo, sem cor crua nem duration-NNN na tela, sem console.log, só named export; arquivos abaixo de 800 linhas (maior: a view, 760). Fonte: conventions.md §2, §7, §8, §13.
+- Ordem, rótulos, dicas e tons dos 12 indicadores num lugar só (src/indicadores.ts), usado pela tela e pelo PDF.
+- Não se aplicam: padrões 5, 12 e 13 (módulo não grava), 6 (sem par quantidade × valor), 7 (tela sem abas), 9 (consulta comum); conventions.md §15 segundo plano (PDF de uma loja, gerado na hora), §16, §18-§20.
+- Fontes lidas: docs do @gia-cb 0.1.0-alpha.71 (conventions.md, delivery-checklists.md E, F, K, P e Q, packaging.md nas dependências), AGENTS.md da raiz (padrões 1-17) e do módulo. A revisão completa da 0.4.4 (17/11/2026) vale para o resto do módulo; esta conferiu o que mudou.
+
+Não corrigido (decisão ou fora do escopo)
+- Anel do PDF fora da tabela de cores do padrão 17 - decisão do usuário (18/11/2026), registrada como exceção no próprio padrão 17, no PRD e no CHANGELOG.
+- Botão do PDF oculto até os pedidos carregarem, em vez de "desligado durante o carregamento" como diz o padrão 17 - pedido do usuário.
+- npm audit: 2 vulnerabilidades moderadas no uuid, que vem do exceljs (já existia antes desta versão). A correção sugerida rebaixa o exceljs para a 3.4.0, que muda a API; o jspdf novo não tem nenhuma.
+- Padrão 3 do AGENTS.md (4 principais + "Ver todos os totais"): os 12 indicadores ficam à vista desde a 0.4.3 - decisão do usuário.
+
+Testes
+- gia validate: 58/58, 0 erros, 0 avisos; tsc sem erros.
+- PDF gerado fora do navegador com dados fictícios (loja de nome longo, 7 canais, canal de nome comprido, canal só com cancelados, valor acima de R$ 1 milhão): layout, cortes, quebra de página, rodapé e cores conferidos.
+- Falta conferir: no gia dev, o botão aparecendo só depois do resultado e o download do PDF no computador e no celular; o anel centralizado na seção de totais no Safari (tela do diretor) e no Chrome.
+
+Arquivos alterados
+- src/pdf-canais.ts (novo), src/indicadores.ts (novo)
+- src/components/ResumoCards.tsx, src/views/FechamentoMaestroView.tsx
+- src/faq.ts, src/tour.ts, src/permissions.ts, src/module.ts
+- PRD.md, CHANGELOG.md, INTEGRATION.md, README.md, package.json, package-lock.json
+- ../AGENTS.md (referência do padrão 17 e exceção do anel)
+
+Pendências com outros times
+- Time do SDK: o Tab vai para o <body> depois de elemento com Tooltip (inclusive no DataReport) - continua da 0.4.2.
+- Time do SDK: MensagemErro é um arquivo copiado entre módulos (proposta para virar componente do portal).
+- Time do SDK: não há padrão nem componente de PDF no @gia-cb; o padrão 17 do workspace cobre isso por enquanto.
+- Enviar modules-fechamento-maestro-0.4.5.tgz ao time do Portal GIA pelo canal combinado.

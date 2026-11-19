@@ -1,0 +1,46 @@
+Fechamento Maestro 0.4.3 - os 12 totais sempre à vista - 12/11/2026
+
+Entrega
+- Módulo: fechamento-maestro ("Fechamento Maestro")
+- Versão: 0.4.2 → 0.4.3
+- Pacote: modules-fechamento-maestro-0.4.3.tgz (87,5 kB, 34 arquivos, sem .env nem segredos)
+- Menu: Plataformas › Maestro › Fechamento Maestro
+- Permissões: fechamento-maestro.ler, fechamento-maestro.exportar, fechamento-maestro.ver-dados-cliente (sem chave nova)
+- Validação SDK: gia validate 58/58, 0 erros, 0 avisos (tsc sem erros)
+- SDK: @gia-cb 0.1.0-alpha.70 (a mesma dos outros módulos)
+- Tipo: só leitura (sem mudança de banco nem de permissões)
+
+Pedido do usuário
+1. Seção de canais e totais: tirar a função "Ver todos os totais (+8)" / "Ocultar os demais totais", porque ela não muda a altura da seção.
+   - Ao lado do anel de canais, as 3 linhas de 5 indicadores cabem na altura do anel. Esconder 8 deles não deixava a seção mais baixa; só escondia os cancelados, os descontos e o sem classificação.
+   - Agora os 12 indicadores ficam sempre à vista, na ordem de sempre: Online, Adquirentes online, Adquirentes offline, Offline; os 4 cancelados; Descontos loja, Descontos parceiro; Valor sem classificação e Pagamentos sem classificação.
+   - Saem junto: o ponto vermelho do botão (sem classificação escondido) e a abertura automática da parte de baixo quando um card escondido filtrava a tabela - não há mais card escondido.
+   - Clique filtra a tabela, dica só com mouse e a regra das 5 linhas continuam como na 0.4.2.
+
+Mudanças no código
+- src/components/ResumoCards.tsx: sai a prop principais, o estado de expandir, o botão e a grade de baixo; a grade mostra os 12 itens.
+- src/helpers.ts: sai a constante TOTAIS_PRINCIPAIS.
+- src/views/FechamentoMaestroView.tsx: deixa de passar principais ao ResumoCards.
+- src/hooks/use-medidas-tela.ts: a regra das 5 linhas descontava a parte "demais totais" da altura da seção; agora mede a seção inteira.
+
+Desvio consciente do AGENTS.md
+- Padrão 3 do AGENTS.md da raiz pede, com mais de ~5 indicadores, os 4 principais à vista e o botão "Ver todos os totais". No Maestro a barra fica ao lado do anel de canais, que já define a altura da seção; com os 12 à vista a seção não fica mais alta. Decisão do usuário.
+- Em área com menos de ~900 px de largura o anel vai para cima dos indicadores e a grade fica com 3 colunas (4 linhas de indicadores); a regra das 5 linhas continua fechando a seção sozinha quando falta espaço.
+
+Conferido
+- FAQ e tour sem menção ao sistema antigo (grep sem ocorrências). Fonte: AGENTS.md da raiz, padrão 4.
+- FAQ, tour e PRD não citam mais o "Ver todos os totais"; o PRD ganhou o critério de aceite dos 12 indicadores sempre à vista.
+
+Testes
+- tsc --noEmit sem erros.
+- gia validate: 58/58, 0 erros, 0 avisos.
+- Falta conferir no gia dev: a seção com os 12 indicadores ao lado do anel em 1920, 1440 e 1280 px, e em área estreita (3 colunas).
+
+Arquivos alterados
+- src/components/ResumoCards.tsx, src/helpers.ts, src/views/FechamentoMaestroView.tsx, src/hooks/use-medidas-tela.ts
+- src/faq.ts, src/tour.ts, src/module.ts
+- PRD.md, CHANGELOG.md, INTEGRATION.md, package.json, package-lock.json
+
+Pendências com outros times
+- Time do SDK: o Tab vai para o <body> depois de elemento com Tooltip (inclusive no DataReport) - continua da 0.4.2.
+- Enviar modules-fechamento-maestro-0.4.3.tgz ao time do Portal GIA pelo canal combinado.

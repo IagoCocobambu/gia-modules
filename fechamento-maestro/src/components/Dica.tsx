@@ -19,8 +19,17 @@ interface DicaProps {
  * abre pelo dedo e ainda atrapalha: o navegador emula um "mouse" no ponto do
  * último toque, e o tooltip do elemento que ficava ali abria sozinho e cobria o
  * vizinho. Lá, o elemento vai sem tooltip — o rótulo visível e a FAQ explicam.
+ *
+ * `asChild`: o filho (botão, fatia do anel) é o próprio gatilho. Sem ele o Radix
+ * envolve o filho num `<button>` a mais — botão dentro de botão (HTML inválido).
  */
 export function Dica({ content, children }: DicaProps) {
   const comHover = useComHover()
-  return comHover ? <Tooltip content={content}>{children}</Tooltip> : children
+  return comHover ? (
+    <Tooltip content={content} asChild>
+      {children}
+    </Tooltip>
+  ) : (
+    children
+  )
 }

@@ -254,17 +254,6 @@ export function resumirTotais(pedidos: PedidoFechamento[]): TotaisPeriodo {
   }
 }
 
-/**
- * Os 4 indicadores à vista na barra de totais acima da tabela (os grupos de
- * pagamento do fechamento); os demais abrem por "Ver todos os totais".
- */
-export const TOTAIS_PRINCIPAIS: readonly FiltroTotal[] = [
-  'online',
-  'adquirentes_online',
-  'adquirentes_offline',
-  'offline',
-]
-
 /** Canal do pedido (a `origem` da API); "Sem origem" quando a API não informou. */
 export function canalDoPedido(p: PedidoFechamento): string {
   return p.origem?.trim() || 'Sem origem'
@@ -377,7 +366,12 @@ export const COLUNAS_DIA: ColunaExport<ResumoDia>[] = [
 export const COLUNAS_PEDIDO: ColunaExport<PedidoFechamento>[] = [
   { header: 'Data', valor: (p) => p.data, tipo: 'data', largura: 12 },
   { header: 'Nº pedido', valor: (p) => p.n_pedido, tipo: 'texto', largura: 11 },
+  // Nº parceiro e Nº conta como texto: o id do parceiro pode passar de 15 dígitos
+  // (o Excel arredondaria) ou ter letras.
+  { header: 'Nº parceiro', valor: (p) => p.n_parceiro, tipo: 'texto', largura: 20 },
+  { header: 'Nº conta', valor: (p) => p.n_conta, tipo: 'texto', largura: 12 },
   { header: 'Data criação', valor: (p) => p.data_de_criacao, tipo: 'dataHora', largura: 19 },
+  { header: 'Data de ação', valor: (p) => p.data_de_acao, tipo: 'dataHora', largura: 19 },
   { header: 'Origem', valor: (p) => p.origem, tipo: 'texto', largura: 16 },
   { header: 'Status pedido', valor: (p) => p.status_do_pedido, tipo: 'texto', largura: 14 },
   {
@@ -387,7 +381,19 @@ export const COLUNAS_PEDIDO: ColunaExport<PedidoFechamento>[] = [
     largura: 10,
   },
   { header: 'Cliente', valor: (p) => p.nome_cliente, tipo: 'texto', largura: 28 },
+  // Dados pessoais: já chegam mascarados do servidor sem `ver-dados-cliente`.
+  { header: 'CPF cliente', valor: (p) => p.cpf_cliente, tipo: 'texto', largura: 16 },
+  { header: 'Email cliente', valor: (p) => p.email_cliente, tipo: 'texto', largura: 28 },
+  { header: 'Telefone cliente', valor: (p) => p.telefone_cliente, tipo: 'texto', largura: 17 },
+  { header: 'Qtd pedidos', valor: (p) => p.quantidade_pedidos, tipo: 'inteiro', largura: 10 },
+  { header: 'Rua', valor: (p) => p.street_name, tipo: 'texto', largura: 28 },
+  { header: 'Número', valor: (p) => p.street_number, tipo: 'texto', largura: 9 },
+  { header: 'Referência', valor: (p) => p.reference, tipo: 'texto', largura: 24 },
+  { header: 'Retirada', valor: (p) => p.retirada, tipo: 'texto', largura: 10 },
   { header: 'Tipo entrega', valor: (p) => p.tipo_entrega, tipo: 'texto', largura: 16 },
+  { header: 'Confirmado por', valor: (p) => p.confirmado_por, tipo: 'texto', largura: 18 },
+  { header: 'Cancelado por', valor: (p) => p.cancelado_por, tipo: 'texto', largura: 18 },
+  { header: 'Nome loja', valor: (p) => p.nome_loja, tipo: 'texto', largura: 28 },
   {
     header: 'Valor pedido',
     valor: (p) => p.valor_do_pedido,
@@ -403,8 +409,16 @@ export const COLUNAS_PEDIDO: ColunaExport<PedidoFechamento>[] = [
     total: true,
   },
   { header: 'Total pago', valor: (p) => p.total_pago, tipo: 'moeda', largura: 14, total: true },
+  // Bruto: o online do pedido como na coluna "Total pago online" da tabela.
+  {
+    header: 'Online (bruto)',
+    valor: (p) => p.total_pago_online,
+    tipo: 'moeda',
+    largura: 14,
+    total: true,
+  },
   // Líquido do incentivo que foi para Descontos parceiro — como o card e a aba
-  // Fechamento diário. O bruto continua nas formas de pagamento do pedido.
+  // Fechamento diário.
   {
     header: 'Online (líquido)',
     valor: onlineLiquido,
@@ -443,6 +457,13 @@ export const COLUNAS_PEDIDO: ColunaExport<PedidoFechamento>[] = [
   {
     header: 'Desconto total',
     valor: (p) => p.desconto_total,
+    tipo: 'moeda',
+    largura: 14,
+    total: true,
+  },
+  {
+    header: 'Total de descontos',
+    valor: (p) => p.total_de_descontos,
     tipo: 'moeda',
     largura: 14,
     total: true,

@@ -14,7 +14,8 @@ export const fechamentoMaestroPermissions = definePermissions({
     },
     {
       key: 'fechamento-maestro.exportar',
-      description: 'Exportar o fechamento e os pedidos em Excel (.xlsx)',
+      description:
+        'Exportar o fechamento e os pedidos em Excel (.xlsx) e os totais por canal em PDF',
       groupPath: ['Fechamento Maestro'],
     },
     {

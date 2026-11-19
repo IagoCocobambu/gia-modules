@@ -1,3 +1,3 @@
-import fs from 'node:fs';
+import fs from 'node:fs'
 
-const data = fs.readFileSync(process.cwd() + '/test.json', 'utf-8');
+const data = fs.readFileSync(process.cwd() + '/test.json', 'utf-8')

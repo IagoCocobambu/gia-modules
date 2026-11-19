@@ -16,8 +16,13 @@ export const faq: ModuleFaq = {
 3. Clique em **Pesquisar**.
 
 No alto da tela fica o título do módulo, à esquerda, e a loja e as datas, à
-direita (no celular, embaixo do título, recolhíveis). Depois de pesquisar, a
-tela mostra, de cima para baixo:
+direita (no celular, embaixo do título, recolhíveis). No computador, depois de
+pesquisar, a barra de filtros fica **mais baixa, numa linha só**: some a frase
+abaixo do título e os nomes acima dos campos (Loja, Data inicial, Data final,
+Canal), para sobrar altura para a tabela. Os campos continuam no mesmo lugar e
+na mesma ordem — é só trocar e clicar em **Pesquisar** de novo. Em tela mais
+estreita (tablet) a barra fica completa. Depois de pesquisar, a tela mostra, de
+cima para baixo:
 
 - a **seção de canais e totais**: os **canais** de venda e os **totais** do
   período inteiro — ou só do **canal** escolhido (no celular, ela abre pelo
@@ -75,16 +80,12 @@ você escolhe um canal. Pedido sem origem informada aparece como **Sem origem**.
 
 O botão **Totais**, na barra da tabela, abre e fecha a seção acima da tabela,
 com os canais e os **12 indicadores** do fechamento do período inteiro. Cada indicador tem
-um ícone, o **valor** em destaque e o nome embaixo. Ficam **à vista os 4 grupos
-de pagamento** — **Online**, **Adquirentes online**, **Adquirentes offline** e
-**Offline** — e, ao lado, o botão **Ver todos os totais (+8)**, que abre logo
-abaixo os demais: os 4 **cancelados**, **Descontos loja**, **Descontos parceiro**
-e os dois **sem classificação**. Clique em **Ocultar os demais totais** para
-fechar. Fechada, a barra ocupa uma linha só e sobra mais espaço para a tabela.
-Quando há valor **sem classificação** escondido, o botão mostra um **ponto
-vermelho**. Se um dos indicadores escondidos está filtrando a tabela, a parte de
-baixo fica aberta até você tirar o filtro. **No celular** a seção fica acima da lista de pedidos, com um indicador por
-linha, e começa fechada: toque em **Totais** para abri-la.
+um ícone, o **valor** em destaque e o nome embaixo. Os 12 ficam sempre à vista,
+ao lado do anel: na primeira linha os 4 grupos de pagamento — **Online**,
+**Adquirentes online**, **Adquirentes offline** e **Offline** —, depois os 4
+**cancelados**, **Descontos loja**, **Descontos parceiro** e os dois **sem
+classificação**. **No celular** a seção fica acima da lista de pedidos, com os indicadores em
+duas colunas, e começa fechada: toque em **Totais** para abri-la.
 
 As cores ajudam a ler de relance: os grupos de pagamento têm cada um a sua cor;
 os **cancelados** ficam vermelhos quando há valor e **sem classificação** fica
@@ -130,9 +131,10 @@ Quando há **pagamento sem classificação**, o último indicador fica **vermelh
 clique nele para ver na tabela os pedidos com forma de pagamento sem nome, e num
 pedido para abrir o detalhe com cada forma. Sem nenhum, ele mostra **0** em verde.
 
-No computador, a seção fica **aberta** em telas com 700 px de altura ou mais e
-**fechada** em telas mais baixas, para sobrar espaço para a tabela — e acompanha a janela se
-você mudar o tamanho dela. Depois que você clica em **Totais**, vale a sua
+No computador, a seção fica **aberta** enquanto, com ela aberta, a tabela ainda
+mostra umas **5 linhas** de pedidos; numa janela mais baixa ela fica **fechada**,
+para sobrar espaço para a tabela — e acompanha a janela se você mudar o tamanho
+dela. Depois que você clica em **Totais**, vale a sua
 escolha até recarregar a página. A barra mostra o período inteiro do **Canal**
 escolhido (ou de todos) — o *Só divergências*, a busca e os filtros de coluna
 não mudam os totais. Para recortar os totais, escolha um **canal** no anel ou no seletor **Canal**.
@@ -310,7 +312,7 @@ abertas para você corrigir. Os botões da barra da tabela mostram sempre o nome
 total pago e tipo: toque em **ver mais** para os outros campos ligados, e no
 cartão para abrir o detalhe. Use o **campo de busca** para achar um pedido. O
 botão de **colunas** também funciona no celular: as colunas que você ligar
-aparecem no *ver mais*. Só divergências e Exportar funcionam igual ao
+aparecem no *ver mais*. Só divergências, Exportar e PDF por canal funcionam igual ao
 computador.
       `,
     },
@@ -324,7 +326,7 @@ arquivo **.xlsx** com **3 abas**:
 | Aba | O que tem |
 |---|---|
 | **Fechamento diário** | uma linha por dia, com a linha **Total** |
-| **Pedidos** | os pedidos **não cancelados**, com a conciliação de cada um e as divergências por extenso |
+| **Pedidos** | os pedidos **não cancelados**, com **todas as colunas da tabela** (inclusive as desligadas, como Nº parceiro, Nº conta e os dados do cliente), a conciliação de cada um e as divergências por extenso |
 | **Cancelados** | os pedidos cancelados, à parte |
 
 O que vai para o arquivo segue a tabela: os pedidos que estão nela — com o
@@ -336,9 +338,41 @@ descontos saem em duas colunas, **Descontos loja** e **Descontos parceiro**, com
 a mesma regra dos cards. Com algum filtro ligado, o subtítulo de cada aba avisa
 quantos pedidos entraram (ex.: *filtrado: 12 de 340 pedidos*).
 
+As abas de pedidos levam todas as colunas, mesmo as que estão desligadas na
+tela. CPF, e-mail, telefone, número e referência saem como você os vê: sem a
+permissão de dados pessoais, **mascarados** também no arquivo. A coluna
+**Online (bruto)** é o online do pedido sem abatimento; **Online (líquido)** é
+o que soma no card Online.
+
 As linhas **Total** usam a fórmula SUBTOTAL: se você filtrar no próprio Excel,
 o total acompanha. O nome do arquivo segue o padrão do portal:
 *GIA - Fechamento Maestro - &lt;loja&gt; - &lt;período&gt;.xlsx*.
+      `,
+    },
+    {
+      id: 'pdf-por-canal',
+      title: 'PDF com os totais de cada canal',
+      content: `
+Com a permissão de exportação, o botão **PDF por canal**, na barra da tabela antes
+do **Exportar**, baixa um **PDF** (A4) com os totais separados por canal —
+pronto para enviar ou imprimir. Ele aparece quando os pedidos da pesquisa terminam
+de carregar (não aparece durante a pesquisa nem quando ela não traz pedidos).
+
+- No alto: **Fechamento Maestro**, a **loja**, o **período** e quando o PDF foi
+  gerado.
+- Depois, uma seção para **cada canal** da pesquisa (iFood, App Coco Bambu,
+  Pedido manual...), do que mais vendeu para o que menos vendeu: o **anel** com a
+  fatia do canal em destaque, o total pago, a porcentagem e os pedidos dele, e os
+  **12 indicadores só daquele canal** — os mesmos números que a tela mostra
+  quando você escolhe o canal no anel ou no seletor **Canal**.
+- Canal que só teve pedidos cancelados também entra, com venda zero e os
+  cancelados nos indicadores dele.
+
+O PDF é sempre da **pesquisa inteira**: o canal escolhido, o clique num
+indicador, o *Só divergências* e os filtros de coluna não mudam o arquivo. Para
+baixar a tabela como está na tela, use o **Exportar** (Excel). No celular o
+botão funciona igual. O nome do arquivo segue o padrão do portal:
+*GIA - Fechamento Maestro - &lt;loja&gt; - Totais por canal - &lt;período&gt;.pdf*.
       `,
     },
     {
@@ -478,8 +512,8 @@ nenhum dos dois lugares, a pesquisa avisa que falta o número no cadastro.
       category: 'Permissões',
       items: [
         {
-          q: 'Por que não vejo o botão Exportar?',
-          a: 'A exportação exige a permissão `fechamento-maestro.exportar`. Com apenas `fechamento-maestro.ler` você consulta o fechamento na tela, mas não baixa a planilha. Peça a permissão ao gestor do seu grupo.',
+          q: 'Por que não vejo o botão Exportar nem o PDF por canal?',
+          a: 'Os dois exigem a permissão `fechamento-maestro.exportar`. Com apenas `fechamento-maestro.ler` você consulta o fechamento na tela, mas não baixa a planilha nem o PDF. Peça a permissão ao gestor do seu grupo.',
         },
         {
           q: 'Por que vejo o CPF, o e-mail e o telefone com asteriscos (***)?',
@@ -495,8 +529,8 @@ nenhum dos dois lugares, a pesquisa avisa que falta o número no cadastro.
       category: 'Erros comuns',
       items: [
         {
-          q: 'A tela mostrou "Não foi possível consultar os dados". O que faço?',
-          a: 'Leia a mensagem abaixo do título: ela diz o motivo. "Demorou demais" pede um período menor. "A API de delivery respondeu 5xx" é instabilidade da API do DW, e "Não foi possível ler o cadastro de formas de pagamento" é falha no banco do Maestro; nos dois casos, clique em Tentar de novo em alguns minutos. Mensagem de credencial ou integração (403/503) é com o administrador do portal.',
+          q: 'Apareceu uma mensagem de erro no lugar da tabela. Como leio?',
+          a: 'O topo da mensagem diz de onde veio ("Lista de lojas" ou "Pedidos do delivery (Maestro)") e o tipo do problema. Embaixo vem a frase do servidor, que diz o motivo. Sem conexão: verifique a internet; a pesquisa é refeita sozinha quando ela volta. Um sistema que não respondeu (por exemplo, "A API de delivery demorou demais"): tente de novo em alguns minutos ou com um período menor. Revise a pesquisa (período inválido, loja sem número no cadastro): ajuste os filtros e pesquise de novo. Falta de acesso: fale com o gestor. Falha do serviço (por exemplo, "A API de delivery respondeu 5xx" ou "Não foi possível ler o cadastro de formas de pagamento"): clique em Tentar de novo e, se continuar, avise o suporte. Em "Ver detalhes técnicos" estão o que foi pedido e o que voltou, com os botões Copiar tudo e Baixar diagnóstico — mande isso ao suporte. Senhas, tokens e dados pessoais não aparecem ali.',
         },
         {
           q: 'A pesquisa voltou sem nenhum pedido. Está certo?',

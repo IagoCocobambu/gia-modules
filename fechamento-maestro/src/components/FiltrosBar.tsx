@@ -24,6 +24,11 @@ interface FiltrosBarProps {
   semAlteracao: boolean
   /** Layout de celular: campos empilhados, ocupando a largura toda. */
   compacto: boolean
+  /**
+   * Há resultado na tela: fora do celular a barra vira uma linha só (título, campos
+   * e Pesquisar), sem subtítulo nem rótulos — padrão 8 do AGENTS.md da raiz.
+   */
+  enxuto?: boolean
   /** Ao lado do título do módulo (o botão de rever o tour). */
   tituloExtra?: ReactNode
   /**
@@ -43,6 +48,7 @@ export function FiltrosBar({
   onPesquisar,
   semAlteracao,
   compacto,
+  enxuto = false,
   tituloExtra,
   seletorCanal,
   className,
@@ -75,6 +81,78 @@ export function FiltrosBar({
     </Button>
   )
 
+  const seletorLoja = (controle: Record<string, unknown>) => (
+    <SearchableSelect<number>
+      triggerProps={controle}
+      options={lojas.map((l) => ({
+        value: l.empresaId,
+        label: l.nome,
+        description: l.ativo ? undefined : 'Inativa',
+      }))}
+      value={value.empresaId}
+      onChange={(empresaId) => set({ empresaId })}
+      placeholder={lojasLoading ? 'Carregando lojas…' : 'Selecione a loja'}
+      searchPlaceholder="Buscar loja…"
+      emptyLabel="Nenhuma loja disponível"
+      disabled={lojasLoading}
+    />
+  )
+  const seletorDe = (controle: Record<string, unknown>) => (
+    <DatePicker {...controle} value={value.de} max={hoje} onChange={(de) => set({ de })} />
+  )
+  const seletorAte = (controle: Record<string, unknown>) => (
+    <DatePicker {...controle} value={value.ate} max={hoje} onChange={(ate) => set({ ate })} />
+  )
+  // Botão desativado não recebe o mouse: a dica fica num invólucro focável. Na
+  // linha enxuta o invólucro não leva `w-full` (empurraria o botão para baixo).
+  const pesquisar =
+    semAlteracao && !pesquisando ? (
+      <Dica content="Nenhum filtro mudou desde a última pesquisa — o resultado na tela já é este.">
+        <span
+          tabIndex={0}
+          className={cn(
+            'inline-flex rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            !enxuto && 'w-full'
+          )}
+        >
+          {botao}
+        </span>
+      </Dica>
+    ) : (
+      botao
+    )
+
+  // Depois da pesquisa, fora do celular: uma linha só (padrão 8), para sobrar
+  // altura para a tabela. No celular vale o recolher do ListHeader (padrão 1).
+  if (enxuto && !compacto) {
+    return (
+      <div
+        className={cn(
+          'flex shrink-0 items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2 transition-all duration-default ease-default',
+          className
+        )}
+        data-tour="fechamento-maestro-filtros"
+      >
+        {/* Sem quebra de linha: em tela estreita o título encurta (…), não desce. */}
+        <div className="flex min-w-0 shrink items-center gap-1">
+          <h1 className="truncate text-sm font-semibold text-foreground">{NOME_MODULO}</h1>
+          {tituloExtra}
+        </div>
+        <div className="ml-auto flex min-w-0 items-center gap-2">
+          <div className="w-56 min-w-36 shrink">{seletorLoja({ 'aria-label': 'Loja' })}</div>
+          <div className="w-40 shrink-0">{seletorDe({ 'aria-label': 'Data inicial' })}</div>
+          <div className="w-40 shrink-0">{seletorAte({ 'aria-label': 'Data final' })}</div>
+          {seletorCanal && (
+            <div className="w-40 shrink-0" data-tour="fechamento-maestro-canal">
+              {seletorCanal}
+            </div>
+          )}
+          <div className="shrink-0">{pesquisar}</div>
+        </div>
+      </div>
+    )
+  }
+
   // Cabeçalho padrão do portal (o mesmo do Reports Maestro): título à esquerda,
   // formulário à direita. No celular o formulário desce para baixo do título e
   // recolhe pelo chevron do ListHeader, liberando a tela para os pedidos.
@@ -96,44 +174,15 @@ export function FiltrosBar({
             controles à direita: w-full faz o formulário ocupar a largura toda. */}
         <div className={compacto ? 'flex w-full flex-col gap-3' : 'flex flex-wrap items-end gap-3'}>
           <Field label="Loja" className={compacto ? 'w-full' : 'w-52'}>
-            {(controle) => (
-              <SearchableSelect<number>
-                triggerProps={controle}
-                options={lojas.map((l) => ({
-                  value: l.empresaId,
-                  label: l.nome,
-                  description: l.ativo ? undefined : 'Inativa',
-                }))}
-                value={value.empresaId}
-                onChange={(empresaId) => set({ empresaId })}
-                placeholder={lojasLoading ? 'Carregando lojas…' : 'Selecione a loja'}
-                searchPlaceholder="Buscar loja…"
-                emptyLabel="Nenhuma loja disponível"
-                disabled={lojasLoading}
-              />
-            )}
+            {(controle) => seletorLoja(controle)}
           </Field>
 
           <div className={compacto ? 'grid grid-cols-2 gap-3' : 'contents'}>
             <Field label="Data inicial" className={compacto ? 'min-w-0' : 'w-40'}>
-              {(controle) => (
-                <DatePicker
-                  {...controle}
-                  value={value.de}
-                  max={hoje}
-                  onChange={(de) => set({ de })}
-                />
-              )}
+              {(controle) => seletorDe(controle)}
             </Field>
             <Field label="Data final" className={compacto ? 'min-w-0' : 'w-40'}>
-              {(controle) => (
-                <DatePicker
-                  {...controle}
-                  value={value.ate}
-                  max={hoje}
-                  onChange={(ate) => set({ ate })}
-                />
-              )}
+              {(controle) => seletorAte(controle)}
             </Field>
           </div>
 
@@ -145,21 +194,7 @@ export function FiltrosBar({
               </Field>
             )}
 
-            {/* Botão desativado não recebe o mouse: a dica fica num invólucro focável. */}
-            <div className={compacto ? 'w-full' : undefined}>
-              {semAlteracao && !pesquisando ? (
-                <Dica content="Nenhum filtro mudou desde a última pesquisa — o resultado na tela já é este.">
-                  <span
-                    tabIndex={0}
-                    className="inline-flex w-full rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    {botao}
-                  </span>
-                </Dica>
-              ) : (
-                botao
-              )}
-            </div>
+            <div className={compacto ? 'w-full' : undefined}>{pesquisar}</div>
           </div>
         </div>
       </ListHeader>

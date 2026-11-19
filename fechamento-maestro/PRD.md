@@ -8,10 +8,10 @@
 | **Label visível**      | Fechamento Maestro                        |
 | **Categoria**          | `operacional`                             |
 | **Autor**              | Iago Pereira (iago.pereira@cocobambu.com) |
-| **Versão do PRD**      | `1.3`                                     |
+| **Versão do PRD**      | `1.4`                                     |
 | **Status**             | `em-dev`                                  |
-| **Última atualização** | 2026-11-11                                |
-| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.67`              |
+| **Última atualização** | 2026-11-17                                |
+| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.71`              |
 
 ---
 
@@ -78,7 +78,7 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 - Propriedade (sem CNPJ): não aparece no seletor; a pesquisa responde 404.
 - Período > 31 dias, data final < inicial ou data futura: recusado com mensagem.
 - API demora mais de 90 s: 504 com a sugestão de reduzir o período.
-- API fora do ar ou integração não liberada: estado de erro com a mensagem e "Tentar de novo".
+- API fora do ar ou integração não liberada: mensagem de erro padrão (`MensagemErro`, padrão 11 do AGENTS.md, desde a 0.4.4) no lugar da tabela, no alto e centrada como o estado vazio: tipo do problema (sem conexão, sistema que não respondeu, revise a pesquisa, acesso, falha do serviço), de onde veio ("Lista de lojas" ou "Pedidos do delivery (Maestro)"), a frase do servidor, "Tentar de novo" e "Ver detalhes técnicos" (Copiar tudo, Baixar diagnóstico só deste módulo, sem senha, token nem dado pessoal).
 - Vale novo fora do cadastro ONLINE VR: entra como ONLINE (pré-pago) ou OFFLINE, como no legado.
 - Forma de pagamento sem nome ou `DESCONHECIDO`: SEM CLASSIFICAÇÃO e o pedido fica divergente.
 - Banco do Maestro fora do ar: 502 "Não foi possível ler o cadastro de formas de pagamento".
@@ -167,8 +167,10 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
   no celular, inline acima da lista, começando fechada (padrão 3); o Dashboard
   saiu (RF-9).
 - Os 12 indicadores do Fechamento Diário do legado em produção, nesta ordem.
-  Aberta em telas com altura ≥ 700 px e fechada abaixo (segue o resize, via
-  `matchMedia`); depois que o usuário usa o botão "Totais", vale a escolha dele
+  Aberta enquanto, com ela aberta, a tabela ainda mostra 5 linhas, e fechada
+  abaixo disso (segue o resize; **0.4.2:** mede o espaço da tela em vez do
+  `min-height: 700px`, que no Chrome fechava a seção com a tabela ainda folgada
+  e variava entre navegadores); depois que o usuário usa o botão "Totais", vale a escolha dele
   até recarregar:
   1. Online (RN-10), Adquirentes online, Adquirentes offline, Offline — pedidos
      não cancelados (RN-4).
@@ -182,8 +184,12 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
   cheias. **0.3.0 — padrão 3 do workspace:** grade de até 5 colunas; à vista os 4
   grupos de pagamento (Online, Adquirentes online/offline, Offline) e o botão
   "Ver todos os totais (+8)" com os demais logo abaixo (cancelados, descontos,
-  sem classificação). Ponto vermelho no botão com sem classificação escondido;
-  card escondido filtrando mantém a parte de baixo aberta. Tooltip com a explicação da conta no hover (fecha no clique).
+  sem classificação). **0.4.3:** sai o "Ver todos os totais" — ao lado do anel de
+  canais, as 3 linhas de 5 indicadores cabem na altura do anel, então esconder
+  8 deles não deixava a seção mais baixa; os 12 ficam sempre à vista. **0.4.4:** no celular a
+  grade fica com **2 colunas** (antes 1): os 12 indicadores ocupavam a tela inteira
+  quando a seção abria; em 2, metade da altura. Abaixo de `@sm` o item fica compacto
+  (ícone 7×7, valor `text-sm`; abaixo de `@xs` — tela de até ~375 px —, sem o ícone) e o rótulo quebra em vez de cortar (sem dica no toque). Tooltip com a explicação da conta no hover (fecha no clique).
 - **Cada indicador é um filtro da tabela** (pedido de 2026-11-06): o clique mostra
   só os pedidos que somaram nele (`pedidosDoTotal`, mesma regra de
   `resumirTotais`, valor ≠ 0 no grupo); o indicador fica marcado (`aria-pressed`)
@@ -209,6 +215,43 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
   SUBTOTAL(109). Segue os pedidos que estão na tabela (filtros incluídos). Com
   canal e/ou indicador ligados, o subtítulo diz "filtrado (iFood · Online): X de
   Y pedidos".
+- **0.4.1:** as abas Pedidos e Cancelados levam **todas** as colunas da tabela
+  (ligadas ou não), mais as da conciliação: Nº parceiro, Nº conta, Data de
+  ação, dados do cliente (mascarados sem `ver-dados-cliente`, como na tela),
+  endereço, Retirada, Confirmado/Cancelado por, Nome loja, Online bruto e
+  líquido, Total de descontos. Nº parceiro e Nº conta vão como texto (o Excel
+  arredondaria ids com mais de 15 dígitos).
+
+### RF-8a: PDF de totais por canal (0.4.5)
+
+- Pedido da diretoria (17/11/2026): os painéis da seção de totais separados por
+  canal, num PDF. Botão **PDF por canal** (`ghost`, `FileText`) na barra da
+  tabela, logo antes do Exportar;
+  permissão `fechamento-maestro.exportar` (a mesma do Excel). **Oculto** até os
+  pedidos carregarem: não aparece antes da 1ª pesquisa, durante uma pesquisa nem
+  quando ela não traz pedidos.
+- Botão próprio, fora do Exportar: o SDK (alpha.71) não tem padrão de PDF, o
+  Exportar do `DataReport` baixa as linhas da tabela, e o `PlanilhaMenu` só tem
+  ações fixas. Decisão do usuário em 17/11/2026.
+- A4 retrato: cabeçalho "Fechamento Maestro" com loja, período e data/hora da
+  geração; uma seção por canal (ordem do anel, maior venda primeiro, inclusive
+  canal só com cancelados) com o anel (fatia do canal acesa, as outras apagadas),
+  total pago, % e pedidos no miolo, "Totais só de <canal> · X de Y pedidos" e os
+  12 indicadores do canal (mesmos rótulos e tons da tela, `src/indicadores.ts`).
+  Até 4 canais por página; faixa e painel do canal nunca se separam.
+- Visual do padrão 17 do `../AGENTS.md`: margem 12,7 mm, título 15 pt no acento
+  `#3783FF` + subtítulo, linha de contexto (loja · período · pedidos · gerado em),
+  linha de acento de 1,2 pt; faixa `#DBE8FF` com o canal em maiúsculas; páginas
+  seguintes só com a linha de continuação; rodapé `GIA · Fechamento Maestro ·
+<loja> · <período>` + "Página X de Y". **Exceção (pedido em 17/11/2026):** o
+  anel segue as cores da tela — cada canal na cor do `PainelCanais` (iFood rosa,
+  App Coco Bambu azul, 99Food âmbar, outros cinza), o da seção aceso e os outros a
+  30%. Testado com loja de nome longo, 7 canais e canal de nome longo.
+- Sempre da pesquisa inteira: canal escolhido, filtro de indicador, Só
+  divergências e filtros de coluna não entram.
+- Gerado no navegador com o jsPDF (vetor, `import()` dinâmico), baixado direto —
+  funciona no celular (conventions §11). Nome por `nomeArquivoExport`
+  (`GIA - Fechamento Maestro - <loja> - Totais por canal - <período>.pdf`).
 
 ### RF-9: Dashboard (removido na 0.4.0)
 
@@ -233,6 +276,11 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
   o mouse acende (padrão 2). Cores = `BadgeOrigemPedido`. Anel = pesquisa
   inteira (não muda com o canal). Canal só com cancelados não tem fatia: escolhe-se
   pelo seletor Canal, que também é o caminho pelo teclado.
+- **Barra de filtros enxuta** (0.4.2, padrão 8 do AGENTS.md): com resultado na
+  tela e área com 1040 px ou mais de largura, a barra vira uma linha só (~60 px,
+  em vez de ~140), sem subtítulo nem rótulos (os campos levam `aria-label`). Em
+  área mais estreita a linha não cabe (as datas e o Pesquisar cortavam) e fica a
+  barra completa. No celular vale o recolher do padrão 1.
 - O seletor **Canal** (0.3.0, na toolbar) fica na **barra de filtros**, à esquerda
   do Pesquisar (0.4.0), ligado ao mesmo estado do anel (escolher num muda o
   outro): dá para trocar de canal com a seção de totais fechada, pelo teclado ou
@@ -266,6 +314,7 @@ formas de pagamento segue a regra do legado (RN-4), lendo o mesmo cadastro
 2. **Investigar divergência**: Só divergências → clicar no pedido → detalhe.
 3. **Forma não classificada**: card Pagamentos sem classificação → lista → pedido → detalhe.
 4. **Exportar**: Exportar → `.xlsx` de 3 abas.
+   **PDF por canal** → `.pdf` com o painel de totais de cada canal.
 5. **Ver um canal**: Totais → clicar na fatia do canal no anel, ou seletor Canal (totais, tabela e Excel só dele).
 
 ---
@@ -389,11 +438,16 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 - [ ] Mesma loja e dia: os 12 indicadores iguais aos do Fechamento Diário do legado
 - [ ] Online + Adquirentes online + Adquirentes offline + Offline + Valor sem classificação = total pago − incentivo abatido do Online (RN-10)
 - [ ] No celular, a seção de canais e totais começa fechada e abre pelo botão Totais, acima da lista
+- [ ] Erro na consulta mostra a mensagem padrão (tipo, origem, frase do servidor, Tentar de novo quando ajuda e Ver detalhes técnicos), no alto da área da tabela, na mesma posição do "Escolha a loja e o período" (padrão 11 do AGENTS.md)
+- [ ] No celular (inclusive 320 px), os 12 indicadores ficam em 2 colunas, sem corte de valor e com o rótulo inteiro (quebra em 2 linhas se precisar)
+- [ ] No computador, diminuindo a altura da janela, a seção de totais fecha sozinha só quando a tabela ficaria com menos de 5 linhas — igual no Chrome, no Safari e no Edge
+- [ ] Ao lado do anel, os 12 indicadores ficam sempre à vista (sem o botão "Ver todos os totais"), sem a seção ficar mais alta que o anel
 - [ ] Clicar num indicador filtra a tabela pelos pedidos dele; clicar de novo (ou no botão do filtro) tira o filtro
 - [ ] Com o filtro, a soma da coluna do grupo na tabela bate com o valor do indicador
 - [ ] Painel de canais: escolher iFood muda os 12 indicadores, a tabela, o contador do Só divergências e o Exportar; a barra avisa "Totais só de iFood · X de Y pedidos"
 - [ ] Soma dos indicadores por canal = totais com Todos os canais; nova pesquisa mantém o canal (ou volta a Todos se ele não estiver na pesquisa)
 - [ ] No celular, os filtros recolhem pelo chevron do cabeçalho (ListHeader) e recolhem sozinhos quando a pesquisa começa (recusada: ficam abertos)
+- [ ] Fora do celular, com resultado na tela, a barra de filtros vira uma linha só (título, Loja, Data inicial, Data final, Canal e Pesquisar), sem subtítulo nem rótulos, com `aria-label` nos campos; antes da pesquisa, durante uma pesquisa nova, com erro ou em área com menos de 1040 px de largura, a barra completa (padrão 8 do AGENTS.md)
 - [ ] Em tela de toque, os botões da barra mostram o nome (não só o ícone)
 - [ ] Clicar no canal escolhido (ou em Todos os canais) volta à pesquisa inteira; o anel apaga os outros canais
 - [ ] Busca genérica só no celular; título do módulo à esquerda e filtros à direita
@@ -405,7 +459,10 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 - [ ] Coluna Tipo mostra os tipos do pedido (ex.: `ONLINE; ONLINE VR`), filtra e vai no Excel
 - [ ] Mesmo dia/loja: Online, Adquirentes e Offline iguais aos do Fechamento Diário legado
 - [ ] Excel com 3 abas e totais que batem com a tela
-- [ ] Sem `fechamento-maestro.exportar` não há botão Exportar
+- [ ] Abas Pedidos e Cancelados do Excel com todas as colunas da tabela, inclusive Nº parceiro (texto, sem arredondar)
+- [ ] Sem `fechamento-maestro.exportar` não há botão Exportar nem PDF por canal
+- [ ] PDF por canal: uma seção por canal da pesquisa, os 12 indicadores de cada uma iguais aos da tela com aquele canal escolhido; o canal escolhido e os filtros da tela não mudam o arquivo
+- [ ] PDF por canal baixa também no celular, com cabeçalho Fechamento Maestro, loja e período
 - [ ] Colunas na ordem do legado; de cara só as 11 ativas; obrigatórias fora do menu de colunas
 - [ ] Sem `fechamento-maestro.ver-dados-cliente`, a resposta do handler (DevTools → Rede) já traz CPF/e-mail/telefone/número/referência mascarados; com ela, completos
 - [ ] Mobile (375x667), tablet (768x1024), desktop (1280x720) funcionam; tabelas viram cards
@@ -456,6 +513,10 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 - `api-dw.cocobambu.com` `/Delivery/`.
 - Banco do Maestro — tabela `gia_relatorios.formas_pagamento` (só leitura).
 
+### Bibliotecas
+
+- `exceljs` (Excel) e `jspdf` (PDF por canal, 0.4.5), as duas por `import()` dinâmico.
+
 ### Decisões pendentes
 
 - [ ] Validar RN-8 e RN-9 com o financeiro.
@@ -481,7 +542,7 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 9. O que é "Venda concluída"?
 10. Como vejo o fechamento de um dia específico?
 11. Por que os totais não mudam com os filtros de coluna? Como vejo os totais só do iFood? (Canal)
-12. Como exporto e o que vai no Excel?
+12. Como exporto e o que vai no Excel? E o PDF por canal?
 13. Posso cadastrar a classificação de uma forma de pagamento?
 14. Por que não vejo o botão Exportar?
 15. Por que minha loja não aparece no seletor?
@@ -503,6 +564,7 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
 | 5   | Fechamento | `[data-tour="fechamento-maestro-totais-toggle"]`      | Mostrar e esconder os totais         |
 | 6   | Fechamento | `[data-tour="fechamento-maestro-toolbar"]`            | Colunas e Excel                      |
 | 7   | Fechamento | `[data-tour="fechamento-maestro-divergencias"]`       | Divergências                         |
+| 8   | Fechamento | `[data-tour="fechamento-maestro-pdf"]`                | PDF por canal (espera a pesquisa)    |
 
 ---
 
@@ -554,3 +616,10 @@ OFFLINE`/`DEBIT OFFLINE` da maquininha e formas novas.
   tabela e o Excel. Sai o
   Dashboard (RF-9); o seletor Canal vai para a barra de filtros, ligado ao anel; no
   celular a seção abre inline pelo botão Totais.
+
+### 2026-11-17 — v1.4 PDF de totais por canal
+
+- Pedido da diretoria: PDF com os painéis de totais separados por canal
+  (RF-8a). Botão próprio na barra da tabela, fora do Exportar (o SDK não tem
+  padrão de PDF); jsPDF no navegador; cabeçalho "Fechamento Maestro" com loja e
+  período.

@@ -1,0 +1,60 @@
+Fechamento Maestro 0.4.4 - revisão SDK, totais em 2 colunas no celular e mensagem de erro padrão - 17/11/2026
+
+Entrega
+- Módulo: fechamento-maestro ("Fechamento Maestro")
+- Versão: 0.4.3 → 0.4.4
+- Pacote: modules-fechamento-maestro-0.4.4.tgz (95,7 kB, 35 arquivos, sem .env nem segredos)
+- Menu: Plataformas › Maestro › Fechamento Maestro
+- Permissões: fechamento-maestro.ler, fechamento-maestro.exportar, fechamento-maestro.ver-dados-cliente (sem chave nova)
+- Validação SDK: gia validate 58/58, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- SDK: @gia-cb 0.1.0-alpha.71 (antes alpha.70; a mesma do Fechamento iFood Diário, do Fechamento iFood Mensal e do Reports Maestro)
+- Tipo: só leitura (sem mudança de banco nem de permissões)
+
+Pedido do usuário
+1. Devolutiva da 0.4.3 (13/11/2026, sugestão sem bloquear): no celular a grade dos totais ficava com uma coluna, e os 12 indicadores ocupavam a tela inteira quando a seção abria.
+   - Agora são 2 colunas no celular: a grade dos totais passou de ~530 px para 346 px de altura (de 320 a 430 px de largura de tela).
+   - No celular o indicador fica mais compacto (ícone 7×7, valor em text-sm) e o rótulo quebra em 2 linhas em vez de ser cortado com "…" - no toque não há dica para ler o nome inteiro.
+   - Em tela de até ~375 px (grade abaixo de @xs) o quadradinho do ícone sai, para o valor caber inteiro (em 320 px "R$ 8.038,72" cortava); a cor do valor continua dando o tom. De 390 px para cima o ícone aparece.
+   - Fora do celular nada muda.
+2. Atualizar o SDK para a alpha.71, a mesma dos outros módulos em dia.
+
+Incongruências encontradas e corrigidas
+1. Erro da consulta num EmptyState com o texto cru do servidor → mensagem padrão MensagemErro (copiada igual da referência, src/components/MensagemErro.tsx do Fechamento iFood Mensal), no alto da área da tabela e centrada, na mesma posição do "Escolha a loja e o período". Mostra o tipo do problema, de onde veio ("Lista de lojas" ou "Pedidos do delivery (Maestro)"), a frase do servidor, Tentar de novo quando adianta e Ver detalhes técnicos (Copiar tudo, Baixar diagnóstico). Fonte: AGENTS.md da raiz, padrão 11.
+2. FAQ (Erros comuns) explicava o erro pelo título antigo "Não foi possível consultar os dados" → reescrita para a mensagem nova: origem, tipos e o que fazer em cada um, com os textos que o servidor do módulo devolve. Fonte: conventions.md §14 (FAQ atualizada na mesma entrega).
+3. PRD e INTEGRATION com o SDK antigo (SDK mínima alpha.67, versão usada alpha.70) → alpha.71. Fonte: delivery-checklists.md P (documentação).
+
+Conferido e já de acordo
+- Docs novas da alpha.71 (só acréscimos: endereço e região da Empresa, integracoes/planos da operação; "não mantenha tabela de loja × plataforma"): o módulo tira o número da loja de ctx.empresas() (locRefs.BIAPI ou nome), sem tabela própria. Fonte: api-reference.md §1.12, dados-externos.md.
+- Handlers com requirePermission e requireOperacao/escopo (validate). Fonte: dados-externos.md, delivery-checklists.md N.
+- Sem title= nativo, sem cor raw, sem duration-NNN, sem localStorage, sem console.log no front, só named export. Fonte: conventions.md §2, §7, §8, §13.
+- staleTime declarado nas duas queries. Fonte: delivery-checklists.md K.
+- Arquivos abaixo de 800 linhas (maior: a view, 723). Fonte: conventions.md §13.
+- Tooltip só com mouse pelo Dica (asChild). Fonte: AGENTS.md da raiz, padrão 2.
+- Barra de indicadores, clique filtra, sem summaryRow. Fonte: AGENTS.md da raiz, padrão 3.
+- FAQ e tour sem menção ao sistema antigo (grep sem ocorrências). Fonte: AGENTS.md da raiz, padrão 4.
+- Barra de filtros enxuta depois da pesquisa e completa com erro. Fonte: AGENTS.md da raiz, padrão 8.
+- Regra das 5 linhas: em 1280×720 a seção de totais fecha sozinha. Fonte: AGENTS.md da raiz, padrão 10.
+- Não se aplicam: padrão 5 (módulo não grava), 6 (a tabela não tem par quantidade × valor do mesmo item), 7 (tela sem abas), 9 (consulta comum, uma chamada); conventions §15, §16, §18-§20 (sem job, sem escrita, uma tela, sem agendamento nem realtime).
+- Fontes lidas: docs do @gia-cb 0.1.0-alpha.71 (conventions.md §1-§17, delivery-checklists.md inteiro, api-reference.md e dados-externos.md nas partes novas da alpha.71 e de handler), AGENTS.md da raiz e do módulo.
+
+Não corrigido (decisão ou fora do escopo)
+- Padrão 3 do AGENTS.md (4 principais + "Ver todos os totais"): os 12 indicadores ficam à vista desde a 0.4.3 - decisão do usuário, registrada no resumo da 0.4.3.
+- Validação de período e loja continua em toast ("Informe uma loja.", período inválido): é aviso de preenchimento antes da pesquisa, não erro de consulta.
+
+Testes
+- gia validate: 58/58, 0 erros, 0 avisos; tsc sem erros.
+- gia dev (alpha.71, loja 01.CB GOIANIA, 16/11/2026, só leitura):
+   - Totais em 2 colunas no celular em 320, 360, 375, 390 e 430 px: 346 px de altura, nenhum valor nem rótulo cortado; ícone some até 375 px.
+   - Erro forçado no handler fechamento: 502 → "Algo deu errado do nosso lado" (falha de serviço) com Tentar de novo e Ver detalhes técnicos; 422 → "Revise a pesquisa", sem Tentar de novo; modal de detalhes com requisição, resposta, Copiar tudo e Baixar diagnóstico. Em 1280×720 e 390×844, sem rolagem vertical de página.
+   - Desktop 1280×720 com resultado: barra enxuta, tabela, totais fechados pela regra das 5 linhas.
+- Falta conferir: tipo "sem conexão" (internet caindo de verdade) e a tela no Safari/WebKit.
+
+Arquivos alterados
+- src/components/ResumoCards.tsx, src/components/MensagemErro.tsx (novo), src/views/FechamentoMaestroView.tsx
+- src/faq.ts, src/module.ts
+- PRD.md, CHANGELOG.md, INTEGRATION.md, package.json, package-lock.json
+
+Pendências com outros times
+- Time do SDK: o Tab vai para o <body> depois de elemento com Tooltip (inclusive no DataReport) - continua da 0.4.2.
+- Time do SDK: MensagemErro é um arquivo copiado entre módulos (proposta para virar componente do portal); a cópia do Fechamento iFood Diário já divergiu das outras.
+- Enviar modules-fechamento-maestro-0.4.4.tgz ao time do Portal GIA pelo canal combinado.

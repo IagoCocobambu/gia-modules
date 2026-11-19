@@ -8,7 +8,7 @@ export const tour = defineTour({
       screen: '/fechamento-maestro',
       target: '[data-tour="fechamento-maestro-filtros"]',
       title: 'Loja e período',
-      body: 'Escolha a **loja** e as **datas** (no máximo 31 dias, sem datas futuras). As datas começam em *ontem*.',
+      body: 'Escolha a **loja** e as **datas** (no máximo 31 dias, sem datas futuras). As datas começam em *ontem*. Depois da pesquisa, no computador, esta barra fica numa linha só, sem os nomes dos campos, para sobrar espaço para a tabela.',
       placement: 'bottom',
     },
     {
@@ -32,7 +32,7 @@ export const tour = defineTour({
       screen: '/fechamento-maestro',
       target: '[data-tour="fechamento-maestro-totais-indicadores"]',
       title: 'Totais do fechamento',
-      body: 'À vista, os grupos de pagamento: **Online**, **Adquirentes online**, **Adquirentes offline** e **Offline**. Em **Ver todos os totais** abrem os **cancelados**, os **descontos** da loja e do parceiro e o que ficou **sem classificação** (o normal é zero; o vermelho pede atenção). Passe o mouse num indicador para ver a conta e **clique nele para filtrar a tabela** só pelos pedidos daquele total; clique de novo para tirar o filtro.',
+      body: 'Os 12 indicadores do fechamento: os grupos de pagamento (**Online**, **Adquirentes online**, **Adquirentes offline** e **Offline**), os **cancelados**, os **descontos** da loja e do parceiro e o que ficou **sem classificação** (o normal é zero; o vermelho pede atenção). Passe o mouse num indicador para ver a conta e **clique nele para filtrar a tabela** só pelos pedidos daquele total; clique de novo para tirar o filtro.',
       placement: 'bottom',
     },
     {
@@ -40,7 +40,15 @@ export const tour = defineTour({
       screen: '/fechamento-maestro',
       target: '[data-tour="fechamento-maestro-totais-toggle"]',
       title: 'Mostrar e esconder os totais',
-      body: 'O botão **Totais** abre e fecha a seção de canais e totais, para dar mais espaço à tabela. Em telas baixas e no celular ela começa fechada.',
+      body: 'O botão **Totais** abre e fecha a seção de canais e totais, para dar mais espaço à tabela. Quando ela deixaria a tabela com menos de umas 5 linhas, e no celular, ela começa fechada.',
+      placement: 'bottom',
+    },
+    {
+      id: 'pdf',
+      screen: '/fechamento-maestro',
+      target: '[data-tour="fechamento-maestro-pdf"]',
+      title: 'PDF por canal',
+      body: 'Baixa um **PDF** com os totais de **cada canal** separados: o anel e os 12 indicadores de iFood, App Coco Bambu e dos outros canais, com a loja e o período no alto. É sempre da pesquisa inteira — os filtros da tela não mudam o arquivo. Precisa da permissão de exportação.',
       placement: 'bottom',
     },
     {

@@ -1,0 +1,38 @@
+Fechamento Maestro 0.4.2 - seção de totais com a mesma regra em todos os navegadores (12/11/2026)
+
+Pedido do cliente
+- Ao diminuir a altura do navegador, quando a tabela chegava a umas cinco linhas, a seção de canais e totais sumia. Isso acontecia no Chrome, mas não no Safari.
+- Ajustar para que a seção feche só quando a tabela chegar a umas cinco linhas, igual no Safari, no Chrome e nos outros navegadores.
+
+Causa
+- A seção abria e fechava sozinha por uma regra fixa de altura da janela: aberta com 700 px de altura ou mais, fechada abaixo disso.
+- Cada navegador mede a altura da janela de um jeito (barras, zoom, área útil). No Chrome a seção fechava com a tabela ainda mostrando várias linhas; no Safari o corte acontecia em outro ponto.
+
+O que mudou (0.4.2) - pacote modules-fechamento-maestro-0.4.2.tgz
+- A regra da altura da janela saiu. Agora a tela mede o espaço de verdade: a barra de filtros, a seção de totais, a barra da tabela, o cabeçalho, o rodapé e a altura de uma linha.
+- A seção fica aberta enquanto, com ela aberta, a tabela ainda mostra 5 linhas de pedidos. Com menos que isso, fecha sozinha e volta a abrir quando a janela cresce de novo.
+- A regra é igual em todos os navegadores, porque mede a própria tela e não a janela.
+- Abrir o "Ver todos os totais" não fecha a seção: a conta usa só a parte fixa da seção.
+- O botão Totais continua valendo acima da regra: depois que o usuário abre ou fecha a seção, vale a escolha dele até recarregar a página.
+- No celular nada mudou: a seção começa fechada e abre pelo botão Totais.
+- FAQ (seção dos totais), tour (passo do botão Totais), PRD (regra e critério de aceite novo) e CHANGELOG atualizados. FAQ e tour sem menção ao sistema antigo.
+- Sem mudança de banco nem de permissões; o módulo continua só leitura.
+
+Testes
+- gia validate: 58/58, 0 erros, 0 avisos (ESLint e Prettier do portal, tsc, permissões e escopo de loja nos handlers, FAQ e tour atualizados).
+- Conferência de conformidade com o SDK (@gia-cb 0.1.0-alpha.70, a mesma dos outros módulos): layout de lista com WidthFrame + fillHeight como pede o conventions.md, imports por subpath, tooltip só pelo Dica, tokens de cor, Prettier. Nada a corrigir.
+- Teste no gia dev com Chromium (01.CB GOIANIA, 11/11/2026, 49 pedidos, 1440 px de largura): diminuindo a altura de 900 a 560 px e voltando, a seção fecha uma vez só, quando a tabela ficaria com menos de 5 linhas, e reabre uma vez só quando voltam a caber; nenhuma piscada. Com "Ver todos os totais" aberto, a seção continua aberta.
+- Corrigido no teste: a primeira versão da conta lia como zero a altura da barra de filtros e da tabela (o SDK as coloca em invólucros sem altura própria). A seção fechava tarde e, perto do limite, abria e fechava sem parar. A conta agora parte do espaço real do corpo da tabela.
+- Corrigido depois do retorno do usuário (a seção ainda abria e fechava sem parar no navegador dele): trava contra o pisca-pisca. Ao fechar sozinha, a tela guarda a altura da área do módulo; só reabre sozinha quando essa altura cresce 24 px além disso. Como essa altura só muda quando a janela muda (nunca porque a seção abriu ou fechou), abrir ou fechar não provoca outra troca em nenhum navegador. No Chromium, descendo de 5 em 5 px fecha em 870 px; subindo, reabre em 895 px; parado, nenhuma troca.
+- Falta conferir no Safari (não há Safari neste ambiente de teste).
+
+Observação para o teste
+- Com os filtros de coluna da tabela abertos, o cabeçalho fica mais alto e a seção pode fechar um pouco antes, porque esse espaço entra na conta.
+
+Arquivos alterados
+- src/views/FechamentoMaestroView.tsx (regra de abertura da seção de totais)
+- src/faq.ts, src/tour.ts, src/module.ts
+- PRD.md, CHANGELOG.md, package.json, package-lock.json
+
+Entrega
+- Pacote: modules-fechamento-maestro-0.4.2.tgz (86,7 kB). Enviar ao time do Portal GIA pelo canal combinado.

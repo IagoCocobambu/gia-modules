@@ -1,0 +1,62 @@
+Fechamento Maestro 0.4.2 - revisão SDK, seção de totais em todos os navegadores e barra de filtros enxuta - 12/11/2026
+
+Entrega
+- Módulo: fechamento-maestro ("Fechamento Maestro")
+- Versão: 0.4.1 → 0.4.2 (pacote regerado; substitui o 0.4.2 gerado mais cedo no mesmo dia)
+- Pacote: modules-fechamento-maestro-0.4.2.tgz (88,4 kB, 34 arquivos, sem .env nem segredos)
+- Menu: Plataformas › Maestro › Fechamento Maestro
+- Permissões: fechamento-maestro.ler, fechamento-maestro.exportar, fechamento-maestro.ver-dados-cliente (sem chave nova)
+- Validação SDK: gia validate 58/58, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- SDK: @gia-cb 0.1.0-alpha.70 (a mesma dos outros módulos)
+- Tipo: só leitura
+
+Pedido do usuário (antes da revisão)
+1. Seção de canais e totais: ao diminuir a altura do navegador, ela sumia no Chrome e não no Safari. Pedido: fechar só quando a tabela chega a umas 5 linhas, igual em todos os navegadores.
+   - Antes, a seção fechava por uma regra fixa de altura da janela (menos de 700 px), que cada navegador mede de um jeito.
+   - Agora a tela mede o espaço: a seção fica aberta enquanto, com ela aberta, a tabela ainda mostra 5 linhas de pedidos.
+   - Trava contra o pisca-pisca (o usuário viu a seção abrir e fechar sem parar): depois de fechar sozinha, ela só reabre quando o espaço abaixo da barra de filtros cresce 24 px. Abrir ou fechar a seção não muda esse espaço, então uma troca nunca provoca outra.
+   - O botão Totais continua valendo acima da regra; abrir o "Ver todos os totais" não fecha a seção.
+
+Incongruências encontradas e corrigidas
+1. A barra de filtros não ficava enxuta depois da pesquisa → fora do celular, com resultado na tela, a barra vira uma linha só (título, Loja, Data inicial, Data final, Canal e Pesquisar), sem subtítulo nem rótulos, com aria-label nos campos; cai de ~140 para ~60 px. Antes da pesquisa, durante uma pesquisa nova, com erro ou em área com menos de 1040 px de largura, fica a barra completa (abaixo disso as datas e o Pesquisar cortavam). Decisão do usuário: fazer agora. Fonte: AGENTS.md da raiz, padrão 8.
+2. O Dica não passava asChild à Tooltip → passa. Sem ele o Radix envolvia cada botão e cada fatia do anel num <button> a mais (botão dentro de botão). Fonte: AGENTS.md da raiz, padrão 2; tooltip/index.d.ts do @gia-cb/ui (prop asChild).
+3. PainelCanais não aceitava className na raiz → aceita, com cn(). Fonte: conventions.md §6.
+4. FechamentoMaestroView.tsx com 820 linhas → os hooks de medida da tela (layout de celular, barra enxuta e abertura da seção de totais) foram para src/hooks/use-medidas-tela.ts; a view ficou com ~720 linhas. Fonte: conventions.md §13 (item 10) e §1 (pasta hooks/).
+5. INTEGRATION.md com "Versão do pacote" 0.2.1 → 0.4.2. Fonte: delivery-checklists.md §P.
+6. README descrevia "visões Por dia e Pedidos" (a visão Por dia não existe mais; o dia a dia está no Excel) → descreve a seção de canais e totais, a tabela de Pedidos e o novo src/hooks/. Fonte: delivery-checklists.md §P.
+
+Conferido e já de acordo
+- Estrutura de pastas, module.ts, permissions.ts com o mesmo groupPath nas 3 chaves. Fonte: conventions.md §1 e §13 (item 17); delivery-checklists.md §B e §C.
+- Sem import default fora dos handlers (que seguem o formato export default defineHandler da documentação), sem title= nativo, sem cor crua, sem duration fixa, sem localStorage, sem console.log. Fonte: conventions.md §7, §8 e §13.
+- hover:bg-muted/60 só em estado de hover, não como sub-superfície. Fonte: conventions.md §7.
+- Layout de lista com WidthFrame + fillHeight, sem padding externo e sem rolagem de página (conferido de 390 a 1920 px). Fonte: conventions.md §11.
+- Handlers chamam requirePermission e requireEmpresa. Fonte: dados-externos.md; delivery-checklists.md §N.
+- Celular: a pesquisa recolhe a barra de filtros. Fonte: AGENTS.md da raiz, padrão 1.
+- Barra de indicadores com 4 principais + "Ver todos", dica só com mouse, clique filtra, sem total dentro da tabela. Fonte: AGENTS.md da raiz, padrão 3.
+- FAQ e tour sem menção ao sistema antigo (grep sem ocorrências). Fonte: AGENTS.md da raiz, padrão 4.
+- Padrões 5, 6 e 7 não se aplicam: o módulo não grava dados, não mostra quantidade e valor no mesmo item e não tem abas.
+- Fontes lidas: docs do @gia-cb 0.1.0-alpha.70 (delivery-checklists.md inteiro; conventions.md §1, §6, §7, §8, §10, §11, §13 e §14; tooltip/index.d.ts do @gia-cb/ui), AGENTS.md da raiz e do módulo.
+
+Não corrigido (decisão ou fora do escopo)
+- Padrão 9 do AGENTS.md (faixa de progresso sobre a tabela e dados entrando conforme chegam): a pesquisa é uma chamada só (até ~25 s) com a tabela em carregamento. Exige dividir a consulta no servidor e na tela - decisão do usuário: fica para uma versão própria.
+- Padrão 3 do AGENTS.md diz que a seção de totais abre sozinha com min-height 700px; o Maestro usa a regra das 5 linhas desta versão, a pedido do usuário. Decisão do usuário: não mexer no AGENTS.md.
+- Stories (Storybook) e screenshots em assets/: pedidos na conventions.md §12 e no delivery-checklists.md §I/§P, mas o gia validate desta versão não cobra e nenhum módulo do workspace tem. Fica como estava.
+- Depois de um elemento com dica, o Tab manda o foco para o <body> (acontece também nos botões do próprio DataReport). Já anotado na 0.4.0 como problema do SDK; o asChild não resolveu.
+
+Testes
+- gia validate: 58/58, 0 erros, 0 avisos.
+- gia dev com Chromium (01.CB GOIANIA, 11/11/2026, 49 pedidos):
+   - Seção de totais, 1440 px de largura, altura de 5 em 5 px: descendo fecha uma vez (765 px); subindo reabre uma vez (790 px); parado, nenhuma troca. Entre 800 e 880 px de altura, abre depois da pesquisa (cabem de 5,7 a 7,4 linhas). Com "Ver todos os totais" aberto, continua aberta.
+   - Barra enxuta: uma linha de 60 px em 1920, 1440, 1280, 1104 px; barra completa em 1024, 1000 e 900 px; no celular (390 px) os filtros recolhem ao pesquisar. Sem rolagem de página e sem erro no console.
+   - Dicas: nenhum botão dentro de botão; dica aparece nos indicadores e nas fatias do anel.
+- Falta conferir: Safari (não há Safari neste ambiente de teste) e o tour com a barra enxuta.
+
+Arquivos alterados
+- src/views/FechamentoMaestroView.tsx, src/hooks/use-medidas-tela.ts (novo)
+- src/components/FiltrosBar.tsx, src/components/Dica.tsx, src/components/PainelCanais.tsx
+- src/faq.ts, src/tour.ts, src/module.ts
+- PRD.md, CHANGELOG.md, INTEGRATION.md, README.md, package.json, package-lock.json
+
+Pendências com outros times
+- Time do SDK: o Tab vai para o <body> depois de elemento com Tooltip (inclusive no DataReport).
+- Enviar modules-fechamento-maestro-0.4.2.tgz ao time do Portal GIA pelo canal combinado.

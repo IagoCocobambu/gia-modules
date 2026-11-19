@@ -1,7 +1,6 @@
-import { useState, type ComponentType, type ReactNode, type SVGProps } from 'react'
+import { type ComponentType, type ReactNode, type SVGProps } from 'react'
 import {
   AlertTriangle,
-  ChevronDown,
   CircleHelp,
   CircleX,
   CreditCard,
@@ -14,11 +13,9 @@ import {
 import { Skeleton } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
 import { formatBRL } from '../helpers'
+import { INDICADORES, type Tom } from '../indicadores'
 import type { FiltroTotal, TotaisPeriodo } from '../types'
 import { Dica } from './Dica'
-
-/** Cor do indicador: tinge o quadradinho do ícone e o valor. */
-type Tom = 'neutro' | 'success' | 'info' | 'primary' | 'warning' | 'destructive'
 
 const TOM_ICONE: Record<Tom, string> = {
   neutro: 'bg-muted text-muted-foreground',
@@ -38,98 +35,24 @@ const TOM_VALOR: Record<Tom, string> = {
   destructive: 'text-destructive',
 }
 
-type CampoValor = Exclude<keyof TotaisPeriodo, 'pagamentos_sem_classificacao' | 'divergentes'>
-
 /**
- * Indicadores de valor — os do Fechamento Diário do legado, na mesma ordem: venda,
- * cancelados, descontos/sem classificação. `tom` recebe o valor: os de alerta só
- * ganham cor quando há algo a olhar.
+ * Ícone de cada indicador. A ordem, o rótulo, a dica e o tom ficam em
+ * `../indicadores` — os mesmos do PDF por canal.
  */
-const INDICADORES: {
-  campo: CampoValor
-  rotulo: string
-  dica: string
-  icone: ComponentType<SVGProps<SVGSVGElement>>
-  tom: (valor: number) => Tom
-}[] = [
-  {
-    campo: 'online',
-    rotulo: 'online',
-    dica: 'Formas ONLINE (PRE PAGO), menos o incentivo que foi para Descontos parceiro',
-    icone: Globe,
-    tom: () => 'info',
-  },
-  {
-    campo: 'adquirentes_online',
-    rotulo: 'adquirentes online',
-    dica: 'Vales ONLINE VR pagos antes, no app ou no parceiro (PRE PAGO)',
-    icone: CreditCard,
-    tom: () => 'primary',
-  },
-  {
-    campo: 'adquirentes_offline',
-    rotulo: 'adquirentes offline',
-    dica: 'Vales ONLINE VR passados na entrega, sem PRE PAGO (ex.: VR Refeição)',
-    icone: CreditCard,
-    tom: () => 'primary',
-  },
-  {
-    campo: 'offline',
-    rotulo: 'offline',
-    dica: 'Parte paga na entrega (dinheiro ou maquininha): formas sem PRE PAGO',
-    icone: HandCoins,
-    tom: () => 'warning',
-  },
-  {
-    campo: 'cancelado_online',
-    rotulo: 'cancelado online',
-    dica: 'Parte online dos pedidos cancelados (fora do fechamento)',
-    icone: CircleX,
-    tom: (v) => (v > 0 ? 'destructive' : 'neutro'),
-  },
-  {
-    campo: 'cancelado_adquirentes_online',
-    rotulo: 'cancelado adquirentes online',
-    dica: 'Parte em adquirentes online dos pedidos cancelados',
-    icone: CircleX,
-    tom: (v) => (v > 0 ? 'destructive' : 'neutro'),
-  },
-  {
-    campo: 'cancelado_adquirentes_offline',
-    rotulo: 'cancelado adquirentes offline',
-    dica: 'Parte em adquirentes offline dos pedidos cancelados',
-    icone: CircleX,
-    tom: (v) => (v > 0 ? 'destructive' : 'neutro'),
-  },
-  {
-    campo: 'cancelado_offline',
-    rotulo: 'cancelado offline',
-    dica: 'Parte offline dos pedidos cancelados',
-    icone: CircleX,
-    tom: (v) => (v > 0 ? 'destructive' : 'neutro'),
-  },
-  {
-    campo: 'descontos_loja',
-    rotulo: 'descontos loja',
-    dica: 'Desconto total dos pedidos despachados ou entregues (DISPATCHED / DELIVERED)',
-    icone: Store,
-    tom: () => 'neutro',
-  },
-  {
-    campo: 'descontos_parceiro',
-    rotulo: 'descontos parceiro',
-    dica: 'Incentivo do parceiro em pedidos (fora do 99Food) com ONLINE VR ou OFFLINE; sai do Online',
-    icone: Handshake,
-    tom: () => 'neutro',
-  },
-  {
-    campo: 'nao_classificado',
-    rotulo: 'sem classificação',
-    dica: 'Valor em formas de pagamento sem nome (vazia ou DESCONHECIDO) — o normal é zero',
-    icone: CircleHelp,
-    tom: (v) => (v !== 0 ? 'warning' : 'neutro'),
-  },
-]
+const ICONE: Record<FiltroTotal, ComponentType<SVGProps<SVGSVGElement>>> = {
+  online: Globe,
+  adquirentes_online: CreditCard,
+  adquirentes_offline: CreditCard,
+  offline: HandCoins,
+  cancelado_online: CircleX,
+  cancelado_adquirentes_online: CircleX,
+  cancelado_adquirentes_offline: CircleX,
+  cancelado_offline: CircleX,
+  descontos_loja: Store,
+  descontos_parceiro: Handshake,
+  nao_classificado: CircleHelp,
+  pagamentos_sem_classificacao: AlertTriangle,
+}
 
 interface IndicadorProps {
   icone: ComponentType<SVGProps<SVGSVGElement>>
@@ -144,21 +67,32 @@ function Indicador({ icone: Icone, tom, valor, rotulo }: IndicadorProps) {
     <>
       <span
         className={cn(
-          'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-colors duration-fast ease-default',
+          // Grade estreita (celular até ~375 px): sem o quadradinho, o valor
+          // cabe inteiro; o tom continua na cor do valor.
+          'hidden h-7 w-7 shrink-0 place-items-center rounded-lg transition-colors duration-fast ease-default @xs:grid @sm:h-8 @sm:w-8',
           TOM_ICONE[tom]
         )}
       >
-        <Icone aria-hidden className="h-4 w-4" />
+        <Icone aria-hidden className="h-3.5 w-3.5 @sm:h-4 @sm:w-4" />
       </span>
       <span className="flex min-w-0 flex-col leading-tight">
         {valor === null ? (
           <Skeleton className="my-0.5 h-4 w-20" />
         ) : (
-          <span className={cn('truncate text-base font-semibold tabular-nums', TOM_VALOR[tom])}>
+          <span
+            className={cn(
+              'truncate text-sm font-semibold tabular-nums @sm:text-base',
+              TOM_VALOR[tom]
+            )}
+          >
             {valor}
           </span>
         )}
-        <span className="truncate text-xs text-muted-foreground">{rotulo}</span>
+        {/* Estreito (celular, 2 colunas): o rótulo quebra em vez de cortar — no
+            toque não há dica para ler o nome inteiro. */}
+        <span className="whitespace-normal break-words text-xs text-muted-foreground @sm:truncate">
+          {rotulo}
+        </span>
       </span>
     </>
   )
@@ -189,16 +123,8 @@ interface ResumoCardsProps {
   filtro: FiltroTotal | null
   /** Clique num indicador: filtra a tabela por ele; clicar de novo tira o filtro. */
   onFiltroChange: (filtro: FiltroTotal | null) => void
-  /**
-   * Indicadores à vista, nessa ordem; os demais abrem pelo botão "Ver todos os
-   * totais" (padrão 3 do `../AGENTS.md`). Sem isto, mostra os 12.
-   */
-  principais?: readonly FiltroTotal[]
   className?: string
 }
-
-/** Indicadores que deveriam ser zero: escondidos com valor, marcam o botão "Ver todos". */
-const ALERTAS: readonly FiltroTotal[] = ['nao_classificado', 'pagamentos_sem_classificacao']
 
 /**
  * Ao lado do anel de canais: 5 colunas já a partir de @4xl (~900 px). Abaixo
@@ -206,13 +132,34 @@ const ALERTAS: readonly FiltroTotal[] = ['nao_classificado', 'pagamentos_sem_cla
  */
 const GRADE_AO_LADO = '@4xl:grid-cols-5'
 
-const GRADE = 'grid grid-cols-1 gap-x-1 gap-y-0.5 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-5'
+/**
+ * 2 colunas já no celular (0.4.4): em 1 coluna os 12 indicadores ocupavam a tela
+ * inteira quando a seção abria; em 2, metade da altura.
+ */
+const GRADE = 'grid grid-cols-2 gap-x-1 gap-y-0.5 @2xl:grid-cols-3 @5xl:grid-cols-5'
 
 const ITEM = cn(
-  'flex min-h-11 min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-left',
+  'flex min-h-11 min-w-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-1.5 py-1.5 text-left @sm:gap-2.5 @sm:px-2',
   'transition-colors duration-fast ease-default',
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 )
+
+/** Base das dicas enquanto os totais carregam (o texto não depende do valor). */
+const TOTAIS_ZERADOS: TotaisPeriodo = {
+  online: 0,
+  adquirentes_online: 0,
+  adquirentes_offline: 0,
+  offline: 0,
+  cancelado_online: 0,
+  cancelado_adquirentes_online: 0,
+  cancelado_adquirentes_offline: 0,
+  cancelado_offline: 0,
+  descontos_loja: 0,
+  descontos_parceiro: 0,
+  nao_classificado: 0,
+  pagamentos_sem_classificacao: 0,
+  divergentes: 0,
+}
 
 const DICA_FILTRO = 'Clique para ver na tabela só os pedidos que entram nesta conta.'
 
@@ -222,10 +169,10 @@ const DICA_FILTRO = 'Clique para ver na tabela só os pedidos que entram nesta c
  * (com a mesma divisão), os descontos da loja e do parceiro e o que ficou sem
  * classificação.
  *
- * Padrão 3 do `../AGENTS.md`: grade de até 5 colunas (container query; 1 no
- * celular). Com `principais` (a barra acima da tabela), só os 4 grupos de
- * pagamento ficam à vista e o 5º lugar é o botão "Ver todos os totais (+8)", que
- * abre os demais logo abaixo — fechada, a barra ocupa uma linha só.
+ * Padrão 3 do `../AGENTS.md`: grade de até 5 colunas (container query; 2 no
+ * celular, desde a 0.4.4). Os 12 ficam sempre à vista, sem o "Ver todos os totais": ao lado do
+ * anel de canais, as 3 linhas de 5 cabem na altura do anel — esconder parte dos
+ * indicadores não deixaria a seção mais baixa (0.4.3).
  *
  * Cada indicador é um FILTRO da tabela: o clique mostra só os pedidos que somaram
  * nele (`pedidosDoTotal`) e o indicador fica marcado; clicar de novo tira o
@@ -240,50 +187,21 @@ export function ResumoCards({
   tourPrefixo,
   filtro,
   onFiltroChange,
-  principais,
   className,
 }: ResumoCardsProps) {
-  const [expandida, setExpandida] = useState(false)
   const pronto = !carregando && totais !== null
-  const semClassificacao = pronto ? totais.pagamentos_sem_classificacao : 0
 
-  const itens: {
-    campo: FiltroTotal
-    rotulo: string
-    dica: string
-    icone: ComponentType<SVGProps<SVGSVGElement>>
-    tom: Tom
-    valor: string | null
-    zerado: boolean
-  }[] = [
-    ...INDICADORES.map((i) => {
-      const v = pronto ? totais[i.campo] : 0
-      return {
-        campo: i.campo,
-        rotulo: i.rotulo,
-        dica: i.dica,
-        icone: i.icone,
-        tom: pronto ? i.tom(v) : ('neutro' as Tom),
-        valor: pronto ? formatBRL(v) : null,
-        zerado: v === 0,
-      }
-    }),
-    {
-      campo: 'pagamentos_sem_classificacao',
-      rotulo: 'pagamentos sem classificação',
-      dica:
-        semClassificacao > 0
-          ? 'Formas de pagamento que a regra não reconheceu (vazia ou DESCONHECIDO)'
-          : 'Todas as formas de pagamento foram classificadas',
-      icone: AlertTriangle,
-      tom: !pronto ? 'neutro' : semClassificacao > 0 ? 'destructive' : 'success',
-      valor: pronto ? semClassificacao.toLocaleString('pt-BR') : null,
-      zerado: semClassificacao === 0,
-    },
-  ]
+  const itens = INDICADORES.map((i) => ({
+    campo: i.campo,
+    rotulo: i.rotulo,
+    dica: pronto ? i.dica(totais) : i.dica(TOTAIS_ZERADOS),
+    icone: ICONE[i.campo],
+    tom: pronto ? i.tom(totais) : ('neutro' as Tom),
+    valor: pronto ? i.valor(totais, formatBRL) : null,
+    zerado: pronto ? i.zerado(totais) : true,
+  }))
 
-  type Item = (typeof itens)[number]
-  const item = (i: Item) => {
+  const item = (i: (typeof itens)[number]) => {
     const ativo = filtro === i.campo
     const semAcao = !pronto || (i.zerado && !ativo)
     return (
@@ -311,17 +229,6 @@ export function ResumoCards({
     )
   }
 
-  const destaque = principais
-    ? principais.map((c) => itens.find((i) => i.campo === c)).filter((i): i is Item => !!i)
-    : itens
-  const demais = principais ? itens.filter((i) => !principais.includes(i.campo)) : []
-  // O card que filtra a tabela nunca fica escondido: se for um dos demais, a parte
-  // de baixo abre sozinha (e o botão trava até o filtro sair).
-  const filtroEscondido = filtro !== null && demais.some((i) => i.campo === filtro)
-  const aberta = expandida || filtroEscondido
-  // Algo que deveria ser zero está entre os escondidos: o botão ganha um ponto vermelho.
-  const alertaEscondido = pronto && demais.some((i) => ALERTAS.includes(i.campo) && !i.zerado)
-
   return (
     <div
       className={cn(
@@ -332,8 +239,11 @@ export function ResumoCards({
     >
       <div className="flex flex-col gap-1.5 @4xl:flex-row">
         {lateral != null && (
+          // Estica até a altura dos indicadores (a borda vai de cima a baixo) e
+          // centraliza o anel na vertical: sem o flex, ele ficava no alto quando a
+          // coluna dos indicadores era mais alta (no Safari, rótulos em 2 linhas).
           <div
-            className="border-b border-border pb-1.5 @4xl:shrink-0 @4xl:border-b-0 @4xl:border-r @4xl:pb-0 @4xl:pr-1.5"
+            className="flex items-center justify-center border-b border-border pb-1.5 @4xl:shrink-0 @4xl:border-b-0 @4xl:border-r @4xl:pb-0 @4xl:pr-1.5"
             data-tour={tourPrefixo && `${tourPrefixo}-canais`}
           >
             {lateral}
@@ -356,55 +266,8 @@ export function ResumoCards({
             aria-label="Totais do período — clique num indicador para filtrar a tabela"
             className={cn(GRADE, lateral != null && GRADE_AO_LADO)}
           >
-            {destaque.map(item)}
-            {demais.length > 0 && (
-              <button
-                type="button"
-                aria-expanded={aberta}
-                disabled={filtroEscondido}
-                onClick={() => setExpandida(!aberta)}
-                className="flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors duration-fast ease-default hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-              >
-                {aberta ? 'Ocultar os demais totais' : `Ver todos os totais (+${demais.length})`}
-                {alertaEscondido && !aberta && (
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-destructive">
-                    <span className="sr-only">— há pagamento sem classificação</span>
-                  </span>
-                )}
-                <ChevronDown
-                  aria-hidden
-                  className={cn(
-                    'h-4 w-4 transition-transform duration-fast ease-default',
-                    aberta && 'rotate-180'
-                  )}
-                />
-              </button>
-            )}
+            {itens.map(item)}
           </div>
-          {demais.length > 0 && (
-            <div
-              inert={!aberta}
-              aria-hidden={!aberta}
-              className={cn(
-                'grid transition-all duration-default ease-default',
-                aberta ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-              )}
-            >
-              <div className="min-h-0 overflow-hidden">
-                <div
-                  role="group"
-                  aria-label="Demais totais do período"
-                  className={cn(
-                    GRADE,
-                    lateral != null && GRADE_AO_LADO,
-                    'mt-1 border-t border-border pt-1'
-                  )}
-                >
-                  {demais.map(item)}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

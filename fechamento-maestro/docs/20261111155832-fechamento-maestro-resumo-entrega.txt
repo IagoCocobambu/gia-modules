@@ -1,0 +1,34 @@
+Fechamento Maestro 0.4.1 - correção no Exportar (11/11/2026)
+
+Pedido do cliente
+- O Excel exportado não trazia o número do parceiro (Nº parceiro).
+- Verificar o máximo de colunas que dá para exportar.
+
+O que mudou (0.4.1) - pacote modules-fechamento-maestro-0.4.1.tgz
+- As abas Pedidos e Cancelados do Excel passaram a levar TODAS as colunas da tabela, ligadas ou não na tela: de 26 para 41 colunas.
+- Colunas novas no Excel: Nº parceiro, Nº conta, Data de ação, CPF cliente, Email cliente, Telefone cliente, Qtd pedidos, Rua, Número, Referência, Retirada, Confirmado por, Cancelado por, Nome loja, Online (bruto) e Total de descontos.
+- Nº parceiro e Nº conta saem como texto: o Excel arredondaria números com mais de 15 dígitos (ex.: ids do iFood). O Excel pode marcar "número armazenado como texto"; é esperado.
+- Online (bruto) = online do pedido sem abatimento (a coluna "Total pago online" da tela). Online (líquido) = o que soma no card Online (sem o incentivo que foi para Descontos parceiro). As duas ficam lado a lado.
+- Online (bruto) e Total de descontos entram na linha Total (SUBTOTAL, acompanha o filtro do Excel). Qtd pedidos não soma.
+- Dados pessoais (CPF, e-mail, telefone, número e referência) saem como na tela: mascarados para quem não tem a permissão de dados pessoais completos.
+- Status pedido continua com o valor original da API no Excel (como já era).
+- A aba Fechamento diário não mudou (já tinha todos os totais).
+- FAQ (seção Exportando para Excel), PRD (RF-8 e critério de aceite) e CHANGELOG atualizados. FAQ sem menção ao sistema antigo.
+- Sem mudança de banco nem de permissões; o módulo continua só leitura.
+
+Testes
+- gia validate: 58/58, 0 erros, 0 avisos (ESLint e Prettier do portal, tsc, permissões e escopo de loja nos handlers, FAQ e tour atualizados).
+- Planilha gerada com pedidos de exemplo e reaberta: 41 colunas sem repetição; Nº parceiro de 19 dígitos e com letras saem inteiros; datas em dd/mm/aaaa hh:mm:ss; valores em R$; totais com SUBTOTAL corretos; autofiltro cobrindo todas as colunas.
+- Conferência de conformidade com o SDK: nada a corrigir.
+- Falta conferir no gia dev com uma pesquisa real e abrir o Excel.
+
+Arquivos alterados
+- src/helpers.ts (colunas do Excel)
+- src/faq.ts, src/module.ts
+- PRD.md, CHANGELOG.md, package.json, package-lock.json
+
+Pendência de decisão
+- Quem tem as permissões de exportar E de ver dados pessoais completos baixa o Excel com CPF, e-mail e telefone completos. Decidir se o Excel deve sair sempre mascarado ou sem essas colunas.
+
+Entrega
+- Pacote: modules-fechamento-maestro-0.4.1.tgz (84,9 kB). Enviar ao time do Portal GIA pelo canal combinado.

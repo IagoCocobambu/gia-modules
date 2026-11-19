@@ -3,7 +3,7 @@
 Módulo GIA — menu: Plataformas › Maestro, ao lado do Reports Maestro. Monta o **fechamento diário dos pedidos de
 delivery do Maestro** (App Coco Bambu, iFood, 99Food, manual) de uma loja num
 período: divide o total pago em **Online**, **Adquirentes** e **Offline**, confere
-pagamentos e descontos de cada pedido e aponta as divergências. Exporta em Excel.
+pagamentos e descontos de cada pedido e aponta as divergências. Exporta em Excel e gera um PDF com os totais de cada canal.
 
 Porte da tela **Fechamento Diário Maestro** do GIA legado (UniGUI). Pedidos da API
 do DW; formas ONLINE VR do cadastro `gia_relatorios.formas_pagamento` do banco do
@@ -30,5 +30,8 @@ banco do Maestro de `GIA_SERVER_DATABASE_URL`.
 - `src/server/fechamento.ts` — `GET /Delivery/` da api-dw + conciliação de cada pedido
   (o tipo de cada forma de pagamento — regra do legado — está em `classificar`).
 - `src/api/fechamento-maestro.ts` — hooks React Query que chamam os handlers.
-- `src/views/FechamentoMaestroView.tsx` — filtros, cards de totais, visões Por dia e Pedidos.
+- `src/views/FechamentoMaestroView.tsx` — filtros, seção de canais e totais (anel +
+  indicadores) e a tabela de Pedidos.
+- `src/hooks/use-medidas-tela.ts` — layout de celular e abertura automática da seção
+  de totais (abre enquanto a tabela ainda mostra 5 linhas).
 - `src/helpers.ts` — datas, formatação, resumo por dia e a planilha `.xlsx`.

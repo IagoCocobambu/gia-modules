@@ -69,6 +69,7 @@ interface PainelCanaisProps {
   canal: string | null
   onCanalChange: (canal: string | null) => void
   carregando: boolean
+  className?: string
 }
 
 /**
@@ -84,7 +85,13 @@ interface PainelCanaisProps {
  * mouse — no toque o navegador emula o mouse). No toque não há dica: o miolo
  * mostra o nome e os números do canal escolhido.
  */
-export function PainelCanais({ canais, canal, onCanalChange, carregando }: PainelCanaisProps) {
+export function PainelCanais({
+  canais,
+  canal,
+  onCanalChange,
+  carregando,
+  className,
+}: PainelCanaisProps) {
   const reduzido = usePrefersReducedMotion()
   const [sobre, setSobre] = useState<string | null>(null)
   const [comHover] = useState(
@@ -154,7 +161,7 @@ export function PainelCanais({ canais, canal, onCanalChange, carregando }: Paine
   )
 
   return (
-    <div className="grid place-items-center p-2" onPointerLeave={sair}>
+    <div className={cn('grid place-items-center p-2', className)} onPointerLeave={sair}>
       <div className="relative h-36 w-36">
         <svg
           viewBox="0 0 120 120"
