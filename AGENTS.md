@@ -786,3 +786,39 @@ Referência visual: ficha da Agenda de Recrutamento
 seção, linha de continuação, seção que não cabe vai inteira para a página seguinte,
 rodapé pós-geração). Exceção combinada: o anel de canais mantém as cores de cada
 canal da tela (`PainelCanais`), fora da tabela de cores acima.
+
+## Padrões de versionamento
+
+### 18. Uma branch por módulo e versão: `feat/<modulo>-<versão>`
+
+Cada versão de cada módulo tem a **sua branch**, e a branch leva **só os arquivos
+daquele módulo**. Nada de commitar um módulo na branch de outro (ex.: a 0.2.5 do
+`fechamento-ifood-diario` dentro da `feat/fechamento-ifood-mensal-0.1.0`): o PR de
+um módulo passa a arrastar o outro, e não dá para entregar um sem o outro.
+
+- **Nome**: `feat/<id do módulo>-<versão do package.json>`, a versão sem `v`
+  (ex.: `feat/fechamento-maestro-0.4.5`, `feat/fechamento-99food-mensal-0.1.0`).
+- **Versão nova = branch nova.** Subiu a versão (padrão 15, `/finalizacao-modulo`)?
+  Abra a branch da versão nova; não continue na da versão anterior.
+- **Só o módulo**: `git add <id do módulo>/` — nunca `git add -A` na raiz. Antes
+  do commit, `git diff --cached --stat` não pode mostrar arquivo de outra pasta.
+- **O que não é de um módulo** fica em branch própria, nunca junto com um módulo:
+  - padrões e ferramentas do workspace (`AGENTS.md`, `.claude/skills/`,
+    `package.json` da raiz, `scripts/`, `docs/` da raiz) → `chore/<tema>`
+    (ex.: `chore/padroes-workspace`);
+  - só documento de entrega, sem versão nova do módulo (ex.: o aviso de entrega
+    gerado de novo) → `docs/<id do módulo>-<o quê>-<aaaa-mm-dd>`.
+- **Base**: a branch nasce da `main` atualizada, para o PR trazer só o módulo.
+  Se depender de algo ainda não integrado (ex.: um padrão novo do workspace), diga
+  isso no PR.
+- **Dados de teste** fora do git: respostas cruas de API, planilhas com dado de
+  loja e arquivos grandes de teste vão no `.gitignore` do módulo.
+- **Toda alteração pedida pelo usuário gera um commit**, ao fim de cada pedido,
+  na branch a que ela pertence (as regras acima) — sem esperar ele pedir o commit.
+  Pedido que mexe em mais de um módulo gera um commit em cada branch. O **push**
+  só quando o usuário pedir. Mensagem no formato
+  `feat(<id do módulo>): v<versão> <o que mudou>` (no workspace,
+  `chore: <o que mudou>`), terminando com o `Co-Authored-By` da IA.
+
+Referência: as branches de 19/11/2026 (`feat/fechamento-ifood-mensal-0.1.2`,
+`feat/fechamento-maestro-0.4.5`, `chore/padroes-workspace`…).
