@@ -24,12 +24,14 @@ acima da tabela, uma **barra com 4 totais** — valor pedido, valor entrega, tot
 pago e desconto total —, a soma, em R$, dos pedidos do período **nos status e nas
 origens marcados** nos filtros (todos, se nada estiver marcado). Com mouse, pare
 o ponteiro num total para ver a conta; no celular e no tablet não há essa dica — a
-conta de cada total está na tabela abaixo. O desconto total só fica vermelho quando há desconto. Os
-totais começam **abertos** em telas com 700 px de altura ou mais e **fechados** em
-telas mais baixas e **no celular** (para sobrar espaço para a tabela); com eles abertos o botão
-fica preenchido. O botão só
-funciona depois da primeira pesquisa, e a escolha de aberto/fechado vale até
-você sair da tela (pesquisar de novo não fecha os cards):
+conta de cada total está na tabela abaixo. O desconto total só fica vermelho quando há desconto. No
+computador, os totais ficam **abertos** enquanto a tabela, com eles à vista, ainda
+mostra umas **5 linhas** de pedidos; numa janela mais baixa eles **fecham sozinhos**,
+para sobrar espaço para a tabela, e reabrem quando a janela volta a crescer. **No
+celular** começam fechados. Com eles abertos o botão fica preenchido. O botão só
+funciona depois da primeira pesquisa e abre ou fecha os totais a qualquer momento;
+depois que você usa o botão, vale a sua escolha até recarregar a página (pesquisar
+de novo não fecha os cards):
 
 | Card | Soma da coluna |
 |---|---|
@@ -261,7 +263,10 @@ Ao clicar em **Pesquisar** no celular, a barra com a loja, as datas e o botão
 **recolhe**, para sobrar a tela para o resultado. Para pesquisar de novo, toque na
 **seta** ao lado do nome do módulo: a barra reabre. Se a pesquisa for recusada
 (período inválido ou sem loja), a barra fica aberta para você corrigir. No
-computador e no tablet os filtros ficam sempre à vista.
+computador e no tablet os filtros ficam sempre à vista: depois da pesquisa a barra
+vira **uma linha só** — o nome do módulo, a loja, as duas datas e o Pesquisar, sem os
+rótulos e sem a frase de baixo —, para sobrar altura para a tabela e o
+Operacional. Se a pesquisa der erro, a barra volta a ser a completa.
 
 No celular cada pedido vira um **cartão** com número, data, status e total pago;
 toque em **ver mais** para abrir os outros campos. A **busca** fica no topo da lista,
@@ -412,7 +417,8 @@ para em *Despachado*, e mostra só os tempos dentro da loja.
   de todo o Operacional (cartões, tempo por etapa, mapa, linhas e quem cancelou). É
   puxada pelos extremos — um pedido de 13 horas sobe a média do mês inteiro —, e
   por isso o "90% até" e o máximo ficam ao lado.
-- **Mediana**: metade das entregas leva menos que isso, metade leva mais. Não é a
+- **Mediana**: metade das entregas leva menos que isso, metade leva mais (com um
+  número par de entregas, é a média das duas do meio). Não é a
   média — um pedido esquecido de 5 horas não puxa a mediana para cima. Aparece como
   detalhe nos cartões do Tempo por etapa.
 - **90% até**: 90% das entregas levam até esse tempo; só 1 em cada 10 passa dele. É
@@ -471,9 +477,15 @@ entrega marcada depois, no app de entrega, e não tempo real de rota.
     menos de 5 entregas medidas fica **sem medida**: a linha desce até a base do
     gráfico (no dia destacado, o ponto dessa hora fica vazado) e a dica mostra "sem
     medida" — a descida não quer dizer tempo baixo.
-  - **Por dia**: um mapa de calor com uma linha para cada data do período. Cor mais
-    forte é mais tempo (ou mais pedidos), e o número de cada célula está escrito
-    dentro dela (minutos, ou pedidos). O **pior horário** ganha um contorno e é
+  - **Por dia**: um mapa de calor com uma linha para cada data do período, em
+    **verde, amarelo e vermelho**. A cor compara os horários da própria pesquisa:
+    do menor ao maior valor do mapa, a faixa é dividida em três partes. Em tempo
+    na loja e preparo, **verde** é a parte com menos tempo, **amarelo** a do meio
+    e **vermelho** a com mais tempo. Em pedidos é ao contrário: **verde** são os
+    horários com mais pedidos e **vermelho** os com menos. A legenda mostra o
+    intervalo de cada cor. Se todos os
+    horários têm o mesmo valor, o mapa fica todo amarelo. O número de cada célula
+    está escrito dentro dela (minutos, ou pedidos). O **pior horário** ganha um contorno e é
     citado na legenda. Horário com menos de 3 entregas medidas fica **listrado**,
     porque poucos pedidos não dão uma média confiável; célula em branco é horário
     sem pedido. Para ver os números de um horário, passe o mouse na célula — **no
@@ -590,7 +602,7 @@ confiável.
         },
         {
           q: 'Onde estão os totais em R$?',
-          a: 'Clique no botão Totais, no cabeçalho da tabela, ao lado de Exportar. Ele abre, acima da tabela, a barra com a soma de Valor pedido, Valor entrega, Total pago e Desconto total; clique de novo para fechar. Os totais já começam abertos em telas com 700 px de altura ou mais e fechados no celular e em telas mais baixas (como notebook pequeno), e o botão fica desativado até você fazer a primeira pesquisa.',
+          a: 'Clique no botão Totais, no cabeçalho da tabela, ao lado de Exportar. Ele abre, acima da tabela, a barra com a soma de Valor pedido, Valor entrega, Total pago e Desconto total; clique de novo para fechar. No computador eles ficam abertos enquanto a tabela ainda mostra umas 5 linhas de pedidos e fecham sozinhos numa janela mais baixa (como notebook pequeno); no celular começam fechados. Depois que você usa o botão, vale a sua escolha até recarregar a página. O botão fica desativado até você fazer a primeira pesquisa.',
         },
         {
           q: 'Filtrei a tabela, mas os cards de totais não mudaram. Por quê?',
@@ -663,8 +675,8 @@ confiável.
       category: 'Erros comuns',
       items: [
         {
-          q: 'A tela mostrou "Não foi possível consultar os dados". O que faço?',
-          a: 'Leia a mensagem abaixo do título: ela diz o motivo. "Demorou demais" pede um período menor. "A API de delivery respondeu 5xx" é instabilidade da API do DW; clique em Tentar de novo em alguns minutos. "Não tem número de loja no cadastro" quer dizer que a Empresa perdeu o número depois que você abriu a tela — o administrador do portal ajusta o cadastro. Mensagem de credencial ou integração (403/503) é com o administrador do portal.',
+          q: 'A pesquisa deu erro. O que faço?',
+          a: 'A mensagem de erro aparece no lugar da tabela e do Operacional. O topo dela diz de onde veio ("Pedidos do Maestro" ou "Lista de lojas") e o tipo do problema: sem conexão (a pesquisa refaz sozinha quando a internet volta), um sistema que não respondeu (tente de novo em alguns minutos), algo a ajustar na pesquisa, falta de acesso (fale com o gestor) ou falha do serviço (tente de novo e, se continuar, avise o suporte). O botão Tentar de novo refaz a pesquisa. Em "Ver detalhes técnicos" estão o que foi pedido e o que voltou, com os botões Copiar tudo e Baixar diagnóstico — mande isso ao suporte; senhas, tokens e dados pessoais não aparecem ali. A frase abaixo do título diz o motivo. "Demorou demais" pede um período menor. "A API de delivery respondeu 5xx" é instabilidade da API do DW; clique em Tentar de novo em alguns minutos. "Não tem número de loja no cadastro" quer dizer que a Empresa perdeu o número depois que você abriu a tela — o administrador do portal ajusta o cadastro. Mensagem de credencial ou integração (403/503) é com o administrador do portal.',
         },
         {
           q: 'A pesquisa voltou sem nenhum pedido. Está certo?',

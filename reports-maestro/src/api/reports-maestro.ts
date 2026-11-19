@@ -50,3 +50,18 @@ export function usePedidosReportsMaestro(periodo: Periodo | null, verDadosClient
     retry: false,
   })
 }
+
+/** De onde veio o erro, no nome que o usuário entende (para o `MensagemErro`). */
+const ORIGEM_HANDLER: Record<string, string> = {
+  lojas: 'Lista de lojas',
+  pedidos: 'Pedidos do Maestro',
+}
+
+/**
+ * A `origem` do `MensagemErro`: o server-client do SDK anexa ao erro a
+ * `requisicao` com o handler chamado.
+ */
+export function origemDoErro(erro: unknown): string | undefined {
+  const handler = (erro as { requisicao?: { handler?: string } } | null)?.requisicao?.handler
+  return handler ? ORIGEM_HANDLER[handler] : undefined
+}

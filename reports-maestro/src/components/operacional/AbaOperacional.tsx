@@ -1,7 +1,9 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
-import { AlertTriangle, Gauge, Info, RefreshCw } from 'lucide-react'
-import { Button, EmptyState, SegmentedControl, Skeleton } from '@gia-cb/ui'
+import { Gauge, Info } from 'lucide-react'
+import { EmptyState, SegmentedControl, Skeleton } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
+import { origemDoErro } from '../../api/reports-maestro'
+import { MensagemErro } from '../MensagemErro'
 import { useEntradaEmCascata } from '../../hooks/use-entrada'
 import { useComHover } from '../../hooks/use-com-hover'
 import {
@@ -99,7 +101,9 @@ function Aviso({ className, children }: { className?: string; children: ReactNod
   return (
     <div
       className={cn(
-        'flex items-center justify-center rounded-lg border border-border bg-surface p-6',
+        // No alto, centrado na horizontal: o mesmo lugar dos estados vazios e do
+        // erro na aba Pedidos (padrão 11 do workspace).
+        'flex items-start justify-center overflow-y-auto rounded-lg border border-border bg-surface px-4',
         className
       )}
     >
@@ -121,16 +125,9 @@ export function AbaOperacional({
   if (erro) {
     return (
       <Aviso className={className}>
-        <EmptyState
-          icon={AlertTriangle}
-          title="Não foi possível montar o dashboard"
-          description={erro.message}
-          action={
-            <Button onClick={onTentarDeNovo}>
-              <RefreshCw className="h-4 w-4" /> Tentar de novo
-            </Button>
-          }
-        />
+        <div className="py-12">
+          <MensagemErro erro={erro} origem={origemDoErro(erro)} onTentarDeNovo={onTentarDeNovo} />
+        </div>
       </Aviso>
     )
   }
@@ -429,7 +426,9 @@ function PainelOperacional({
             <>
               {leituraMapa === 'semana'
                 ? 'Uma linha por dia da semana; a linha grossa é a média dos dias.'
-                : `Cor mais forte = ${metricaMapa === 'pedidos' ? 'mais pedidos' : 'mais tempo'}.`}
+                : metricaMapa === 'pedidos'
+                  ? 'Verde = mais pedidos, amarelo = meio, vermelho = menos pedidos no período.'
+                  : 'Verde = menos tempo, amarelo = meio, vermelho = mais tempo no período.'}
               {metricaMapa !== 'pedidos' &&
                 (leituraMapa === 'semana'
                   ? ` Horários com menos de ${piso} entregas medidas descem até a base (sem medida).`
@@ -506,6 +505,7 @@ function PainelOperacional({
                 metricaMapa === 'pedidos' ? fmtInt(v) : Math.round(v).toLocaleString('pt-BR')
               }
               destacarMaior={metricaMapa !== 'pedidos'}
+              maiorEhMelhor={metricaMapa === 'pedidos'}
               celula={(linha, hora) => {
                 const c = grade.celulas.get(chaveDaCelula(linha, hora))
                 if (!c) return null

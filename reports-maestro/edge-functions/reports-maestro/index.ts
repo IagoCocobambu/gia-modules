@@ -15,6 +15,23 @@ type GiaOperacao = {
   tipo?: string
   ativo: boolean
   rankings: Record<string, string | null>
+  sigla: string | null
+  dataAbertura: string | null
+  dataFechamento: string | null
+  integracoes: GiaIntegracaoOperacao[]
+  locRefs: Record<string, string>
+  planos: string[]
+}
+type GiaIntegracaoOperacao = { tipo: string; locRef: string; descricao: string | null }
+type GiaEndereco = {
+  logradouro: string | null
+  numero: string | null
+  complemento: string | null
+  bairro: string | null
+  cep: string | null
+  cidade: string | null
+  uf: string | null
+  tipoLocalizacao: string | null
 }
 type GiaEc = { ec: string; tipo: 'maquineta' | 'link' | 'ecommerce' | null; ativo: boolean }
 type GiaEcAlterado = GiaEc & { empresaId: number; alterado: boolean }
@@ -34,6 +51,13 @@ type GiaEmpresa = {
   ativo: boolean
   locRefs: Record<string, string>
   ecs: GiaEc[]
+  endereco: GiaEndereco
+  coordenadas: { latitude: number; longitude: number } | null
+  regiao: string | null
+  regiaoCb: string | null
+  ehMatriz: boolean
+  empresaMatrizId: number | null
+  tabelasPreco: { cb: string | null; vasto: string | null; pizza: string | null }
 }
 type GiaArmazem = {
   id: number
@@ -187,7 +211,14 @@ async function __giaOperacoes(scope: EmpresaScope): Promise<GiaOperacao[]> {
   const res = await fetch(
     `${env('SUPABASE_URL')}/rest/v1/operacoes?deleted_at=is.null` +
       `&select=operacao_id,operacao_ref,nome_operacao,tipo_operacao,empresa_id,ativo,` +
-      `operacoes_rankings(rankings_areas(chave,ativo),rankings_opcoes(nome))${filtro}`,
+      `sigla_operacao,data_abertura,data_fechamento,` +
+      `operacoes_rankings(rankings_areas(chave,ativo),rankings_opcoes(nome)),` +
+      // Vínculos e planos no MESMO embed (alpha.71). Ordenados por `id` pelo
+      // mesmo motivo das integrações da Empresa: o primeiro de cada tipo é o
+      // `locRefs`, e a escolha não pode depender da ordem do PostgREST.
+      `operacoes_integracoes(id,tipo,p_loc_ref,p_descricao,ativo,deleted_at),` +
+      `operacoes_planos(tipo,ativo,deleted_at)` +
+      `&operacoes_integracoes.order=id&operacoes_planos.order=tipo${filtro}`,
     { headers: { apikey: key, Authorization: `Bearer ${key}`, 'Accept-Profile': 'gia' } }
   )
   if (!res.ok) throw new HttpError(500, 'falha ao consultar as operações do usuário')
@@ -198,10 +229,22 @@ async function __giaOperacoes(scope: EmpresaScope): Promise<GiaOperacao[]> {
     tipo_operacao: string | null
     empresa_id: number
     ativo: boolean
+    sigla_operacao: string | null
+    data_abertura: string | null
+    data_fechamento: string | null
     operacoes_rankings?: Array<{
       rankings_areas: { chave: string; ativo: boolean } | null
       rankings_opcoes: { nome: string } | null
     }> | null
+    operacoes_integracoes?: Array<{
+      id: number
+      tipo: string
+      p_loc_ref: string | null
+      p_descricao: string | null
+      ativo: boolean
+      deleted_at: string | null
+    }> | null
+    operacoes_planos?: Array<{ tipo: string; ativo: boolean; deleted_at: string | null }> | null
   }>
   return rows.map((o) => {
     const rankings: Record<string, string | null> = {}
@@ -210,6 +253,21 @@ async function __giaOperacoes(scope: EmpresaScope): Promise<GiaOperacao[]> {
       if (!r.rankings_areas?.ativo) continue
       rankings[r.rankings_areas.chave] = r.rankings_opcoes?.nome ?? null
     }
+    // Vínculo desativado, excluído ou sem identificador não é identidade válida
+    // (mesma regra do `locRefs` da Empresa).
+    const integracoes: GiaIntegracaoOperacao[] = []
+    const locRefs: Record<string, string> = {}
+    for (const i of o.operacoes_integracoes ?? []) {
+      const locRef = (i.p_loc_ref ?? '').trim()
+      if (!i.ativo || i.deleted_at || !locRef) continue
+      integracoes.push({ tipo: i.tipo, locRef, descricao: __giaTexto(i.p_descricao) })
+      if (locRefs[i.tipo] === undefined) locRefs[i.tipo] = locRef
+    }
+    const planos = [
+      ...new Set(
+        (o.operacoes_planos ?? []).filter((x) => x.ativo && !x.deleted_at).map((x) => x.tipo)
+      ),
+    ]
     return {
       id: o.operacao_id,
       ref: o.operacao_ref,
@@ -218,8 +276,31 @@ async function __giaOperacoes(scope: EmpresaScope): Promise<GiaOperacao[]> {
       empresaId: o.empresa_id,
       ativo: o.ativo,
       rankings,
+      sigla: __giaTexto(o.sigla_operacao),
+      dataAbertura: o.data_abertura ? o.data_abertura.slice(0, 10) : null,
+      dataFechamento: o.data_fechamento ? o.data_fechamento.slice(0, 10) : null,
+      integracoes,
+      locRefs,
+      planos,
     }
   })
+}
+/** Texto do cadastro: vazio ou só espaços vira `null`. */
+function __giaTexto(v: string | null | undefined): string | null {
+  const t = (v ?? '').trim()
+  return t ? t : null
+}
+/** `numeric` chega como texto pelo PostgREST; só vale com as duas, finitas e fora de 0,0. */
+function __giaCoordenadas(
+  lat: number | string | null,
+  lng: number | string | null
+): { latitude: number; longitude: number } | null {
+  if (lat === null || lng === null || lat === '' || lng === '') return null
+  const latitude = Number(lat)
+  const longitude = Number(lng)
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null
+  if (latitude === 0 && longitude === 0) return null
+  return { latitude, longitude }
 }
 // ── Empresas no escopo (gia.empresas + gia.empresas_integracoes + gia.empresas_ecs)
 // O embed `empresas_integracoes(...)` resolve o de-para de plataforma na MESMA
@@ -231,6 +312,9 @@ async function __giaEmpresas(scope: EmpresaScope): Promise<GiaEmpresa[]> {
   const res = await fetch(
     `${env('SUPABASE_URL')}/rest/v1/empresas?deleted_at=is.null` +
       `&select=empresa_id,cnpj,tipo_registro,razao_social,nome_fantasia,icms_vinho,ativo,` +
+      // alpha.71: endereço, coordenadas, regiões, matriz e Tabela Oficial.
+      `logradouro,numero,complemento,bairro,cep,cidade,estado,tipo_localizacao,` +
+      `latitude,longitude,regiao,regiao_cb,is_matriz,empresa_matriz_id,tabela,tab_vasto,tab_pizza,` +
       `empresas_integracoes(id,tipo,locref,ativo,deleted_at),` +
       // `dados_cielo` fica de fora de propósito: é o cadastro da adquirente, não
       // a identidade do EC.
@@ -252,6 +336,23 @@ async function __giaEmpresas(scope: EmpresaScope): Promise<GiaEmpresa[]> {
     nome_fantasia: string | null
     icms_vinho: number | null
     ativo: boolean
+    logradouro: string | null
+    numero: string | null
+    complemento: string | null
+    bairro: string | null
+    cep: string | null
+    cidade: string | null
+    estado: string | null
+    tipo_localizacao: string | null
+    latitude: number | string | null
+    longitude: number | string | null
+    regiao: string | null
+    regiao_cb: string | null
+    is_matriz: boolean | null
+    empresa_matriz_id: number | null
+    tabela: string | null
+    tab_vasto: string | null
+    tab_pizza: string | null
     empresas_integracoes?: Array<{
       id: number
       tipo: string
@@ -292,6 +393,26 @@ async function __giaEmpresas(scope: EmpresaScope): Promise<GiaEmpresa[]> {
       ecs: (e.empresas_ecs ?? [])
         .filter((x) => !x.deleted_at)
         .map((x) => ({ ec: x.ec, tipo: x.tipo, ativo: x.ativo })),
+      endereco: {
+        logradouro: __giaTexto(e.logradouro),
+        numero: __giaTexto(e.numero),
+        complemento: __giaTexto(e.complemento),
+        bairro: __giaTexto(e.bairro),
+        cep: __giaTexto(e.cep),
+        cidade: __giaTexto(e.cidade),
+        uf: __giaTexto(e.estado),
+        tipoLocalizacao: __giaTexto(e.tipo_localizacao),
+      },
+      coordenadas: __giaCoordenadas(e.latitude, e.longitude),
+      regiao: __giaTexto(e.regiao),
+      regiaoCb: __giaTexto(e.regiao_cb),
+      ehMatriz: e.is_matriz === true,
+      empresaMatrizId: e.empresa_matriz_id ?? null,
+      tabelasPreco: {
+        cb: __giaTexto(e.tabela),
+        vasto: __giaTexto(e.tab_vasto),
+        pizza: __giaTexto(e.tab_pizza),
+      },
     }
   })
 }

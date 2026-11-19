@@ -1,6 +1,6 @@
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { AlertTriangle, Bike, ChartPie, RefreshCw, SlidersHorizontal } from 'lucide-react'
+import { Bike, ChartPie, SlidersHorizontal } from 'lucide-react'
 import {
   Button,
   DataReport,
@@ -16,7 +16,11 @@ import { Dica } from '../components/Dica'
 import { fadeIn } from '@gia-cb/ui/motion'
 import { useTourProgress, useTourReplayTrigger } from '@gia-cb/sdk/modules'
 import { useCanAccess } from '@gia-cb/sdk/permissions'
-import { useLojasReportsMaestro, usePedidosReportsMaestro } from '../api/reports-maestro'
+import {
+  origemDoErro,
+  useLojasReportsMaestro,
+  usePedidosReportsMaestro,
+} from '../api/reports-maestro'
 import { AbasDoReports } from '../components/AbasDoReports'
 import { tour } from '../tour'
 import { AbaOperacional } from '../components/operacional/AbaOperacional'
@@ -28,6 +32,8 @@ import { BadgeStatusPedido } from '../components/BadgeStatusPedido'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
 import { OrigemFiltro } from '../components/OrigemFiltro'
 import { PainelDialog } from '../components/PainelDialog'
+import { MensagemErro } from '../components/MensagemErro'
+import { useCabemTotais, useLarguraArea } from '../hooks/use-medidas-tela'
 import { Recolhivel } from '../components/Recolhivel'
 import { StatusFiltro } from '../components/StatusFiltro'
 import { TotaisCards } from '../components/TotaisCards'
@@ -52,15 +58,6 @@ import {
 import { canaisDosPedidos, type AbaReports } from '../operacional'
 import { statusPedido } from '../status-pedido'
 import type { Consulta, PedidoMaestro } from '../types'
-
-/** Abaixo desta largura (px) a tela usa o layout de celular — o mesmo corte do
- *  `DataReport` (`@3xl` = 48rem), que vira lista de cards nesse ponto. */
-const LARGURA_COMPACTA = 768
-
-/** A partir desta altura de tela (px) os cards de totais já começam abertos;
- *  abaixo, começam fechados para sobrar espaço para a tabela. Vale a janela (não
- *  o elemento) porque a altura do frame já é derivada de `100vh`. */
-const ALTURA_TOTAIS_ABERTOS = 700
 
 /**
  * Colunas da tabela quando não há linha nenhuma. O `DataReport` desenha o estado
@@ -118,24 +115,6 @@ const SCROLLBAR_ELEGANTE = [
   '[@supports_not_selector(::-webkit-scrollbar)]:[&_*]:[scrollbar-width:thin]',
   '[@supports_not_selector(::-webkit-scrollbar)]:[&_*]:[scrollbar-color:color-mix(in_oklab,var(--color-muted-foreground)_50%,transparent)_color-mix(in_oklab,var(--color-border)_50%,transparent)]',
 ].join(' ')
-
-/**
- * `true` quando a ÁREA da tela é estreita. Mede o elemento — não a janela — pelo
- * mesmo motivo do `DataReport`: o seletor de Viewport do dev-shell e painéis
- * estreitos do portal limitam a largura do módulo sem mudar a janela.
- */
-function useModoCompacto(el: HTMLElement | null): boolean {
-  const [compacto, setCompacto] = useState(false)
-  useLayoutEffect(() => {
-    if (!el || typeof ResizeObserver === 'undefined') return
-    const medir = (largura: number) => setCompacto(largura > 0 && largura < LARGURA_COMPACTA)
-    medir(el.getBoundingClientRect().width)
-    const ro = new ResizeObserver((entries) => medir(entries[0]?.contentRect.width ?? 0))
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [el])
-  return compacto
-}
 
 async function exportarXlsx(
   pedidos: PedidoMaestro[],
@@ -234,7 +213,7 @@ export function ReportsMaestroView() {
   const [tourDasAbasAberto, setTourDasAbasAberto] = useState(false)
 
   const [area, setArea] = useState<HTMLDivElement | null>(null)
-  const compacto = useModoCompacto(area)
+  const { compacto, cabeLinhaFiltros } = useLarguraArea(area)
 
   const lojasQuery = useLojasReportsMaestro(canView)
   const lojas = useMemo(() => lojasQuery.data?.lojas ?? [], [lojasQuery.data])
@@ -249,6 +228,10 @@ export function ReportsMaestroView() {
   const pedidos = useMemo(() => pedidosQuery.data?.pedidos ?? [], [pedidosQuery.data])
   const carregando = pedidosQuery.isFetching
   const erro = pedidosQuery.error ?? lojasQuery.error
+  const tentarDeNovo = () => {
+    if (lojasQuery.isError) void lojasQuery.refetch()
+    if (pedidosQuery.isError) void pedidosQuery.refetch()
+  }
   const pesquisando = carregando
 
   // Canal do dashboard Operacional (`null` = todos). Mora aqui, e não na aba,
@@ -280,18 +263,17 @@ export function ReportsMaestroView() {
   const [statusRascunho, setStatusRascunho] = useState<ReadonlySet<string>>(() => new Set())
   const [origemRascunho, setOrigemRascunho] = useState<ReadonlySet<string>>(() => new Set())
   // Botões do cabeçalho da tabela: "Totais" abre/fecha os cards de totais em R$
-  // acima da tabela (começam abertos em tela com altura >= ALTURA_TOTAIS_ABERTOS e
-  // fechados abaixo disso e no celular; a escolha vale até sair da tela). O celular
-  // vai pela largura da janela: o `compacto` só é medido depois do 1º render;
+  // acima da tabela. Fora do celular eles abrem e fecham sozinhos pela regra das
+  // 5 linhas (padrão 10 do workspace: abertos enquanto a tabela, com eles abertos,
+  // ainda mostra umas 5 linhas); no celular começam fechados. Depois que o usuário
+  // usa o botão, vale a escolha dele até recarregar a página.
   // "Filtros" abre o dialog de status/origem (fecha com X, rodapé, clique fora ou
   // Esc). Fechar o de filtros NÃO limpa o marcado — o número no botão avisa que a
   // tabela continua filtrada.
-  const [totaisAbertos, setTotaisAbertos] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      window.innerWidth >= LARGURA_COMPACTA &&
-      window.innerHeight >= ALTURA_TOTAIS_ABERTOS
-  )
+  const [painelTotais, setPainelTotais] = useState<HTMLDivElement | null>(null)
+  const cabemTotais = useCabemTotais(area, painelTotais)
+  const [totaisEscolhidos, setTotaisEscolhidos] = useState<boolean | null>(null)
+  const totaisAbertos = totaisEscolhidos ?? (cabemTotais && !compacto)
   const [filtrosAbertos, setFiltrosAbertos] = useState(false)
   const qtdFiltrosAtivos = statusFiltro.size + origemFiltro.size
   const qtdRascunho = statusRascunho.size + origemRascunho.size
@@ -481,22 +463,12 @@ export function ReportsMaestroView() {
 
   let emptyState
   if (erro) {
+    // Mensagem padrão de erro (padrão 11 do workspace): no alto da área da tabela,
+    // centrada na horizontal, no mesmo lugar do "Escolha a loja e o período".
     emptyState = (
-      <EmptyState
-        icon={AlertTriangle}
-        title="Não foi possível consultar os dados"
-        description={erro.message}
-        action={
-          <Button
-            onClick={() => {
-              if (lojasQuery.isError) void lojasQuery.refetch()
-              if (pedidosQuery.isError) void pedidosQuery.refetch()
-            }}
-          >
-            <RefreshCw className="h-4 w-4" /> Tentar de novo
-          </Button>
-        }
-      />
+      <div className="flex min-h-0 flex-1 justify-center overflow-y-auto px-4 py-12">
+        <MensagemErro erro={erro} origem={origemDoErro(erro)} onTentarDeNovo={tentarDeNovo} />
+      </div>
     )
   } else if (!consulta) {
     emptyState = (
@@ -542,6 +514,9 @@ export function ReportsMaestroView() {
           onPesquisar={pesquisar}
           semAlteracao={semAlteracao}
           compacto={compacto}
+          // Linha enxuta só com resultado na tela (padrão 8): pesquisa cancelada ou
+          // com erro volta à barra completa.
+          enxuto={painelDisponivel && pedidosQuery.data !== undefined && cabeLinhaFiltros}
           tituloExtra={
             <TourReplayButton
               onClick={() => {
@@ -580,11 +555,8 @@ export function ReportsMaestroView() {
               consulta={consulta}
               pedidos={operacional}
               carregando={carregando}
-              erro={pedidosQuery.error ?? lojasQuery.error}
-              onTentarDeNovo={() => {
-                if (lojasQuery.isError) void lojasQuery.refetch()
-                if (pedidosQuery.isError) void pedidosQuery.refetch()
-              }}
+              erro={erro}
+              onTentarDeNovo={tentarDeNovo}
               canal={canal}
               compacto={compacto}
               className={compacto ? undefined : 'min-h-0 flex-1'}
@@ -601,7 +573,10 @@ export function ReportsMaestroView() {
             {/* Cards de totais acima da tabela, abertos/fechados pelo botão "Totais" do
             cabeçalho. Recolhido, o `Recolhivel` cancela o próprio gap do container. */}
             <Recolhivel className="shrink-0" visivel={painelDisponivel && totaisAbertos}>
-              <TotaisCards totais={totais} carregando={carregando} />
+              {/* Medido pelo useCabemTotais: a altura natural da seção, mesmo fechada. */}
+              <div ref={setPainelTotais}>
+                <TotaisCards totais={totais} carregando={carregando} />
+              </div>
             </Recolhivel>
 
             {/* Célula da tabela nunca quebra linha (a coluna alarga e a tabela rola na
@@ -698,7 +673,7 @@ export function ReportsMaestroView() {
                       aria-label="Totais"
                       aria-pressed={totaisAbertos}
                       disabled={!painelDisponivel}
-                      onClick={() => setTotaisAbertos((v) => !v)}
+                      onClick={() => setTotaisEscolhidos(!totaisAbertos)}
                       data-tour="reports-maestro-totais-toggle"
                     >
                       <ChartPie className="h-4 w-4" />

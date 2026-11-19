@@ -3,9 +3,9 @@
 ## 1. Identificação
 
 - **Módulo**: `reports-maestro` — Reports Maestro
-- **Versão do pacote**: 0.3.1
+- **Versão do pacote**: 0.3.2
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
-- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.70 (fixada)
+- **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.71 (fixada)
 
 ## 2. Fontes de dados externas
 

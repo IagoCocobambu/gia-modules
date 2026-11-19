@@ -8,10 +8,10 @@
 | **Label visível**      | Reports Maestro                           |
 | **Categoria**          | `operacional`                             |
 | **Autor**              | Iago Pereira (iago.pereira@cocobambu.com) |
-| **Versão do PRD**      | `1.5`                                     |
+| **Versão do PRD**      | `1.6`                                     |
 | **Status**             | `em-dev`                                  |
-| **Última atualização** | 2026-11-09                                |
-| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.68`              |
+| **Última atualização** | 2026-11-16                                |
+| **SDK version mínima** | `@gia-cb/sdk@0.1.0-alpha.71`              |
 
 ---
 
@@ -77,7 +77,7 @@ CPF/e-mail/telefone/endereço completos (ex.: atendimento de reclamação).
 - Campos adicionais nulos (pedido sem parceiro): "—" na tela, célula vazia no Excel.
 - Período > 31 dias, data final < inicial ou data futura: recusado com mensagem.
 - API demora mais de 90 s: 504 com a sugestão de reduzir o período.
-- API fora do ar ou integração não liberada: estado de erro com a mensagem do servidor (403/502/503/504) e "Tentar de novo".
+- API fora do ar ou integração não liberada: mensagem de erro padrão (`MensagemErro`: tipo do problema, origem, a frase do servidor 403/502/503/504, "Tentar de novo" e "Ver detalhes técnicos"), no alto da área, nas duas abas.
 - Loja sem delivery no período: estado vazio "Nenhum pedido".
 
 ---
@@ -140,10 +140,11 @@ do parceiro · Nº da loja · Criação (UTC). Filtro e ordenação por coluna, 
 global só no celular (cards) e escolha de colunas visíveis. Acima da tabela:
 
 - **Barra de totais** (4 indicadores — ícone tingido, valor e rótulo —, no desenho
-  dos totais do Fechamento Diário Maestro; dica com a conta de cada um) (acima da tabela, começam abertos se a altura da tela for
-  > = 700 px e fechados abaixo disso e no celular; o botão **Totais** no
+  dos totais do Fechamento Diário Maestro; dica com a conta de cada um) (acima da tabela; fora do celular abrem e fecham sozinhos pela regra das 5
+  > linhas — abertos enquanto a tabela, com eles abertos, mostra 5 linhas —, no
+  > celular começam fechados; o botão **Totais** no
   > cabeçalho da tabela abre/fecha, com transição de altura + fade; desativado antes da
-  > 1ª pesquisa; o estado vale enquanto a tela está aberta) — Valor pedido, Valor
+  > 1ª pesquisa; depois de usado, vale a escolha do usuário até recarregar) — Valor pedido, Valor
   > entrega, Total pago e Desconto total —
   > com a soma dos pedidos do período nos status e origens marcados (todos, se nada). A busca
   > e os filtros de coluna da tabela não mudam os totais; para somar esse recorte,
@@ -224,7 +225,9 @@ também o resumo do dashboard).
   linha por data do período pesquisado). Por dia da semana é um gráfico de linhas —
   uma linha de cor própria por dia, a média dos dias em linha grossa neutra, legenda
   que destaca um dia (mais grosso, com halo e pontos; os outros recuam)
-  e dica com todos os dias na hora apontada. Por dia é o mapa de calor, com o valor
+  e dica com todos os dias na hora apontada. Por dia é o mapa de calor em verde,
+  amarelo e vermelho (terços entre o menor e o maior valor da pesquisa — RN-8;
+  em Pedidos o verde é o maior; legenda com o intervalo de cada cor), com o valor
   escrito discretamente em cada célula, o pior horário contornado e as células com
   poucas entregas listradas.
 - Loja sem nenhuma entrega registrada pelo app de entrega (ex.: loja 01 em
@@ -386,11 +389,19 @@ Não usa.
     esconde esses números e avisa.
   - **Média** é o número principal de todo o Operacional (cartões, mapa, linhas,
     quem cancelou; pedido do usuário em 05/11/2026). Mediana (só nos cartões de
-    etapa) e "90% até" por posição na lista ordenada.
+    etapa) e "90% até" pela posição na lista ordenada, interpolando entre os dois
+    vizinhos (quantidade par: a mediana é a média dos dois do meio; desde a 0.3.2,
+    devolutiva de 10/11/2026 — antes pegava o menor dos dois).
   - Quem cancelou = `origem` do evento Cancelado: `CONSUMER` → cliente ou
     plataforma; `STORE` → loja.
   - Mapa de calor: célula com menos de 5 entregas medidas (3 na visão por dia) não
     mostra tempo; hora com menos de 0,5% dos pedidos (mín. 3) não vira coluna.
+  - Cor do mapa de calor (visão por dia): régua relativa à pesquisa. O intervalo
+    entre o menor e o maior valor do mapa é dividido em três partes iguais: verde
+    (`success`), amarelo (`warning`) e vermelho (`destructive`), do menor para o
+    maior em tempo na loja e preparo; em pedidos, invertido (mais pedidos = verde,
+    menos = vermelho). Mapa com um valor só fica amarelo.
+    Célula sem medida segue listrada (neutra).
 
 Histórico: o módulo não altera dados, então não há trilha de mutação.
 
@@ -412,7 +423,9 @@ Histórico: o módulo não altera dados, então não há trilha de mutação.
 - [ ] Quantidades de cada filtro de chips somam o "Todos" e não mudam ao marcar chip da própria barra
 - [ ] Marcar origem recalcula as quantidades de status (e vice-versa); chip marcado com 0 continua desmarcável
 - [ ] Coluna Origem mostra badge centralizado
-- [ ] Botão Totais abre/fecha os totais acima da tabela (abertos de início se a altura da tela for >= 700 px, fechados abaixo e sempre fechados no celular), em desktop e mobile
+- [ ] Botão Totais abre/fecha os totais acima da tabela; fora do celular eles abrem e fecham sozinhos pela regra das 5 linhas da tabela (trocam uma vez ao passar do limite, sem piscar com a janela parada), no celular começam fechados; depois do clique vale a escolha do usuário
+- [ ] Fora do celular, depois da pesquisa com resultado, a barra de filtros vira uma linha só (sem subtítulo nem rótulos; campos com `aria-label`); erro volta à barra completa
+- [ ] Erro de consulta mostra a `MensagemErro` (tipo, origem, Tentar de novo, Ver detalhes técnicos) no alto da área, nas duas abas
 - [ ] Botão Filtros abre o dialog de status/origem; marcar chips não fecha; "Limpar filtros" desmarca tudo; tabela só muda em "Ver N pedidos" (que fecha); X/fora/Esc descartam o marcado; filtros mostram só status/origens com pedidos; fechado com filtro ativo, o botão mostra a quantidade marcada
 - [ ] Clicar em status filtra tabela, totais e export; "Todos" limpa
 - [ ] Mobile (375x667), tablet (768x1024), desktop (1280x720) funcionam; tabela vira cards
@@ -528,6 +541,34 @@ sozinho, usa sempre os números da pesquisa (API) e volta para o Operacional no 
 ---
 
 ## 14. Histórico
+
+### 2026-11-16 — v1.6 (pacote 0.3.2)
+
+Devolutiva da 0.3.1:
+
+- Mapa de calor por dia em verde, amarelo e vermelho (terços entre o menor e o
+  maior valor da pesquisa); em Pedidos, mais pedidos é verde e menos é vermelho.
+  Legenda com o intervalo de cada cor; o item "Menos de N entregas medidas" só
+  aparece quando há célula listrada. Antes era um azul só, do claro ao escuro.
+
+Sugestões da devolutiva de 10/11/2026 (aprovação da 0.3.1):
+
+- Mediana e "90% até" interpolados entre os dois vizinhos (`quantil` em
+  `operacional.ts`).
+- Código sem uso removido: `PaginacaoGrafico.tsx`, `paginar.ts` e, em
+  `contexto-grafico.ts`, os contextos de tela cheia e de altura do corpo, que só
+  serviam à paginação (a `MolduraGrafico` deixa de medir o corpo).
+
+Padrões do workspace aplicados na revisão:
+
+- Padrão 11: erro de consulta pela `MensagemErro` (copiada do Fechamento iFood
+  Mensal), no alto da área, nas duas abas; os estados vazios do Operacional sobem
+  para o alto também.
+- Padrão 10: os Totais da aba Pedidos abrem e fecham pela regra das 5 linhas
+  (`useCabemTotais`, como o Fechamento Maestro), no lugar da altura da janela
+  (`innerHeight >= 700`).
+- Padrão 8: fora do celular, depois da pesquisa, a barra de filtros vira uma linha só.
+- SDK `@gia-cb/*` 0.1.0-alpha.71.
 
 ### 2026-11-09 — v1.5 (pacote 0.3.1)
 

@@ -1,0 +1,78 @@
+Reports Maestro 0.3.2 - revisão SDK e mapa de calor em verde, amarelo e vermelho - 16/11/2026
+
+Entrega
+- Módulo: reports-maestro ("Reports Maestro")
+- Versão: 0.3.1 → 0.3.2
+- Pacote: modules-reports-maestro-0.3.2.tgz (134,7 kB, 57 arquivos, sem .env nem segredos)
+- Menu: Plataformas › Maestro › Reports Maestro
+- Permissões: reports-maestro.ler, reports-maestro.exportar, reports-maestro.ver-dados-cliente (sem chave nova)
+- Validação SDK: gia validate 57/57, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- SDK: @gia-cb 0.1.0-alpha.71 (era alpha.70; a mesma do Fechamento iFood Diário e do Mensal; mínima no PRD: alpha.71)
+- Tipo: só leitura (nenhuma migration)
+
+Devolutiva da 0.3.1
+1. Mapa de calor "Por dia" em verde, amarelo e vermelho, no lugar do azul do claro ao escuro.
+   - Régua relativa à pesquisa: o intervalo entre o menor e o maior valor do mapa é dividido em três partes iguais.
+   - Tempo na loja e Preparo: verde = menos tempo, vermelho = mais tempo.
+   - Pedidos: ao contrário, verde = mais pedidos, vermelho = menos pedidos.
+   - Mapa com um valor só fica todo amarelo.
+   - Legenda com o intervalo de cada cor; o item "Menos de N entregas medidas" só aparece quando há célula listrada (em Pedidos, nunca).
+   - Cores pelos tokens success, warning e destructive do tema (funciona no tema escuro); o número da célula usa a cor de texto de cada fundo.
+   - Subtítulo do gráfico, FAQ e PRD (RN-8) explicam as cores.
+
+Devolutiva de 10/11/2026 (aprovação da 0.3.1) - sugestões aplicadas
+1. Mediana interpolada: o quantil (operacional.ts) interpola entre os dois vizinhos; com quantidade par, a mediana é a média dos dois do meio, como a FAQ descreve (antes pegava o menor). Vale também para o "90% até": os números dos cartões podem mudar alguns segundos.
+2. Código sem uso removido: PaginacaoGrafico.tsx e paginar.ts. Em contexto-grafico.ts saíram também usePorPagina, useLinhasQueCabem e os contextos de tela cheia e de altura do corpo, que só serviam à paginação; a MolduraGrafico deixou de medir o corpo do cartão.
+
+Incongruências encontradas e corrigidas
+1. Erro de consulta num EmptyState com a mensagem crua, nas abas Pedidos e Operacional → MensagemErro (copiado do Fechamento iFood Mensal), com tipo do problema, origem ("Pedidos do Maestro" ou "Lista de lojas"), Tentar de novo e Ver detalhes técnicos. No alto da área, centrado na horizontal; os estados vazios do Operacional também subiram para o alto. Fonte: AGENTS.md da raiz, padrão 11.
+2. Totais da aba Pedidos abriam ou não pela altura da janela (innerHeight >= 700) → regra das 5 linhas com ResizeObserver (useCabemTotais, mesma conta do Fechamento Maestro 0.4.2, em src/hooks/use-medidas-tela.ts), com trava contra o pisca-pisca; depois do clique em Totais vale a escolha do usuário até recarregar. Fonte: AGENTS.md da raiz, padrão 10.
+3. Barra de filtros com subtítulo e rótulos mesmo depois da pesquisa → fora do celular, com resultado na tela, vira uma linha só (título, loja, datas e Pesquisar; campos com aria-label; data-tour no contêiner). Erro volta à barra completa. Fonte: AGENTS.md da raiz, padrão 8.
+4. Sem CHANGELOG.md → criado, com a 0.3.2 e o resumo das anteriores, e incluído no "files" do package.json. Fonte: packaging.md §7.4 e delivery-checklists.md §P.
+5. SDK alpha.70 → alpha.71, a pedido do usuário; PRD (mínima), INTEGRATION.md e package.json atualizados. Fonte: getting-started.md, "Atualizando o SDK".
+6. FAQ desatualizada sobre os totais (700 px) e sobre o erro ("Não foi possível consultar os dados") → reescrita para a regra das 5 linhas, a barra enxuta e a mensagem de erro nova. Fonte: conventions.md §14 e AGENTS.md da raiz, padrão 10.
+
+Conferido e já de acordo
+- Padrão 1 (no celular, Pesquisar recolhe a barra de filtros): mantido; a barra enxuta não vale no celular. Fonte: AGENTS.md, padrão 1.
+- Padrão 2 (tooltip só com mouse): todo tooltip pelo Dica; nenhum title= nativo. Fonte: AGENTS.md, padrão 2.
+- Padrão 3 (barra de indicadores): os 4 totais já estão num contêiner com ícone tingido, valor e rótulo; todos somam a pesquisa inteira, então só informam (não filtram). Os filtros de status e origem são do módulo e recortam totais, tabela e Excel juntos. Fonte: AGENTS.md, padrão 3.
+- Padrão 4 (FAQ e tour sem o sistema antigo): grep sem ocorrências em faq.ts, tour.ts e tour-das-abas.ts. Fonte: AGENTS.md, padrão 4.
+- Tokens semânticos, imports por subpath, named exports, Prettier do portal. Fonte: conventions.md §2.1, §3, §7.
+- Handlers com requirePermission e checagem de escopo de loja. Fonte: dados-externos.md e consumir-modulo-gestor.md Parte A.
+- Fontes lidas: docs do @gia-cb 0.1.0-alpha.71 (conventions, delivery-checklists, packaging, getting-started, api-reference nas partes usadas), AGENTS.md da raiz e do módulo.
+
+Não corrigido (decisão ou fora do escopo)
+- Padrão 7 (abas embaixo com GridTabsBar) - não se aplica: a aba Operacional é um dashboard, sem tabela nem contador de linhas; abas seguem em cima com o seletor de canal ao lado (decisão do usuário).
+- Padrão 9 (faixa de carregamento com dados entrando aos poucos) - não se aplica: a pesquisa é uma chamada só ao servidor, sem páginas nem várias fontes.
+- Padrão 5 (escrita só na 999) e padrão 6 (selo de quantidade) - não se aplicam: o módulo só lê e não tem par quantidade/valor.
+- Sugestões ainda pendentes (devolutivas da 0.3.0 e de 10/11/2026): contraste da paleta, linha interrompida na hora sem medida no gráfico de linhas, aviso quando a resposta chega sem o resumo operacional e pedido depois da meia-noite. Falta o texto da devolutiva da 0.3.0 com o detalhe do contraste e da hora sem medida.
+- Legenda do mapa repete o número da divisa nas duas cores vizinhas ("2 a 16", "16 a 30") - oferecido ao usuário, sem resposta ainda.
+
+Testes
+- gia validate: 57/57, 0 erros, 0 avisos (também depois da mediana e da remoção do código sem uso).
+- Mediana: conferida a conta (1, 2, 3, 4 → 2,5; uma entrega só → ela mesma; 1 a 10 no 90% → 9,1).
+- gia dev (loja 01.CB GOIANIA, 14 e 15/11/2026, dados reais):
+   - Computador 1440 px: filtros viram uma linha só depois da pesquisa (60 px de altura, sem rótulos); mapa por dia em verde, amarelo e vermelho nas três métricas, com Pedidos invertido.
+   - Regra das 5 linhas, altura da janela 900 → 520 → 900 px: totais abertos com 6,6 linhas, fecham uma vez abaixo disso e reabrem só em 800 px (sem pisca-pisca).
+   - Erro simulado (502 no handler pedidos): MensagemErro nas duas abas, no alto, com Tentar de novo; a barra de filtros volta à completa.
+   - Celular 375 px: MensagemErro empilhada, botões na largura toda.
+- Falta conferir: os novos números de mediana e "90% até" na tela; tema escuro do mapa de calor (legibilidade do número na célula verde e vermelha), Safari/WebKit na regra das 5 linhas, e o "Baixar diagnóstico" no portal.
+
+Arquivos alterados
+- src/components/graficos/MapaDeCalor.tsx
+- src/components/graficos/MolduraGrafico.tsx, contexto-grafico.ts
+- src/components/graficos/PaginacaoGrafico.tsx e paginar.ts (removidos)
+- src/operacional.ts (quantil)
+- src/components/operacional/AbaOperacional.tsx
+- src/components/FiltrosBar.tsx
+- src/components/MensagemErro.tsx (novo, copiado do Fechamento iFood Mensal)
+- src/hooks/use-medidas-tela.ts (novo)
+- src/views/ReportsMaestroView.tsx
+- src/api/reports-maestro.ts (origemDoErro)
+- src/faq.ts, src/module.ts
+- PRD.md (v1.6), INTEGRATION.md, CHANGELOG.md (novo), package.json, package-lock.json
+- edge-functions/reports-maestro (gerado pelo gia)
+
+Pendências com outros times
+- Time GIA: as duas pendências da 0.3.1 continuam (module_id 'reports-maestro:abas' do tour das abas e o tour da tela que volta após recarregar no dev-shell).
+- Enviar modules-reports-maestro-0.3.2.tgz ao time do Portal GIA pelo canal combinado.

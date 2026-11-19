@@ -8,12 +8,18 @@ import { DicaGrafico, LinhaDica } from './DicaGrafico'
 // Mapa de calor: dia (linhas — da semana ou cada data do período) × hora do
 // pedido (colunas).
 //
-// ── UMA COR SÓ, DO CLARO AO ESCURO ──────────────────────────────────────────
+// ── VERDE, AMARELO E VERMELHO ───────────────────────────────────────────────
 //
-// Magnitude é escala SEQUENCIAL: um matiz, cinco faixas de intensidade. Cada
-// faixa é a cor do tema misturada com a SUPERFÍCIE (`color-mix`), então no tema
-// escuro a escala inverte sozinha — a célula fraca some no fundo escuro e a
-// forte acende — sem uma segunda paleta para manter.
+// Devolutiva da 0.3.1 (16/11/2026): o mapa usa as cores de semáforo — verde,
+// amarelo e vermelho — no lugar do azul do claro ao escuro. A régua é RELATIVA
+// à pesquisa: o intervalo entre o menor e o maior valor do mapa é dividido em
+// três partes iguais; o terço de baixo fica verde (menos tempo, menos pedidos),
+// o do meio amarelo e o de cima vermelho. Em Pedidos a régua INVERTE
+// (`maiorEhMelhor`, pedido do usuário em 16/11/2026): mais pedidos é bom para a
+// loja, então o pico fica verde e o horário fraco, vermelho. As cores são os tokens `success`,
+// `warning` e `destructive` do tema, misturados com a superfície para a célula
+// não gritar; a legenda mostra o intervalo de cada cor. Mapa com um valor só
+// (menor = maior) fica todo amarelo: não há o que comparar.
 //
 // Célula com poucos pedidos não pinta tempo: uma média de dois pedidos pinta
 // "pior hora da semana" por acaso. Ela fica neutra, e a legenda diz por quê.
@@ -54,6 +60,8 @@ interface Props {
   formatarNaCelula?: (v: number) => string
   /** Contorna a célula de maior valor (a pior hora, quando a métrica é tempo). */
   destacarMaior?: boolean
+  /** Inverte o semáforo: o maior valor fica verde e o menor, vermelho (Pedidos). */
+  maiorEhMelhor?: boolean
 }
 
 /** Quanto tempo o dedo fica parado na célula para abrir a dica (celular). */
@@ -61,9 +69,14 @@ const TEMPO_TOQUE_LONGO = 450
 /** Quanto o dedo pode mexer, em px, sem desistir do toque longo. */
 const TOLERANCIA_TOQUE = 10
 
-const FAIXAS = [16, 34, 52, 72, 92] as const
-/** Da faixa 3 em diante o fundo é forte: o número vai claro. */
-const FAIXA_FORTE = 3
+/** Do menor para o maior valor: verde, amarelo, vermelho (tokens do tema). */
+const FAIXAS = [
+  { nome: 'Verde', token: 'success' },
+  { nome: 'Amarelo', token: 'warning' },
+  { nome: 'Vermelho', token: 'destructive' },
+] as const
+/** Quanto da cor do tema entra na célula (o resto é a superfície). */
+const INTENSIDADE = 90
 /** Abaixo desta largura a célula não cabe número. */
 const LARGURA_MIN_NUMERO = 24
 /** As listras da célula sem medida, para a legenda (a mesma do padrão SVG). */
@@ -72,8 +85,15 @@ const LISTRAS =
 const ALTURA_EIXO = 18
 
 function corDaFaixa(i: number): string {
-  return `color-mix(in oklab, var(--color-primary) ${FAIXAS[i]}%, var(--color-surface))`
+  return `color-mix(in oklab, var(--color-${FAIXAS[i].token}) ${INTENSIDADE}%, var(--color-surface))`
 }
+
+/** O número escrito na célula, na cor de texto própria de cada fundo. */
+const TEXTO_DA_FAIXA = [
+  'fill-success-foreground',
+  'fill-warning-foreground',
+  'fill-destructive-foreground',
+] as const
 
 export function MapaDeCalor({
   linhas,
@@ -84,6 +104,7 @@ export function MapaDeCalor({
   rotuloPoucos,
   formatarNaCelula,
   destacarMaior,
+  maiorEhMelhor,
 }: Props) {
   const { ref, largura } = useTamanho<HTMLDivElement>()
   // As células CRESCEM do centro, em onda da esquerda para a direita (uma coluna
@@ -131,20 +152,40 @@ export function MapaDeCalor({
   const larguraRotulo = Math.ceil(Math.max(0, ...linhas.map((l) => larguraDoTexto(l.rotulo)))) + 10
 
   const valores: number[] = []
+  let temSemMedida = false
   let pior: { linha: string; hora: number; valor: number } | null = null
   for (const l of linhas)
     for (const h of horas) {
-      const v = celula(l.chave, h)?.valor
-      if (v == null) continue
+      const c = celula(l.chave, h)
+      const v = c?.valor
+      if (v == null) {
+        if (c) temSemMedida = true
+        continue
+      }
       valores.push(v)
       if (!pior || v > pior.valor) pior = { linha: l.chave, hora: h, valor: v }
     }
   const min = valores.length ? Math.min(...valores) : 0
   const max = valores.length ? Math.max(...valores) : 0
+  /** Terço do valor (0 = de baixo, 2 = de cima) → índice da cor em `FAIXAS`. */
+  const corDoTerco = (t: number) => (maiorEhMelhor ? FAIXAS.length - 1 - t : t)
   const faixaDe = (v: number) =>
     max === min
-      ? FAIXAS.length - 1
-      : Math.min(FAIXAS.length - 1, Math.floor(((v - min) / (max - min)) * FAIXAS.length))
+      ? 1
+      : corDoTerco(
+          Math.min(FAIXAS.length - 1, Math.floor(((v - min) / (max - min)) * FAIXAS.length))
+        )
+  // Onde cada cor começa e termina, para a legenda.
+  const corte1 = min + (max - min) / 3
+  const corte2 = min + ((max - min) * 2) / 3
+  const intervalos =
+    max === min
+      ? [null, `${formatar(min)}`, null]
+      : [
+          `${formatar(min)} a ${formatar(corte1)}`,
+          `${formatar(corte1)} a ${formatar(corte2)}`,
+          `${formatar(corte2)} a ${formatar(max)}`,
+        ]
 
   const larguraCelula = horas.length ? Math.max((largura - larguraRotulo) / horas.length, 1) : 0
   const alturaCelula = largura < 480 ? 24 : 28
@@ -273,10 +314,8 @@ export function MapaDeCalor({
                           pointerEvents="none"
                           data-marca="aparecer"
                           className={cn(
-                            'text-[10px] tabular-nums',
-                            faixa != null && faixa >= FAIXA_FORTE
-                              ? 'fill-primary-foreground opacity-70'
-                              : 'fill-foreground opacity-50'
+                            'text-[10px] tabular-nums opacity-80',
+                            faixa != null ? TEXTO_DA_FAIXA[faixa] : 'fill-foreground'
                           )}
                         >
                           {formatarNaCelula(c.valor as number)}
@@ -324,26 +363,38 @@ export function MapaDeCalor({
           </DicaGrafico>
         )}
       </div>
-      {/* Legenda da escala: as cinco faixas, do menor ao maior valor. */}
+      {/* Legenda: cada cor com o intervalo de valores que ela pinta. */}
       {valores.length > 0 && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="tabular-nums">{formatar(min)}</span>
-            <span className="flex" aria-hidden>
-              {FAIXAS.map((_, i) => (
+          {/* Do menor para o maior valor; a cor de cada terço segue `maiorEhMelhor`. */}
+          {intervalos.map((intervalo, t) => {
+            if (intervalo == null) return null
+            const i = max === min ? 1 : corDoTerco(t)
+            return (
+              <span key={t} className="flex items-center gap-1.5">
                 <span
-                  key={i}
-                  className="h-2.5 w-5 first:rounded-l-sm last:rounded-r-sm"
+                  aria-hidden
+                  className="h-2.5 w-2.5 rounded-sm"
                   style={{ background: corDaFaixa(i) }}
                 />
-              ))}
+                <span className="tabular-nums">
+                  <span className="sr-only">{FAIXAS[i].nome}: </span>
+                  {intervalo}
+                </span>
+              </span>
+            )
+          })}
+          {/* Só quando há célula listrada (em Pedidos, nunca há). */}
+          {temSemMedida && (
+            <span className="flex items-center gap-1.5">
+              <span
+                aria-hidden
+                className="h-2.5 w-2.5 rounded-sm"
+                style={{ background: LISTRAS }}
+              />
+              {rotuloPoucos}
             </span>
-            <span className="tabular-nums">{formatar(max)}</span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: LISTRAS }} />
-            {rotuloPoucos}
-          </span>
+          )}
           {destacarMaior && pior && (
             <span className="flex items-center gap-1.5">
               <span aria-hidden className="h-2.5 w-2.5 rounded-sm border-2 border-foreground" />

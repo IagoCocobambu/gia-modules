@@ -59,11 +59,18 @@ export const QUEM_CANCELOU: Record<QuemCancelou, string> = {
 
 // ─── Base ────────────────────────────────────────────────────────────────────
 
-/** Valor na posição `q` da lista ordenada (0,5 = mediana); `null` se vazia. */
+/**
+ * Valor na posição `q` da lista ordenada (0,5 = mediana); `null` se vazia.
+ * Interpola entre os dois vizinhos quando a posição cai entre eles: com
+ * quantidade par, a mediana é a média dos dois do meio (como a FAQ descreve) —
+ * até a 0.3.1 pegava o menor dos dois. Vale também para o "90% até".
+ */
 export function quantil(valores: number[], q: number): number | null {
   if (valores.length === 0) return null
   const s = [...valores].sort((a, b) => a - b)
-  return s[Math.floor(q * (s.length - 1))]
+  const pos = q * (s.length - 1)
+  const i = Math.floor(pos)
+  return i + 1 < s.length ? s[i] + (s[i + 1] - s[i]) * (pos - i) : s[i]
 }
 
 /** Média aritmética; `null` se vazia. */
