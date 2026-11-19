@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Falha na API do iFood — 17/11/2026</title>
+<style>
+  @page { size: A4; margin: 14mm 13mm; }
+  * { box-sizing: border-box; }
+  body { font: 10pt/1.5 Helvetica, Arial, sans-serif; color: #1F2937; margin: 0; }
+  h1 { font-size: 17pt; color: #3783FF; margin: 0; }
+  .sub { color: #6B7280; font-size: 9.5pt; margin: 2pt 0 8pt; }
+  .linha { border-bottom: 1.2pt solid #3783FF; margin-bottom: 12pt; }
+  h2 { font-size: 9.5pt; text-transform: uppercase; letter-spacing: .3pt; color: #3783FF;
+       background: #DBE8FF; padding: 5pt 7pt; margin: 14pt 0 7pt; }
+  p { margin: 0 0 6pt; }
+  .resumo { border: 1pt solid #D1D6DB; border-left: 4pt solid #E62B34; padding: 8pt 11pt; border-radius: 3pt; }
+  .resumo p:last-child { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 4pt 0 6pt; }
+  td { border: .4pt solid #D1D6DB; padding: 4pt 6pt; vertical-align: top; }
+  tr:nth-child(even) td { background: #F5F7FA; }
+  td.r { font-weight: bold; color: #374151; width: 24%; }
+  code, .mono { font-family: 'Courier New', monospace; font-size: 8.5pt; word-break: break-all; }
+  .erro { color: #E62B34; font-weight: bold; }
+  figure { margin: 6pt 0 4pt; }
+  figure img { width: 100%; border: .5pt solid #D1D6DB; border-radius: 3pt; display: block; }
+  figcaption { color: #6B7280; font-size: 8pt; margin-top: 3pt; }
+  ol { margin: 0 0 6pt 16pt; padding: 0; }
+  li { margin-bottom: 3pt; }
+  li code { white-space: nowrap; word-break: normal; }
+  .bloco { break-inside: avoid; }
+  .quebra { break-before: page; }
+  .rodape { margin-top: 14pt; color: #6B7280; font-size: 8pt; border-top: .5pt solid #D1D6DB; padding-top: 5pt; }
+</style>
+</head>
+<body>
+
+<h1>Falha na API do iFood (503) — parte 1 de 2</h1>
+<div class="sub">17/11/2026, por volta das 18h06 (horário de Brasília) · API Financial v3 (<code>/sales</code>) · Fechamento iFood Diário</div>
+<div class="linha"></div>
+
+<div class="resumo">
+  <p><b>O que aconteceu:</b> a API do iFood parou de responder. A chamada direta ao iFood, feita <b>fora do portal</b>,
+  voltou <span class="erro">503 Service Unavailable</span> com a mensagem <code>no healthy upstream</code>.</p>
+  <p><b>O que isso quer dizer:</b> o iFood recebeu a chamada, mas não tinha nenhum servidor disponível para atendê-la.
+  A falha está <b>do lado do iFood</b>, e não no portal GIA nem no módulo.</p>
+  <p><b>Efeito:</b> enquanto durar, o Fechamento iFood Diário não consegue trazer os pedidos. Nada foi gravado nem alterado.</p>
+</div>
+
+<div class="bloco">
+<h2>1 — Chamada direta ao iFood (sem o portal)</h2>
+<p>Feita num cliente de API, direto no endereço do iFood, para descartar qualquer problema do portal.</p>
+<table>
+  <tr><td class="r">Endereço</td><td class="mono">GET /financial/v3.0/merchants/{merchant}/sales?beginSalesDate=2026-11-08&amp;endSalesDate=2026-11-08&amp;page=1</td></tr>
+  <tr><td class="r">Resposta</td><td><span class="erro">503 Service Unavailable</span> · 156 ms · 767 B</td></tr>
+  <tr><td class="r">Corpo da resposta</td><td class="mono">no healthy upstream</td></tr>
+</table>
+<p>A resposta voltou em 156 ms: o iFood recusou na entrada, sem nem processar o pedido.</p>
+<figure>
+  <img src="print-chamada-direta.png" alt="Cliente de API com a resposta 503 no healthy upstream" />
+  <figcaption>Print 1 — chamada direta à API do iFood: 503 Service Unavailable, corpo “no healthy upstream”.</figcaption>
+</figure>
+</div>
+
+<div class="rodape">Parte 1 de 2 · GIA · Fechamento iFood Diário · Relatório de falha da API do iFood · 17/11/2026</div>
+
+</body>
+</html>

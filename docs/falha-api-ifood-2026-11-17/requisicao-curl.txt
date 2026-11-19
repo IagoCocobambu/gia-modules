@@ -1,0 +1,24 @@
+# Requisição — 17/11/2026 18:30:35 (horário de Brasília)
+
+curl -i -X GET 'https://merchant-api.ifood.com.br/financial/v3.0/merchants/{merchantId}/sales?beginSalesDate=2026-11-08&endSalesDate=2026-11-08&page=1' \
+  -H 'Authorization: Bearer <TOKEN>' \
+  -H 'Accept: */*'
+
+# Resposta (em 0,22 s)
+
+HTTP/2 503
+date: Tue, 17 Nov 2026 21:30:36 GMT
+content-type: text/plain; charset=UTF-8
+content-length: 19
+ifood-ratelimit-limit: 1000
+ifood-ratelimit-remaining: 999
+ifood-ratelimit-reset: 60
+server: cloudflare
+x-request-id: c5139902-5305-4288-aadc-a8868f9f2e3c
+x-ifood-request-id: fc9b62c9-e4d5-4b0d-939b-19cca8ec1faa
+x-kong-upstream-latency: 1
+x-kong-proxy-latency: 2
+cf-ray: a5c1d6663b2cc0a7-GRU
+cf-cache-status: DYNAMIC
+
+no healthy upstream

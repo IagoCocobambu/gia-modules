@@ -1,0 +1,11 @@
+curl -i -X GET 'https://merchant-api.ifood.com.br/financial/v3.0/merchants/94aaf166-84cc-4ebf-a35d-d223be34d01f/sales?beginSalesDate=2026-05-01&endSalesDate=2026-05-08&page=8' -H 'Authorization: Bearer <TOKEN>' -H 'Accept: application/json'
+
+# Resposta às 18:01:51.039 (Brasília)
+HTTP/2 429
+date: Fri, 13 Nov 2026 21:01:51 GMT
+ifood-ratelimit-limit: 1000
+ifood-ratelimit-remaining: 996
+ifood-ratelimit-reset: 47
+x-ifood-request-id: b5f2549e-f6eb-49ff-9cd4-2285ad01d119
+
+{"code":429,"message":"Too many requests"}

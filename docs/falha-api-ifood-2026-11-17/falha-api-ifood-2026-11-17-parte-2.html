@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Falha na API do iFood — 17/11/2026</title>
+<style>
+  @page { size: A4; margin: 14mm 13mm; }
+  * { box-sizing: border-box; }
+  body { font: 10pt/1.5 Helvetica, Arial, sans-serif; color: #1F2937; margin: 0; }
+  h1 { font-size: 17pt; color: #3783FF; margin: 0; }
+  .sub { color: #6B7280; font-size: 9.5pt; margin: 2pt 0 8pt; }
+  .linha { border-bottom: 1.2pt solid #3783FF; margin-bottom: 12pt; }
+  h2 { font-size: 9.5pt; text-transform: uppercase; letter-spacing: .3pt; color: #3783FF;
+       background: #DBE8FF; padding: 5pt 7pt; margin: 14pt 0 7pt; }
+  p { margin: 0 0 6pt; }
+  .resumo { border: 1pt solid #D1D6DB; border-left: 4pt solid #E62B34; padding: 8pt 11pt; border-radius: 3pt; }
+  .resumo p:last-child { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 4pt 0 6pt; }
+  td { border: .4pt solid #D1D6DB; padding: 4pt 6pt; vertical-align: top; }
+  tr:nth-child(even) td { background: #F5F7FA; }
+  td.r { font-weight: bold; color: #374151; width: 24%; }
+  code, .mono { font-family: 'Courier New', monospace; font-size: 8.5pt; word-break: break-all; }
+  .erro { color: #E62B34; font-weight: bold; }
+  figure { margin: 6pt 0 4pt; }
+  figure img { width: 100%; border: .5pt solid #D1D6DB; border-radius: 3pt; display: block; }
+  figcaption { color: #6B7280; font-size: 8pt; margin-top: 3pt; }
+  ol { margin: 0 0 6pt 16pt; padding: 0; }
+  li { margin-bottom: 3pt; }
+  li code { white-space: nowrap; word-break: normal; }
+  .bloco { break-inside: avoid; }
+  .quebra { break-before: page; }
+  .rodape { margin-top: 14pt; color: #6B7280; font-size: 8pt; border-top: .5pt solid #D1D6DB; padding-top: 5pt; }
+</style>
+</head>
+<body>
+
+<h1>Falha na API do iFood (503) — parte 2 de 2</h1>
+<div class="sub">17/11/2026, por volta das 18h06 (horário de Brasília) · API Financial v3 (<code>/sales</code>) · Fechamento iFood Diário</div>
+<div class="linha"></div>
+
+<div class="bloco">
+<h2>2 — Fechamento iFood Diário (no portal)</h2>
+<table>
+  <tr><td class="r">Quando</td><td>17/11/2026, 18:06:41</td></tr>
+  <tr><td class="r">Pesquisa</td><td>Loja 01.CB GOIANIA · dia 16/11/2026</td></tr>
+  <tr><td class="r">Chamada</td><td class="mono">POST /__gia/bff/fechamento-ifood-diario/vendas · página 1</td></tr>
+  <tr><td class="r">Resposta</td><td><span class="erro">503</span> — “A API do iFood está fora do ar (respondeu 503, página 1).”</td></tr>
+</table>
+<p>O módulo só repassou o que o iFood respondeu: a tela mostra “Um sistema não respondeu agora”.</p>
+<figure>
+  <img src="print-fechamento-diario.png" alt="Detalhes técnicos do erro 503 no Fechamento iFood Diário" />
+  <figcaption>Print 2 — detalhes técnicos do erro na tela do Fechamento iFood Diário.</figcaption>
+</figure>
+</div>
+
+<div class="rodape">Parte 2 de 2 · GIA · Fechamento iFood Diário · Relatório de falha da API do iFood · 17/11/2026</div>
+
+</body>
+</html>

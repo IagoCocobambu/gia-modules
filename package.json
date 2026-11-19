@@ -2,6 +2,7 @@
   "dependencies": {
     "@gia-cb/dev-shell": "^0.1.0-alpha.70",
     "@gia-cb/sdk": "^0.1.0-alpha.70",
-    "@gia-cb/ui": "^0.1.0-alpha.70"
+    "@gia-cb/ui": "^0.1.0-alpha.70",
+    "@types/node": "^26.6.6"
   }
 }

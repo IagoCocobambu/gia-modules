@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>API Financial do iFood — vendas vazias e 429</title>
+<style>
+  @page { size: A4; margin: 14mm 13mm; }
+  * { box-sizing: border-box; }
+  body { font: 10pt/1.5 Helvetica, Arial, sans-serif; color: #1F2937; margin: 0; }
+  h1 { font-size: 17pt; color: #3783FF; margin: 0; }
+  .sub { color: #6B7280; font-size: 9.5pt; margin: 2pt 0 8pt; }
+  .linha { border-bottom: 1.2pt solid #3783FF; margin-bottom: 12pt; }
+  h2 { font-size: 9.5pt; text-transform: uppercase; letter-spacing: .3pt; color: #3783FF;
+       background: #DBE8FF; padding: 5pt 7pt; margin: 14pt 0 7pt; }
+  p { margin: 0 0 6pt; }
+  .resumo { border: 1pt solid #D1D6DB; border-left: 4pt solid #E62B34; padding: 8pt 11pt; border-radius: 3pt; }
+  .resumo p:last-child { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 4pt 0 6pt; }
+  td { border: .4pt solid #D1D6DB; padding: 4pt 6pt; vertical-align: top; }
+  tr:nth-child(even) td { background: #F5F7FA; }
+  td.r { font-weight: bold; color: #374151; width: 24%; }
+  code, .mono { font-family: 'Courier New', monospace; font-size: 8.5pt; word-break: break-all; }
+  .erro { color: #E62B34; font-weight: bold; }
+  figure { margin: 6pt 0 4pt; }
+  figure img { width: 100%; border: .5pt solid #D1D6DB; border-radius: 3pt; display: block; }
+  figcaption { color: #6B7280; font-size: 8pt; margin-top: 3pt; }
+  ol { margin: 0 0 6pt 16pt; padding: 0; }
+  li { margin-bottom: 3pt; }
+  li code { white-space: nowrap; word-break: normal; }
+  .bloco { break-inside: avoid; }
+  .quebra { break-before: page; }
+  .rodape { margin-top: 14pt; color: #6B7280; font-size: 8pt; border-top: .5pt solid #D1D6DB; padding-top: 5pt; }
+</style>
+<style>
+  table.dados { font-size: 8pt; }
+  table.dados th { background: #3783FF; color: #fff; text-align: left; padding: 3pt 5pt; }
+  table.dados td { padding: 3pt 5pt; }
+  .num { text-align: right; white-space: nowrap; }
+  .ok { color: #3AA85B; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>API Financial do iFood: vendas vazias e 429 com cota sobrando</h1>
+<div class="sub">Teste em 13/11/2026, das 18:00:37 às 18:04:34 (horário de Brasília) · <code>GET /financial/v3.0/merchants/{merchantId}/sales</code> · somente leitura</div>
+<div class="linha"></div>
+
+<div class="resumo">
+  <p><b>Problema 1 — vendas vazias em respostas de sucesso.</b> 34 respostas <b>HTTP 200</b> trouxeram vendas
+  sem nenhum valor: a venda aparece (id, data, status <code>CONCLUDED</code>), mas com <code>orderEvents: []</code>
+  (sem o <code>FINANCIAL_BILLED_ORDER_ENTRY</code>), <code>billingSummary.saleBalance: 0</code> e, quase sempre,
+  sem pagamento. Pedindo a mesma página de novo, a venda vem completa.</p>
+  <p><b>Problema 2 — 429 com a cota sobrando.</b> 3 requisições foram recusadas com
+  <code>429 Too many requests</code> enquanto o cabeçalho <code>ifood-ratelimit-remaining</code> informava
+  956 a 996 chamadas disponíveis de 1.000, sem <code>Retry-After</code>.</p>
+  <p>Os dois problemas aconteceram também com <b>uma requisição por vez</b>, sem nenhuma outra em andamento.</p>
+</div>
+
+<div class="bloco">
+<h2>1 — A mesma venda, completa e vazia</h2>
+<p>Mesma página (<code>beginSalesDate=2026-05-01&amp;endSalesDate=2026-05-08&amp;page=21</code>), pedida duas vezes. Venda
+<b>shortId 5984</b> (id <code>3cf18d25-f9ec-4087-9f64-7cf8691e1149</code>):</p>
+<table class="dados">
+  <tr><th>Campo da venda</th><th>1ª requisição</th><th>2ª requisição</th></tr>
+  <tr><td class="r">Hora (Brasília)</td><td>18:02:18.547</td><td>18:03:25.239</td></tr>
+  <tr><td class="r">x-ifood-request-id</td><td class="mono">c38f8eed-1d7a-4a5d-a55c-42df9ed2f81b</td><td class="mono">ffccffaf-0bde-4c28-aadd-133fe6dcd0c8</td></tr>
+  <tr><td class="r">HTTP</td><td>200</td><td>200</td></tr>
+  <tr><td class="r">currentStatus</td><td>CONCLUDED</td><td>CONCLUDED</td></tr>
+  <tr><td class="r">saleGrossValue.bag</td><td>1025.51</td><td class="erro">0</td></tr>
+  <tr><td class="r">payments.methods</td><td>PIX · 1026.50</td><td class="erro">[]</td></tr>
+  <tr><td class="r">billingSummary.saleBalance</td><td>922.95</td><td class="erro">0</td></tr>
+  <tr><td class="r">billingSummary.billingEntries</td><td>4 itens</td><td class="erro">[]</td></tr>
+  <tr><td class="r">orderEvents</td><td>9 eventos, com FINANCIAL_BILLED_ORDER_ENTRY</td><td class="erro">[]</td></tr>
+</table>
+<p>Na 2ª requisição as 5 vendas da página vieram vazias (shortId 2683, 3718, 2480, 2643, 5984).</p>
+</div>
+
+<div class="bloco">
+<h2>2 — Vendas vazias com uma requisição por vez</h2>
+<p>Requisições feitas <b>sem nenhuma outra em andamento</b>, todas com HTTP 200, mesmo merchant e período
+<code>2026-05-01</code> a <code>2026-05-08</code>:</p>
+<table class="dados">
+  <tr><th>Hora (Brasília)</th><th>page</th><th class="num">Vendas vazias</th><th class="num">ratelimit-remaining</th><th>x-ifood-request-id</th></tr>
+  <tr><td>18:01:33.023</td><td>3</td><td class="num">20 de 20</td><td class="num">977</td><td class="mono">f5b184d0-98b0-4bd4-aae5-8e51764919bf</td></tr>
+  <tr><td>18:01:43.652</td><td>6</td><td class="num">20 de 20</td><td class="num">998</td><td class="mono">dd8d84f1-ba97-48b8-9059-0ceae2bd47be</td></tr>
+  <tr><td>18:01:50.002</td><td>7</td><td class="num">20 de 20</td><td class="num">997</td><td class="mono">e4d4d85a-37b8-49c1-b425-c792909b755e</td></tr>
+  <tr><td>18:01:52.290</td><td>10</td><td class="num">20 de 20</td><td class="num">994</td><td class="mono">9b7c8a88-c597-4d19-a5bb-8d1769b94b4c</td></tr>
+  <tr><td>18:01:58.287</td><td>11</td><td class="num">20 de 20</td><td class="num">993</td><td class="mono">7d5be876-8243-487d-847f-72de854611b5</td></tr>
+  <tr><td>18:02:01.006</td><td>13</td><td class="num">13 de 20</td><td class="num">991</td><td class="mono">5ac19d9d-93d6-4add-b7e0-ca453d80db44</td></tr>
+  <tr><td>18:02:04.518</td><td>15</td><td class="num">20 de 20</td><td class="num">989</td><td class="mono">fa1f3fe7-64b2-4669-b7c3-896db8e9e21d</td></tr>
+  <tr><td>18:03:22.844</td><td>1</td><td class="num">8 de 20</td><td class="num">938</td><td class="mono">47325ec4-ec19-4a38-a17d-553e380b6d63</td></tr>
+</table>
+<p>As outras 26 respostas com vendas vazias aconteceram com 2 a 9 requisições simultâneas.</p>
+</div>
+
+<div class="bloco">
+<h2>3 — 429 com a cota sobrando</h2>
+<table class="dados">
+  <tr><th>Hora (Brasília)</th><th class="num">Simultâneas</th><th class="num">ratelimit-remaining</th><th class="num">ratelimit-reset</th><th>Retry-After</th><th>x-ifood-request-id</th></tr>
+  <tr><td>18:01:51.039</td><td class="num">0</td><td class="num">996</td><td class="num">47 s</td><td>não veio</td><td class="mono">b5f2549e-f6eb-49ff-9cd4-2285ad01d119</td></tr>
+  <tr><td>18:03:12.930</td><td class="num">5</td><td class="num">958</td><td class="num">32 s</td><td>não veio</td><td class="mono">8718514a-5133-4fa8-9a40-381ea51b4f7c</td></tr>
+  <tr><td>18:03:12.944</td><td class="num">5</td><td class="num">956</td><td class="num">32 s</td><td>não veio</td><td class="mono">ac93065d-c579-4b94-b910-a4bf96d1f670</td></tr>
+</table>
+<p>Corpo das três: <code>{"code":429,"message":"Too many requests"}</code>. O maior uso em um minuto foi de 133
+chamadas (13% da cota), e o saldo informado nas respostas mostra que nenhuma outra chamada usou a cota nesse período.</p>
+</div>
+
+<div class="bloco">
+<h2>4 — O que foi testado</h2>
+<table>
+  <tr><td class="r">Quando</td><td>13/11/2026, das 18:00:37 às 18:04:34 (horário de Brasília)</td></tr>
+  <tr><td class="r">Endpoint</td><td class="mono">GET https://merchant-api.ifood.com.br/financial/v3.0/merchants/{merchantId}/sales?beginSalesDate=…&amp;endSalesDate=…&amp;page=…</td></tr>
+  <tr><td class="r">Período consultado</td><td>vendas de maio/2026, em janelas de até 8 dias</td></tr>
+  <tr><td class="r">Alcance</td><td>2 merchants com vendas no período · 230 requisições com resposta 200 ou 429 · nenhuma repetida automaticamente após falha · 1 a 10 requisições simultâneas, conforme a etapa</td></tr>
+  <tr><td class="r">Vendas vazias</td><td>34 respostas · 631 ocorrências · todas sem eventos e com saldo 0; 626 também sem pagamento e com <code>saleGrossValue</code> zerado</td></tr>
+  <tr><td class="r">Mesma venda, completa em outra resposta</td><td>413 vendas</td></tr>
+  <tr><td class="r">Venda com eventos e sem FINANCIAL_BILLED_ORDER_ENTRY</td><td class="ok">nenhuma (das 4.342 versões de venda recebidas, inclusive canceladas)</td></tr>
+  <tr><td class="r">Quando o evento vem</td><td>vem completo: 645 vendas vieram com ele em mais de uma resposta, com itens idênticos</td></tr>
+</table>
+<p>Temos o corpo completo de cada resposta e o <code>curl</code> de cada requisição (token e dados de cartão e de
+documento ocultos) e podemos enviar se precisarem.</p>
+</div>
+
+<div class="rodape">Relatório de teste da API Financial do iFood · 13/11/2026</div>
+
+</body>
+</html>

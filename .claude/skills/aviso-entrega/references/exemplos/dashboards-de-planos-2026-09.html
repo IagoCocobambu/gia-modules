@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>GIA — Dashboards de Planos — Aviso de entrega</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --accent:   #14577a;
+    --ink:      #16202b;
+    --ink-2:    #3f4a57;
+    --muted:    #5a6874;
+    --amber:    #7a4a12;
+    --amber-bg: #fbf0e0;
+    --rule:     #dae0e6;
+    --rule-2:   #c3ccd5;
+    --chip:     #e4eef4;
+    --chip-2:   #e9ecf0;
+    --box:      #e8f0f5;
+    --roxo:     #4a3a6b;
+    --roxo-bg:  #ece8f4;
+  }
+
+  @page { size: A4; margin: 16mm 16mm 14mm; }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    margin: 0;
+    background: #fff;
+    font-family: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+    font-size: 11.9pt;
+    line-height: 1.594;
+    color: var(--ink-2);
+  }
+
+  .sans { font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; }
+
+  /* ── cabeçalho ─────────────────────────────────────────────────────── */
+  .sobrancelha {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.3pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14pt;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 25.2pt;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin: 0 0 8pt;
+  }
+
+  .resumo {
+    font-size: 12.6pt;
+    line-height: 1.45;
+    color: var(--ink-2);
+    margin: 0 0 18pt;
+    max-width: 44em;
+  }
+
+  .regua-forte { border: 0; border-top: 1.5pt solid var(--rule-2); margin: 0 0 14pt; }
+
+  /* ── metadados ─────────────────────────────────────────────────────── */
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0 14pt;
+    margin: 0 0 20pt;
+  }
+  .meta dt {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 4pt;
+  }
+  .meta dd {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 11.1pt;
+    color: var(--ink);
+    margin: 0;
+  }
+  .seta { color: var(--muted); padding: 0 1pt; }
+
+  /* ── seções ────────────────────────────────────────────────────────── */
+  section { border-top: 0.75pt solid var(--rule); padding-top: 14pt; margin-top: 18pt; }
+  section:first-of-type { margin-top: 0; }
+
+  h2 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 9.6pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10pt;
+  }
+
+  p { margin: 0 0 9pt; max-width: 46em; }
+  p:last-child { margin-bottom: 0; }
+  b, strong { font-weight: 600; color: var(--ink); }
+
+  /* ── blocos de tela ────────────────────────────────────────────────── */
+  .tela { margin: 0 0 18pt; break-inside: avoid; }
+  .tela:last-child { margin-bottom: 0; }
+
+  .tela h3 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 12.6pt;
+    color: var(--ink);
+    margin: 0 0 3pt;
+  }
+
+  .caminho {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.6pt;
+    color: var(--muted);
+    margin: 0 0 8pt;
+  }
+  .caminho b { font-weight: 500; color: var(--ink-2); }
+  .caminho .sep { padding: 0 3pt; color: var(--rule-2); }
+
+  .quem {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 10.4pt;
+    color: var(--muted);
+    margin: 9pt 0 0;
+    display: flex;
+    align-items: center;
+    gap: 5pt;
+    flex-wrap: wrap;
+  }
+  .chip {
+    display: inline-block;
+    font-weight: 600;
+    font-size: 8.9pt;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    background: var(--chip);
+    border-radius: 2.5pt;
+    padding: 2pt 6pt;
+  }
+
+  /* ── lista do "o que resolve" ──────────────────────────────────────── */
+  .resolve { margin: 0; padding: 0; list-style: none; }
+  .resolve li { margin: 0 0 9pt; padding-left: 12pt; position: relative; max-width: 46em; }
+  .resolve li:last-child { margin-bottom: 0; }
+  .resolve li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0.62em;
+    width: 4pt; height: 4pt;
+    border-radius: 50%;
+    background: var(--rule-2);
+  }
+
+  /* ── tabela de permissões ──────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; margin: 0; }
+  thead th {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 0 8pt 6pt 0;
+    border-bottom: 0.75pt solid var(--rule-2);
+  }
+  thead th:last-child { padding-right: 0; }
+  tbody td {
+    padding: 8pt 8pt 8pt 0;
+    border-bottom: 0.75pt solid var(--rule);
+    vertical-align: top;
+    font-size: 10.4pt;
+    line-height: 1.4;
+  }
+  tbody td:last-child { padding-right: 0; }
+  tbody tr.grupo td {
+    border-bottom: 0.75pt solid var(--rule-2);
+    padding-top: 12pt;
+    padding-bottom: 5pt;
+  }
+  .grupo-rotulo {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.9pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--roxo);
+    background: var(--roxo-bg);
+    border-radius: 2.5pt;
+    padding: 2pt 6pt;
+    margin-right: 7pt;
+  }
+  .grupo-caminho {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.6pt;
+    color: var(--muted);
+  }
+  code {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 9.8pt;
+    color: var(--ink);
+    word-break: break-word;
+  }
+  .col-chave  { width: 46%; }
+  .col-libera { width: 32%; }
+  .col-para   { width: 22%; }
+  .para-chip {
+    display: inline-block;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.9pt;
+    color: var(--accent);
+    background: var(--chip);
+    border-radius: 2.5pt;
+    padding: 1.5pt 5pt;
+    margin: 0 3pt 3pt 0;
+  }
+
+  /* ── caixas ────────────────────────────────────────────────────────── */
+  .caixa {
+    background: var(--box);
+    border-left: 2.5pt solid var(--accent);
+    padding: 11pt 13pt;
+    margin: 14pt 0 0;
+    break-inside: avoid;
+  }
+  .caixa p { max-width: none; }
+  .caixa p:last-child { margin-bottom: 0; }
+
+  .atencao {
+    background: var(--amber-bg);
+    border-left: 2.5pt solid var(--amber);
+    padding: 11pt 13pt;
+    margin: 14pt 0 0;
+    color: var(--amber);
+    break-inside: avoid;
+  }
+  .atencao b { color: var(--amber); }
+  .atencao p { max-width: none; }
+  .atencao p:last-child { margin-bottom: 0; }
+
+  /* ── passos ────────────────────────────────────────────────────────── */
+  ol.passos { margin: 0 0 12pt; padding-left: 16pt; break-inside: avoid; }
+  section.junta { break-inside: avoid; }
+  ol.passos li { margin: 0 0 5pt; max-width: 46em; }
+
+  /* ── rodapé ────────────────────────────────────────────────────────── */
+  footer {
+    border-top: 0.75pt solid var(--rule);
+    margin-top: 20pt;
+    padding-top: 9pt;
+    display: flex;
+    justify-content: space-between;
+    gap: 16pt;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.2pt;
+    color: var(--muted);
+  }
+  footer b { font-weight: 500; color: var(--ink-2); }
+</style>
+</head>
+<body>
+
+<p class="sobrancelha">Aviso de entrega · Portal GIA</p>
+<h1>Dashboards de Planos</h1>
+<p class="resumo">
+  Dois painéis novos leem o que os planos já gravam e põem as lojas da rede lado
+  a lado, sem ninguém exportar planilha.
+</p>
+
+<hr class="regua-forte" />
+
+<dl class="meta">
+  <div>
+    <dt>Entregue em</dt>
+    <dd>23/09/2026</dd>
+  </div>
+  <div>
+    <dt>Onde já está</dt>
+    <dd>Produção</dd>
+  </div>
+  <div>
+    <dt>Onde encontrar</dt>
+    <dd>Dashboards <span class="seta">→</span> Planos</dd>
+  </div>
+  <div>
+    <dt>Responsável</dt>
+    <dd>João Souza</dd>
+  </div>
+</dl>
+
+<section>
+  <h2>O que é</h2>
+  <p>
+    O Plano de RH e o Plano de Contas são preenchidos loja a loja, mês a mês. Cada
+    loja enxerga o próprio plano — e a pergunta que vem depois é sempre a mesma:
+    <i>isto aqui é alto ou baixo comparado a quê?</i> Até agora, responder pedia
+    exportar vários planos e montar a comparação na mão, numa planilha que envelhecia
+    no dia seguinte.
+  </p>
+  <p>
+    Os dois painéis fazem essa conta no portal, sobre o mesmo dado que os planos
+    gravaram. O <b>Dashboard de Contas</b> compara o resultado — faturamento, despesas,
+    lucro, rentabilidade e qualquer linha do plano de contas. O <b>Dashboard de RH</b>
+    compara o quadro de pessoal — número de funcionários, folha e os indicadores de RH.
+    Nenhum dos dois escreve nada: eles só leem, somam e comparam.
+  </p>
+</section>
+
+<section>
+  <h2>Onde fica, e quem usa</h2>
+
+  <div class="tela">
+    <h3>Dashboard de Contas</h3>
+    <p class="caminho">
+      <b>Dashboards</b><span class="sep">›</span><b>Planos</b><span class="sep">›</span><b>Dashboard de Contas</b>
+    </p>
+    <p>
+      Quatro leituras do mesmo recorte de lojas e de período. <b>Visão geral</b> abre com
+      faturamento, despesas, lucro e rentabilidade contra o período anterior, a evolução
+      em doze meses e o ranking das lojas e das regiões. <b>Plano de contas</b> mostra a
+      árvore inteira somada, aberta por nível, com a variação em reais e em pontos.
+      <b>Comparativos</b> põe uma coluna por loja — ou por região, estado, matriz e filiais —
+      contra a média, a melhor ou a pior loja da seleção. <b>Por índice</b> responde
+      “quem é o maior e o menor nesta conta”, em qualquer linha do plano.
+    </p>
+    <p class="quem">Quem usa: <span class="chip">Diretores</span><span class="chip">Auditoria</span></p>
+  </div>
+
+  <div class="tela">
+    <h3>Dashboard de RH</h3>
+    <p class="caminho">
+      <b>Dashboards</b><span class="sep">›</span><b>Planos</b><span class="sep">›</span><b>Dashboard de RH</b>
+    </p>
+    <p>
+      Seis leituras do quadro de pessoal. <b>Visão geral</b>, <b>Comparar</b>,
+      <b>Por índice</b> e <b>Plano</b> seguem o mesmo desenho do painel de Contas, sobre
+      os indicadores de RH. <b>Análises adicionais</b> traz as contas das planilhas MISSÃO
+      CB — índice de folha, produtividade e turnover. <b>Qualidade</b> é a tela que acusa
+      o dado impossível antes de alguém decidir em cima dele: fração de pessoa no quadro,
+      loja sem plano no mês, valor fora da faixa.
+    </p>
+    <p class="quem">Quem usa: <span class="chip">Diretores</span><span class="chip">Auditoria</span></p>
+  </div>
+
+  <div class="caixa">
+    <p>
+      <b>Os dois painéis são somente leitura.</b> Não existe botão que grave, nem handler
+      que escreva. Quem corrige um número corrige no plano de origem — no Plano de RH ou
+      no Plano de Contas — e o painel acompanha na consulta seguinte.
+    </p>
+  </div>
+</section>
+
+<section>
+  <h2>O que a entrega resolve</h2>
+  <ul class="resolve">
+    <li>
+      <b>A comparação com a rede, sem planilha.</b> A loja deixa de ser um número sozinho
+      e passa a ter a média das outras ao lado, na mesma tela.
+    </li>
+    <li>
+      <b>As razões são recalculadas sobre as somas.</b> Rentabilidade, CMV e labor de um
+      grupo de lojas saem da divisão dos totais, e não da média dos percentuais — que dá
+      outro número, e errado.
+    </li>
+    <li>
+      <b>Um mês ou um período de até doze meses</b>, sempre contra o período anterior do
+      mesmo tamanho, à escolha de quem olha.
+    </li>
+    <li>
+      <b>Loja sem plano no período não vira zero.</b> Ela fica de fora da conta e aparece
+      nomeada, com o mês que falta — a diferença entre “a loja vendeu pouco” e “a loja não
+      entregou o plano”.
+    </li>
+    <li>
+      <b>Tudo o que está na tela sai em Excel</b>, com o formato de cada coluna junto —
+      as grades e também os gráficos, com os dados e a imagem do desenho.
+    </li>
+    <li>
+      <b>Cada número diz de onde veio.</b> Passar o ponteiro sobre uma linha mostra de que
+      contas ela é feita, e a tela nomeia a conta de origem de cada cartão.
+    </li>
+    <li>
+      <b>Nada consulta sozinho.</b> Escolhe-se o recorte inteiro — lojas, período, filtros —
+      e o botão <b>Consultar</b> busca uma vez só.
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Permissões</h2>
+  <p>
+    Cada chave libera uma coisa só, e as três são de leitura — nenhum dos dois módulos
+    escreve. A coluna da direita é sugestão: o gestor decide conforme a necessidade real
+    de uso.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="col-chave">Chave</th>
+        <th class="col-libera">O que libera</th>
+        <th class="col-para">Sugerido para</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="grupo">
+        <td colspan="3">
+          <span class="grupo-rotulo">Dashboard de Contas</span>
+          <span class="grupo-caminho">Dashboards › Planos › Dashboard de Contas</span>
+        </td>
+      </tr>
+      <tr>
+        <td><code>dashboard-contas.ler</code></td>
+        <td>Abrir o painel e ver as quatro abas</td>
+        <td><span class="para-chip">Diretores</span><span class="para-chip">Auditoria</span></td>
+      </tr>
+      <tr>
+        <td><code>dashboard-contas.exportar</code></td>
+        <td>Baixar as grades e os gráficos em Excel</td>
+        <td><span class="para-chip">Diretores</span><span class="para-chip">Auditoria</span></td>
+      </tr>
+      <tr>
+        <td><code>dashboard-contas.ler-rede</code></td>
+        <td>Comparar com a rede inteira, e não só com as lojas do próprio acesso</td>
+        <td><span class="para-chip">Diretores</span><span class="para-chip">Auditoria</span></td>
+      </tr>
+
+      <tr class="grupo">
+        <td colspan="3">
+          <span class="grupo-rotulo">Dashboard de RH</span>
+          <span class="grupo-caminho">Dashboards › Planos › Dashboard de RH</span>
+        </td>
+      </tr>
+      <tr>
+        <td><code>dashboard-rh.ler</code></td>
+        <td>Abrir o painel e ver as seis abas</td>
+        <td><span class="para-chip">Diretores</span><span class="para-chip">Auditoria</span></td>
+      </tr>
+      <tr>
+        <td><code>dashboard-rh.exportar</code></td>
+        <td>Baixar as grades e os gráficos em Excel</td>
+        <td><span class="para-chip">Diretores</span><span class="para-chip">Auditoria</span></td>
+      </tr>
+      <tr>
+        <td><code>dashboard-rh.ler-rede</code></td>
+        <td>Comparar com a rede inteira, e não só com as lojas do próprio acesso</td>
+        <td><span class="para-chip">Diretores</span><span class="para-chip">Auditoria</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="caixa">
+    <p>
+      <b>As chaves <code>ler-rede</code> merecem atenção, e a intenção é concedê-las junto
+      com a de abrir o painel.</b> Sem elas o painel abre, mas compara a loja da pessoa com
+      ela mesma — que é a pergunta que ele não responde. Elas ampliam só o que o painel
+      LÊ: nenhum dos dois módulos escreve em lugar nenhum, e ter a chave não dá acesso a
+      nada fora deles.
+    </p>
+  </div>
+
+  <div class="atencao">
+    <p>
+      <b>As duas chaves de rede dependem de duas funções existirem no banco</b> —
+      <code>public.operacoes_da_rede</code> e <code>public.empresas_da_rede</code>, criadas
+      pelo time do Portal GIA. Sem elas o painel não quebra: ele simplesmente ignora a
+      chave e volta a mostrar só as lojas do acesso da pessoa, sem avisar. Se alguém com a
+      chave concedida continuar vendo uma loja só, é isto que se confere primeiro.
+    </p>
+  </div>
+</section>
+
+<section class="junta">
+  <h2>Como atribuir</h2>
+  <ol class="passos">
+    <li>Portal <span class="seta">→</span> Cadastros › Grupos (ou Papéis, para função que atravessa departamentos).</li>
+    <li>Abra o grupo que vai receber o acesso — Diretores, Auditoria…</li>
+    <li>Na aba de permissões, procure por <code>dashboard-contas</code> e <code>dashboard-rh</code>, e marque as chaves.</li>
+    <li>Salve. Quem já estiver logado enxerga a mudança sem precisar sair e entrar.</li>
+  </ol>
+  <p>
+    O acesso continua limitado às lojas que a pessoa já enxerga no portal, com uma
+    exceção deliberada: as chaves <code>ler-rede</code>, que existem justamente para
+    ampliar a COMPARAÇÃO. Um diretor com elas vê os números das outras lojas no painel —
+    e continua sem poder alterar coisa alguma, em nenhum módulo.
+  </p>
+</section>
+
+<footer>
+  <span>Dúvidas sobre os módulos: <b>time do Portal GIA</b></span>
+  <span>Ajuda dentro da tela: <b>botão ? no topo</b></span>
+</footer>
+
+</body>
+</html>

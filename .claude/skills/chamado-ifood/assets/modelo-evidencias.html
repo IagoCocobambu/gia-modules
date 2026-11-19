@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Falha na API do iFood — 17/11/2026</title>
+<style>
+  @page { size: A4; margin: 14mm 13mm; }
+  * { box-sizing: border-box; }
+  body { font: 10pt/1.5 Helvetica, Arial, sans-serif; color: #1F2937; margin: 0; }
+  h1 { font-size: 17pt; color: #3783FF; margin: 0; }
+  .sub { color: #6B7280; font-size: 9.5pt; margin: 2pt 0 8pt; }
+  .linha { border-bottom: 1.2pt solid #3783FF; margin-bottom: 12pt; }
+  h2 { font-size: 9.5pt; text-transform: uppercase; letter-spacing: .3pt; color: #3783FF;
+       background: #DBE8FF; padding: 5pt 7pt; margin: 14pt 0 7pt; }
+  p { margin: 0 0 6pt; }
+  .resumo { border: 1pt solid #D1D6DB; border-left: 4pt solid #E62B34; padding: 8pt 11pt; border-radius: 3pt; }
+  .resumo p:last-child { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 4pt 0 6pt; }
+  td { border: .4pt solid #D1D6DB; padding: 4pt 6pt; vertical-align: top; }
+  tr:nth-child(even) td { background: #F5F7FA; }
+  td.r { font-weight: bold; color: #374151; width: 24%; }
+  code, .mono { font-family: 'Courier New', monospace; font-size: 8.5pt; word-break: break-all; }
+  .erro { color: #E62B34; font-weight: bold; }
+  figure { margin: 6pt 0 4pt; }
+  figure img { width: 100%; border: .5pt solid #D1D6DB; border-radius: 3pt; display: block; }
+  figcaption { color: #6B7280; font-size: 8pt; margin-top: 3pt; }
+  ol { margin: 0 0 6pt 16pt; padding: 0; }
+  li { margin-bottom: 3pt; }
+  li code { white-space: nowrap; word-break: normal; }
+  .bloco { break-inside: avoid; }
+  .quebra { break-before: page; }
+  .rodape { margin-top: 14pt; color: #6B7280; font-size: 8pt; border-top: .5pt solid #D1D6DB; padding-top: 5pt; }
+</style>
+</head>
+<body>
+
+<!-- Título: o erro em poucas palavras, com o status. Ex.: "Falha na API do iFood (503)" -->
+<h1>{{TITULO}}</h1>
+<!-- Contexto: data/hora (Brasília) · API e endpoint · sem nomes internos (portal, módulos) -->
+<div class="sub">{{DATA}}, por volta das {{HORA}} (horário de Brasília) · {{API}} (<code>{{ENDPOINT_CURTO}}</code>)</div>
+<div class="linha"></div>
+
+<div class="resumo">
+  <p><b>O que aconteceu:</b> {{O_QUE_ACONTECEU}}</p>
+  <p><b>O que isso quer dizer:</b> {{O_QUE_QUER_DIZER}}</p>
+  <p><b>Efeito:</b> {{EFEITO}}</p>
+</div>
+
+<!-- Uma seção por evidência. A 1ª é sempre a chamada direta à API (fora do nosso sistema).
+     Seção com print: class="bloco" (não divide entre páginas). Para começar em página nova: class="bloco quebra". -->
+<div class="bloco">
+<h2>1 — Chamada direta ao iFood</h2>
+<p>Feita num cliente de API, direto no endereço do iFood.</p>
+<table>
+  <tr><td class="r">Quando</td><td>{{QUANDO}}</td></tr>
+  <tr><td class="r">Endereço</td><td class="mono">{{METODO}} {{URL_SEM_ID}}</td></tr>
+  <tr><td class="r">Resposta</td><td><span class="erro">{{STATUS}}</span> · {{TEMPO}} · {{TAMANHO}}</td></tr>
+  <tr><td class="r">Corpo da resposta</td><td class="mono">{{CORPO}}</td></tr>
+</table>
+<p>{{LEITURA_DA_RESPOSTA}}</p>
+<figure>
+  <img src="print-1.png" alt="{{ALT_PRINT_1}}" />
+  <figcaption>Print 1 — {{LEGENDA_PRINT_1}}</figcaption>
+</figure>
+</div>
+
+<div class="bloco quebra">
+<h2>2 — {{TITULO_EVIDENCIA_2}}</h2>
+<table>
+  <tr><td class="r">Quando</td><td>{{QUANDO_2}}</td></tr>
+  <tr><td class="r">Consulta</td><td>{{LOJA_E_PERIODO_2}}</td></tr>
+  <tr><td class="r">Resposta</td><td><span class="erro">{{STATUS_2}}</span> — {{RESPOSTA_2}}</td></tr>
+</table>
+<figure>
+  <img src="print-2.png" alt="{{ALT_PRINT_2}}" />
+  <figcaption>Print 2 — {{LEGENDA_PRINT_2}}</figcaption>
+</figure>
+</div>
+
+<div class="rodape">Relatório de falha da API do iFood · {{DATA}}</div>
+
+</body>
+</html>

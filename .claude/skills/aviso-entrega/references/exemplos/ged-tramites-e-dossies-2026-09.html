@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>GIA - GED Trâmites e Dossiês - Aviso de entrega - 2026-09</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=block" rel="stylesheet">
+<style>
+  /* Medidas tiradas do aviso do Menu CB Touch: A4, 15 mm de margem, 510 pt de
+     largura útil. Tamanhos em pt, iguais aos do modelo. */
+  @page { size: A4; margin: 15mm 15mm 16mm 15mm; }
+
+  :root {
+    --tinta: #16202a;
+    --apagado: #596773;
+    --destaque: #135779;
+    --regua: #c2ccd5;
+    --caixa: #e7f0f5;
+    --serif: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+    --sans: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
+    --mono: 'IBM Plex Mono', Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: #ffffff; }
+  body {
+    margin: 0;
+    background: #ffffff;
+    color: var(--tinta);
+    font-family: var(--serif);
+    font-size: 12pt;
+    line-height: 19.5pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sobretitulo {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 8.4pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--destaque);
+    margin: 0 0 22pt;
+  }
+  h1 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 25.5pt;
+    line-height: 30pt;
+    letter-spacing: -0.005em;
+    margin: 0 0 10pt;
+    color: var(--tinta);
+  }
+  .abertura {
+    font-size: 12.7pt;
+    line-height: 21pt;
+    color: var(--apagado);
+    margin: 0 0 30pt;
+    max-width: 470pt;
+  }
+
+  /* A faixa dos quatro dados */
+  .ficha {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 0.75pt solid var(--regua);
+    border-bottom: 0.75pt solid var(--regua);
+    padding: 11pt 0 12pt;
+    margin: 0 0 30pt;
+  }
+  .ficha dt {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--apagado);
+    margin: 0 0 4pt;
+  }
+  .ficha dd {
+    font-family: var(--sans);
+    font-size: 11.2pt;
+    line-height: 15pt;
+    margin: 0;
+    padding-right: 10pt;
+  }
+
+  h2 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 9.7pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--destaque);
+    margin: 26pt 0 14pt;
+    break-after: avoid;
+  }
+  p { margin: 0 0 10pt; }
+  b, strong { font-weight: 600; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.82em;
+  }
+
+  /* Cada tela: título, caminho no menu, texto, quem usa */
+  .tela { margin: 0 0 20pt; }
+  /* O bloco pode quebrar entre parágrafos — sem isso cada tela pulava inteira
+     para a página seguinte e deixava meia página em branco. O que não se separa é
+     o título do caminho, o caminho do texto, e o "Quem usa" do último parágrafo. */
+  .tela h3, .caminho { break-after: avoid; }
+  .tela p { orphans: 3; widows: 3; }
+  .quem { break-before: avoid; }
+  .tela h3 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 12.7pt;
+    line-height: 16pt;
+    margin: 0 0 3pt;
+  }
+  .caminho {
+    font-family: var(--sans);
+    font-size: 9.7pt;
+    color: var(--tinta);
+    margin: 0 0 11pt;
+  }
+  .caminho b { font-weight: 500; }
+  .caminho .sep { color: var(--apagado); padding: 0 3pt; }
+  .quem {
+    font-family: var(--sans);
+    font-size: 10.5pt;
+    color: var(--apagado);
+    margin: 12pt 0 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5pt;
+  }
+  .quem > span:first-child { margin-right: 4pt; }
+
+  /* Os selos de papel — mesma família de cor do modelo */
+  .selo {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 9pt;
+    line-height: 12pt;
+    padding: 2pt 7pt;
+    border-radius: 3pt;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  .s-assistentes { color: #794a12; background: #f6ecde; }
+  .s-diretores   { color: #135779; background: #e3eef4; }
+  .s-auditoria   { color: #3f4a57; background: #e8ecf0; }
+  .s-padrinhos   { color: #4a3a6a; background: #ece8f3; }
+  .s-fundadores  { color: #2f5a3f; background: #e4efe7; }
+  .s-admin       { color: #6a3a3a; background: #f3e7e7; }
+
+  /* O que a entrega resolve */
+  .ganhos { list-style: none; margin: 0; padding: 0; }
+  .ganhos li {
+    position: relative;
+    padding-left: 13.2pt;
+    margin: 0 0 9pt;
+    break-inside: avoid;
+  }
+  .ganhos li::before {
+    content: '';
+    position: absolute;
+    left: 1pt;
+    top: 8pt;
+    width: 4.5pt;
+    height: 4.5pt;
+    border-radius: 50%;
+    background: var(--destaque);
+  }
+
+  /* Permissões */
+  table.chaves {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+    margin: 4pt 0 22pt;
+  }
+  table.chaves col.c1 { width: 160pt; }
+  table.chaves col.c2 { width: 165pt; }
+  table.chaves col.c3 { width: 185pt; }
+  table.chaves thead th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--apagado);
+    padding: 0 8pt 8pt 0;
+    border-bottom: 0.75pt solid var(--regua);
+  }
+  table.chaves tr.grupo td {
+    padding: 13pt 0 5pt;
+    font-size: 9pt;
+    color: var(--apagado);
+    border-bottom: 0.75pt solid var(--regua);
+  }
+  table.chaves tr.grupo b {
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tinta);
+    margin-right: 8pt;
+  }
+  table.chaves tbody td {
+    vertical-align: top;
+    padding: 6.5pt 8pt 6.5pt 0;
+    border-bottom: 0.5pt solid #e3e8ec;
+  }
+  table.chaves td.chave {
+    font-family: var(--mono);
+    font-size: 9.7pt;
+    line-height: 14pt;
+    padding-top: 7.5pt;
+  }
+  table.chaves td.libera { font-size: 10.5pt; line-height: 16.5pt; }
+  table.chaves td.para { padding-right: 0; }
+  table.chaves td.para .selo { margin: 0 4pt 4pt 0; }
+  table.chaves tr { break-inside: avoid; }
+
+  .atencao {
+    background: var(--caixa);
+    border-left: 2.2pt solid var(--destaque);
+    padding: 13pt 15.5pt 4pt;
+    font-size: 11.2pt;
+    line-height: 18pt;
+    margin: 0 0 8pt;
+    break-inside: avoid;
+  }
+  .atencao p { margin: 0 0 10pt; }
+  .atencao code { font-size: 9.8pt; }
+
+  ol.passos { margin: 0 0 14pt; padding-left: 0; list-style: none; counter-reset: passo; }
+  ol.passos li { counter-increment: passo; margin: 0 0 7pt; padding-left: 17pt; position: relative; }
+  ol.passos li::before { content: counter(passo) '.'; position: absolute; left: 0; }
+
+  .rodape {
+    margin-top: 26pt;
+    padding-top: 10pt;
+    border-top: 0.75pt solid var(--regua);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--sans);
+    font-size: 9.7pt;
+    color: var(--apagado);
+    break-inside: avoid;
+  }
+  .rodape b { font-weight: 600; color: var(--tinta); }
+  .quebra { break-before: page; }
+</style>
+</head>
+<body>
+
+<p class="sobretitulo">Aviso de entrega · Portal GIA</p>
+<h1>GED — Trâmites e Dossiês</h1>
+<p class="abertura">A gestão eletrônica de documentos das lojas passa a funcionar dentro do portal, com o login e as permissões dele.</p>
+
+<dl class="ficha">
+  <div><dt>Entregue em</dt><dd>16/09/2026</dd></div>
+  <div><dt>Onde já está</dt><dd>Homologação e produção</dd></div>
+  <div><dt>Onde encontrar</dt><dd>Ged → Trâmites e Dossiês</dd></div>
+  <div><dt>Responsável</dt><dd>João Victor de Souza</dd></div>
+</dl>
+
+<h2>O que é</h2>
+<p>Até agora, os documentos das lojas — ordens de pagamento, notas, contratos — ficavam no GED antigo, um sistema à parte, com login e senha próprios e um código por e-mail a cada entrada. A entrega traz esse trabalho para o portal, em dois módulos com donos diferentes.</p>
+<p>Os <b>Trâmites</b> recebem os lotes de documentos de cada loja: quem monta envia, o diretor valida e a auditoria do setor audita. Os <b>Dossiês</b> reúnem o pacote formal — com valor, fornecedor e setor —, que passa pela validação de um ou dois padrinhos e pela aprovação do fundador, e termina num documento oficial em PDF.</p>
+<p>O acervo do sistema antigo veio junto: 68.320 trâmites e 618.940 documentos, com o histórico de cada etapa.</p>
+
+<h2>Onde fica, e quem usa</h2>
+
+<div class="tela">
+  <h3>Trâmites</h3>
+  <p class="caminho"><b>Ged</b><span class="sep">›</span><b>Trâmites</b></p>
+  <p>A fila dos lotes de cada loja, separada em abas pelo ponto em que cada um está: <b>Validação</b>, <b>Validados</b>, <b>Auditoria</b> e <b>Auditados</b>. Clicar numa linha abre o trâmite ao lado, com os documentos, a prévia de cada arquivo e o histórico de quem fez o quê.</p>
+  <p>Em <b>Novo trâmite</b>, primeiro se preenche o lote — loja, setor, nome, competência, mês de referência e valor — e depois se enviam os documentos, todos de uma vez, até 50 MB por arquivo.</p>
+  <div class="quem"><span>Quem usa:</span><span class="selo s-assistentes">Assistentes</span><span class="selo s-diretores">Diretores</span><span class="selo s-auditoria">Auditoria</span></div>
+</div>
+
+<div class="tela">
+  <h3>Linha do tempo e Diretórios</h3>
+  <p class="caminho"><b>Ged</b><span class="sep">›</span><b>Trâmites</b><span class="sep">›</span>menu do <b>Exportar</b> e <b>Diretórios</b></p>
+  <p><b>Linha do tempo</b> mostra, semana a semana, cada movimentação dos trâmites — quem validou, enviou, auditou ou reprovou, e quando. Fica no menu do botão Exportar, ao lado da planilha.</p>
+  <p><b>Diretórios</b> é onde cada documento fica arquivado. O documento já nasce no diretório do setor do lote, e ali aparece agrupado pelo trâmite a que pertence. A busca procura o título dos documentos na loja inteira.</p>
+  <div class="quem"><span>Quem usa:</span><span class="selo s-assistentes">Assistentes</span><span class="selo s-diretores">Diretores</span><span class="selo s-auditoria">Auditoria</span></div>
+</div>
+
+<div class="tela">
+  <h3>Dossiês</h3>
+  <p class="caminho"><b>Ged</b><span class="sep">›</span><b>Dossiês</b></p>
+  <p>A lista dos dossiês de cada loja, em abas pelo que cada um espera: <b>Com o padrinho</b>, <b>Com o fundador</b>, <b>Devolvidos</b>, <b>Aprovados</b>, <b>Em anulação</b> e <b>Anulados</b>. Padrinho e fundador abrem a tela em <b>Minha fila</b>, só com o que depende deles; os demais abrem em <b>Todos</b>. A coluna Padrinhos filtra a fila de uma pessoa.</p>
+  <p>Em <b>Novo dossiê</b> se monta o pacote: código, dígito e título, loja, setor, fornecedor, valor, padrinhos e documentos. O dossiê aprovado gera o <b>documento oficial</b> em PDF, com a trilha de assinaturas.</p>
+  <div class="quem"><span>Quem usa:</span><span class="selo s-diretores">Diretores</span><span class="selo s-padrinhos">Padrinhos</span><span class="selo s-fundadores">Fundadores</span></div>
+</div>
+
+<div class="tela">
+  <h3>Relatório e Parâmetros</h3>
+  <p class="caminho"><b>Ged</b><span class="sep">›</span><b>Dossiês</b><span class="sep">›</span>menu do <b>Exportar</b> e <b>Parâmetros</b></p>
+  <p><b>Relatório de dossiês</b> mostra a trilha de assinaturas dos dossiês criados no período — quem criou, validou e aprovou, e quando — e sai em planilha. Fica no menu do botão Exportar.</p>
+  <p><b>Parâmetros</b> define, por loja, se o dossiê exige a validação de dois padrinhos.</p>
+  <div class="quem"><span>Quem usa:</span><span class="selo s-auditoria">Auditoria</span><span class="selo s-admin">Administração/GIA</span></div>
+</div>
+
+<h2>O que a entrega resolve</h2>
+<ul class="ganhos">
+  <li><b>Um login só.</b> O GED passa a usar o usuário do portal, sem senha própria nem código por e-mail. Quem já trabalhava no sistema antigo tem o histórico ligado ao usuário automaticamente, no primeiro acesso, pelo e-mail.</li>
+  <li><b>O trâmite nasce antes dos documentos.</b> Loja, setor, competência e valor são definidos primeiro, e os arquivos sobem em lote, de uma vez.</li>
+  <li><b>Cada um vê o seu setor.</b> A auditoria enxerga só os setores que audita, e cada pessoa só as lojas do próprio escopo no portal.</li>
+  <li><b>Reprovação sempre com motivo.</b> A auditoria aponta a ressalva documento a documento, e quem corrige vê exatamente o que voltou.</li>
+  <li><b>Padrinho e fundador veem a própria fila.</b> A lista de dossiês abre no que espera por eles. Ver o resto é possível; decidir, só no dossiê em que a pessoa foi designada.</li>
+  <li><b>Tudo fica registrado.</b> Cada etapa do trâmite e do dossiê grava quem fez e quando, e nada é apagado. É essa trilha que sai no documento oficial.</li>
+  <li><b>O relatório de GED volta, dentro do portal.</b> A planilha do botão Exportar traz a aba Movimentações — uma linha por mudança de estado —, no formato do relatório que saía do data warehouse.</li>
+</ul>
+
+<h2>Permissões</h2>
+<p>Cada chave libera uma coisa só, e leitura é sempre separada de alteração. A coluna da direita é sugestão — o gestor decide conforme a necessidade real de uso.</p>
+
+<table class="chaves">
+  <colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup>
+  <thead>
+    <tr><th>Chave</th><th>O que libera</th><th>Sugerido para</th></tr>
+  </thead>
+  <tbody>
+    <tr class="grupo"><td colspan="3"><b>Trâmites</b>Ged › Trâmites</td></tr>
+    <tr>
+      <td class="chave">tramites.ler</td>
+      <td class="libera">Ver a fila, os trâmites e o acervo das lojas do escopo</td>
+      <td class="para"><span class="selo s-assistentes">Assistentes</span><span class="selo s-diretores">Diretores</span><span class="selo s-auditoria">Auditoria</span></td>
+    </tr>
+    <tr>
+      <td class="chave">tramites.enviar</td>
+      <td class="libera">Gravar o trâmite e os documentos, e substituir documento com ressalva</td>
+      <td class="para"><span class="selo s-assistentes">Assistentes</span><span class="selo s-diretores">Diretores</span></td>
+    </tr>
+    <tr>
+      <td class="chave">tramites.editar</td>
+      <td class="libera">Validar, reprovar na validação e enviar para a auditoria</td>
+      <td class="para"><span class="selo s-diretores">Diretores</span></td>
+    </tr>
+    <tr>
+      <td class="chave">tramites.auditar</td>
+      <td class="libera">Auditar, marcar documento como conferido, reprovar com ressalva e dar como auditado</td>
+      <td class="para"><span class="selo s-auditoria">Auditoria</span></td>
+    </tr>
+    <tr>
+      <td class="chave">tramites.cadastrar</td>
+      <td class="libera">Guardar os documentos no diretório do setor e manter diretórios, tipos e etiquetas</td>
+      <td class="para"><span class="selo s-assistentes">Assistentes</span><span class="selo s-diretores">Diretores</span></td>
+    </tr>
+    <tr>
+      <td class="chave">tramites.excluir</td>
+      <td class="libera">Excluir trâmites em lote, junto dos documentos — ação sem volta</td>
+      <td class="para"><span class="selo s-admin">Administração/GIA</span></td>
+    </tr>
+
+    <tr class="grupo"><td colspan="3"><b>Setores</b>Ged › Trâmites — quais lotes a pessoa enxerga</td></tr>
+    <tr>
+      <td class="chave">tramites.setor.financeiro</td>
+      <td class="libera">Trabalhar com os trâmites do Financeiro</td>
+      <td class="para"><span class="selo s-assistentes">Assistentes</span><span class="selo s-diretores">Diretores</span><span class="selo s-auditoria">Auditoria</span></td>
+    </tr>
+    <tr>
+      <td class="chave">tramites.setor.rh</td>
+      <td class="libera">Trabalhar com os trâmites de RH</td>
+      <td class="para"><span class="selo s-assistentes">Assistentes</span><span class="selo s-diretores">Diretores</span><span class="selo s-auditoria">Auditoria</span></td>
+    </tr>
+    <tr>
+      <td class="chave">tramites.setor.almoxarifado</td>
+      <td class="libera">Trabalhar com os trâmites do Almoxarifado</td>
+      <td class="para"><span class="selo s-assistentes">Assistentes</span><span class="selo s-diretores">Diretores</span><span class="selo s-auditoria">Auditoria</span></td>
+    </tr>
+    <tr>
+      <td class="chave">tramites.setor.manutencao</td>
+      <td class="libera">Trabalhar com os trâmites de Manutenção</td>
+      <td class="para"><span class="selo s-assistentes">Assistentes</span><span class="selo s-diretores">Diretores</span><span class="selo s-auditoria">Auditoria</span></td>
+    </tr>
+    <tr>
+      <td class="chave">tramites.setor.sem-grupo</td>
+      <td class="libera">Trabalhar com os trâmites sem setor definido — 30.136 do acervo, quase metade dele</td>
+      <td class="para"><span class="selo s-assistentes">Assistentes</span><span class="selo s-diretores">Diretores</span><span class="selo s-auditoria">Auditoria</span></td>
+    </tr>
+
+    <tr class="grupo"><td colspan="3"><b>Dossiês</b>Ged › Dossiês</td></tr>
+    <tr>
+      <td class="chave">dossies.ler</td>
+      <td class="libera">Ver os dossiês, o documento oficial e o Relatório de dossiês</td>
+      <td class="para"><span class="selo s-diretores">Diretores</span><span class="selo s-padrinhos">Padrinhos</span><span class="selo s-fundadores">Fundadores</span><span class="selo s-auditoria">Auditoria</span></td>
+    </tr>
+    <tr>
+      <td class="chave">dossies.criar</td>
+      <td class="libera">Montar o dossiê e enviar aos padrinhos, corrigir o que voltar e pedir a anulação</td>
+      <td class="para"><span class="selo s-diretores">Diretores</span></td>
+    </tr>
+    <tr>
+      <td class="chave">dossies.apadrinhar</td>
+      <td class="libera">Validar ou invalidar os dossiês em que foi escolhido, e aparecer na lista de padrinhos</td>
+      <td class="para"><span class="selo s-padrinhos">Padrinhos</span></td>
+    </tr>
+    <tr>
+      <td class="chave">dossies.aprovar</td>
+      <td class="libera">Aprovar ou reprovar os dossiês validados endereçados a ele, e decidir a anulação</td>
+      <td class="para"><span class="selo s-fundadores">Fundadores</span></td>
+    </tr>
+    <tr>
+      <td class="chave">dossies.parametrizar</td>
+      <td class="libera">Definir, por loja, se o dossiê exige dois padrinhos</td>
+      <td class="para"><span class="selo s-admin">Administração/GIA</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="atencao">
+  <p><b>Quatro pontos merecem atenção.</b> O diretor precisa de <code>tramites.enviar</code> <b>e</b> de <code>tramites.editar</code>: a primeira grava o trâmite, a segunda conduz. Sem <code>tramites.enviar</code>, a criação é recusada com a mensagem "O trâmite não foi criado".</p>
+  <p>As chaves de setor recortam a leitura. Quem recebe <code>tramites.ler</code> precisa das chaves de setor junto — sem elas a fila abre vazia, sem erro.</p>
+  <p><code>dossies.criar</code> faz da pessoa a dona do dossiê: é o nome dela que sai na linha do Diretor, no documento oficial. E <code>dossies.parametrizar</code> fica separada de propósito — quem monta o dossiê não afrouxa a própria exigência de dois padrinhos.</p>
+  <p>Existe ainda <code>tramites.ler.auditoria</code>, que vem do perfil de leitura restrita do sistema antigo. Ela <b>não deve ser atribuída</b>: sozinha, não mostra nenhum trâmite.</p>
+</div>
+
+<h2>Como atribuir</h2>
+<ol class="passos">
+  <li>Portal → <b>Cadastros</b> › <b>Grupos</b> (ou <b>Papéis</b>, para função que atravessa departamentos).</li>
+  <li>Abra o grupo que vai receber o acesso — Assistentes, Diretores, Auditoria, Padrinhos, Fundadores…</li>
+  <li>Na aba de permissões, procure por <b>tramites.</b> e <b>dossies.</b>, e marque as chaves.</li>
+  <li>Salve. Quem já estiver logado enxerga a mudança sem precisar sair e entrar.</li>
+</ol>
+<p>O acesso é sempre limitado às lojas que a pessoa já enxerga no portal. Dar <code>tramites.editar</code> a um diretor não o deixa validar o trâmite da loja do vizinho.</p>
+<p>Os fundadores precisam ter usuário no portal para aparecer na lista de fundadores do dossiê.</p>
+
+<div class="rodape">
+  <span>Dúvidas sobre os módulos: <b>time do Portal GIA</b></span>
+  <span>Ajuda dentro da tela: botão <b>?</b> no topo</span>
+</div>
+
+</body>
+</html>

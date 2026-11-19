@@ -1,0 +1,47 @@
+# Exemplos — teste de 13/11/2026 (horário de Brasília) · merchant 94aaf166-84cc-4ebf-a35d-d223be34d01f
+
+## Sintoma 1 — HTTP 200 com vendas vazias (mesma requisição, duas respostas)
+
+curl -sS -i \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Accept: application/json" \
+  "https://merchant-api.ifood.com.br/financial/v3.0/merchants/94aaf166-84cc-4ebf-a35d-d223be34d01f/sales?beginSalesDate=2026-05-01&endSalesDate=2026-05-08&page=21"
+
+18:02:18.547 · HTTP 200 · x-ifood-request-id: c38f8eed-1d7a-4a5d-a55c-42df9ed2f81b
+  ifood-ratelimit-remaining: 983 · 5 vendas, todas completas
+  shortId 5984: saleBalance 922.95 · PIX 1026.50 · 9 orderEvents (com FINANCIAL_BILLED_ORDER_ENTRY)
+
+18:03:25.239 · HTTP 200 · x-ifood-request-id: ffccffaf-0bde-4c28-aadd-133fe6dcd0c8
+  ifood-ratelimit-remaining: 918 · 5 vendas, todas vazias
+  shortId 5984: saleBalance 0 · payments.methods [] · orderEvents [] · currentStatus CONCLUDED
+
+## Sintoma 1 — com uma requisição por vez (nenhuma outra em andamento)
+
+curl -sS -i \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Accept: application/json" \
+  "https://merchant-api.ifood.com.br/financial/v3.0/merchants/94aaf166-84cc-4ebf-a35d-d223be34d01f/sales?beginSalesDate=2026-05-01&endSalesDate=2026-05-08&page=3"
+
+18:01:33.023 · HTTP 200 (2159 ms)
+  date: Fri, 13 Nov 2026 21:01:35 GMT
+  ifood-ratelimit-limit: 1000
+  ifood-ratelimit-remaining: 977
+  ifood-ratelimit-reset: 5
+  x-ifood-request-id: f5b184d0-98b0-4bd4-aae5-8e51764919bf
+  20 vendas de 20 vazias (orderEvents [], saleBalance 0)
+
+## Sintoma 2 — HTTP 429 com cota disponível (nenhuma outra em andamento)
+
+curl -sS -i \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Accept: application/json" \
+  "https://merchant-api.ifood.com.br/financial/v3.0/merchants/94aaf166-84cc-4ebf-a35d-d223be34d01f/sales?beginSalesDate=2026-05-01&endSalesDate=2026-05-08&page=8"
+
+18:01:51.039 · HTTP 429 (179 ms)
+  date: Fri, 13 Nov 2026 21:01:51 GMT
+  ifood-ratelimit-limit: 1000
+  ifood-ratelimit-remaining: 996
+  ifood-ratelimit-reset: 47
+  retry-after: (não veio)
+  x-ifood-request-id: b5f2549e-f6eb-49ff-9cd4-2285ad01d119
+  {"code":429,"message":"Too many requests"}
