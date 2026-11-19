@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.local
+*.tgz
+.DS_Store
+*.log
+.vite/
+.npmrc
+validation-report.json
+
+# Bodies das respostas do iFood dos testes (pasta grande; o bodies.zip fica versionado)
+docs/**/bodies/
