@@ -1,0 +1,361 @@
+<title>Totais do Dashboard Simphony</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: uma coluna de painéis (A–E); cada painel = maquete no desktop + no celular + prós/contras. Cores = tokens do tema do portal (@gia-cb/ui styles.css). */
+:root {
+  --bg: oklch(0.965 0.005 250); --surface: oklch(1 0 0); --fg: oklch(0.18 0.02 250);
+  --muted: oklch(0.965 0.005 250); --muted-fg: oklch(0.535 0.02 250); --border: oklch(0.925 0.008 250);
+  --primary: oklch(0.55 0.21 261); --success: oklch(0.65 0.15 150); --info: oklch(0.63 0.2 260);
+  --warning: oklch(0.7 0.16 70); --destructive: oklch(0.6 0.22 25);
+  --sc-green-bg: #dcfce7; --sc-green-fg: #16a34a; --sc-blue-bg: #dbeafe; --sc-blue-fg: #2563eb;
+  --sc-indigo-bg: #e0e7ff; --sc-indigo-fg: #4f46e5; --sc-amber-bg: #fef3c7; --sc-amber-fg: #d97706;
+  --sc-rose-bg: #ffe4e6; --sc-rose-fg: #e11d48;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: oklch(0.13 0.018 250); --surface: oklch(0.18 0.02 250); --fg: oklch(0.97 0.005 250);
+  --muted: oklch(0.245 0.02 250); --muted-fg: oklch(0.665 0.02 250); --border: oklch(0.245 0.02 250);
+  --primary: oklch(0.63 0.2 260); --success: oklch(0.7 0.14 150); --info: oklch(0.7 0.18 260);
+  --warning: oklch(0.78 0.16 70); --destructive: oklch(0.65 0.22 25);
+  --sc-green-bg: #052e1699; --sc-green-fg: #4ade80; --sc-blue-bg: #17255499; --sc-blue-fg: #60a5fa;
+  --sc-indigo-bg: #1e1b4b99; --sc-indigo-fg: #818cf8; --sc-amber-bg: #451a0399; --sc-amber-fg: #fbbf24;
+  --sc-rose-bg: #4c051999; --sc-rose-fg: #fb7185; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: oklch(0.13 0.018 250); --surface: oklch(0.18 0.02 250); --fg: oklch(0.97 0.005 250);
+  --muted: oklch(0.245 0.02 250); --muted-fg: oklch(0.665 0.02 250); --border: oklch(0.245 0.02 250);
+  --primary: oklch(0.63 0.2 260); --success: oklch(0.7 0.14 150); --info: oklch(0.7 0.18 260);
+  --warning: oklch(0.78 0.16 70); --destructive: oklch(0.65 0.22 25);
+  --sc-green-bg: #052e1699; --sc-green-fg: #4ade80; --sc-blue-bg: #17255499; --sc-blue-fg: #60a5fa;
+  --sc-indigo-bg: #1e1b4b99; --sc-indigo-fg: #818cf8; --sc-amber-bg: #451a0399; --sc-amber-fg: #fbbf24;
+  --sc-rose-bg: #4c051999; --sc-rose-fg: #fb7185; color-scheme: dark; }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+header h1 { font-size: 26px; font-weight: 600; margin: 0 0 6px; text-wrap: balance; letter-spacing: -0.01em; }
+header p { margin: 0 0 6px; color: var(--muted-fg); max-width: 75ch; }
+.num { font-variant-numeric: tabular-nums; }
+
+.painel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.painel.rec { border-color: color-mix(in oklab, var(--primary) 55%, var(--border)); }
+.painel-topo { display: flex; gap: 12px; align-items: baseline; padding: 18px 20px 4px; flex-wrap: wrap; }
+.letra { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--surface); background: var(--fg); border-radius: 5px; padding: 1px 7px; }
+.painel h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.tag { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; border-radius: 999px; padding: 1px 8px; border: 1px solid; }
+.tag.sdk { color: var(--primary); border-color: color-mix(in oklab, var(--primary) 45%, transparent); }
+.tag.ws { color: var(--success); border-color: color-mix(in oklab, var(--success) 45%, transparent); }
+.tag.rec { color: var(--surface); background: var(--primary); border-color: var(--primary); }
+.ideia { padding: 0 20px; margin: 4px 0 0; color: var(--muted-fg); max-width: 80ch; }
+
+.palco { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; padding: 16px 20px; background: var(--bg); border-block: 1px solid var(--border); margin-top: 14px; }
+.tela { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.rot-tela { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-fg); font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+.filtros { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 6px 10px; font-size: 12px; }
+.filtros b { font-weight: 600; margin-right: auto; }
+.campo { border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; color: var(--muted-fg); white-space: nowrap; }
+.btn { background: var(--primary); color: #fff; border-radius: 6px; padding: 2px 10px; white-space: nowrap; }
+.tabela { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; overflow: hidden; font-size: 12px; }
+.tabela .tt { padding: 6px 10px; font-weight: 600; border-bottom: 1px solid var(--border); }
+.tabela .ln { display: grid; grid-template-columns: 1fr 60px 90px; padding: 5px 10px; border-bottom: 1px solid var(--border); }
+.tabela .ln:last-child { border-bottom: 0; }
+.tabela .ln span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.tabela .cab { color: var(--muted-fg); font-size: 11px; }
+
+/* StatCard do SDK: ícone em pílula colorida + número grande + rótulo em maiúsculas */
+.sc-grade { display: grid; gap: 10px; }
+.sc { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 2px rgb(0 0 0 / .05); min-width: 0; }
+.sc .ic { border-radius: 8px; padding: 9px; display: grid; place-items: center; flex-shrink: 0; }
+.sc .ic svg { width: 18px; height: 18px; }
+.sc .v { font-size: 20px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc .l { font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; color: var(--muted-fg); }
+.sc.mini { padding: 8px 10px; gap: 8px; border-radius: 10px; }
+.sc.mini .ic { padding: 6px; } .sc.mini .ic svg { width: 14px; height: 14px; }
+.sc.mini .v { font-size: 14px; } .sc.mini .l { font-size: 9.5px; }
+.green { background: var(--sc-green-bg); color: var(--sc-green-fg); } .blue { background: var(--sc-blue-bg); color: var(--sc-blue-fg); }
+.indigo { background: var(--sc-indigo-bg); color: var(--sc-indigo-fg); } .amber { background: var(--sc-amber-bg); color: var(--sc-amber-fg); }
+.slate { background: var(--muted); color: var(--muted-fg); } .rose { background: var(--sc-rose-bg); color: var(--sc-rose-fg); }
+
+/* Barra de indicadores (padrão 3 do workspace) */
+.barra { border: 1px solid var(--border); background: var(--surface); border-radius: 12px; padding: 6px; box-shadow: 0 1px 2px rgb(0 0 0 / .05); }
+.barra .g { display: grid; gap: 2px 4px; }
+.ind { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; min-width: 0; white-space: nowrap; }
+.ind .q { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+.ind .q svg { width: 16px; height: 16px; }
+.ind .v { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.ind .l { font-size: 11.5px; color: var(--muted-fg); line-height: 1.2; }
+.ind.mini { gap: 8px; padding: 4px 6px; } .ind.mini .q { width: 26px; height: 26px; } .ind.mini .q svg { width: 13px; height: 13px; }
+.ind.mini .v { font-size: 13px; } .ind.mini .l { font-size: 10px; }
+.t-success { background: color-mix(in oklab, var(--success) 12%, transparent); color: var(--success); }
+.t-info { background: color-mix(in oklab, var(--info) 12%, transparent); color: var(--info); }
+.t-primary { background: color-mix(in oklab, var(--primary) 12%, transparent); color: var(--primary); }
+.t-warning { background: color-mix(in oklab, var(--warning) 14%, transparent); color: var(--warning); }
+.t-neutro { background: var(--muted); color: var(--muted-fg); }
+.t-destructive { background: color-mix(in oklab, var(--destructive) 12%, transparent); color: var(--destructive); }
+.vc-success { color: var(--success); } .vc-info { color: var(--info); } .vc-primary { color: var(--primary); }
+.vc-warning { color: var(--warning); } .vc-neutro { color: var(--fg); } .vc-destructive { color: var(--destructive); }
+.ver { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--muted-fg); border-radius: 8px; padding: 6px; white-space: nowrap; }
+.ver.sc-ver { border: 1px dashed var(--border); border-radius: 12px; }
+.sep { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px; }
+
+.celular { width: 260px; border: 1px solid var(--border); border-radius: 22px; padding: 10px; background: var(--bg); display: flex; flex-direction: column; gap: 6px; justify-self: end; }
+.celular .rot-tela { padding: 0 2px; }
+.cel-filtro { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 6px 8px; font-size: 11px; display: flex; justify-content: space-between; }
+.cel-card { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 6px 8px; font-size: 11px; display: flex; justify-content: space-between; gap: 6px; }
+.cel-card span:last-child { font-variant-numeric: tabular-nums; }
+
+.avaliacao { display: grid; grid-template-columns: 1fr 1fr; }
+.avaliacao > div { padding: 14px 20px 16px; min-width: 0; }
+.avaliacao > div + div { border-left: 1px solid var(--border); }
+.avaliacao h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-fg); font-weight: 600; }
+.avaliacao ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.custo { grid-column: 1 / -1; border-top: 1px solid var(--border); border-left: 0 !important; font-size: 13px; color: var(--muted-fg); }
+.custo b { color: var(--fg); font-weight: 500; }
+
+.quadro { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+.quadro h2 { margin: 0 0 8px; font-size: 17px; }
+.quadro table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.quadro th, .quadro td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.quadro th { font-size: 11.5px; color: var(--muted-fg); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+.quadro tr:last-child td { border-bottom: 0; }
+.rolar { overflow-x: auto; }
+footer { color: var(--muted-fg); font-size: 12.5px; max-width: 80ch; }
+
+@media (max-width: 760px) {
+  .palco { grid-template-columns: 1fr; }
+  .celular { justify-self: center; }
+  .avaliacao { grid-template-columns: 1fr; }
+  .avaliacao > div + div { border-left: 0; border-top: 1px solid var(--border); }
+  .painel-topo, .ideia, .avaliacao > div { padding-left: 14px; padding-right: 14px; }
+  .palco { padding: 12px 14px; }
+  .g6, .g3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .g5 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-cifrao" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></symbol>
+    <symbol id="i-pessoas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-conta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6"/><path d="M16 12h-6"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
+    <symbol id="i-desfazer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol>
+    <symbol id="i-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <h1>Totais do dia — 5 propostas</h1>
+    <p>Dashboard Simphony 0.1.0 · os 6 totais do dia que o GIA antigo mostrava no alto da tela (venda líquida, pessoas, contas, descontos, estornos e cancelamentos). Exemplo: <b>01.CB GOIANIA</b>, dia de negócio <b>18/11/2026</b>.</p>
+    <p>O SDK (<code>@gia-cb/ui</code> 0.1.0-alpha.71) tem o <code>StatCard</code>, “card de estatística pro Dashboard”. O padrão 3 do workspace pede a <b>barra de indicadores</b> compacta. As duas coisas apontam para lados diferentes; a dúvida foi para a equipe do SDK no <b>Q-01</b>.</p>
+  </header>
+
+  <!-- A -->
+  <section class="painel rec">
+    <div class="painel-topo"><span class="letra">A</span><h2>StatCard do SDK, 6 cards em grade</h2><span class="tag sdk">SDK, como entregue</span><span class="tag rec">recomendada</span></div>
+    <p class="ideia"><code>&lt;StatCard icon value label iconColor&gt;</code> numa grade de 3 colunas (2 no celular). É o componente como o SDK entrega, sem nada por fora.</p>
+    <div class="palco">
+      <div class="tela">
+        <div class="rot-tela"><span>Desktop</span><span>~210 px de altura</span></div>
+        <div class="filtros"><b>Dashboard Simphony</b><span class="campo">01.CB GOIANIA</span><span class="campo">Último dia</span><span class="btn">Pesquisar</span></div>
+        <div class="sc-grade g3" style="grid-template-columns: repeat(3, minmax(0,1fr))">
+          <div class="sc"><span class="ic green"><svg><use href="#i-cifrao"/></svg></span><div style="min-width:0"><div class="v">R$ 57.330,45</div><div class="l">Venda líquida</div></div></div>
+          <div class="sc"><span class="ic blue"><svg><use href="#i-pessoas"/></svg></span><div><div class="v">418</div><div class="l">Pessoas</div></div></div>
+          <div class="sc"><span class="ic indigo"><svg><use href="#i-conta"/></svg></span><div><div class="v">189</div><div class="l">Contas</div></div></div>
+          <div class="sc"><span class="ic amber"><svg><use href="#i-tag"/></svg></span><div style="min-width:0"><div class="v">−R$ 2.040,40</div><div class="l">Descontos</div></div></div>
+          <div class="sc"><span class="ic slate"><svg><use href="#i-desfazer"/></svg></span><div style="min-width:0"><div class="v">R$ 312,90</div><div class="l">Estornos</div></div></div>
+          <div class="sc"><span class="ic rose"><svg><use href="#i-x"/></svg></span><div style="min-width:0"><div class="v">R$ 85,00</div><div class="l">Cancelamentos</div></div></div>
+        </div>
+        <div class="tabela"><div class="tt">Mix de vendas</div><div class="ln cab"><span>Item</span><span>Qtd</span><span>Total</span></div><div class="ln"><span>Camarão Internacional</span><span>21</span><span>R$ 3.987,90</span></div><div class="ln"><span>Moqueca de Camarão</span><span>14</span><span>R$ 3.003,00</span></div></div>
+      </div>
+      <div class="celular">
+        <div class="rot-tela"><span>Celular</span><span>3 linhas</span></div>
+        <div class="cel-filtro"><span>01.CB GOIANIA · 18/11</span><span>▾</span></div>
+        <div class="sc-grade" style="grid-template-columns: repeat(2, minmax(0,1fr)); gap:6px">
+          <div class="sc mini"><span class="ic green"><svg><use href="#i-cifrao"/></svg></span><div style="min-width:0"><div class="v">R$ 57.330</div><div class="l">Venda líq.</div></div></div>
+          <div class="sc mini"><span class="ic blue"><svg><use href="#i-pessoas"/></svg></span><div><div class="v">418</div><div class="l">Pessoas</div></div></div>
+          <div class="sc mini"><span class="ic indigo"><svg><use href="#i-conta"/></svg></span><div><div class="v">189</div><div class="l">Contas</div></div></div>
+          <div class="sc mini"><span class="ic amber"><svg><use href="#i-tag"/></svg></span><div style="min-width:0"><div class="v">−R$ 2.040</div><div class="l">Descontos</div></div></div>
+          <div class="sc mini"><span class="ic slate"><svg><use href="#i-desfazer"/></svg></span><div><div class="v">R$ 312,90</div><div class="l">Estornos</div></div></div>
+          <div class="sc mini"><span class="ic rose"><svg><use href="#i-x"/></svg></span><div><div class="v">R$ 85,00</div><div class="l">Cancel.</div></div></div>
+        </div>
+        <div class="cel-card"><span>Camarão Internacional</span><span>21× R$ 3.987,90</span></div>
+      </div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>Prós</h4><ul><li>Componente do SDK, sem cópia no módulo.</li><li>Parece um painel: o que o GIA antigo mostrava.</li><li>Número grande, fácil de ler de longe.</li></ul></div>
+      <div><h4>Contras</h4><ul><li>Ocupa ~210 px: em monitor pequeno sobram poucas linhas para a tabela (o padrão 10 recolhe a seção).</li><li>Sem dica com a explicação de cada total (só a FAQ explica).</li><li>Visual diferente das barras de totais dos outros módulos.</li></ul></div>
+      <div class="custo"><b>Custo:</b> o menor. Só props do SDK; o <code>Recolhivel</code> e o botão Totais seguem o padrão 3.</div>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">B</span><h2>StatCard, 4 à vista e “Ver todos”</h2><span class="tag sdk">SDK, composição</span></div>
+    <p class="ideia">Os mesmos <code>StatCard</code>, mas só os 4 principais numa linha; estornos e cancelamentos abrem por um botão, como no padrão 3.</p>
+    <div class="palco">
+      <div class="tela">
+        <div class="rot-tela"><span>Desktop</span><span>~100 px fechado · ~200 px aberto</span></div>
+        <div class="filtros"><b>Dashboard Simphony</b><span class="campo">01.CB GOIANIA</span><span class="campo">Último dia</span><span class="btn">Pesquisar</span></div>
+        <div class="sc-grade g5" style="grid-template-columns: repeat(5, minmax(0,1fr))">
+          <div class="sc"><span class="ic green"><svg><use href="#i-cifrao"/></svg></span><div style="min-width:0"><div class="v" style="font-size:17px">R$ 57.330,45</div><div class="l">Venda líquida</div></div></div>
+          <div class="sc"><span class="ic blue"><svg><use href="#i-pessoas"/></svg></span><div><div class="v" style="font-size:17px">418</div><div class="l">Pessoas</div></div></div>
+          <div class="sc"><span class="ic indigo"><svg><use href="#i-conta"/></svg></span><div><div class="v" style="font-size:17px">189</div><div class="l">Contas</div></div></div>
+          <div class="sc"><span class="ic amber"><svg><use href="#i-tag"/></svg></span><div style="min-width:0"><div class="v" style="font-size:17px">−R$ 2.040,40</div><div class="l">Descontos</div></div></div>
+          <div class="ver sc-ver">Ver todos (+2) <svg width="14" height="14"><use href="#i-seta"/></svg></div>
+        </div>
+        <div class="tabela"><div class="tt">Mix de vendas</div><div class="ln cab"><span>Item</span><span>Qtd</span><span>Total</span></div><div class="ln"><span>Camarão Internacional</span><span>21</span><span>R$ 3.987,90</span></div><div class="ln"><span>Moqueca de Camarão</span><span>14</span><span>R$ 3.003,00</span></div><div class="ln"><span>Picanha na Chapa</span><span>11</span><span>R$ 1.758,90</span></div></div>
+      </div>
+      <div class="celular">
+        <div class="rot-tela"><span>Celular</span><span>2 linhas + botão</span></div>
+        <div class="cel-filtro"><span>01.CB GOIANIA · 18/11</span><span>▾</span></div>
+        <div class="sc-grade" style="grid-template-columns: repeat(2, minmax(0,1fr)); gap:6px">
+          <div class="sc mini"><span class="ic green"><svg><use href="#i-cifrao"/></svg></span><div style="min-width:0"><div class="v">R$ 57.330</div><div class="l">Venda líq.</div></div></div>
+          <div class="sc mini"><span class="ic blue"><svg><use href="#i-pessoas"/></svg></span><div><div class="v">418</div><div class="l">Pessoas</div></div></div>
+          <div class="sc mini"><span class="ic indigo"><svg><use href="#i-conta"/></svg></span><div><div class="v">189</div><div class="l">Contas</div></div></div>
+          <div class="sc mini"><span class="ic amber"><svg><use href="#i-tag"/></svg></span><div style="min-width:0"><div class="v">−R$ 2.040</div><div class="l">Descontos</div></div></div>
+        </div>
+        <div class="ver sc-ver" style="font-size:11px">Ver todos (+2)</div>
+        <div class="cel-card"><span>Camarão Internacional</span><span>21× R$ 3.987,90</span></div>
+      </div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>Prós</h4><ul><li>Componente do SDK, metade da altura da A.</li><li>Segue a regra “4 à vista + Ver todos” do padrão 3.</li></ul></div>
+      <div><h4>Contras</h4><ul><li>O botão “Ver todos” fica no módulo (o SDK não tem).</li><li>Card do SDK apertado em 5 colunas: o valor em R$ encolhe.</li></ul></div>
+      <div class="custo"><b>Custo:</b> baixo. Uma grade e um botão por fora do <code>StatCard</code>.</div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">C</span><h2>StatCard, os 6 numa linha</h2><span class="tag sdk">SDK, composição</span></div>
+    <p class="ideia">Grade de 6 colunas no desktop (2 no celular). Tudo à vista, sem botão.</p>
+    <div class="palco">
+      <div class="tela">
+        <div class="rot-tela"><span>Desktop</span><span>~100 px (só em tela larga)</span></div>
+        <div class="filtros"><b>Dashboard Simphony</b><span class="campo">01.CB GOIANIA</span><span class="campo">Último dia</span><span class="btn">Pesquisar</span></div>
+        <div class="sc-grade g6" style="grid-template-columns: repeat(6, minmax(0,1fr)); gap:8px">
+          <div class="sc" style="padding:10px"><span class="ic green" style="padding:7px"><svg style="width:15px;height:15px"><use href="#i-cifrao"/></svg></span><div style="min-width:0"><div class="v" style="font-size:14.5px">R$ 57.330,45</div><div class="l">Venda líq.</div></div></div>
+          <div class="sc" style="padding:10px"><span class="ic blue" style="padding:7px"><svg style="width:15px;height:15px"><use href="#i-pessoas"/></svg></span><div><div class="v" style="font-size:14.5px">418</div><div class="l">Pessoas</div></div></div>
+          <div class="sc" style="padding:10px"><span class="ic indigo" style="padding:7px"><svg style="width:15px;height:15px"><use href="#i-conta"/></svg></span><div><div class="v" style="font-size:14.5px">189</div><div class="l">Contas</div></div></div>
+          <div class="sc" style="padding:10px"><span class="ic amber" style="padding:7px"><svg style="width:15px;height:15px"><use href="#i-tag"/></svg></span><div style="min-width:0"><div class="v" style="font-size:14.5px">−R$ 2.040,40</div><div class="l">Descontos</div></div></div>
+          <div class="sc" style="padding:10px"><span class="ic slate" style="padding:7px"><svg style="width:15px;height:15px"><use href="#i-desfazer"/></svg></span><div style="min-width:0"><div class="v" style="font-size:14.5px">R$ 312,90</div><div class="l">Estornos</div></div></div>
+          <div class="sc" style="padding:10px"><span class="ic rose" style="padding:7px"><svg style="width:15px;height:15px"><use href="#i-x"/></svg></span><div style="min-width:0"><div class="v" style="font-size:14.5px">R$ 85,00</div><div class="l">Cancel.</div></div></div>
+        </div>
+        <div class="tabela"><div class="tt">Mix de vendas</div><div class="ln cab"><span>Item</span><span>Qtd</span><span>Total</span></div><div class="ln"><span>Camarão Internacional</span><span>21</span><span>R$ 3.987,90</span></div><div class="ln"><span>Moqueca de Camarão</span><span>14</span><span>R$ 3.003,00</span></div><div class="ln"><span>Picanha na Chapa</span><span>11</span><span>R$ 1.758,90</span></div></div>
+      </div>
+      <div class="celular">
+        <div class="rot-tela"><span>Celular</span><span>igual à A</span></div>
+        <div class="cel-filtro"><span>01.CB GOIANIA · 18/11</span><span>▾</span></div>
+        <div class="sc-grade" style="grid-template-columns: repeat(2, minmax(0,1fr)); gap:6px">
+          <div class="sc mini"><span class="ic green"><svg><use href="#i-cifrao"/></svg></span><div style="min-width:0"><div class="v">R$ 57.330</div><div class="l">Venda líq.</div></div></div>
+          <div class="sc mini"><span class="ic blue"><svg><use href="#i-pessoas"/></svg></span><div><div class="v">418</div><div class="l">Pessoas</div></div></div>
+          <div class="sc mini"><span class="ic indigo"><svg><use href="#i-conta"/></svg></span><div><div class="v">189</div><div class="l">Contas</div></div></div>
+          <div class="sc mini"><span class="ic amber"><svg><use href="#i-tag"/></svg></span><div style="min-width:0"><div class="v">−R$ 2.040</div><div class="l">Descontos</div></div></div>
+          <div class="sc mini"><span class="ic slate"><svg><use href="#i-desfazer"/></svg></span><div><div class="v">R$ 312,90</div><div class="l">Estornos</div></div></div>
+          <div class="sc mini"><span class="ic rose"><svg><use href="#i-x"/></svg></span><div><div class="v">R$ 85,00</div><div class="l">Cancel.</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>Prós</h4><ul><li>Componente do SDK; os 6 totais à vista.</li><li>Uma linha só em monitor largo.</li></ul></div>
+      <div><h4>Contras</h4><ul><li>Em monitor de 1366 px o valor em R$ corta (o card do SDK usa letreiro rolante quando não cabe).</li><li>Abaixo de ~1200 px vira 2 ou 3 linhas.</li></ul></div>
+      <div class="custo"><b>Custo:</b> baixo. Só a grade.</div>
+    </div>
+  </section>
+
+  <!-- D -->
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">D</span><h2>Barra de indicadores, 4 à vista + “Ver todos os totais”</h2><span class="tag ws">workspace, padrão 3</span></div>
+    <p class="ideia">A barra dos outros módulos (<code>BarraIndicadores</code>, cópia do Fechamento iFood Mensal) com <code>principais</code> = venda líquida, pessoas, contas e descontos. Dica com a explicação de cada total só com mouse.</p>
+    <div class="palco">
+      <div class="tela">
+        <div class="rot-tela"><span>Desktop</span><span>~58 px fechada</span></div>
+        <div class="filtros"><b>Dashboard Simphony</b><span class="campo">01.CB GOIANIA</span><span class="campo">Último dia</span><span class="btn">Pesquisar</span></div>
+        <div class="barra"><div class="g g5" style="grid-template-columns: repeat(5, minmax(0,1fr))">
+          <div class="ind"><span class="q t-success"><svg><use href="#i-cifrao"/></svg></span><span><div class="v vc-success">R$ 57.330,45</div><div class="l">venda líquida</div></span></div>
+          <div class="ind"><span class="q t-info"><svg><use href="#i-pessoas"/></svg></span><span><div class="v vc-info">418</div><div class="l">pessoas</div></span></div>
+          <div class="ind"><span class="q t-primary"><svg><use href="#i-conta"/></svg></span><span><div class="v vc-primary">189</div><div class="l">contas</div></span></div>
+          <div class="ind"><span class="q t-warning"><svg><use href="#i-tag"/></svg></span><span><div class="v vc-warning">−R$ 2.040,40</div><div class="l">descontos</div></span></div>
+          <div class="ver">Ver todos os totais (+2) <svg width="14" height="14"><use href="#i-seta"/></svg></div>
+        </div></div>
+        <div class="tabela"><div class="tt">Mix de vendas</div><div class="ln cab"><span>Item</span><span>Qtd</span><span>Total</span></div><div class="ln"><span>Camarão Internacional</span><span>21</span><span>R$ 3.987,90</span></div><div class="ln"><span>Moqueca de Camarão</span><span>14</span><span>R$ 3.003,00</span></div><div class="ln"><span>Picanha na Chapa</span><span>11</span><span>R$ 1.758,90</span></div><div class="ln"><span>Salmão Grelhado</span><span>9</span><span>R$ 1.070,10</span></div></div>
+      </div>
+      <div class="celular">
+        <div class="rot-tela"><span>Celular</span><span>fechada; abre em Totais</span></div>
+        <div class="cel-filtro"><span>01.CB GOIANIA · 18/11</span><span>▾</span></div>
+        <div class="barra" style="padding:4px"><div class="g" style="grid-template-columns: 1fr">
+          <div class="ind mini"><span class="q t-success"><svg><use href="#i-cifrao"/></svg></span><span><div class="v vc-success">R$ 57.330,45</div><div class="l">venda líquida</div></span></div>
+          <div class="ind mini"><span class="q t-info"><svg><use href="#i-pessoas"/></svg></span><span><div class="v vc-info">418</div><div class="l">pessoas</div></span></div>
+          <div class="ind mini"><span class="q t-primary"><svg><use href="#i-conta"/></svg></span><span><div class="v vc-primary">189</div><div class="l">contas</div></span></div>
+          <div class="ind mini"><span class="q t-warning"><svg><use href="#i-tag"/></svg></span><span><div class="v vc-warning">−R$ 2.040,40</div><div class="l">descontos</div></span></div>
+          <div class="ver" style="font-size:11px">Ver todos os totais (+2)</div>
+        </div></div>
+      </div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>Prós</h4><ul><li>A menor altura: sobra mais tabela.</li><li>Igual aos totais dos outros módulos do portal.</li><li>Dica com a conta de cada total (no mouse).</li></ul></div>
+      <div><h4>Contras</h4><ul><li>Componente copiado no módulo (o SDK não tem; o SDK tem o <code>StatCard</code>).</li><li>Número menor: parece menos um “painel”.</li></ul></div>
+      <div class="custo"><b>Custo:</b> baixo. Cópia idêntica da referência (padrão 16), já usada em 4 módulos.</div>
+    </div>
+  </section>
+
+  <!-- E -->
+  <section class="painel">
+    <div class="painel-topo"><span class="letra">E</span><h2>Barra de indicadores, os 6 à vista</h2><span class="tag ws">workspace, padrão 3</span></div>
+    <p class="ideia">A mesma barra, sem o botão: os 6 numa grade de 3 colunas (2 linhas). Estornos e cancelamentos ganham tom de alerta quando passam de zero.</p>
+    <div class="palco">
+      <div class="tela">
+        <div class="rot-tela"><span>Desktop</span><span>~100 px</span></div>
+        <div class="filtros"><b>Dashboard Simphony</b><span class="campo">01.CB GOIANIA</span><span class="campo">Último dia</span><span class="btn">Pesquisar</span></div>
+        <div class="barra"><div class="g g3" style="grid-template-columns: repeat(3, minmax(0,1fr))">
+          <div class="ind"><span class="q t-success"><svg><use href="#i-cifrao"/></svg></span><span><div class="v vc-success">R$ 57.330,45</div><div class="l">venda líquida</div></span></div>
+          <div class="ind"><span class="q t-info"><svg><use href="#i-pessoas"/></svg></span><span><div class="v vc-info">418</div><div class="l">pessoas</div></span></div>
+          <div class="ind"><span class="q t-primary"><svg><use href="#i-conta"/></svg></span><span><div class="v vc-primary">189</div><div class="l">contas</div></span></div>
+          <div class="ind"><span class="q t-neutro"><svg><use href="#i-tag"/></svg></span><span><div class="v vc-neutro">−R$ 2.040,40</div><div class="l">descontos</div></span></div>
+          <div class="ind"><span class="q t-warning"><svg><use href="#i-desfazer"/></svg></span><span><div class="v vc-warning">R$ 312,90</div><div class="l">estornos</div></span></div>
+          <div class="ind"><span class="q t-destructive"><svg><use href="#i-x"/></svg></span><span><div class="v vc-destructive">R$ 85,00</div><div class="l">cancelamentos</div></span></div>
+        </div></div>
+        <div class="tabela"><div class="tt">Mix de vendas</div><div class="ln cab"><span>Item</span><span>Qtd</span><span>Total</span></div><div class="ln"><span>Camarão Internacional</span><span>21</span><span>R$ 3.987,90</span></div><div class="ln"><span>Moqueca de Camarão</span><span>14</span><span>R$ 3.003,00</span></div><div class="ln"><span>Picanha na Chapa</span><span>11</span><span>R$ 1.758,90</span></div></div>
+      </div>
+      <div class="celular">
+        <div class="rot-tela"><span>Celular</span><span>fechada; abre em Totais</span></div>
+        <div class="cel-filtro"><span>01.CB GOIANIA · 18/11</span><span>▾</span></div>
+        <div class="barra" style="padding:4px"><div class="g" style="grid-template-columns: repeat(2, minmax(0,1fr))">
+          <div class="ind mini"><span class="q t-success"><svg><use href="#i-cifrao"/></svg></span><span><div class="v vc-success">R$ 57.330</div><div class="l">venda líq.</div></span></div>
+          <div class="ind mini"><span class="q t-info"><svg><use href="#i-pessoas"/></svg></span><span><div class="v vc-info">418</div><div class="l">pessoas</div></span></div>
+          <div class="ind mini"><span class="q t-primary"><svg><use href="#i-conta"/></svg></span><span><div class="v vc-primary">189</div><div class="l">contas</div></span></div>
+          <div class="ind mini"><span class="q t-neutro"><svg><use href="#i-tag"/></svg></span><span><div class="v vc-neutro">−R$ 2.040</div><div class="l">descontos</div></span></div>
+          <div class="ind mini"><span class="q t-warning"><svg><use href="#i-desfazer"/></svg></span><span><div class="v vc-warning">R$ 312,90</div><div class="l">estornos</div></span></div>
+          <div class="ind mini"><span class="q t-destructive"><svg><use href="#i-x"/></svg></span><span><div class="v vc-destructive">R$ 85,00</div><div class="l">cancel.</div></span></div>
+        </div></div>
+      </div>
+    </div>
+    <div class="avaliacao">
+      <div><h4>Prós</h4><ul><li>Os 6 totais à vista, sem clique.</li><li>Cor dá sentido: o que deveria ser baixo aparece em alerta.</li></ul></div>
+      <div><h4>Contras</h4><ul><li>Fora da regra do padrão 3 (mais de 5 → 4 à vista + botão).</li><li>A regra da cor (quando alertar) é nova: precisa de ok do negócio.</li></ul></div>
+      <div class="custo"><b>Custo:</b> baixo. Mesma cópia da D, sem <code>principais</code>.</div>
+    </div>
+  </section>
+
+  <section class="quadro">
+    <h2>Recomendação</h2>
+    <div class="rolar"><table>
+      <thead><tr><th>Proposta</th><th>Altura no desktop</th><th>Origem</th><th>Leitura</th></tr></thead>
+      <tbody>
+        <tr><td><b>A</b> StatCard, 6 em grade</td><td class="num">~210 px</td><td>SDK, como entregue</td><td><b>Recomendada pela regra do workspace</b>: componente do SDK primeiro.</td></tr>
+        <tr><td><b>B</b> StatCard, 4 + Ver todos</td><td class="num">~100 px</td><td>SDK + botão no módulo</td><td>Meio-termo se a altura da A pesar.</td></tr>
+        <tr><td><b>C</b> StatCard, 6 numa linha</td><td class="num">~100 px</td><td>SDK</td><td>Só funciona bem em monitor largo.</td></tr>
+        <tr><td><b>D</b> Barra, 4 + Ver todos</td><td class="num">~58 px</td><td>Workspace, padrão 3</td><td>A melhor para a tabela e igual aos outros módulos; fica com ela se o Q-01 disser que a barra é o caminho.</td></tr>
+        <tr><td><b>E</b> Barra, 6 à vista</td><td class="num">~100 px</td><td>Workspace, fora da regra</td><td>Só se o negócio quiser os 6 sempre à vista.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer>Valores de exemplo, não são da loja. Gerado em 19/11/2026 para o conceito do Dashboard Simphony 0.1.0 (<code>docs/conceito.md</code>, seção 8).</footer>
+</div>

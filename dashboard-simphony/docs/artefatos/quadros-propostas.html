@@ -1,0 +1,204 @@
+<title>Quadros do Dashboard Simphony</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: uma coluna de painéis (A–E); cada painel = maquete no desktop + no celular + prós/contras. Cores = tokens do tema do portal (@gia-cb/ui styles.css). */
+:root {
+  --bg: oklch(0.965 0.005 250); --surface: oklch(1 0 0); --fg: oklch(0.18 0.02 250);
+  --muted: oklch(0.965 0.005 250); --muted-fg: oklch(0.535 0.02 250); --border: oklch(0.925 0.008 250);
+  --primary: oklch(0.55 0.21 261); --success: oklch(0.65 0.15 150); --info: oklch(0.63 0.2 260);
+  --warning: oklch(0.7 0.16 70); --destructive: oklch(0.6 0.22 25);
+  --sc-green-bg: #dcfce7; --sc-green-fg: #16a34a; --sc-blue-bg: #dbeafe; --sc-blue-fg: #2563eb;
+  --sc-indigo-bg: #e0e7ff; --sc-indigo-fg: #4f46e5; --sc-amber-bg: #fef3c7; --sc-amber-fg: #d97706;
+  --sc-rose-bg: #ffe4e6; --sc-rose-fg: #e11d48;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: oklch(0.13 0.018 250); --surface: oklch(0.18 0.02 250); --fg: oklch(0.97 0.005 250);
+  --muted: oklch(0.245 0.02 250); --muted-fg: oklch(0.665 0.02 250); --border: oklch(0.245 0.02 250);
+  --primary: oklch(0.63 0.2 260); --success: oklch(0.7 0.14 150); --info: oklch(0.7 0.18 260);
+  --warning: oklch(0.78 0.16 70); --destructive: oklch(0.65 0.22 25);
+  --sc-green-bg: #052e1699; --sc-green-fg: #4ade80; --sc-blue-bg: #17255499; --sc-blue-fg: #60a5fa;
+  --sc-indigo-bg: #1e1b4b99; --sc-indigo-fg: #818cf8; --sc-amber-bg: #451a0399; --sc-amber-fg: #fbbf24;
+  --sc-rose-bg: #4c051999; --sc-rose-fg: #fb7185; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: oklch(0.13 0.018 250); --surface: oklch(0.18 0.02 250); --fg: oklch(0.97 0.005 250);
+  --muted: oklch(0.245 0.02 250); --muted-fg: oklch(0.665 0.02 250); --border: oklch(0.245 0.02 250);
+  --primary: oklch(0.63 0.2 260); --success: oklch(0.7 0.14 150); --info: oklch(0.7 0.18 260);
+  --warning: oklch(0.78 0.16 70); --destructive: oklch(0.65 0.22 25);
+  --sc-green-bg: #052e1699; --sc-green-fg: #4ade80; --sc-blue-bg: #17255499; --sc-blue-fg: #60a5fa;
+  --sc-indigo-bg: #1e1b4b99; --sc-indigo-fg: #818cf8; --sc-amber-bg: #451a0399; --sc-amber-fg: #fbbf24;
+  --sc-rose-bg: #4c051999; --sc-rose-fg: #fb7185; color-scheme: dark; }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+header h1 { font-size: 26px; font-weight: 600; margin: 0 0 6px; text-wrap: balance; letter-spacing: -0.01em; }
+header p { margin: 0 0 6px; color: var(--muted-fg); max-width: 75ch; }
+.num { font-variant-numeric: tabular-nums; }
+
+.painel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.painel.rec { border-color: color-mix(in oklab, var(--primary) 55%, var(--border)); }
+.painel-topo { display: flex; gap: 12px; align-items: baseline; padding: 18px 20px 4px; flex-wrap: wrap; }
+.letra { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--surface); background: var(--fg); border-radius: 5px; padding: 1px 7px; }
+.painel h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.tag { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; border-radius: 999px; padding: 1px 8px; border: 1px solid; }
+.tag.sdk { color: var(--primary); border-color: color-mix(in oklab, var(--primary) 45%, transparent); }
+.tag.ws { color: var(--success); border-color: color-mix(in oklab, var(--success) 45%, transparent); }
+.tag.rec { color: var(--surface); background: var(--primary); border-color: var(--primary); }
+.ideia { padding: 0 20px; margin: 4px 0 0; color: var(--muted-fg); max-width: 80ch; }
+
+.palco { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; padding: 16px 20px; background: var(--bg); border-block: 1px solid var(--border); margin-top: 14px; }
+.tela { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.rot-tela { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-fg); font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+.filtros { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 6px 10px; font-size: 12px; }
+.filtros b { font-weight: 600; margin-right: auto; }
+.campo { border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; color: var(--muted-fg); white-space: nowrap; }
+.btn { background: var(--primary); color: #fff; border-radius: 6px; padding: 2px 10px; white-space: nowrap; }
+.tabela { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; overflow: hidden; font-size: 12px; }
+.tabela .tt { padding: 6px 10px; font-weight: 600; border-bottom: 1px solid var(--border); }
+.tabela .ln { display: grid; grid-template-columns: 1fr 60px 90px; padding: 5px 10px; border-bottom: 1px solid var(--border); }
+.tabela .ln:last-child { border-bottom: 0; }
+.tabela .ln span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.tabela .cab { color: var(--muted-fg); font-size: 11px; }
+
+/* StatCard do SDK: ícone em pílula colorida + número grande + rótulo em maiúsculas */
+.sc-grade { display: grid; gap: 10px; }
+.sc { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 2px rgb(0 0 0 / .05); min-width: 0; }
+.sc .ic { border-radius: 8px; padding: 9px; display: grid; place-items: center; flex-shrink: 0; }
+.sc .ic svg { width: 18px; height: 18px; }
+.sc .v { font-size: 20px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc .l { font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; color: var(--muted-fg); }
+.sc.mini { padding: 8px 10px; gap: 8px; border-radius: 10px; }
+.sc.mini .ic { padding: 6px; } .sc.mini .ic svg { width: 14px; height: 14px; }
+.sc.mini .v { font-size: 14px; } .sc.mini .l { font-size: 9.5px; }
+.green { background: var(--sc-green-bg); color: var(--sc-green-fg); } .blue { background: var(--sc-blue-bg); color: var(--sc-blue-fg); }
+.indigo { background: var(--sc-indigo-bg); color: var(--sc-indigo-fg); } .amber { background: var(--sc-amber-bg); color: var(--sc-amber-fg); }
+.slate { background: var(--muted); color: var(--muted-fg); } .rose { background: var(--sc-rose-bg); color: var(--sc-rose-fg); }
+
+/* Barra de indicadores (padrão 3 do workspace) */
+.barra { border: 1px solid var(--border); background: var(--surface); border-radius: 12px; padding: 6px; box-shadow: 0 1px 2px rgb(0 0 0 / .05); }
+.barra .g { display: grid; gap: 2px 4px; }
+.ind { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; min-width: 0; white-space: nowrap; }
+.ind .q { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+.ind .q svg { width: 16px; height: 16px; }
+.ind .v { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.ind .l { font-size: 11.5px; color: var(--muted-fg); line-height: 1.2; }
+.ind.mini { gap: 8px; padding: 4px 6px; } .ind.mini .q { width: 26px; height: 26px; } .ind.mini .q svg { width: 13px; height: 13px; }
+.ind.mini .v { font-size: 13px; } .ind.mini .l { font-size: 10px; }
+.t-success { background: color-mix(in oklab, var(--success) 12%, transparent); color: var(--success); }
+.t-info { background: color-mix(in oklab, var(--info) 12%, transparent); color: var(--info); }
+.t-primary { background: color-mix(in oklab, var(--primary) 12%, transparent); color: var(--primary); }
+.t-warning { background: color-mix(in oklab, var(--warning) 14%, transparent); color: var(--warning); }
+.t-neutro { background: var(--muted); color: var(--muted-fg); }
+.t-destructive { background: color-mix(in oklab, var(--destructive) 12%, transparent); color: var(--destructive); }
+.vc-success { color: var(--success); } .vc-info { color: var(--info); } .vc-primary { color: var(--primary); }
+.vc-warning { color: var(--warning); } .vc-neutro { color: var(--fg); } .vc-destructive { color: var(--destructive); }
+.ver { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--muted-fg); border-radius: 8px; padding: 6px; white-space: nowrap; }
+.ver.sc-ver { border: 1px dashed var(--border); border-radius: 12px; }
+.sep { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px; }
+
+.celular { width: 260px; border: 1px solid var(--border); border-radius: 22px; padding: 10px; background: var(--bg); display: flex; flex-direction: column; gap: 6px; justify-self: end; }
+.celular .rot-tela { padding: 0 2px; }
+.cel-filtro { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 6px 8px; font-size: 11px; display: flex; justify-content: space-between; }
+.cel-card { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 6px 8px; font-size: 11px; display: flex; justify-content: space-between; gap: 6px; }
+.cel-card span:last-child { font-variant-numeric: tabular-nums; }
+
+.avaliacao { display: grid; grid-template-columns: 1fr 1fr; }
+.avaliacao > div { padding: 14px 20px 16px; min-width: 0; }
+.avaliacao > div + div { border-left: 1px solid var(--border); }
+.avaliacao h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-fg); font-weight: 600; }
+.avaliacao ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.custo { grid-column: 1 / -1; border-top: 1px solid var(--border); border-left: 0 !important; font-size: 13px; color: var(--muted-fg); }
+.custo b { color: var(--fg); font-weight: 500; }
+
+.quadro { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+.quadro h2 { margin: 0 0 8px; font-size: 17px; }
+.quadro table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.quadro th, .quadro td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.quadro th { font-size: 11.5px; color: var(--muted-fg); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+.quadro tr:last-child td { border-bottom: 0; }
+.rolar { overflow-x: auto; }
+footer { color: var(--muted-fg); font-size: 12.5px; max-width: 80ch; }
+
+@media (max-width: 760px) {
+  .palco { grid-template-columns: 1fr; }
+  .celular { justify-self: center; }
+  .avaliacao { grid-template-columns: 1fr; }
+  .avaliacao > div + div { border-left: 0; border-top: 1px solid var(--border); }
+  .painel-topo, .ideia, .avaliacao > div { padding-left: 14px; padding-right: 14px; }
+  .palco { padding: 12px 14px; }
+  .g6, .g3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .g5 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+</style>
+<style>
+.dr { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; overflow: hidden; font-size: 12px; min-width: 0; display: flex; flex-direction: column; }
+.dr .top { display: flex; align-items: center; gap: 6px; padding: 7px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.dr .top b { font-size: 12.5px; margin-right: auto; }
+.dr .top small { color: var(--muted-fg); font-weight: 400; display: block; font-size: 10.5px; }
+.chip { border: 1px solid var(--border); border-radius: 6px; padding: 1px 7px; color: var(--muted-fg); font-size: 11px; white-space: nowrap; }
+.chip.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 7px; padding: 2px; gap: 2px; background: var(--muted); }
+.seg span { padding: 1px 8px; border-radius: 5px; font-size: 11px; color: var(--muted-fg); white-space: nowrap; }
+.seg span.on { background: var(--surface); color: var(--fg); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+.ln4 { display: grid; padding: 5px 10px; border-bottom: 1px solid var(--border); gap: 8px; }
+.ln4:last-child { border-bottom: 0; }
+.ln4 span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ln4 span.r { text-align: right; font-variant-numeric: tabular-nums; }
+.ln4.cab { color: var(--muted-fg); font-size: 11px; background: var(--bg); }
+.ln4 .ord { color: var(--primary); }
+.abas { display: flex; align-items: stretch; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; font-size: 11px; overflow: hidden; }
+.abas .ls { padding: 6px 8px; border-right: 1px solid var(--border); color: var(--muted-fg); }
+.abas .aba { padding: 6px 14px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; color: var(--muted-fg); border-right: 1px solid var(--border); white-space: nowrap; }
+.abas .aba.on { color: var(--primary); box-shadow: inset 0 -2px 0 var(--primary); background: color-mix(in oklab, var(--primary) 6%, transparent); }
+.abas .cont { margin-left: auto; display: flex; gap: 12px; padding: 6px 10px; color: var(--muted-fg); white-space: nowrap; }
+.abas .cont b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.barra-mini { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 6px 10px; font-size: 11.5px; display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted-fg); }
+.barra-mini b { color: var(--success); font-variant-numeric: tabular-nums; }
+.lado { display: grid; gap: 8px; }
+@media (max-width: 760px) { .lado { grid-template-columns: 1fr !important; } }
+</style>
+<div class="wrap">
+<header><h1>Mix de vendas e funcionários — 5 propostas</h1>
+<p>Dashboard Simphony 0.1.0 · o GIA antigo mostrava três quadros lado a lado: <b>Sales Mix</b> (item, quantidade, total), <b>Top Employees</b> (funcionário, contas, venda) e <b>Top Service Charge</b> (funcionário, contas, taxa de serviço). Exemplo: <b>01.CB GOIANIA</b>, dia de negócio <b>18/11/2026</b>.</p>
+<p>No portal, tabela é o <code>DataReport</code> do SDK (busca, ordenar e filtrar por coluna, Exportar, Atualizar e cards no celular) e várias tabelas numa tela usam o <code>GridTabsBar</code> embaixo (padrão 7). A barra de totais acima da tabela é a escolhida em <code>totais-propostas.html</code>.</p></header>
+<section class="painel rec">
+<div class="painel-topo"><span class="letra">A</span><h2>Uma tabela, 2 abas embaixo: Mix de vendas · Funcionários</h2><span class="tag sdk">SDK, como entregue</span><span class="tag rec">recomendada</span></div>
+<p class="ideia"><code>DataReport</code> + <code>GridTabsBar</code> (padrão 7). A aba Funcionários traz contas, venda líquida e taxa de serviço juntas: o ranking da taxa de serviço é a mesma lista ordenada pela coluna Serviço (um clique no cabeçalho).</p>
+<div class="palco"><div class="tela"><div class="rot-tela"><span>Desktop</span><span>tabela com a altura que sobra</span></div><div class="filtros"><b>Dashboard Simphony</b><span class="campo">01.CB GOIANIA</span><span class="campo">Último dia</span><span class="btn">Pesquisar</span></div><div class="barra-mini"><span><b>R$ 57.330,45</b> venda líquida</span><span>418 pessoas</span><span>189 contas</span><span>−R$ 2.040,40 descontos</span><span>Ver todos os totais (+2) ▾</span></div><div class="dr"><div class="top"><b>Funcionários<small>Dia 18/11/2026 · último dia de negócio</small></b><span class="chip">Totais</span><span class="chip">↻</span><span class="chip">Exportar</span></div><div class="ln4 cab" style="grid-template-columns:1fr 44px 84px 78px"><span>Funcionário</span><span class="r">Contas</span><span class="r ord">Venda líquida ↓</span><span class="r ">Serviço</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px 78px"><span>101 - Ana Souza</span><span class="r">14</span><span class="r">R$ 3.920,00</span><span class="r">R$ 313,60</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px 78px"><span>104 - Diego Alves</span><span class="r">12</span><span class="r">R$ 3.312,40</span><span class="r">R$ 278,24</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px 78px"><span>102 - Bruno Lima</span><span class="r">11</span><span class="r">R$ 2.233,00</span><span class="r">R$ 187,57</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px 78px"><span>106 - Fábio Nunes</span><span class="r">9</span><span class="r">R$ 2.871,00</span><span class="r">R$ 252,65</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px 78px"><span>103 - Carla Mendes</span><span class="r">8</span><span class="r">R$ 1.664,00</span><span class="r">R$ 139,78</span></div></div><div class="abas"><span class="ls">☰</span><span class="aba">Mix de vendas</span><span class="aba on">Funcionários</span><span class="cont"><span>Total <b>7</b></span><span>Alterados <b>0</b></span></span></div></div><div class="celular"><div class="rot-tela"><span>Celular</span><span>cards + abas embaixo</span></div><div class="cel-filtro"><span>01.CB GOIANIA · 18/11</span><span>▾</span></div><div class="cel-card"><span>101 - Ana Souza</span><span>R$ 3.920,00 · serv. R$ 313,60</span></div><div class="cel-card"><span>104 - Diego Alves</span><span>R$ 3.312,40 · serv. R$ 278,24</span></div><div class="cel-card"><span>102 - Bruno Lima</span><span>R$ 2.233,00 · serv. R$ 187,57</span></div><div class="abas"><span class="ls">☰</span><span class="aba">Mix</span><span class="aba on">Funcion.</span><span class="cont"><b>7</b></span></div></div></div>
+<div class="avaliacao"><div><h4>Prós</h4><ul><li>Só peças do SDK, como entregues.</li><li>A tabela fica com toda a altura; igual às outras telas com abas.</li><li>Venda e serviço lado a lado: dá para comparar o mesmo funcionário.</li><li>Exportar leva as duas colunas de uma vez.</li></ul></div><div><h4>Contras</h4><ul><li>Os três “quadros” do GIA antigo viram duas abas: o ranking de serviço pede um clique em Serviço.</li><li>Não se vê Mix e Funcionários ao mesmo tempo.</li></ul></div><div class="custo"><b>Custo:</b> o menor. Dois <code>DataReport</code> (um por aba) e o <code>GridTabsBar</code>.</div></div>
+</section><section class="painel">
+<div class="painel-topo"><span class="letra">B</span><h2>Uma tabela, 3 abas: Mix · Funcionários · Taxa de serviço</h2><span class="tag sdk">SDK, como entregue</span></div>
+<p class="ideia">Igual à A, mas com os três quadros do GIA antigo como três abas. Funcionários vem pela venda líquida; Taxa de serviço, pelo serviço.</p>
+<div class="palco"><div class="tela"><div class="rot-tela"><span>Desktop</span><span>tabela com a altura que sobra</span></div><div class="filtros"><b>Dashboard Simphony</b><span class="campo">01.CB GOIANIA</span><span class="campo">Último dia</span><span class="btn">Pesquisar</span></div><div class="barra-mini"><span><b>R$ 57.330,45</b> venda líquida</span><span>418 pessoas</span><span>189 contas</span><span>−R$ 2.040,40 descontos</span><span>Ver todos os totais (+2) ▾</span></div><div class="dr"><div class="top"><b>Taxa de serviço<small>Dia 18/11/2026 · último dia de negócio</small></b><span class="chip">Totais</span><span class="chip">↻</span><span class="chip">Exportar</span></div><div class="ln4 cab" style="grid-template-columns:1fr 44px 84px"><span>Funcionário</span><span class="r">Contas</span><span class="r ord">Serviço ↓</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>101 - Ana Souza</span><span class="r">14</span><span class="r">R$ 313,60</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>104 - Diego Alves</span><span class="r">12</span><span class="r">R$ 278,24</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>106 - Fábio Nunes</span><span class="r">9</span><span class="r">R$ 252,65</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>102 - Bruno Lima</span><span class="r">11</span><span class="r">R$ 187,57</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>103 - Carla Mendes</span><span class="r">8</span><span class="r">R$ 139,78</span></div></div><div class="abas"><span class="ls">☰</span><span class="aba">Mix de vendas</span><span class="aba">Funcionários</span><span class="aba on">Taxa de serviço</span><span class="cont"><span>Total <b>7</b></span><span>Alterados <b>0</b></span></span></div></div><div class="celular"><div class="rot-tela"><span>Celular</span><span>cards + 3 abas</span></div><div class="cel-filtro"><span>01.CB GOIANIA · 18/11</span><span>▾</span></div><div class="cel-card"><span>101 - Ana Souza</span><span>serv. R$ 313,60</span></div><div class="cel-card"><span>104 - Diego Alves</span><span>serv. R$ 278,24</span></div><div class="cel-card"><span>106 - Fábio Nunes</span><span>serv. R$ 252,65</span></div><div class="abas"><span class="ls">☰</span><span class="aba">Mix</span><span class="aba">Func.</span><span class="aba on">Serv.</span><span class="cont"><b>7</b></span></div></div></div>
+<div class="avaliacao"><div><h4>Prós</h4><ul><li>Os mesmos três quadros que as lojas conhecem.</li><li>Cada aba já abre na ordem certa.</li></ul></div><div><h4>Contras</h4><ul><li>Duas abas com as mesmas pessoas: Funcionários e Taxa de serviço repetem a lista.</li><li>No celular, três abas apertam a barra.</li></ul></div><div class="custo"><b>Custo:</b> o menor. Igual à A, com uma aba a mais.</div></div>
+</section><section class="painel">
+<div class="painel-topo"><span class="letra">C</span><h2>Três quadros lado a lado, como no GIA antigo</h2><span class="tag sdk">SDK, composição</span></div>
+<p class="ideia">Três <code>DataReport</code> pequenos numa grade de 3 colunas, cada um com o seu top da lista e rolagem própria. Sem barra de abas. No celular, empilhados.</p>
+<div class="palco"><div class="tela"><div class="rot-tela"><span>Desktop</span><span>3 colunas de ~300 px</span></div><div class="filtros"><b>Dashboard Simphony</b><span class="campo">01.CB GOIANIA</span><span class="campo">Último dia</span><span class="btn">Pesquisar</span></div><div class="barra-mini"><span><b>R$ 57.330,45</b> venda líquida</span><span>418 pessoas</span><span>189 contas</span><span>−R$ 2.040,40 descontos</span><span>Ver todos os totais (+2) ▾</span></div><div class="lado" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div class="dr"><div class="top"><b>Mix de vendas</b></div><div class="ln4 cab" style="grid-template-columns:1fr 44px 84px"><span>Item</span><span class="r">Qtd</span><span class="r ord">Total ↓</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Camarão Internacional</span><span class="r">21</span><span class="r">R$ 3.987,90</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Moqueca de Camarão</span><span class="r">14</span><span class="r">R$ 3.003,00</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Picanha na Chapa</span><span class="r">11</span><span class="r">R$ 1.758,90</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Salmão Grelhado</span><span class="r">9</span><span class="r">R$ 1.070,10</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Caipirinha</span><span class="r">26</span><span class="r">R$ 832,00</span></div></div><div class="dr"><div class="top"><b>Funcionários</b></div><div class="ln4 cab" style="grid-template-columns:1fr 44px 84px"><span>Funcionário</span><span class="r">Contas</span><span class="r ord">Venda ↓</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>101 - Ana Souza</span><span class="r">14</span><span class="r">R$ 3.920,00</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>104 - Diego Alves</span><span class="r">12</span><span class="r">R$ 3.312,40</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>102 - Bruno Lima</span><span class="r">11</span><span class="r">R$ 2.233,00</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>106 - Fábio Nunes</span><span class="r">9</span><span class="r">R$ 2.871,00</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>103 - Carla Mendes</span><span class="r">8</span><span class="r">R$ 1.664,00</span></div></div><div class="dr"><div class="top"><b>Taxa de serviço</b></div><div class="ln4 cab" style="grid-template-columns:1fr 44px 84px"><span>Funcionário</span><span class="r">Contas</span><span class="r ord">Serviço ↓</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>101 - Ana Souza</span><span class="r">14</span><span class="r">R$ 313,60</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>104 - Diego Alves</span><span class="r">12</span><span class="r">R$ 278,24</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>106 - Fábio Nunes</span><span class="r">9</span><span class="r">R$ 252,65</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>102 - Bruno Lima</span><span class="r">11</span><span class="r">R$ 187,57</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>103 - Carla Mendes</span><span class="r">8</span><span class="r">R$ 139,78</span></div></div></div></div><div class="celular"><div class="rot-tela"><span>Celular</span><span>empilhados, rolagem longa</span></div><div class="cel-filtro"><span>01.CB GOIANIA · 18/11</span><span>▾</span></div><div class="dr"><div class="top"><b>Mix de vendas</b></div><div class="ln4 cab" style="grid-template-columns:1fr 30px 70px"><span>Item</span><span class="r">Qtd</span><span class="r ord">Total ↓</span></div><div class="ln4" style="grid-template-columns:1fr 30px 70px"><span>Camarão Internacional</span><span class="r">21</span><span class="r">R$ 3.987,90</span></div><div class="ln4" style="grid-template-columns:1fr 30px 70px"><span>Moqueca de Camarão</span><span class="r">14</span><span class="r">R$ 3.003,00</span></div><div class="ln4" style="grid-template-columns:1fr 30px 70px"><span>Picanha na Chapa</span><span class="r">11</span><span class="r">R$ 1.758,90</span></div></div><div class="dr"><div class="top"><b>Funcionários</b></div><div class="ln4 cab" style="grid-template-columns:1fr 30px 70px"><span>Funcionário</span><span class="r">Contas</span><span class="r ord">Venda ↓</span></div><div class="ln4" style="grid-template-columns:1fr 30px 70px"><span>101 - Ana Souza</span><span class="r">14</span><span class="r">R$ 3.920,00</span></div><div class="ln4" style="grid-template-columns:1fr 30px 70px"><span>104 - Diego Alves</span><span class="r">12</span><span class="r">R$ 3.312,40</span></div></div></div></div>
+<div class="avaliacao"><div><h4>Prós</h4><ul><li>A cara de “painel” do GIA antigo: tudo de uma vez.</li><li>Nenhum clique para ver os três rankings.</li></ul></div><div><h4>Contras</h4><ul><li>Cada quadro fica estreito: nome do item corta, sem espaço para filtros por coluna nem Exportar em cada um.</li><li>Três rolagens na mesma tela; no celular a página fica muito longa.</li><li>Fora do padrão 7 (abas embaixo).</li></ul></div><div class="custo"><b>Custo:</b> médio. Três <code>DataReport</code> sem <code>fillHeight</code>, toolbar reduzida, layout próprio de grade.</div></div>
+</section><section class="painel">
+<div class="painel-topo"><span class="letra">D</span><h2>Uma tabela com seletor no título (sem barra de abas)</h2><span class="tag sdk">SDK, composição</span></div>
+<p class="ideia">Um <code>DataReport</code> com o <code>SegmentedControl</code> do SDK no <code>titleExtra</code>: Mix de vendas | Funcionários | Taxa de serviço. A troca fica no alto, perto do título.</p>
+<div class="palco"><div class="tela"><div class="rot-tela"><span>Desktop</span><span>tabela com a altura que sobra</span></div><div class="filtros"><b>Dashboard Simphony</b><span class="campo">01.CB GOIANIA</span><span class="campo">Último dia</span><span class="btn">Pesquisar</span></div><div class="barra-mini"><span><b>R$ 57.330,45</b> venda líquida</span><span>418 pessoas</span><span>189 contas</span><span>−R$ 2.040,40 descontos</span><span>Ver todos os totais (+2) ▾</span></div><div class="dr"><div class="top"><b>Mix de vendas<small>Dia 18/11/2026 · último dia de negócio</small></b><span class="seg"><span class="on">Mix de vendas</span><span>Funcionários</span><span>Taxa de serviço</span></span><span class="chip">Totais</span><span class="chip">↻</span><span class="chip">Exportar</span></div><div class="ln4 cab" style="grid-template-columns:1fr 44px 84px"><span>Item</span><span class="r">Qtd</span><span class="r ord">Total ↓</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Camarão Internacional</span><span class="r">21</span><span class="r">R$ 3.987,90</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Moqueca de Camarão</span><span class="r">14</span><span class="r">R$ 3.003,00</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Picanha na Chapa</span><span class="r">11</span><span class="r">R$ 1.758,90</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Salmão Grelhado</span><span class="r">9</span><span class="r">R$ 1.070,10</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Caipirinha</span><span class="r">26</span><span class="r">R$ 832,00</span></div></div></div><div class="celular"><div class="rot-tela"><span>Celular</span><span>seletor no alto</span></div><div class="cel-filtro"><span>01.CB GOIANIA · 18/11</span><span>▾</span></div><span class="seg" style="align-self:flex-start"><span class="on">Mix</span><span>Func.</span><span>Serv.</span></span><div class="cel-card"><span>Camarão Internacional</span><span>21× R$ 3.987,90</span></div><div class="cel-card"><span>Moqueca de Camarão</span><span>14× R$ 3.003,00</span></div><div class="cel-card"><span>Picanha na Chapa</span><span>11× R$ 1.758,90</span></div></div></div>
+<div class="avaliacao"><div><h4>Prós</h4><ul><li>Peças do SDK; a troca de lista fica à vista, no alto.</li><li>Uma linha a menos embaixo (sem barra de abas).</li></ul></div><div><h4>Contras</h4><ul><li>Fora do padrão 7: as outras telas com várias tabelas usam abas embaixo.</li><li>O seletor disputa espaço com a toolbar (busca, Totais, Exportar) em monitor estreito.</li></ul></div><div class="custo"><b>Custo:</b> baixo. <code>SegmentedControl</code> + troca de colunas.</div></div>
+</section><section class="painel">
+<div class="painel-topo"><span class="letra">E</span><h2>Duas tabelas lado a lado: Mix | Funcionários</h2><span class="tag sdk">SDK, composição</span></div>
+<p class="ideia">Dois <code>DataReport</code> numa grade 60/40: o Mix à esquerda, Funcionários (venda e serviço) à direita. Sem abas.</p>
+<div class="palco"><div class="tela"><div class="rot-tela"><span>Desktop</span><span>2 colunas</span></div><div class="filtros"><b>Dashboard Simphony</b><span class="campo">01.CB GOIANIA</span><span class="campo">Último dia</span><span class="btn">Pesquisar</span></div><div class="barra-mini"><span><b>R$ 57.330,45</b> venda líquida</span><span>418 pessoas</span><span>189 contas</span><span>−R$ 2.040,40 descontos</span><span>Ver todos os totais (+2) ▾</span></div><div class="lado" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)"><div class="dr"><div class="top"><b>Mix de vendas<small>Dia 18/11/2026 · último dia de negócio</small></b><span class="chip">Totais</span><span class="chip">↻</span><span class="chip">Exportar</span></div><div class="ln4 cab" style="grid-template-columns:1fr 44px 84px"><span>Item</span><span class="r">Qtd</span><span class="r ord">Total ↓</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Camarão Internacional</span><span class="r">21</span><span class="r">R$ 3.987,90</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Moqueca de Camarão</span><span class="r">14</span><span class="r">R$ 3.003,00</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Picanha na Chapa</span><span class="r">11</span><span class="r">R$ 1.758,90</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Salmão Grelhado</span><span class="r">9</span><span class="r">R$ 1.070,10</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>Caipirinha</span><span class="r">26</span><span class="r">R$ 832,00</span></div></div><div class="dr"><div class="top"><b>Funcionários</b><span class="chip">Exportar</span></div><div class="ln4 cab" style="grid-template-columns:1fr 44px 84px"><span>Funcionário</span><span class="r">Contas</span><span class="r ord">Venda ↓</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>101 - Ana Souza</span><span class="r">14</span><span class="r">R$ 3.920,00</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>104 - Diego Alves</span><span class="r">12</span><span class="r">R$ 3.312,40</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>102 - Bruno Lima</span><span class="r">11</span><span class="r">R$ 2.233,00</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>106 - Fábio Nunes</span><span class="r">9</span><span class="r">R$ 2.871,00</span></div><div class="ln4" style="grid-template-columns:1fr 44px 84px"><span>103 - Carla Mendes</span><span class="r">8</span><span class="r">R$ 1.664,00</span></div></div></div></div><div class="celular"><div class="rot-tela"><span>Celular</span><span>empilhados</span></div><div class="cel-filtro"><span>01.CB GOIANIA · 18/11</span><span>▾</span></div><div class="dr"><div class="top"><b>Mix de vendas</b></div><div class="ln4 cab" style="grid-template-columns:1fr 30px 70px"><span>Item</span><span class="r">Qtd</span><span class="r ord">Total ↓</span></div><div class="ln4" style="grid-template-columns:1fr 30px 70px"><span>Camarão Internacional</span><span class="r">21</span><span class="r">R$ 3.987,90</span></div><div class="ln4" style="grid-template-columns:1fr 30px 70px"><span>Moqueca de Camarão</span><span class="r">14</span><span class="r">R$ 3.003,00</span></div><div class="ln4" style="grid-template-columns:1fr 30px 70px"><span>Picanha na Chapa</span><span class="r">11</span><span class="r">R$ 1.758,90</span></div></div><div class="dr"><div class="top"><b>Funcionários</b></div><div class="ln4 cab" style="grid-template-columns:1fr 30px 70px"><span>Funcionário</span><span class="r">Contas</span><span class="r ord">Venda ↓</span></div><div class="ln4" style="grid-template-columns:1fr 30px 70px"><span>101 - Ana Souza</span><span class="r">14</span><span class="r">R$ 3.920,00</span></div><div class="ln4" style="grid-template-columns:1fr 30px 70px"><span>104 - Diego Alves</span><span class="r">12</span><span class="r">R$ 3.312,40</span></div></div></div></div>
+<div class="avaliacao"><div><h4>Prós</h4><ul><li>Mix e funcionários ao mesmo tempo.</li><li>Cada tabela com o seu Exportar.</li></ul></div><div><h4>Contras</h4><ul><li>A coluna de serviço não cabe ao lado da venda na tabela da direita (vai para o “ver mais”).</li><li>Duas rolagens; em monitor de 1366 px as duas ficam apertadas.</li><li>Fora do padrão 7.</li></ul></div><div class="custo"><b>Custo:</b> médio. Duas tabelas com <code>fillHeight</code> numa grade, toolbar duplicada.</div></div>
+</section>
+<section class="quadro"><h2>Recomendação</h2><div class="rolar"><table>
+<thead><tr><th>Proposta</th><th>Peças</th><th>Padrão 7</th><th>Leitura</th></tr></thead><tbody>
+<tr><td><b>A</b> 2 abas</td><td>DataReport + GridTabsBar</td><td>sim</td><td><b>Recomendada</b>: SDK como entregue, tabela com toda a altura, venda e serviço lado a lado; o ranking de serviço é um clique na coluna.</td></tr>
+<tr><td><b>B</b> 3 abas</td><td>DataReport + GridTabsBar</td><td>sim</td><td>Se as lojas fizerem questão dos três quadros separados.</td></tr>
+<tr><td><b>C</b> 3 quadros</td><td>3× DataReport</td><td>não</td><td>Mais parecida com o GIA antigo, mas apertada e longa no celular.</td></tr>
+<tr><td><b>D</b> seletor no título</td><td>DataReport + SegmentedControl</td><td>não</td><td>Boa, mas diferente das outras telas com várias tabelas.</td></tr>
+<tr><td><b>E</b> 2 lado a lado</td><td>2× DataReport</td><td>não</td><td>Só em monitor largo.</td></tr>
+</tbody></table></div></section>
+<footer>Valores e nomes de exemplo, não são da loja. Gerado em 19/11/2026 para o conceito do Dashboard Simphony 0.1.0 (<code>docs/conceito.md</code>, seção 8).</footer>
+</div>
