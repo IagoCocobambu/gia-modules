@@ -41,7 +41,7 @@ Cada mesa aberta é um card:
 - **à direita**, a **mesa** em destaque e, depois da barra, o **grupo** da mesa
   (\`45/2\` = mesa 45, grupo 2);
 - embaixo, o ícone de pessoas com o **número de pessoas** da conta;
-- **à direita**, o quadrinho do **buffet**, com o número de buffets lançados. Ele
+- **à direita**, o quadrinho do **buffet** (tampa de travessa), com o número de buffets lançados. Ele
   aparece em toda loja; na loja sem itens de buffet configurados fica sempre em 0 (e
   amarelo, porque nada foi lançado), mas aí ele **não conta** para a situação da mesa
   nem para os chips.

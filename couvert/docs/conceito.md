@@ -166,7 +166,7 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
   `GIA_SERVER_DATABASE_URL` e os dados de demonstração. **Q-01 resolvido.**
 - **Dia de negócio**: `getLatestBusDt` da BI (não mais a data de hoje). R2 muda.
 - **Buffet volta**: na loja com itens de buffet, o card ganha o quadrinho do buffet à
-  direita (ícone tigela), com as mesmas regras; a mesa fica com a pior situação entre
+  direita (ícone tampa de travessa, `ConciergeBell`), com as mesmas regras; a mesa fica com a pior situação entre
   couvert e buffet (**R14, suposição**). Loja sem buffet: só couvert.
 - **Exportar em Excel** (`couvert.exportar`): as mesas da tela, com chip e busca; o
   `gia validate` exige a 2ª permissão.
@@ -188,3 +188,6 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
   quadrinho do buffet aparece em toda loja, também na Exportação. Na loja sem itens de
   buffet configurados ele fica em 0 e amarelo, mas não entra na situação da mesa nem
   nos chips (R14). O ícone está em escolha (`docs/artefatos/icone-buffet-propostas.html`).
+- **Ícone do buffet: opção A, tampa de travessa (`ConciergeBell`)** — escolhida pelo
+  usuário em 23/11/2026 entre as 6 de `docs/artefatos/icone-buffet-propostas.html`;
+  é a mais parecida com o ícone do legado.

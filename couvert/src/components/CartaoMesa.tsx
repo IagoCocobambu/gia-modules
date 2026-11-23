@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { Music, Soup, Users } from 'lucide-react'
+import { ConciergeBell, Music, Users } from 'lucide-react'
 import { cn } from '@gia-cb/ui/cn'
 import { ROTULO_SITUACAO, selo, situacao, situacaoDoContador } from '../regras'
 import type { Mesa, Situacao } from '../types'
@@ -96,7 +96,7 @@ export function CartaoMesa({ mesa, temBuffet }: { mesa: Mesa; temBuffet: boolean
             {mesa.pessoas}
           </p>
         </div>
-        <Quadro pessoas={mesa.pessoas} valor={mesa.buffet} icone={Soup} />
+        <Quadro pessoas={mesa.pessoas} valor={mesa.buffet} icone={ConciergeBell} />
       </div>
     </li>
   )
