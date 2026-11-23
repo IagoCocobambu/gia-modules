@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>GIA — Couvert — Aviso de entrega</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --accent:   #14577a;
+    --ink:      #16202b;
+    --ink-2:    #3f4a57;
+    --muted:    #5a6874;
+    --amber:    #7a4a12;
+    --amber-bg: #fbf0e0;
+    --rule:     #dae0e6;
+    --rule-2:   #c3ccd5;
+    --chip:     #e4eef4;
+    --box:      #e8f0f5;
+    --roxo:     #4a3a6b;
+    --roxo-bg:  #ece8f4;
+    --verde:    #2f5a3f;
+    --verde-bg: #e4efe7;
+  }
+
+  @page { size: A4; margin: 16mm 16mm 14mm; }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    margin: 0;
+    background: #fff;
+    font-family: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+    font-size: 11.9pt;
+    line-height: 1.594;
+    color: var(--ink-2);
+  }
+
+  /* Na tela (fora da impressão), a folha tem a largura do A4 e fica centrada. */
+  @media screen {
+    body { max-width: 210mm; margin: 0 auto; padding: 16mm; }
+  }
+
+  .sans { font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; }
+
+  /* ── cabeçalho ─────────────────────────────────────────────────────── */
+  .sobrancelha {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.3pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14pt;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 25.2pt;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin: 0 0 8pt;
+  }
+
+  .resumo {
+    font-size: 12.6pt;
+    line-height: 1.45;
+    color: var(--ink-2);
+    margin: 0 0 18pt;
+    max-width: 44em;
+  }
+
+  .regua-forte { border: 0; border-top: 1.5pt solid var(--rule-2); margin: 0 0 14pt; }
+
+  /* ── ficha ─────────────────────────────────────────────────────────── */
+  .meta { display: flex; gap: 0 14pt; margin: 0 0 20pt; }
+  .meta > div { flex: 1 1 0; min-width: 0; }
+  .meta dt {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 4pt;
+  }
+  .meta dd {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 11.1pt;
+    color: var(--ink);
+    margin: 0;
+  }
+  .seta { color: var(--muted); padding: 0 1pt; }
+
+  /* ── seções ────────────────────────────────────────────────────────── */
+  section { border-top: 0.75pt solid var(--rule); padding-top: 14pt; margin-top: 18pt; }
+  section:first-of-type { margin-top: 0; }
+
+  h2 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 9.6pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10pt;
+  }
+
+  p { margin: 0 0 9pt; max-width: 46em; }
+  p:last-child { margin-bottom: 0; }
+  b, strong { font-weight: 600; color: var(--ink); }
+
+  /* ── telas ─────────────────────────────────────────────────────────── */
+  .tela { margin: 0 0 18pt; break-inside: avoid; }
+  .tela:last-child { margin-bottom: 0; }
+  .tela h3 {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 12.6pt;
+    color: var(--ink);
+    margin: 0 0 3pt;
+  }
+  .caminho {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.6pt;
+    color: var(--muted);
+    margin: 0 0 8pt;
+  }
+  .caminho b { font-weight: 500; color: var(--ink-2); }
+  .caminho .sep { padding: 0 3pt; color: var(--rule-2); }
+
+  .quem {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 10.4pt;
+    color: var(--muted);
+    margin: 9pt 0 0;
+    display: flex;
+    align-items: center;
+    gap: 5pt;
+    flex-wrap: wrap;
+  }
+
+  /* ── públicos: uma cor por público, a mesma em todo aviso ──────────── */
+  /* A classe de cada público está em references/publicos.md. Público novo
+     ganha a próxima cor livre e entra no registro. */
+  .chip {
+    display: inline-block;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.9pt;
+    letter-spacing: 0.02em;
+    border-radius: 2.5pt;
+    padding: 1.5pt 6pt;
+    margin: 0 3pt 3pt 0;
+    color: var(--accent);
+    background: var(--chip);
+  }
+  .p-diretores   { color: #135779; background: #e3eef4; }
+  .p-auditoria   { color: #3f4a57; background: #e8ecf0; }
+  .p-assistentes { color: #794a12; background: #f6ecde; }
+  .p-padrinhos   { color: #4a3a6a; background: #ece8f3; }
+  .p-fundadores  { color: #2f5a3f; background: #e4efe7; }
+  .p-admin       { color: #6a3a3a; background: #f3e7e7; }
+  .p-gerentes    { color: #3b5a6e; background: #e6eef2; }
+  .p-auxiliarrh  { color: #5a4a2f; background: #f0ebe1; }
+  .p-suporte     { color: #5a3a55; background: #f1e6ef; }
+  .p-financeiro       { color: #34584f; background: #e3efeb; }
+  .p-assistentefinanceiro { color: #55561f; background: #eff0dc; }
+
+  /* ── listas ────────────────────────────────────────────────────────── */
+  .resolve { margin: 0; padding: 0; list-style: none; }
+  .resolve li { margin: 0 0 9pt; padding-left: 12pt; position: relative; max-width: 46em; }
+  .resolve li:last-child { margin-bottom: 0; }
+  .resolve li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0.62em;
+    width: 4pt; height: 4pt;
+    border-radius: 50%;
+    background: var(--rule-2);
+  }
+  /* Subtítulo dentro de "O que muda" (ex.: "Pedidos do Davi Nascimento"). */
+  .bloco {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 10.4pt;
+    color: var(--ink);
+    margin: 14pt 0 7pt;
+  }
+  .bloco:first-of-type { margin-top: 0; }
+
+  /* ── tabela de permissões ──────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; margin: 0; }
+  thead th {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 0 8pt 6pt 0;
+    border-bottom: 0.75pt solid var(--rule-2);
+  }
+  thead th:last-child { padding-right: 0; }
+  tbody tr { break-inside: avoid; }
+  tbody td {
+    padding: 8pt 8pt 8pt 0;
+    border-bottom: 0.75pt solid var(--rule);
+    vertical-align: top;
+    font-size: 10.4pt;
+    line-height: 1.4;
+  }
+  tbody td:last-child { padding-right: 0; }
+  tbody tr.grupo td {
+    border-bottom: 0.75pt solid var(--rule-2);
+    padding-top: 12pt;
+    padding-bottom: 5pt;
+  }
+  .grupo-rotulo {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.9pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--roxo);
+    background: var(--roxo-bg);
+    border-radius: 2.5pt;
+    padding: 2pt 6pt;
+    margin-right: 7pt;
+  }
+  .grupo-caminho {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.6pt;
+    color: var(--muted);
+  }
+  code {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 9.8pt;
+    color: var(--ink);
+    word-break: break-word;
+  }
+  .col-chave  { width: 40%; }
+  .col-libera { width: 36%; }
+  .col-para   { width: 24%; }
+  /* Chave que entrou nesta versão. */
+  .nova {
+    display: inline-block;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 7.6pt;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--verde);
+    background: var(--verde-bg);
+    border-radius: 2pt;
+    padding: 0.5pt 4pt;
+    margin-left: 5pt;
+    vertical-align: 1pt;
+  }
+
+  /* ── caixas ────────────────────────────────────────────────────────── */
+  .caixa {
+    background: var(--box);
+    border-left: 2.5pt solid var(--accent);
+    padding: 11pt 13pt;
+    margin: 14pt 0 0;
+    break-inside: avoid;
+  }
+  .caixa p { max-width: none; }
+  .caixa p:last-child { margin-bottom: 0; }
+
+  .atencao {
+    background: var(--amber-bg);
+    border-left: 2.5pt solid var(--amber);
+    padding: 11pt 13pt;
+    margin: 14pt 0 0;
+    color: var(--amber);
+    break-inside: avoid;
+  }
+  .atencao b { color: var(--amber); }
+  .atencao p { max-width: none; }
+  .atencao p:last-child { margin-bottom: 0; }
+
+  /* ── passos ────────────────────────────────────────────────────────── */
+  ol.passos { margin: 0 0 12pt; padding-left: 16pt; break-inside: avoid; }
+  section.junta { break-inside: avoid; }
+  ol.passos li { margin: 0 0 5pt; max-width: 46em; }
+
+  /* ── permissões por perfil (gerado pelo perfis.mjs) ────────────────── */
+  /* O título, a abertura e o primeiro perfil ficam juntos: sem isso, o título caía
+     sozinho no pé da página (aviso do App CB, 23/10/2026). */
+  .perfis-abertura { break-inside: avoid; }
+  .perfil { border-top: 0.75pt solid var(--rule); padding: 10pt 0 4pt; break-inside: avoid; }
+  .perfil:first-of-type { border-top: 0; padding-top: 2pt; }
+  .perfil-cab { display: flex; align-items: center; gap: 8pt; margin: 0 0 7pt; }
+  .perfil-cab .chip { font-size: 10pt; padding: 2pt 8pt; margin: 0; }
+  .perfil-conta {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.2pt;
+    color: var(--muted);
+  }
+  /* Uma coluna por módulo, a mesma em todos os perfis: o módulo sem chave fica "—". */
+  .perfil-modulos {
+    display: grid;
+    grid-template-columns: repeat(var(--colunas, 3), minmax(0, 1fr));
+    gap: 2pt 20pt;
+  }
+  .perfil-rotulo {
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 8.2pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--roxo);
+    margin: 0 0 3pt;
+  }
+  .perfil-chaves { list-style: none; margin: 0 0 6pt; padding: 0; }
+  .perfil-chaves li { margin: 0 0 2pt; line-height: 1.35; }
+  .perfil-chaves code { font-size: 9.4pt; }
+  .perfil-nenhuma { color: var(--muted); }
+  /* ── fim das permissões por perfil ── */
+  .perfil-nenhuma { color: var(--muted); }
+  /* ── fim das permissões por perfil ── */
+  .perfil-nenhuma { color: var(--muted); }
+  /* ── fim das permissões por perfil ── */
+
+  /* ── rodapé ────────────────────────────────────────────────────────── */
+  footer {
+    border-top: 0.75pt solid var(--rule);
+    margin-top: 20pt;
+    padding-top: 9pt;
+    display: flex;
+    justify-content: space-between;
+    gap: 16pt;
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.2pt;
+    color: var(--muted);
+  }
+  footer b { font-weight: 500; color: var(--ink-2); }
+</style>
+</head>
+<body>
+
+<p class="sobrancelha">Aviso de entrega · Portal GIA</p>
+<h1>Couvert</h1>
+<p class="resumo">
+  As mesas abertas do salão, com o couvert artístico e o buffet de cada uma ao lado do
+  número de pessoas, para corrigir no PDV antes de fechar a conta.
+</p>
+
+<hr class="regua-forte" />
+
+<dl class="meta">
+  <div>
+    <dt>Entregue em</dt>
+    <dd>23/11/2026</dd>
+  </div>
+  <div>
+    <dt>Onde já está</dt>
+    <dd>Ainda não instalado</dd>
+  </div>
+  <div>
+    <dt>Onde encontrar</dt>
+    <dd>Simphony <span class="seta">→</span> Couvert</dd>
+  </div>
+  <div>
+    <dt>Responsável</dt>
+    <dd>Iago Pereira</dd>
+  </div>
+</dl>
+
+<section>
+  <h2>O que é</h2>
+  <p>
+    O couvert artístico é cobrado por pessoa. Uma mesa com 4 pessoas e 2 couverts são 2
+    couverts que deixam de ser cobrados, e uma mesa aberta com 0 pessoas não deixa conferir.
+    Essa conferência era feita na tela Couvert do GIA antigo.
+  </p>
+  <p>
+    O <b>Couvert</b> traz a conferência para o portal novo: mostra as contas abertas de um
+    salão, uma mesa por card, e compara o couvert artístico e o buffet lançados no Simphony
+    com o número de pessoas. O que não confere fica em destaque.
+  </p>
+</section>
+
+<section>
+  <h2>Onde fica, e quem usa</h2>
+
+  <div class="tela">
+    <h3>Couvert</h3>
+    <p class="caminho">
+      <b>Simphony</b><span class="sep">›</span><b>Couvert</b>
+    </p>
+    <p>
+      Escolhe-se a loja e o <b>RVC</b> (o salão) e clica-se em <b>Pesquisar</b>. Cada card
+      mostra o couvert lançado, a mesa com o número de pessoas e o buffet. Vermelho é
+      <b>Divergente</b>, com o selo da diferença (−2, +1); amarelo é <b>Sem lançamento</b>;
+      cinza com o selo é <b>Sem pessoas</b>; neutro é <b>Tudo lançado</b>. Os mesmos nomes
+      filtram as mesas, e a ordem <b>Atenção</b> põe primeiro a mesa com mais divergências.
+    </p>
+    <p>
+      Tocar num card abre a conta da mesa: garçom, rodadas, hora do último lançamento,
+      pré-conta, valores e todos os itens, com assento, rodada e hora. <b>Atualizar</b> busca
+      de novo.
+    </p>
+    <p class="quem">Quem usa: <span class="chip p-gerentes">Gerentes</span><span class="chip p-diretores">Diretores</span><span class="chip p-auditoria">Auditoria</span><span class="chip p-admin">Administração/GIA</span></p>
+  </div>
+
+  <div class="caixa">
+    <p>
+      <b>O módulo é somente leitura, e o dado é sempre o real.</b> Nada é alterado no
+      Simphony nem no portal. Mesmo em homologação, as mesas são as da loja.
+    </p>
+  </div>
+</section>
+
+<section style="break-before: page; border-top: 0; padding-top: 0">
+  <h2>O que a entrega resolve</h2>
+  <ul class="resolve">
+    <li>
+      <b>O couvert que faltou aparece antes de a conta fechar.</b> O card diz quantos faltam
+      ou sobram, e o gerente corrige no PDV com a mesa ainda aberta.
+    </li>
+    <li>
+      <b>Couvert e buffet na mesma conferência.</b> Na loja com itens de buffet configurados,
+      a mesa fica com a pior situação das duas. Na loja sem buffet, só o couvert conta.
+    </li>
+    <li>
+      <b>Dá para ver de quem falta.</b> O detalhe da conta mostra o assento de cada item: com
+      couvert só nos assentos 1 e 2 de uma mesa de 4 pessoas, faltam os assentos 3 e 4.
+    </li>
+    <li>
+      <b>A mesa sem pessoas não se perde.</b> Com couvert ou buffet lançado, ela fica
+      vermelha; sem nada lançado, fica cinza e tem filtro próprio.
+    </li>
+    <li>
+      <b>O turno que passa da meia-noite continua na tela.</b> O dia é o que está aberto na
+      loja, e não a data do relógio.
+    </li>
+    <li>
+      <b>Funciona no computador, no tablet e no celular</b>, com as mesmas ações, e em tela
+      cheia no monitor do salão.
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Permissões</h2>
+  <p>
+    São duas chaves, e só a primeira tem uso hoje. Nenhuma altera dado. A coluna da direita é
+    sugestão: o gestor decide conforme a necessidade real de uso.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="col-chave">Chave</th>
+        <th class="col-libera">O que libera</th>
+        <th class="col-para">Sugerido para</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="grupo">
+        <td colspan="3">
+          <span class="grupo-rotulo">Couvert</span>
+          <span class="grupo-caminho">Simphony › Couvert</span>
+        </td>
+      </tr>
+      <tr>
+        <td><code>couvert.ler</code></td>
+        <td>
+          Abrir a tela, consultar as mesas abertas das próprias lojas e ver a conta de cada
+          mesa, com os valores e o garçom
+        </td>
+        <td><span class="chip p-gerentes">Gerentes</span><span class="chip p-diretores">Diretores</span><span class="chip p-auditoria">Auditoria</span><span class="chip p-admin">Administração/GIA</span></td>
+      </tr>
+      <tr>
+        <td><code>couvert.exportar</code></td>
+        <td>Nada: chave reservada, sem uso na tela</td>
+        <td>Não atribuir</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="caixa">
+    <p>
+      <b>A <code>couvert.ler</code> mostra também valores e o garçom.</b> Quem confere o
+      couvert vê o total, o pago e o saldo da mesa, e o garçom pelo primeiro nome e a inicial
+      do sobrenome. Ainda não há chave separada para isso.
+    </p>
+  </div>
+
+  <div class="atencao">
+    <p>
+      <b>Não atribua a <code>couvert.exportar</code>.</b> A tela não exporta. A chave está
+      declarada só porque o portal pede, em todo módulo, uma chave de ação além da de leitura.
+      Quem a recebe não ganha nada.
+    </p>
+    <p>
+      <b>Antes do primeiro uso, o time do Portal GIA libera o Couvert na credencial
+      <code style="white-space: nowrap">simphony-bi</code>.</b> Sem isso a tela abre, mas a pesquisa responde falta de
+      acesso, mesmo para quem tem a <code>couvert.ler</code>.
+    </p>
+    <p>
+      <b>Cada loja precisa da configuração de couvert no cadastro de Empresas:</b> o vínculo
+      com o Simphony, os itens de programação artística e de buffet e os salões. Sem o
+      vínculo, a loja não aparece na lista; sem os salões, aparece como “Sem RVC
+      configurado”; sem os itens de programação, a pesquisa avisa que a loja não está
+      configurada.
+    </p>
+    <p>
+      <b>O tempo da função <code>couvert</code> precisa chegar a 140 segundos.</b> No horário
+      de movimento, o Simphony já levou até 89 segundos para responder. Com um limite menor,
+      a pesquisa falha e a pessoa tem de tentar de novo.
+    </p>
+  </div>
+</section>
+
+<!-- PERFIS:INICIO — gerado pelo perfis.mjs a partir da tabela de permissões; não edite à mão -->
+<section class="perfis" style="--colunas: 1">
+  <div class="perfis-abertura">
+  <h2>Permissões por perfil</h2>
+  <p>A mesma tabela, vista ao contrário: cada perfil com todas as chaves que deve receber. É a lista para marcar no grupo de cada um no portal.</p>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-gerentes">Gerentes</span><span class="perfil-conta">1 chave</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>couvert.ler</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-diretores">Diretores</span><span class="perfil-conta">1 chave</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>couvert.ler</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-auditoria">Auditoria</span><span class="perfil-conta">1 chave</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>couvert.ler</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="perfil">
+      <p class="perfil-cab"><span class="chip p-admin">Administração/GIA</span><span class="perfil-conta">1 chave</span></p>
+      <div class="perfil-modulos">
+        <div class="perfil-modulo">
+          <ul class="perfil-chaves">
+            <li><code>couvert.ler</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+</section>
+<!-- PERFIS:FIM -->
+
+<section class="junta">
+  <h2>Como atribuir</h2>
+  <ol class="passos">
+    <li>Portal <span class="seta">→</span> Cadastros › Grupos (ou Papéis, para função que atravessa departamentos).</li>
+    <li>Abra o grupo que vai receber o acesso — Gerentes, Diretores, Auditoria…</li>
+    <li>Na aba de permissões, procure por <code>couvert</code> e marque só a <code>couvert.ler</code>.</li>
+    <li>Salve. Quem já estiver logado enxerga a mudança sem precisar sair e entrar.</li>
+  </ol>
+  <p>
+    O acesso continua limitado às lojas que a pessoa já enxerga no portal: a chave não amplia
+    esse limite.
+  </p>
+</section>
+
+<footer>
+  <span>Dúvidas sobre o módulo: <b>time do Portal GIA</b></span>
+  <span>Ajuda dentro da tela: <b>botão ? no topo</b></span>
+</footer>
+
+</body>
+</html>
