@@ -264,7 +264,12 @@ export function CouvertView() {
             compacto ? 'flex-col items-stretch' : 'flex-wrap items-center justify-between'
           )}
         >
-          <ChipsSituacao contagem={contagem} filtro={filtro} onFiltro={setFiltro} />
+          <ChipsSituacao
+            contagem={contagem}
+            filtro={filtro}
+            onFiltro={setFiltro}
+            compacto={compacto}
+          />
           <div className={cn('flex items-center gap-2', compacto && 'justify-between')}>
             <div className={cn('min-w-0', compacto ? 'flex-1' : 'w-28')} data-tour="couvert-busca">
               <IconInput

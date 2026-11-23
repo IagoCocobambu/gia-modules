@@ -149,7 +149,8 @@ botão saem dela.
       content: `
 - Ao pesquisar, a barra de filtros **se recolhe** e a tela fica para as mesas. A
   **seta** no cabeçalho abre a barra de novo para trocar de loja ou de salão.
-- Os cards ficam em **duas colunas**; os chips rolam para o lado.
+- Os cards ficam em **duas colunas**. No lugar dos chips há uma **lista**: toque nela e
+  escolha a situação (com quantas mesas há em cada uma); **Todas** tira o filtro.
 - Os botões **Atualizar** (com o tempo desde a última busca) e **Exportar** ficam
   acima das mesas.
 - A tela cheia só aparece no computador e no tablet.

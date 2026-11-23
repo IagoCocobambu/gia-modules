@@ -48,7 +48,8 @@ buffet; o módulo confere só o couvert artístico.
 7. Pode pôr a tela em **tela cheia** (no tablet do caixa, por exemplo).
 
 No celular: a barra quebra em duas linhas (loja/RVC em cima, ações embaixo) e recolhe
-ao pesquisar (padrão 1); os chips rolam na horizontal; os cards ficam em 2 colunas.
+ao pesquisar (padrão 1); os chips viram uma lista suspensa (`Select` do
+SDK, pedido do usuário em 23/11/2026; antes rolavam na horizontal); os cards ficam em 2 colunas.
 
 ## 4. Dados
 
