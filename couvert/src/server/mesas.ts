@@ -147,7 +147,10 @@ function montarMesas(contas: unknown[], programacao: Set<number>, buffet: Set<nu
         impressa: num(c.numChkPrntd) > 0,
         subtotal: num(c.subTtl),
         desconto: num(c.dscTtl),
-        taxaServico: num(c.svcChgTtl) + num(c.autoSvcTtl),
+        // `svcChgTtl` já inclui a taxa automática (`autoSvcTtl`): somar os dois
+        // dobrava a taxa (visto numa conta real em 23/11/2026: total − subtotal = svcChgTtl).
+        taxaServico:
+          c.svcChgTtl !== null && c.svcChgTtl !== undefined ? num(c.svcChgTtl) : num(c.autoSvcTtl),
         total: num(c.chkTtl),
         pago: num(c.payTtl),
         saldo: num(c.balDueTtl),

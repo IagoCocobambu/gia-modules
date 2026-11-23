@@ -82,18 +82,23 @@ function Contador({
 function Fato({
   icone: Icone,
   rotulo,
+  largo = false,
   children,
 }: {
   icone: ComponentType<{ className?: string }>
   rotulo: string
+  /** Ocupa a linha toda (nome do garçom, que é longo). */
+  largo?: boolean
   children: ReactNode
 }) {
   return (
-    <div className="flex min-w-0 items-start gap-2">
+    <div className={cn('flex min-w-0 items-start gap-2', largo && 'col-span-2')}>
       <Icone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0">
-        <dt className="text-xs text-muted-foreground">{rotulo}</dt>
-        <dd className="break-words text-sm font-semibold text-foreground">{children}</dd>
+        <dt className="truncate whitespace-nowrap text-xs text-muted-foreground">{rotulo}</dt>
+        <dd className="truncate whitespace-nowrap text-sm font-semibold text-foreground">
+          {children}
+        </dd>
       </div>
     </div>
   )
@@ -117,7 +122,7 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
 
   return (
     <Modal open={mesa !== null} onOpenChange={(o) => !o && onFechar()}>
-      <Modal.Content size="xl">
+      <Modal.Content size="2xl">
         {mesa && conta && (
           <>
             <Modal.Header>
@@ -149,7 +154,7 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
               </Modal.Description>
             </Modal.Header>
             <Modal.Body>
-              <div className="grid gap-4 md:grid-cols-[15rem_minmax(0,1fr)]">
+              <div className="grid gap-4 md:grid-cols-[17rem_minmax(0,1fr)]">
                 <aside className="flex min-w-0 flex-col gap-4">
                   <div className="grid grid-cols-3 gap-1.5">
                     <Contador
@@ -172,7 +177,7 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                     />
                   </div>
                   <dl className="grid grid-cols-2 gap-3">
-                    <Fato icone={User} rotulo="Garçom">
+                    <Fato icone={User} rotulo="Garçom" largo>
                       {conta.garcom === null ? (
                         '—'
                       ) : nomes.isLoading ? (
@@ -220,7 +225,7 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                     Itens ({conta.itens.length})
                   </h3>
                   <div className="overflow-x-auto rounded-lg border border-border">
-                    <table className="w-full text-sm">
+                    <table className="w-full whitespace-nowrap text-sm">
                       <thead>
                         <tr className="border-b border-border text-xs text-muted-foreground">
                           <th className="px-2 py-1.5 text-right font-semibold">Qtd</th>
