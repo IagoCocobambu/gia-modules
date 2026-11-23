@@ -8,7 +8,7 @@ import type { Mesa, Situacao } from '../types'
  * Card de uma mesa aberta, no desenho aprovado pelo usuário em 19/11/2026
  * (docs/artefatos/mesas-referencia-usuario.png): à esquerda, o quadrinho do couvert
  * artístico (nota musical); no meio, a mesa em destaque com o grupo (`45/2`) e as
- * pessoas; à direita, na loja com buffet, o quadrinho do buffet. Cada quadrinho tem a
+ * pessoas; à direita, sempre (como no legado), o quadrinho do buffet. Cada quadrinho tem a
  * cor da situação dele e, quando diverge, o selo da diferença (−2, +1); a borda do
  * card é a da pior situação. Mesa com 0 pessoas leva o selo "sem pessoas".
  */
@@ -63,7 +63,7 @@ export function CartaoMesa({ mesa, temBuffet }: { mesa: Mesa; temBuffet: boolean
     `Mesa ${mesa.mesa}${mesa.grupo !== null ? `, grupo ${mesa.grupo}` : ''}`,
     pessoas,
     `${mesa.couvert} couvert`,
-    temBuffet ? `${mesa.buffet} buffet` : null,
+    `${mesa.buffet} buffet`,
     ROTULO_SITUACAO[s].toLowerCase(),
   ]
     .filter(Boolean)
@@ -96,7 +96,7 @@ export function CartaoMesa({ mesa, temBuffet }: { mesa: Mesa; temBuffet: boolean
             {mesa.pessoas}
           </p>
         </div>
-        {temBuffet && <Quadro pessoas={mesa.pessoas} valor={mesa.buffet} icone={Soup} />}
+        <Quadro pessoas={mesa.pessoas} valor={mesa.buffet} icone={Soup} />
       </div>
     </li>
   )

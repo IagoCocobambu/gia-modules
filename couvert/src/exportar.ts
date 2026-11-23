@@ -31,7 +31,7 @@ export async function exportarMesas(mesas: Mesa[], cab: Cabecalho): Promise<void
     { titulo: 'Grupo', largura: 10 },
     { titulo: 'Pessoas', largura: 10 },
     { titulo: 'Couvert artístico', largura: 18 },
-    ...(cab.temBuffet ? [{ titulo: 'Buffet', largura: 10 }] : []),
+    { titulo: 'Buffet', largura: 10 },
     { titulo: 'Situação', largura: 18 },
   ]
 
@@ -58,7 +58,7 @@ export async function exportarMesas(mesas: Mesa[], cab: Cabecalho): Promise<void
       m.grupo ?? '',
       m.pessoas,
       m.couvert,
-      ...(cab.temBuffet ? [m.buffet] : []),
+      m.buffet,
       ROTULO_SITUACAO[situacao(m, cab.temBuffet)],
     ])
   }

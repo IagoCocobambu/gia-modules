@@ -184,3 +184,7 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
   direita. O botão é **Pesquisar** e vira **Atualizar** quando loja e RVC são os das
   mesas na tela. Trocar loja/RVC **não pesquisa mais sozinho** (R3 do fluxo e R10
   mudam). O "atualizado há N min" foi para a linha dos chips.
+- **Buffet sempre à vista** (pedido do usuário, 23/11/2026, "como no legado"): o
+  quadrinho do buffet aparece em toda loja, também na Exportação. Na loja sem itens de
+  buffet configurados ele fica em 0 e amarelo, mas não entra na situação da mesa nem
+  nos chips (R14). O ícone está em escolha (`docs/artefatos/icone-buffet-propostas.html`).

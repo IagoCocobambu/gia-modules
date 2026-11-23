@@ -2,7 +2,7 @@ import type { ModuleFaq } from '@gia-cb/sdk/modules'
 
 export const faq: ModuleFaq = {
   summary:
-    'O **Couvert** mostra, durante o turno, as **mesas abertas** de um salão e confere se o **couvert artístico** (e, na loja com buffet, o **buffet**) lançado no Simphony bate com o **número de pessoas** de cada mesa. Assim dá para corrigir no PDV **antes de fechar a conta**. A tela só consulta: nada é alterado no Simphony.',
+    'O **Couvert** mostra, durante o turno, as **mesas abertas** de um salão e confere se o **couvert artístico** e o **buffet** lançado no Simphony bate com o **número de pessoas** de cada mesa. Assim dá para corrigir no PDV **antes de fechar a conta**. A tela só consulta: nada é alterado no Simphony.',
   sections: [
     {
       id: 'pesquisar',
@@ -41,8 +41,10 @@ Cada mesa aberta é um card:
 - **à direita**, a **mesa** em destaque e, depois da barra, o **grupo** da mesa
   (\`45/2\` = mesa 45, grupo 2);
 - embaixo, o ícone de pessoas com o **número de pessoas** da conta;
-- **à direita**, na loja que tem buffet, o quadrinho do **buffet** (tigela), com o
-  número de buffets lançados. Na loja sem buffet ele não aparece.
+- **à direita**, o quadrinho do **buffet**, com o número de buffets lançados. Ele
+  aparece em toda loja; na loja sem itens de buffet configurados fica sempre em 0 (e
+  amarelo, porque nada foi lançado), mas aí ele **não conta** para a situação da mesa
+  nem para os chips.
 
 Couvert e buffet são a soma das quantidades dos itens configurados para a loja como
 programação artística e como buffet.
@@ -106,7 +108,7 @@ de negócio e a hora exata.
 
 O botão **Exportar** baixa uma planilha Excel com as mesas **que estão na tela** —
 com o chip e a busca que estiverem ligados: mesa, grupo, pessoas, couvert artístico,
-buffet (se a loja tem) e situação. O subtítulo da planilha diz o dia de negócio, a
+buffet e situação. O subtítulo da planilha diz o dia de negócio, a
 hora das mesas e o filtro usado. Aparece só para quem tem a permissão
 \`couvert.exportar\`.
 
@@ -155,8 +157,8 @@ botão saem dela.
           a: 'Os itens do cardápio configurados no cadastro da loja como **programação artística** (couvert) e como **buffet**. O couvert da mesa é a soma das quantidades desses itens na conta; o buffet, o mesmo com os itens de buffet. Item que falta nessa configuração não é contado: avise o time do Portal GIA.',
         },
         {
-          q: 'Por que a minha loja não mostra o buffet?',
-          a: 'O buffet só aparece na loja que tem itens de buffet configurados no cadastro. Sem eles, a tela confere só o couvert artístico.',
+          q: 'O buffet da minha loja fica sempre em 0. Por quê?',
+          a: 'A loja não tem itens de buffet configurados no cadastro, então nada é contado como buffet. Nesse caso o buffet não entra na situação da mesa nem nos chips: a tela confere só o couvert artístico. Se a loja tem buffet, avise o time do Portal GIA para configurar os itens.',
         },
       ],
     },

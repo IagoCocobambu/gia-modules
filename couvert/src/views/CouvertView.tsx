@@ -309,7 +309,7 @@ export function CouvertView() {
           <ul
             className={cn(
               'grid min-h-0 flex-1 auto-rows-min gap-2 overflow-y-auto px-0.5 pb-1 pt-2.5',
-              'grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]',
+              'grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))]',
               'transition-opacity duration-fast',
               consultando && 'opacity-60'
             )}

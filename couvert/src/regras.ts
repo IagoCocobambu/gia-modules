@@ -20,8 +20,10 @@ export function situacaoDoContador(pessoas: number, valor: number): Situacao {
 const PESO: Record<Situacao, number> = { divergente: 0, 'sem-lancamento': 1, 'tudo-lancado': 2 }
 
 /**
- * Situação da mesa: a pior entre o couvert e, na loja com buffet, o buffet (R14 —
- * suposição): Divergente > Sem lançamento > Tudo lançado.
+ * Situação da mesa: a pior entre o couvert e, na loja com itens de buffet
+ * configurados, o buffet (R14 — suposição): Divergente > Sem lançamento > Tudo
+ * lançado. O quadrinho do buffet aparece sempre (como no legado), mas em loja sem
+ * buffet ele não conta: senão toda mesa ficaria "Sem lançamento".
  */
 export function situacao(m: Mesa, temBuffet: boolean): Situacao {
   const couvert = situacaoDoContador(m.pessoas, m.couvert)
