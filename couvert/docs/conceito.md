@@ -197,3 +197,11 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
   assento, rodada, hora, valor; couvert e buffet em destaque) e o aviso do que falta
   acima dela. Propostas em `docs/artefatos/detalhe-mesa-propostas.html` (a recomendação
   era a A). Em aberto: permissão própria para valores e garçom (ex.: `couvert.ver-conta`).
+- **Detalhe da mesa implementado (23/11/2026)**: `DetalheMesa` (`Modal` xl, B+A). O
+  handler `mesas` passou a devolver a conta de cada mesa; o handler novo `nomes` traz
+  os nomes dos itens (`getMenuItemDimensions`) e do garçom (`getEmployeeDimensions`,
+  como "Nome S.") só ao abrir o detalhe. Valores e garçom com `couvert.ler` até a
+  decisão da permissão própria.
+- **Loja de demonstração no `gia dev`** (pedido do usuário, 23/11/2026): "999.LOJA
+  DEMONSTRAÇÃO (gia dev)", vínculo BIAPI `DEMO`, com `GIA_DEV_COUVERT_DEMO=1` — mesas,
+  contas e nomes fictícios, sem chamar a BI; tem buffet configurado.

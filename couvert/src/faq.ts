@@ -68,6 +68,25 @@ diferença:
       `,
     },
     {
+      id: 'detalhe',
+      title: 'Detalhe da conta da mesa',
+      content: `
+Toque num card para ver a **conta aberta** da mesa:
+
+- **à esquerda**: couvert, pessoas e buffet; o **garçom**, as **rodadas** de pedido, a
+  hora do **último lançamento** e se a **pré-conta** já foi impressa; e os valores
+  (subtotal, desconto, taxa de serviço, total, pago e **saldo a pagar**);
+- **à direita**: o aviso do que falta (ex.: "Faltam 2 couverts") e **todos os itens**
+  da conta, com quantidade, **assento**, rodada, hora e valor. Os itens de couvert e
+  de buffet aparecem em destaque.
+
+O assento mostra quem pediu o quê: se o couvert foi lançado só nos assentos 1 e 2 de
+uma mesa com 4 pessoas, faltam os assentos 3 e 4. Os nomes dos itens e do garçom
+podem levar alguns segundos para aparecer; até lá aparecem os códigos. A conta é a da
+última busca: para ver o que mudou no PDV, feche e clique em **Atualizar**.
+      `,
+    },
+    {
       id: 'chips',
       title: 'Filtrar, buscar e ordenar',
       content: `

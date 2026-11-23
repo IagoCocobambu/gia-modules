@@ -10,7 +10,8 @@ import type { Mesa, Situacao } from '../types'
  * artístico (nota musical); no meio, a mesa em destaque com o grupo (`45/2`) e as
  * pessoas; à direita, sempre (como no legado), o quadrinho do buffet. Cada quadrinho tem a
  * cor da situação dele e, quando diverge, o selo da diferença (−2, +1); a borda do
- * card é a da pior situação. Mesa com 0 pessoas leva o selo "sem pessoas".
+ * card é a da pior situação. Mesa com 0 pessoas leva o selo "sem pessoas". Tocar no
+ * card abre o detalhe da conta.
  */
 const BORDA: Record<Situacao, string> = {
   'tudo-lancado': 'border-border',
@@ -56,7 +57,14 @@ function Quadro({
   )
 }
 
-export function CartaoMesa({ mesa, temBuffet }: { mesa: Mesa; temBuffet: boolean }) {
+interface Props {
+  mesa: Mesa
+  temBuffet: boolean
+  /** Toque no card: abre o detalhe da conta (`DetalheMesa`). */
+  onAbrir: () => void
+}
+
+export function CartaoMesa({ mesa, temBuffet, onAbrir }: Props) {
   const s = situacao(mesa, temBuffet)
   const pessoas = `${mesa.pessoas} ${mesa.pessoas === 1 ? 'pessoa' : 'pessoas'}`
   const rotulo = [
@@ -69,15 +77,19 @@ export function CartaoMesa({ mesa, temBuffet }: { mesa: Mesa; temBuffet: boolean
     .filter(Boolean)
     .join(', ')
   return (
-    <li
-      className={cn(
-        'flex min-w-0 items-stretch gap-2 rounded-xl border bg-surface p-1.5 shadow-sm',
-        'animate-in fade-in duration-fast',
-        BORDA[s]
-      )}
-      aria-label={rotulo}
-    >
-      <div className="contents" aria-hidden>
+    <li className="min-w-0 animate-in fade-in duration-fast">
+      <button
+        type="button"
+        onClick={onAbrir}
+        aria-label={`${rotulo}. Ver a conta.`}
+        aria-haspopup="dialog"
+        className={cn(
+          'flex w-full min-w-0 items-stretch gap-2 rounded-xl border bg-surface p-1.5 text-left shadow-sm',
+          'transition-[box-shadow,transform] duration-fast hover:shadow-md active:scale-[0.99]',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          BORDA[s]
+        )}
+      >
         <Quadro pessoas={mesa.pessoas} valor={mesa.couvert} icone={Music} />
         <div className="relative flex min-w-0 flex-1 flex-col items-center justify-center py-1">
           {mesa.pessoas <= 0 && <Selo texto="sem pessoas" />}
@@ -97,7 +109,7 @@ export function CartaoMesa({ mesa, temBuffet }: { mesa: Mesa; temBuffet: boolean
           </p>
         </div>
         <Quadro pessoas={mesa.pessoas} valor={mesa.buffet} icone={ConciergeBell} />
-      </div>
+      </button>
     </li>
   )
 }

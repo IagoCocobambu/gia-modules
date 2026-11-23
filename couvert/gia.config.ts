@@ -30,6 +30,19 @@ export default {
   ],
 
   empresas: [
+    // Loja de DEMONSTRAÇÃO (só gia dev, com GIA_DEV_COUVERT_DEMO=1 no .env): vínculo
+    // BIAPI `DEMO` — os handlers `mesas` e `nomes` devolvem contas e nomes fictícios
+    // sem chamar a BI. Tem buffet configurado, para ver o quadrinho do buffet em uso.
+    {
+      id: 999001,
+      label: '999.LOJA DEMONSTRAÇÃO (gia dev)',
+      locRefs: { BIAPI: 'DEMO' },
+      couvert: {
+        programacao: [500060, 500061, 500062, 500063, 500116, 500161],
+        buffet: [23001],
+        rvcs: [{ nome: 'Restaurante', numero: 101 }],
+      },
+    },
     { id: 23, label: '01.CB GOIANIA', locRefs: { BIAPI: '01 CB Go' }, couvert: COUVERT_DEV },
     { id: 24, label: '02.CB ANALIA FRANCO', locRefs: { BIAPI: '02 CB An' }, couvert: COUVERT_DEV },
     { id: 27, label: '03.CB JK', locRefs: { BIAPI: '03 CB JK' }, couvert: COUVERT_DEV },

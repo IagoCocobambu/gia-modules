@@ -19,6 +19,7 @@ nem no Simphony.
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
 | `lojas.ts`              | `ctx.empresas()`: Empresas do escopo, ativas, `tipoRegistro = 'empresa'`, com `locRefs.BIAPI`; RVCs e buffet de `empresa.couvert`                                                      | —                               |
 | `mesas.ts`              | BI do Simphony (Oracle Reporting & Analytics): `getLatestBusDt` `{ locRef }` e `getGuestChecks` `{ locRef, busDt, searchCriteria: contas abertas do RVC }`; itens de `empresa.couvert` | `ctx.credencial('simphony-bi')` |
+| `nomes.ts`              | BI do Simphony: `getMenuItemDimensions` e `getEmployeeDimensions` `{ locRef }` — nomes dos itens e do garçom, só ao abrir o detalhe da mesa                                            | `ctx.credencial('simphony-bi')` |
 
 Diferenças para o legado (para quem instala):
 
@@ -88,3 +89,9 @@ o token nunca vai para log, resposta ou navegador.
 - **Pendências com o time do Portal GIA**: regra de cor (desenho do usuário em
   `docs/conceito.md` §5), estorno (se `dspQty` vem negativo na linha estornada — ainda
   não houve conta com estorno para conferir), público das permissões.
+- **Detalhe da mesa**: o `mesas` devolve também a conta (valores, garçom, itens com
+  assento, rodada e hora). O `nomes` faz até duas chamadas à BI por loja, só quando o
+  usuário abre o detalhe; a tela guarda o resultado enquanto está aberta.
+- **Modo de demonstração**: `GIA_DEV_COUVERT_DEMO` (prefixo `GIA_DEV_`, só `gia dev`)
+  e o vínculo BIAPI `DEMO` ligam dados fictícios. Não definir em homologação nem em
+  produção; nenhum cadastro real usa `DEMO`.

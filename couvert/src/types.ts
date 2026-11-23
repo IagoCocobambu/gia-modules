@@ -16,6 +16,43 @@ export interface LojaCouvert {
   temBuffet: boolean
 }
 
+/** Item da conta (só linhas de item do cardápio). */
+export interface ItemConta {
+  /** Código do item no PDV; o nome vem do handler `nomes`. */
+  miNum: number
+  qtd: number
+  valor: number
+  assento: number | null
+  rodada: number | null
+  /** Hora local do lançamento, `AAAA-MM-DDTHH:MM:SS`. */
+  hora: string | null
+  tipo: 'couvert' | 'buffet' | null
+}
+
+/** Conta aberta da mesa (detalhe ao tocar no card). */
+export interface Conta {
+  numero: number | null
+  abertura: string | null
+  ultimoLancamento: string | null
+  /** Número do garçom; o nome vem do handler `nomes`. */
+  garcom: number | null
+  rodadas: number | null
+  impressa: boolean
+  subtotal: number
+  desconto: number
+  taxaServico: number
+  total: number
+  pago: number
+  saldo: number
+  itens: ItemConta[]
+}
+
+/** Nomes de itens e garçons (`src/server/nomes.ts`), por código. */
+export interface Nomes {
+  itens: Record<string, string>
+  garcons: Record<string, string>
+}
+
 /** Mesa aberta (`src/server/mesas.ts`). */
 export interface Mesa {
   /** `guestCheckId` da conta. */
@@ -29,6 +66,7 @@ export interface Mesa {
   couvert: number
   /** Buffet lançado (soma das quantidades dos itens de buffet); 0 na loja sem buffet. */
   buffet: number
+  conta: Conta
 }
 
 export interface RespostaMesas {

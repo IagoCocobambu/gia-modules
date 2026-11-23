@@ -16,7 +16,7 @@ export const tour = defineTour({
       screen: '/couvert',
       target: '[data-tour="couvert-conteudo"]',
       title: 'Uma mesa por card',
-      body: 'Cada mesa aberta mostra o **couvert artístico** lançado (a nota musical), a **mesa** com o número de **pessoas** e o **buffet** (a tampa de travessa). Card **amarelo**: nenhum couvert lançado. **Vermelho**: couvert diferente das pessoas, com o selo da diferença (−2, +1) ou "sem pessoas".',
+      body: 'Cada mesa aberta mostra o **couvert artístico** lançado (a nota musical), a **mesa** com o número de **pessoas** e o **buffet** (a tampa de travessa). Toque no card para ver a conta da mesa. Card **amarelo**: nenhum couvert lançado. **Vermelho**: couvert diferente das pessoas, com o selo da diferença (−2, +1) ou "sem pessoas".',
       placement: 'top',
     },
     {

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createServerClient } from '@gia-cb/sdk/server-client'
-import type { Consulta, LojaCouvert, RespostaMesas } from '../types'
+import type { Consulta, LojaCouvert, Nomes, RespostaMesas } from '../types'
 
 // `call(...)` chaveia o transporte sozinho: em dev bate no runner do `gia dev`
 // (src/server/*.ts no Node); em prod, na Edge Function gerada pelo `gia pack`.
@@ -28,6 +28,24 @@ export function useMesas(consulta: Consulta | null) {
     enabled: consulta !== null,
     staleTime: Infinity,
     gcTime: 10 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+  })
+}
+
+/**
+ * Nomes dos itens e do garçom de uma mesa, só ao abrir o detalhe (a conta traz os
+ * códigos). Guardados enquanto a tela está aberta; sem nova busca automática.
+ */
+export function useNomes(empresaId: number | null, itens: number[], garcons: number[]) {
+  const chave = [...itens].sort((a, b) => a - b).join(',') + '|' + garcons.join(',')
+  return useQuery({
+    queryKey: ['couvert', 'nomes', empresaId, chave],
+    queryFn: () => server.call<Nomes>('nomes', { empresaId, itens, garcons }),
+    enabled: empresaId !== null && (itens.length > 0 || garcons.length > 0),
+    staleTime: Infinity,
+    gcTime: 30 * 60_000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     retry: false,

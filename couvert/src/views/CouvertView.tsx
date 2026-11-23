@@ -16,6 +16,7 @@ import { useTourReplayTrigger } from '@gia-cb/sdk/modules'
 import { useCanAccess, useCanAccessState } from '@gia-cb/sdk/permissions'
 import { useLojasCouvert, useMesas } from '../api/couvert'
 import { CartaoMesa } from '../components/CartaoMesa'
+import { DetalheMesa } from '../components/DetalheMesa'
 import { ChipsSituacao } from '../components/ChipsSituacao'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
 import { MensagemErro } from '../components/MensagemErro'
@@ -99,6 +100,7 @@ export function CouvertView() {
   const [busca, setBusca] = useState('')
   const [ordem, setOrdem] = useState<Ordem>('mesa')
   const [telaCheia, setTelaCheia] = useState(false)
+  const [mesaAberta, setMesaAberta] = useState<string | null>(null)
 
   const mesas = useMemo(() => resposta?.mesas ?? [], [resposta])
   const temBuffet = resposta?.temBuffet ?? false
@@ -317,7 +319,12 @@ export function CouvertView() {
             aria-label="Mesas abertas"
           >
             {visiveis.map((m) => (
-              <CartaoMesa key={m.id} mesa={m} temBuffet={temBuffet} />
+              <CartaoMesa
+                key={m.id}
+                mesa={m}
+                temBuffet={temBuffet}
+                onAbrir={() => setMesaAberta(m.id)}
+              />
             ))}
           </ul>
         )}
@@ -354,6 +361,13 @@ export function CouvertView() {
             {conteudo}
           </div>
         </div>
+        <DetalheMesa
+          mesa={mesas.find((m) => m.id === mesaAberta) ?? null}
+          empresaId={consulta?.empresaId ?? null}
+          temBuffet={temBuffet}
+          agora={agora}
+          onFechar={() => setMesaAberta(null)}
+        />
       </TelaCheia>
     </WidthFrame>
   )

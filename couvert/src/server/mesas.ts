@@ -1,4 +1,4 @@
-import { defineHandler, HttpError, type ServerContext } from '@gia-cb/sdk/server'
+import { defineHandler, envOptional, HttpError, type ServerContext } from '@gia-cb/sdk/server'
 
 // Mesas abertas de UM salão (RVC) de UMA loja, agora, com o couvert artístico e o
 // buffet lançados em cada uma. Uma loja por chamada (padrão 14 e orientação do time
@@ -38,6 +38,40 @@ interface Body {
   rvc: number
 }
 
+interface ItemConta {
+  /** Código do item no PDV (`menuItem.miNum`); o nome vem do handler `nomes`. */
+  miNum: number
+  qtd: number
+  valor: number
+  /** Assento (`seatNum`); `null` sem assento. */
+  assento: number | null
+  /** Rodada de pedido (`svcRndNum`). */
+  rodada: number | null
+  /** Hora local do lançamento (`detailLcl`), `AAAA-MM-DDTHH:MM:SS`. */
+  hora: string | null
+  tipo: 'couvert' | 'buffet' | null
+}
+
+/** Conta aberta da mesa — o detalhe que abre ao tocar no card. */
+interface Conta {
+  numero: number | null
+  /** Hora local da abertura (`opnLcl`) e do último lançamento (`lastTransLcl`). */
+  abertura: string | null
+  ultimoLancamento: string | null
+  /** Garçom da conta (`empNum`); o nome vem do handler `nomes`. */
+  garcom: number | null
+  rodadas: number | null
+  /** Pré-conta impressa (`numChkPrntd > 0`). */
+  impressa: boolean
+  subtotal: number
+  desconto: number
+  taxaServico: number
+  total: number
+  pago: number
+  saldo: number
+  itens: ItemConta[]
+}
+
 interface Mesa {
   /** `guestCheckId` da conta. */
   id: string
@@ -48,6 +82,7 @@ interface Mesa {
   pessoas: number
   couvert: number
   buffet: number
+  conta: Conta
 }
 
 interface Resposta {
@@ -65,6 +100,10 @@ type Json = Record<string, unknown>
 const num = (v: unknown): number =>
   typeof v === 'number' && Number.isFinite(v) ? v : Number(v) || 0
 
+const opcional = (v: unknown): number | null =>
+  v === null || v === undefined || v === '' ? null : num(v)
+const texto = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
+
 /** Contas da BI → mesas (regras do legado, ver o topo). */
 function montarMesas(contas: unknown[], programacao: Set<number>, buffet: Set<number>): Mesa[] {
   const mesas: Mesa[] = []
@@ -73,12 +112,23 @@ function montarMesas(contas: unknown[], programacao: Set<number>, buffet: Set<nu
     if (num(c.guestCheckId) <= 0 || c.clsdFlag === true || c.cancelFlag === true) continue
     let couvert = 0
     let somaBuffet = 0
+    const itens: ItemConta[] = []
     for (const linha of Array.isArray(c.detailLines) ? (c.detailLines as Json[]) : []) {
       const item = linha?.menuItem as Json | undefined
       if (!item) continue // taxa de serviço, desconto, pagamento…
       const mi = num(item.miNum)
-      if (programacao.has(mi)) couvert += num(linha.dspQty)
-      if (buffet.has(mi)) somaBuffet += num(linha.dspQty)
+      const tipo = programacao.has(mi) ? 'couvert' : buffet.has(mi) ? 'buffet' : null
+      if (tipo === 'couvert') couvert += num(linha.dspQty)
+      if (tipo === 'buffet') somaBuffet += num(linha.dspQty)
+      itens.push({
+        miNum: mi,
+        qtd: num(linha.dspQty),
+        valor: num(linha.dspTtl),
+        assento: opcional(linha.seatNum),
+        rodada: opcional(linha.svcRndNum),
+        hora: texto(linha.detailLcl),
+        tipo,
+      })
     }
     const tblNum = c.tblNum === null || c.tblNum === undefined ? null : num(c.tblNum)
     mesas.push({
@@ -88,9 +138,173 @@ function montarMesas(contas: unknown[], programacao: Set<number>, buffet: Set<nu
       pessoas: num(c.gstCnt),
       couvert,
       buffet: somaBuffet,
+      conta: {
+        numero: opcional(c.chkNum),
+        abertura: texto(c.opnLcl),
+        ultimoLancamento: texto(c.lastTransLcl),
+        garcom: opcional(c.empNum),
+        rodadas: opcional(c.numSrvcRd),
+        impressa: num(c.numChkPrntd) > 0,
+        subtotal: num(c.subTtl),
+        desconto: num(c.dscTtl),
+        taxaServico: num(c.svcChgTtl) + num(c.autoSvcTtl),
+        total: num(c.chkTtl),
+        pago: num(c.payTtl),
+        saldo: num(c.balDueTtl),
+        itens,
+      },
     })
   }
   return mesas
+}
+
+// ── Loja de demonstração (só `gia dev`) ─────────────────────────────────────
+// Com GIA_DEV_COUVERT_DEMO=1 no `.env`, a Empresa cujo vínculo BIAPI é `DEMO` (a
+// "999.LOJA DEMONSTRAÇÃO" do gia.config.ts) não chama a BI: devolve contas fictícias
+// no formato do `getGuestChecks`. Em produção a variável não existe e nenhum
+// cadastro real tem `DEMO`.
+const LOCREF_DEMO = 'DEMO'
+
+function contasDemo(dia: string): Json[] {
+  const h = (hm: string) => `${dia}T${hm}:00`
+  // [mesa, grupo, pessoas, garçom, rodadas, impressa, abertura, linhas: [miNum, qtd, unit, assento, rodada, hora]]
+  type Linha = [number, number, number, number, number, string]
+  const mesas: Array<[string, number, number, number, number, boolean, string, Linha[]]> = [
+    [
+      '22',
+      1,
+      4,
+      1043,
+      3,
+      false,
+      '19:42',
+      [
+        [500063, 2, 19.9, 1, 1, '19:44'],
+        [23001, 4, 89.9, 1, 1, '19:45'],
+        [3001, 2, 8.9, 1, 1, '19:46'],
+        [3010, 1, 12.9, 4, 1, '19:46'],
+        [4020, 2, 24.9, 1, 2, '20:15'],
+        [9743, 2, 18.9, 3, 3, '21:05'],
+      ],
+    ],
+    [
+      '12',
+      1,
+      2,
+      1021,
+      1,
+      false,
+      '20:05',
+      [
+        [500063, 2, 19.9, 1, 1, '20:07'],
+        [23001, 2, 89.9, 1, 1, '20:07'],
+        [3001, 2, 8.9, 2, 1, '20:08'],
+      ],
+    ],
+    [
+      '31',
+      1,
+      2,
+      1021,
+      2,
+      false,
+      '20:30',
+      [
+        [23001, 2, 89.9, 1, 1, '20:31'],
+        [4020, 2, 24.9, 2, 2, '20:50'],
+      ],
+    ],
+    [
+      '45',
+      2,
+      3,
+      1055,
+      2,
+      true,
+      '19:10',
+      [
+        [500063, 4, 19.9, 1, 1, '19:12'],
+        [23001, 3, 89.9, 1, 1, '19:12'],
+        [3010, 3, 12.9, 2, 2, '19:40'],
+      ],
+    ],
+    [
+      '60',
+      1,
+      6,
+      1043,
+      2,
+      false,
+      '20:12',
+      [
+        [500060, 6, 19.9, 1, 1, '20:14'],
+        [23001, 6, 89.9, 1, 1, '20:14'],
+        [3001, 6, 8.9, 3, 2, '20:40'],
+      ],
+    ],
+    ['81', 1, 0, 1055, 1, false, '21:00', [[3010, 1, 12.9, 1, 1, '21:02']]],
+    [
+      '120',
+      1,
+      10,
+      1021,
+      3,
+      false,
+      '19:30',
+      [
+        [500063, 7, 19.9, 1, 1, '19:32'],
+        [23001, 10, 89.9, 1, 1, '19:33'],
+        [4020, 6, 24.9, 2, 2, '20:05'],
+        [9743, 4, 18.9, 5, 3, '21:00'],
+      ],
+    ],
+    [
+      '303',
+      1,
+      2,
+      1043,
+      1,
+      false,
+      '20:45',
+      [
+        [500063, 2, 19.9, 1, 1, '20:46'],
+        [23001, 1, 89.9, 1, 1, '20:46'],
+      ],
+    ],
+  ]
+  return mesas.map(([mesa, grupo, pessoas, garcom, rodadas, impressa, abertura, linhas], i) => {
+    const sub = Math.round(linhas.reduce((s, l) => s + l[1] * l[2], 0) * 100) / 100
+    const taxa = Math.round(sub * 10) / 100
+    return {
+      guestCheckId: 900000 + i,
+      chkNum: 2930 + i,
+      tblName: mesa,
+      tblNum: grupo,
+      gstCnt: pessoas,
+      empNum: garcom,
+      numSrvcRd: rodadas,
+      numChkPrntd: impressa ? 1 : 0,
+      opnLcl: h(abertura),
+      lastTransLcl: h(linhas[linhas.length - 1][5]),
+      subTtl: sub,
+      dscTtl: 0,
+      svcChgTtl: taxa,
+      chkTtl: Math.round((sub + taxa) * 100) / 100,
+      payTtl: 0,
+      balDueTtl: Math.round((sub + taxa) * 100) / 100,
+      detailLines: [
+        ...linhas.map(([miNum, qtd, unit, assento, rodada, hora]) => ({
+          menuItem: { miNum },
+          dspQty: qtd,
+          dspTtl: Math.round(qtd * unit * 100) / 100,
+          seatNum: assento,
+          svcRndNum: rodada,
+          detailLcl: h(hora),
+        })),
+        { serviceCharge: {}, dspQty: 0, dspTtl: taxa },
+      ],
+    }
+  })
 }
 
 /** POST numa rota da BI. Erros com status e frase curta; o detalhe fica no log. */
@@ -167,6 +381,18 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
       422,
       'A loja não tem itens de couvert artístico configurados no cadastro. Avise o time do Portal GIA.'
     )
+  }
+
+  if (locRef === LOCREF_DEMO && envOptional('GIA_DEV_COUVERT_DEMO') === '1') {
+    const dia = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(
+      new Date()
+    )
+    return {
+      dia,
+      consultadoEm: new Date().toISOString(),
+      temBuffet: config.buffet.length > 0,
+      mesas: montarMesas(contasDemo(dia), new Set(config.programacao), new Set(config.buffet)),
+    }
   }
 
   const ultimo = await bi(ctx, 'getLatestBusDt', { locRef })
