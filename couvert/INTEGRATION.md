@@ -17,7 +17,7 @@ nem no Simphony.
 
 | Handler (`src/server/`) | Fonte                                                                                                                                                                                  | Acesso                          |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `lojas.ts`              | `ctx.empresas()`: Empresas do escopo, ativas, `tipoRegistro = 'empresa'`, com `locRefs.BIAPI`; RVCs e buffet de `empresa.couvert`                                                      | —                               |
+| `lojas.ts`              | `ctx.empresas()`: Empresas do escopo, ativas, `tipoRegistro = 'empresa'`, com `locRefs.BIAPI`; RVCs de `empresa.couvert`                                                               | —                               |
 | `mesas.ts`              | BI do Simphony (Oracle Reporting & Analytics): `getLatestBusDt` `{ locRef }` e `getGuestChecks` `{ locRef, busDt, searchCriteria: contas abertas do RVC }`; itens de `empresa.couvert` | `ctx.credencial('simphony-bi')` |
 | `nomes.ts`              | BI do Simphony: `getMenuItemDimensions` e `getEmployeeDimensions` `{ locRef }` — nomes dos itens e do garçom, só ao abrir o detalhe da mesa                                            | `ctx.credencial('simphony-bi')` |
 
@@ -63,7 +63,7 @@ lê, então não há trava de teste (padrão 12 não se aplica).
   `.ler` — questionamento Q-03 em aberto.
 - `groupPath`: `['Simphony', 'Couvert']`. Público sugerido: **a definir** pelo gestor.
 
-Status que o handler `mesas` devolve (a `MensagemErro` decide o texto por eles):
+Status que os handlers `mesas` e `nomes` devolvem (a `MensagemErro` decide o texto por eles):
 
 | Status | Quando                                                                             |
 | ------ | ---------------------------------------------------------------------------------- |
@@ -72,7 +72,7 @@ Status que o handler `mesas` devolve (a `MensagemErro` decide o texto por eles):
 | 424    | a BI recusou o token (401/403)                                                     |
 | 502    | a BI respondeu com erro, não respondeu ou devolveu algo ilegível                   |
 | 503    | credencial `simphony-bi` inativa ou indisponível no portal                         |
-| 504    | a BI passou de 120 s (cada chamada)                                                |
+| 504    | a BI passou do limite (20 s no dia de negócio, 120 s nas contas)                   |
 
 Os detalhes técnicos (corpo da BI, stack) vão para o log com o prefixo `[couvert]`;
 o token nunca vai para log, resposta ou navegador.
@@ -81,18 +81,23 @@ o token nunca vai para log, resposta ou navegador.
 
 - **Volume na BI**: uma loja e um RVC por pesquisa, só contas abertas; sem atualização
   automática (só o botão Atualizar), conforme o time do Portal GIA (19/11/2026).
-- [ ] **Tempo da Edge Function `couvert-mesas`**: o `getGuestChecks` levou de 2 s a
+- [ ] **Tempo da Edge Function `couvert`** (uma função para os três handlers): o `getGuestChecks` levou de 2 s a
       89 s em 19/11/2026 (89 s, 77 s e 8,5 s seguidos às 17h, um RVC de Campinas). O
-      handler espera até **120 s** por chamada (a orientação era 60 s, que reprovava a
-      maioria das pesquisas no horário de movimento). Confirmar que a função aceita
-      ~125 s (limite da plataforma: 150 s). Passou disso: 504 e Tentar de novo.
+      handler `mesas` espera até **20 s** no `getLatestBusDt` e **120 s** no
+      `getGuestChecks` (a orientação era 60 s, que reprovava a maioria das pesquisas no
+      horário de movimento). Confirmar que a função aceita **140 s** (limite da
+      plataforma: 150 s). Passou disso: 504 e Tentar de novo.
 - **Loja ao abrir**: a 01, reconhecida pelo número no começo do nome da Empresa
   (`01.…`), no 1º RVC. Quem não tem a 01 no escopo vê a última loja pesquisada.
 - **Última loja pesquisada**: guardada no navegador por usuário via
   `createPersistedStore` do SDK (só ids de loja e RVC) — questionamento Q-02 em aberto.
 - **Pendências com o time do Portal GIA**: regra de cor (desenho do usuário em
   `docs/conceito.md` §5), estorno (se `dspQty` vem negativo na linha estornada — ainda
-  não houve conta com estorno para conferir), público das permissões.
+  não houve conta com estorno para conferir), `numChkPrntd` numa conta com pré-conta impressa,
+  público das permissões e se valores e garçom pedem permissão própria.
+- **Dependência**: `framer-motion` (a do `@gia-cb/ui`), para a animação dos cards.
+- **Terminais de PDV** (Oracle MICROS WS 610, 625 e 8): o teclado na tela depende do
+  sistema do aparelho — questionamento Q-04 em aberto, falta testar.
 - **Detalhe da mesa**: o `mesas` devolve também a conta (valores, garçom, itens com
   assento, rodada e hora). O `nomes` faz até duas chamadas à BI por loja, só quando o
   usuário abre o detalhe; a tela guarda o resultado enquanto está aberta.

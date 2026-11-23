@@ -39,7 +39,7 @@ Cada mesa aberta é um card:
 
 - **à esquerda**, o quadrinho com a **nota musical** e o número de **couverts
   artísticos** lançados na conta;
-- **à direita**, a **mesa** em destaque e, depois da barra, o **grupo** da mesa
+- **no meio**, a **mesa** em destaque e, depois da barra, o **grupo** da mesa
   (\`45/2\` = mesa 45, grupo 2);
 - embaixo, o ícone de pessoas com o **número de pessoas** da conta;
 - **à direita**, o quadrinho do **buffet** (tampa de travessa), com o número de buffets lançados. Ele
@@ -64,7 +64,10 @@ duas (vermelho antes de amarelo). No quadrinho vermelho, o **selo** no alto diz 
 diferença:
 
 - **−2**: faltam 2 couverts (ex.: 4 pessoas e 2 couverts);
-- **+1**: há 1 couvert a mais (ex.: 3 pessoas e 4 couverts);
+- **+1**: há 1 couvert a mais (ex.: 3 pessoas e 4 couverts).
+
+No quadrinho do buffet, o selo diz o mesmo dos buffets.
+
 A mesa com o selo **sem pessoas** está com 0 pessoas na conta. Selo cinza: nada foi
 lançado. Selo vermelho: já há couvert ou buffet lançado. Nos dois casos, lance o número de
 pessoas no PDV para conferir o couvert.
@@ -87,7 +90,9 @@ Toque num card para ver a **conta aberta** da mesa:
 
 O assento mostra quem pediu o quê: se o couvert foi lançado só nos assentos 1 e 2 de
 uma mesa com 4 pessoas, faltam os assentos 3 e 4. Os nomes dos itens e do garçom
-podem levar alguns segundos para aparecer; até lá aparecem os códigos. A conta é a da
+podem levar alguns segundos para aparecer; até lá (ou se a BI não mandar os nomes)
+aparecem os códigos. Observações do pedido, como "Sem Modificacao", também vêm na conta
+como itens de R$ 0,00: não contam como couvert nem buffet. A conta é a da
 última busca: para ver o que mudou no PDV, feche e clique em **Atualizar**.
       `,
     },
@@ -109,6 +114,9 @@ Pesquisar outro salão volta para **Todas**.
 
 O campo **Mesa** mostra só as mesas cujo nome tem o que você digitou: "3" mostra as
 mesas 3, 31, 303…
+
+Ao filtrar, buscar ou ordenar, os cards **deslizam** para o lugar novo; os que iriam para
+longe somem e reaparecem. Nenhum dado muda com isso.
 
 ## Ordem
 
@@ -137,7 +145,7 @@ de negócio e a hora exata.
 
 O botão ao lado do Atualizar põe a tela em **tela cheia**, escondendo o menu do
 portal — bom para deixar aberta num tablet ou monitor do salão. **Esc** ou o mesmo
-botão saem dela.
+botão saem dela. Se a pesquisa der erro, o botão de sair fica ao lado do título.
       `,
     },
     {
@@ -149,7 +157,9 @@ botão saem dela.
 - Os cards ficam em **duas colunas**. No lugar dos chips há uma **lista**: toque nela e
   escolha a situação (com quantas mesas há em cada uma); **Todas** tira o filtro.
 - O botão **Atualizar** (com o tempo desde a última busca) fica acima das mesas.
-- A tela cheia só aparece no computador e no tablet.
+- O ícone de **tela cheia** fica na mesma linha, à direita. Para sair, toque no ícone ao
+  lado do título **Couvert**.
+- Em tela de toque não há dicas ao passar o mouse; o que elas dizem está nesta ajuda.
       `,
     },
   ],
@@ -163,7 +173,7 @@ botão saem dela.
         },
         {
           q: 'O que faço com uma mesa vermelha?',
-          a: 'Veja o selo: **−N** quer dizer que faltam N couverts — lance no PDV; **+N**, que há couvert a mais que pessoas — confira o número de pessoas ou estorne o couvert. Depois clique em **Atualizar**.',
+          a: 'Veja o selo do quadrinho vermelho: **−N** quer dizer que faltam N couverts (ou buffets) — lance no PDV; **+N**, que há lançamento a mais que pessoas — confira o número de pessoas ou estorne o que sobrou. Depois clique em **Atualizar**.',
         },
         {
           q: 'O que é a mesa com o selo "sem pessoas"?',
@@ -171,7 +181,7 @@ botão saem dela.
         },
         {
           q: 'E uma mesa amarela?',
-          a: 'É uma mesa com pessoas e **nenhum couvert artístico lançado**. Lance o couvert no PDV, se a mesa deve pagar, e clique em **Atualizar**.',
+          a: 'É uma mesa com pessoas e **nenhum couvert** (ou **nenhum buffet**, na loja que tem) lançado — o quadrinho amarelo diz qual. Lance no PDV, se a mesa deve pagar, e clique em **Atualizar**.',
         },
         {
           q: 'Os cards mudam sozinhos?',

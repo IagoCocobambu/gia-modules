@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Lock, Music, RefreshCw, Search, SearchX, Store } from 'lucide-react'
+import { Lock, Maximize2, Music, RefreshCw, Search, SearchX, Store } from 'lucide-react'
 import {
   Button,
   EmptyState,
@@ -138,6 +138,8 @@ export function CouvertView() {
   const compacto = useMenorQue(area, LARGURA_COMPACTA)
   const estreito = useMenorQue(area, LARGURA_ESTREITA)
   const agora = useAgora(30_000)
+  // Dica só em aparelho com mouse (padrão 2 do AGENTS.md da raiz).
+  const [comHover] = useState(() => window.matchMedia('(hover: hover)').matches)
 
   const lojasQuery = useLojasCouvert(canView)
   const lojas = useMemo(() => lojasQuery.data ?? [], [lojasQuery.data])
@@ -220,13 +222,14 @@ export function CouvertView() {
   const consultando = mesasQuery.isFetching
   const lojaDaTela = lojas.find((l) => l.empresaId === filtros.empresaId)
   const erro = lojasQuery.error ?? (consulta ? mesasQuery.error : null)
+  const mostraErro = erro !== null && !consultando
   const atualizado = resposta ? haQuantoTempo(resposta.consultadoEm, agora) : undefined
   const dicaAtualizado = resposta
     ? `Dia de negócio ${formatData(resposta.dia)} · mesas de ${formatHora(resposta.consultadoEm)}. Clique para buscar de novo na BI do Simphony.`
     : undefined
 
   let conteudo
-  if (erro && !consultando) {
+  if (mostraErro) {
     const handler = (erro as { requisicao?: { handler?: string } } | null)?.requisicao?.handler
     conteudo = (
       // Mesma posição dos estados vazios (EmptyState): no alto, centrada, py-12.
@@ -312,6 +315,7 @@ export function CouvertView() {
                 placeholder="Mesa"
                 aria-label="Buscar mesa"
                 inputMode="search"
+                className={compacto ? 'min-h-11' : undefined}
               />
             </div>
             <div className="shrink-0" data-tour="couvert-ordem">
@@ -319,12 +323,17 @@ export function CouvertView() {
                 value={ordem}
                 onChange={setOrdem}
                 ariaLabel="Ordem das mesas"
+                className={compacto ? '[&>button]:min-h-11' : undefined}
                 options={[
-                  { value: 'mesa', label: 'Mesa', tooltip: 'Pelo número da mesa' },
+                  {
+                    value: 'mesa',
+                    label: 'Mesa',
+                    tooltip: comHover ? 'Pelo número da mesa' : undefined,
+                  },
                   {
                     value: 'atencao',
                     label: 'Atenção',
-                    tooltip: 'Maior número de divergências primeiro',
+                    tooltip: comHover ? 'Maior número de divergências primeiro' : undefined,
                   },
                 ]}
               />
@@ -335,7 +344,22 @@ export function CouvertView() {
               </span>
             )}
           </div>
-          {atualizar && <div className="flex items-center">{atualizar}</div>}
+          {atualizar && (
+            <div className="flex items-center justify-between gap-2">
+              {atualizar}
+              {!telaCheia && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-11 w-11 shrink-0"
+                  aria-label="Tela cheia"
+                  onClick={() => setTelaCheia(true)}
+                >
+                  <Maximize2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
         </div>
         {visiveis.length === 0 ? (
           <EmptyState
@@ -392,7 +416,7 @@ export function CouvertView() {
             onPesquisar={() => pesquisar(filtros)}
             compacto={compacto}
             estreito={estreito}
-            enxuto={consulta !== null}
+            enxuto={consulta !== null && !mostraErro}
             mesmaPesquisa={
               consulta?.empresaId === filtros.empresaId && consulta?.rvc === filtros.rvc
             }

@@ -12,8 +12,9 @@ import type { Mesa, Movimento, Situacao } from '../types'
  * artístico (nota musical); no meio, a mesa em destaque com o grupo (`45/2`) e as
  * pessoas; à direita, sempre (como no legado), o quadrinho do buffet. Cada quadrinho tem a
  * cor da situação dele e, quando diverge, o selo da diferença (−2, +1); a borda do
- * card é a da pior situação. Mesa com 0 pessoas leva o selo "sem pessoas": neutra sem lançamento, vermelha com couvert ou buffet lançado. Tocar no
- * card abre o detalhe da conta.
+ * card é a da pior situação. Mesa com 0 pessoas leva o selo "sem pessoas": neutra sem
+ * lançamento, vermelha com couvert ou buffet lançado. Tocar no card abre o detalhe da
+ * conta.
  */
 const BORDA: Record<Situacao, string> = {
   'tudo-lancado': 'border-border',

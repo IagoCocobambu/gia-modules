@@ -32,7 +32,7 @@ interface FiltrosBarProps {
   /** Área estreita: sem subtítulo, para os campos caberem numa linha. */
   estreito: boolean
   /**
-   * Com mesas na tela, fora do celular: uma linha só (padrão 8) — título e tour à
+   * Pesquisando ou com mesas na tela, fora do celular: uma linha só (padrão 8) — título e tour à
    * esquerda; loja, RVC, Pesquisar e tela cheia juntos à direita.
    */
   enxuto: boolean
@@ -75,6 +75,7 @@ export function FiltrosBar({
   const seletorLoja = (controle: Record<string, unknown>) => (
     <SearchableSelect<number>
       triggerProps={controle}
+      className={compacto ? 'min-h-11' : undefined}
       options={lojas.map((l) => ({
         value: l.empresaId,
         label: l.nome,
@@ -94,6 +95,7 @@ export function FiltrosBar({
   const seletorRvc = (controle: Record<string, unknown>) => (
     <SearchableSelect<number>
       triggerProps={controle}
+      className={compacto ? 'min-h-11' : undefined}
       options={rvcs.map((r) => ({ value: r.numero, label: r.nome }))}
       value={value.rvc}
       onChange={(rvc) => onValueChange({ ...value, rvc })}
@@ -128,6 +130,22 @@ export function FiltrosBar({
   const pesquisar =
     dicaPesquisar && mesmaPesquisa ? <Dica content={dicaPesquisar}>{botao}</Dica> : botao
 
+  const botaoTelaCheia = (
+    <Dica content={telaCheia ? 'Sair da tela cheia (Esc)' : 'Tela cheia'}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className={compacto ? 'h-11 w-11' : undefined}
+        aria-label={telaCheia ? 'Sair da tela cheia' : 'Tela cheia'}
+        aria-pressed={telaCheia}
+        onClick={onTelaCheia}
+        data-tour="couvert-tela-cheia"
+      >
+        {telaCheia ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+      </Button>
+    </Dica>
+  )
+
   if (enxuto && !compacto) {
     return (
       <div
@@ -142,18 +160,7 @@ export function FiltrosBar({
           <div className="w-64 min-w-36 shrink">{seletorLoja({ 'aria-label': 'Loja' })}</div>
           <div className="w-44 shrink-0">{seletorRvc({ 'aria-label': 'RVC (salão)' })}</div>
           <div className="shrink-0">{pesquisar}</div>
-          <Dica content={telaCheia ? 'Sair da tela cheia (Esc)' : 'Tela cheia'}>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={telaCheia ? 'Sair da tela cheia' : 'Tela cheia'}
-              aria-pressed={telaCheia}
-              onClick={onTelaCheia}
-              data-tour="couvert-tela-cheia"
-            >
-              {telaCheia ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-          </Dica>
+          {botaoTelaCheia}
         </div>
       </div>
     )
@@ -163,7 +170,13 @@ export function FiltrosBar({
     <div ref={raiz} className="contents">
       <ListHeader
         title={NOME_MODULO}
-        titleExtra={tituloExtra}
+        titleExtra={
+          // Em tela cheia, a saída fica sempre à vista: no toque não há Esc.
+          <>
+            {tituloExtra}
+            {telaCheia && botaoTelaCheia}
+          </>
+        }
         subtitle={
           estreito ? undefined : 'Mesas abertas do salão e o couvert artístico lançado em cada uma.'
         }

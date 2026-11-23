@@ -1,7 +1,8 @@
 # Couvert — conceito
 
 > Módulo `couvert` · SDK `0.1.0-alpha.72` · template `rich-api`
-> Situação: **confirmado e implementado — 0.1.0** (19/11/2026)
+> Situação: **confirmado e implementado — 0.1.0** (23/11/2026). As decisões do §11 valem
+> sobre o que está antes dele.
 > Marque com **(suposição)** tudo que não veio do usuário.
 
 Base: a tela **Couvert** de `legacy-gia/dashboard-e-couvert`
@@ -18,8 +19,8 @@ o couvert lançado no Simphony está diferente do número de pessoas, para o ger
 corrigir no PDV **antes de fechar a conta**. Mesa com 4 pessoas e 2 couverts são 2
 couverts que deixaram de ser cobrados; mesa aberta com 0 pessoas não deixa conferir.
 
-O **buffet não entra** (decidido em 19/11/2026): no legado a tela também contava o
-buffet; o módulo confere só o couvert artístico.
+O **buffet** chegou a sair em 19/11/2026 e voltou no mesmo dia (§11): a tela confere os
+dois, como no legado.
 
 ## 2. Quem usa
 
@@ -99,7 +100,6 @@ Sem Exportar: a tela é de cards. Público de `couvert.ler`: o usuário decide d
 ## 7. Fora do escopo
 
 - A tela Dashboard do mesmo pacote legado (já é o `dashboard-simphony`).
-- **Buffet** (decidido em 19/11/2026).
 - Qualquer alteração na conta do Simphony.
 - Editar a configuração de couvert/RVCs da loja (enquanto não houver decisão em
   contrário).
@@ -137,28 +137,27 @@ Escolhas:
 
 ## 9. Questionamentos ao SDK
 
-| Nº   | Tema                                                                                                      | Situação                                                                  | Solução provisória                                                 |
-| ---- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Q-01 | Configuração do módulo por loja (itens de couvert e RVCs)                                                 | aberto — `docs/questionamentos-sdk/Q-01-configuracao-por-loja.md`         | ler do banco do GIA (`gia.empresas`); mock até as credenciais      |
-| Q-02 | Lembrar a última loja/RVC do usuário entre acessos (`createPersistedStore` diz "só theme persiste no v1") | aberto — `docs/questionamentos-sdk/Q-02-lembrar-ultima-loja.md`           | `createPersistedStore` com chave por usuário, só ids de loja e RVC |
-| Q-03 | Módulo só de leitura: o `gia validate` exige uma chave de ação além da `.ler`                             | aberto — `docs/questionamentos-sdk/Q-03-permissao-modulo-so-leitura.md`   | `couvert.exportar` declarada como reservada, sem efeito            |
-| Q-04 | Teclado virtual nos terminais Oracle MICROS (WS 610, 625 e 8)                                             | aberto — `docs/questionamentos-sdk/Q-04-teclado-virtual-terminais-pdv.md` | nenhuma; aguarda o teste nos aparelhos                             |
+| Nº   | Tema                                                                                                      | Situação                                                                                               | Solução provisória                                                 |
+| ---- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| Q-01 | Configuração do módulo por loja (itens de couvert e RVCs)                                                 | resolvido pela alpha.72 (`empresa.couvert`) — `docs/questionamentos-sdk/Q-01-configuracao-por-loja.md` | —                                                                  |
+| Q-02 | Lembrar a última loja/RVC do usuário entre acessos (`createPersistedStore` diz "só theme persiste no v1") | aberto — `docs/questionamentos-sdk/Q-02-lembrar-ultima-loja.md`                                        | `createPersistedStore` com chave por usuário, só ids de loja e RVC |
+| Q-03 | Módulo só de leitura: o `gia validate` exige uma chave de ação além da `.ler`                             | aberto — `docs/questionamentos-sdk/Q-03-permissao-modulo-so-leitura.md`                                | `couvert.exportar` declarada como reservada, sem efeito            |
+| Q-04 | Teclado virtual nos terminais Oracle MICROS (WS 610, 625 e 8)                                             | aberto — `docs/questionamentos-sdk/Q-04-teclado-virtual-terminais-pdv.md`                              | nenhuma; aguarda o teste nos aparelhos                             |
 
 ## 10. Perguntas em aberto
 
 - [x] Configuração por loja: banco do GIA, mock até as credenciais (19/11/2026).
-- [x] Dia de negócio: hoje (19/11/2026).
+- [x] Dia de negócio: `getLatestBusDt` (19/11/2026, §11; antes, hoje).
 - [x] Atualização: só pelo botão, sem “Ao vivo” (19/11/2026).
-- [x] Buffet: sai do módulo (19/11/2026).
+- [x] Buffet: volta e fica sempre à vista (19 e 23/11/2026, §11).
 - [x] Mesa com 0 pessoas: vermelha com couvert ou buffet lançado, neutra (chip Sem pessoas) sem lançamento (23/11/2026).
 - [x] Nome: “Couvert” no menu e no título da tela (19/11/2026).
 - [x] Ao abrir: espera o clique; vem com a loja 01 (23/11/2026; em 19/11 era a última loja consultada, que ficou só para quem não tem a 01 no escopo).
 - [x] Tela das mesas: desenho do usuário (19/11/2026).
-- [ ] Trocar loja/RVC já pesquisa? (R10, suposição)
+- [x] Trocar loja/RVC não pesquisa sozinho (19/11/2026, §11).
 - [x] Ordem “Atenção”: maior número de divergências primeiro, por último a mesa (R12, 23/11/2026).
 - [ ] Busca por mesa (R13, suposição).
-- [ ] Dá para tirar o banco do GIA? Só se os itens de couvert forem achados pela BI do Simphony (grupo com o mesmo nome em todas as lojas, ou o mesmo número de item) e os RVCs vierem da BI (`getRevenueCenterDimensions`, a confirmar). O vínculo `BIAPI` do cadastro só traz o código da loja na BI. O usuário vai confirmar como o couvert está cadastrado (19/11/2026); até lá, banco do GIA.
-- [ ] Credenciais do banco do GIA (`GIA_SERVER_DATABASE_URL`) — o usuário vai receber.
+- [x] Banco do GIA: não é usado (alpha.72, §11).
 - [ ] Quem recebe `couvert.ler` — o usuário decide depois.
 
 ## 11. Atualização de 19/11/2026 — orientação do time do Portal GIA
@@ -193,17 +192,17 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
 - **Buffet sempre à vista** (pedido do usuário, 23/11/2026, "como no legado"): o
   quadrinho do buffet aparece em toda loja. Na loja sem itens de
   buffet configurados ele fica em 0 e amarelo, mas não entra na situação da mesa nem
-  nos chips (R14). O ícone está em escolha (`docs/artefatos/icone-buffet-propostas.html`).
+  nos chips (R14).
 - **Ícone do buffet: opção A, tampa de travessa (`ConciergeBell`)** — escolhida pelo
   usuário em 23/11/2026 entre as 6 de `docs/artefatos/icone-buffet-propostas.html`;
   é a mais parecida com o ícone do legado.
 - **Detalhe da mesa — escolhida a combinação B+A (23/11/2026)**: tocar no card abre o
-  `Modal` do SDK (size `xl`) em duas colunas, como a proposta B (à esquerda contadores,
+  `Modal` do SDK (size `2xl`) em duas colunas, como a proposta B (à esquerda contadores,
   fatos e valores), com a lista única de itens da proposta A à direita (qtd, item,
   assento, rodada, hora, valor; couvert e buffet em destaque — o couvert em ciano pouco saturado, que só identifica o item; pedido do usuário em 23/11/2026, antes era vermelho fixo) e o aviso do que falta
   acima dela. Propostas em `docs/artefatos/detalhe-mesa-propostas.html` (a recomendação
   era a A). Em aberto: permissão própria para valores e garçom (ex.: `couvert.ver-conta`).
-- **Detalhe da mesa implementado (23/11/2026)**: `DetalheMesa` (`Modal` xl, B+A). O
+- **Detalhe da mesa implementado (23/11/2026)**: `DetalheMesa` (`Modal` 2xl, B+A). O
   handler `mesas` passou a devolver a conta de cada mesa; o handler novo `nomes` traz
   os nomes dos itens (`getMenuItemDimensions`) e do garçom (`getEmployeeDimensions`,
   como "Nome S.") só ao abrir o detalhe. Valores e garçom com `couvert.ler` até a
@@ -227,3 +226,6 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
   `useDebouncedValue` (250 ms) para reorganizar uma vez, não a cada tecla. **Opção A,
   aprovada pelo usuário em 23/11/2026** entre as 5 de
   `docs/artefatos/animacao-cards-propostas.html` (a recomendação era a C).
+- **Revisão contra o SDK (23/11/2026)**: com erro, a barra volta à completa (padrão 8);
+  tela cheia também no celular (`conventions §11`), com a saída ao lado do título; o dia de
+  negócio continua só na dica do mouse, por decisão do usuário.

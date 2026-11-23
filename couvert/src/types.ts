@@ -12,8 +12,6 @@ export interface LojaCouvert {
   nome: string
   /** Na ordem do cadastro; o 1º é o padrão. Vazio = loja sem RVC configurado. */
   rvcs: Rvc[]
-  /** Loja com itens de buffet configurados: a tela mostra o buffet. */
-  temBuffet: boolean
 }
 
 /** Item da conta (só linhas de item do cardápio). */
@@ -74,7 +72,7 @@ export interface RespostaMesas {
   dia: string
   /** ISO da consulta. */
   consultadoEm: string
-  /** Loja com itens de buffet configurados: a tela mostra o buffet. */
+  /** Loja com itens de buffet configurados: o buffet conta para a situação. */
   temBuffet: boolean
   mesas: Mesa[]
 }

@@ -3,7 +3,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="claude:viewport-fit-sides" content="cover" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+/>
 <style>
   /* Layout: barra de comandos única em cima; duas mesas de teste empilhadas que respondem juntas ao mesmo clique. Cores = tokens do tema do portal (@gia-cb/ui). */
   :root {
@@ -26,102 +29,371 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']) {
-      --bg: oklch(0.13 0.018 250); --surface: oklch(0.18 0.02 250); --fg: oklch(0.97 0.005 250);
-      --muted: oklch(0.245 0.02 250); --muted-fg: oklch(0.7 0.02 250); --border: oklch(0.28 0.02 250);
-      --primary: oklch(0.63 0.2 260); --on-primary: oklch(0.99 0 0); --success: oklch(0.7 0.14 150);
-      --warning: oklch(0.78 0.16 70); --destructive: oklch(0.68 0.2 25); color-scheme: dark;
+      --bg: oklch(0.13 0.018 250);
+      --surface: oklch(0.18 0.02 250);
+      --fg: oklch(0.97 0.005 250);
+      --muted: oklch(0.245 0.02 250);
+      --muted-fg: oklch(0.7 0.02 250);
+      --border: oklch(0.28 0.02 250);
+      --primary: oklch(0.63 0.2 260);
+      --on-primary: oklch(0.99 0 0);
+      --success: oklch(0.7 0.14 150);
+      --warning: oklch(0.78 0.16 70);
+      --destructive: oklch(0.68 0.2 25);
+      color-scheme: dark;
     }
   }
   :root[data-theme='dark'] {
-    --bg: oklch(0.13 0.018 250); --surface: oklch(0.18 0.02 250); --fg: oklch(0.97 0.005 250);
-    --muted: oklch(0.245 0.02 250); --muted-fg: oklch(0.7 0.02 250); --border: oklch(0.28 0.02 250);
-    --primary: oklch(0.63 0.2 260); --on-primary: oklch(0.99 0 0); --success: oklch(0.7 0.14 150);
-    --warning: oklch(0.78 0.16 70); --destructive: oklch(0.68 0.2 25); color-scheme: dark;
+    --bg: oklch(0.13 0.018 250);
+    --surface: oklch(0.18 0.02 250);
+    --fg: oklch(0.97 0.005 250);
+    --muted: oklch(0.245 0.02 250);
+    --muted-fg: oklch(0.7 0.02 250);
+    --border: oklch(0.28 0.02 250);
+    --primary: oklch(0.63 0.2 260);
+    --on-primary: oklch(0.99 0 0);
+    --success: oklch(0.7 0.14 150);
+    --warning: oklch(0.78 0.16 70);
+    --destructive: oklch(0.68 0.2 25);
+    color-scheme: dark;
   }
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+  }
   body {
-    margin: 0; background: var(--bg); color: var(--fg); font: 400 var(--t-m)/1.5 var(--font);
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 400 var(--t-m)/1.5 var(--font);
     padding-block: 20px 48px;
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
-  .pagina { max-width: 1320px; margin-inline: auto; display: grid; gap: 18px; }
-  .pagina > * { min-width: 0; }
-  h1 { margin: 0; font-size: var(--t-xl); font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
-  h2 { margin: 0; font-size: var(--t-l); font-weight: 600; }
-  p { margin: 0; max-width: 72ch; }
-  .sec { color: var(--muted-fg); }
-  .linha { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  .rot { font-size: var(--t-s); font-weight: 600; color: var(--muted-fg); min-width: 84px; }
-  .barra { display: grid; gap: 10px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
-  button, input { font: inherit; color: inherit; }
-  button { min-height: 36px; padding: 4px 13px; font-size: var(--t-s); font-weight: 600; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: background-color 120ms; }
-  button:hover { background: var(--muted); }
-  button:focus-visible, input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-  button[aria-pressed='true'] { background: color-mix(in oklab, var(--primary) 14%, var(--surface)); border-color: var(--primary); }
-  button.forte { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
-  @media (min-width: 900px) and (min-height: 600px) {
-    .filtros { display: flex; align-items: center; justify-content: space-between; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; }
-    .ajustes { gap: 6px; padding-block: 10px; }
-    .ajustes button { min-height: 32px; }
+  .pagina {
+    max-width: 1320px;
+    margin-inline: auto;
+    display: grid;
+    gap: 18px;
   }
-  .chips button { border-radius: 999px; }
-  .chips b, .num { font-variant-numeric: tabular-nums; }
-  input[type='text'] { width: 110px; min-height: 36px; padding: 4px 11px; font-size: var(--t-s); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
-  input[type='range'] { width: 150px; accent-color: var(--primary); }
-  .palco { display: grid; gap: 4px; }
-  .palco p { max-width: 130ch; font-size: var(--t-s); }
-  .palco[hidden] { display: none; }
-  .medida { font-size: var(--t-s); color: var(--muted-fg); font-variant-numeric: tabular-nums; }
-  .grade { position: relative; list-style: none; margin: 0; padding: 10px 0 2px; display: grid; gap: 8px; align-content: start; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-  .grade.cel { max-width: 358px; grid-template-columns: 1fr 1fr; }
-  @media (max-width: 640px) { .grade { grid-template-columns: 1fr 1fr; } .rot { min-width: 100%; } }
-  .card { position: relative; min-width: 0; display: flex; align-items: stretch; gap: 6px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; will-change: transform; }
-  .card.divergente { border-color: color-mix(in oklab, var(--destructive) 55%, var(--border)); }
-  .card.sem-lancamento { border-color: color-mix(in oklab, var(--warning) 60%, var(--border)); }
-  .quadro { position: relative; flex: none; width: 40px; padding: 8px 0; display: grid; justify-items: center; gap: 3px; align-content: center; border: 1px solid transparent; border-radius: 8px; background: var(--muted); color: var(--muted-fg); font-size: 17px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
-  .quadro.divergente { background: color-mix(in oklab, var(--destructive) 15%, var(--surface)); border-color: color-mix(in oklab, var(--destructive) 50%, transparent); color: var(--destructive); }
-  .quadro.sem-lancamento { background: color-mix(in oklab, var(--warning) 15%, var(--surface)); border-color: color-mix(in oklab, var(--warning) 50%, transparent); color: var(--warning); }
-  .selo { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); padding: 0 6px; font-size: 11px; line-height: 16px; font-weight: 700; white-space: nowrap; border-radius: 999px; background: var(--destructive); color: var(--surface); }
-  .selo.neutro { background: var(--muted); color: var(--muted-fg); }
-  .meio { position: relative; flex: 1; min-width: 0; display: grid; justify-items: center; align-content: center; font-variant-numeric: tabular-nums; }
-  .mesa { font-size: 21px; font-weight: 700; line-height: 1.2; }
-  .mesa.longa { font-size: 13px; text-align: center; }
-  .grupo { font-size: 13px; font-weight: 500; color: var(--muted-fg); }
-  .pes { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted-fg); }
-  .fantasma { position: absolute; margin: 0; pointer-events: none; }
-  svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-  .nota { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 4px 24px; font-size: var(--t-s); }
-  .nota div { min-width: 0; }
+  .pagina > * {
+    min-width: 0;
+  }
+  h1 {
+    margin: 0;
+    font-size: var(--t-xl);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  h2 {
+    margin: 0;
+    font-size: var(--t-l);
+    font-weight: 600;
+  }
+  p {
+    margin: 0;
+    max-width: 72ch;
+  }
+  .sec {
+    color: var(--muted-fg);
+  }
+  .linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .rot {
+    font-size: var(--t-s);
+    font-weight: 600;
+    color: var(--muted-fg);
+    min-width: 84px;
+  }
+  .barra {
+    display: grid;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  button,
+  input {
+    font: inherit;
+    color: inherit;
+  }
+  button {
+    min-height: 36px;
+    padding: 4px 13px;
+    font-size: var(--t-s);
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 120ms;
+  }
+  button:hover {
+    background: var(--muted);
+  }
+  button:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  button[aria-pressed='true'] {
+    background: color-mix(in oklab, var(--primary) 14%, var(--surface));
+    border-color: var(--primary);
+  }
+  button.forte {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--on-primary);
+  }
+  @media (min-width: 900px) and (min-height: 600px) {
+    .filtros {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: env(safe-area-inset-top, 0px);
+      z-index: 20;
+    }
+    .ajustes {
+      gap: 6px;
+      padding-block: 10px;
+    }
+    .ajustes button {
+      min-height: 32px;
+    }
+  }
+  .chips button {
+    border-radius: 999px;
+  }
+  .chips b,
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  input[type='text'] {
+    width: 110px;
+    min-height: 36px;
+    padding: 4px 11px;
+    font-size: var(--t-s);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  input[type='range'] {
+    width: 150px;
+    accent-color: var(--primary);
+  }
+  .palco {
+    display: grid;
+    gap: 4px;
+  }
+  .palco p {
+    max-width: 130ch;
+    font-size: var(--t-s);
+  }
+  .palco[hidden] {
+    display: none;
+  }
+  .medida {
+    font-size: var(--t-s);
+    color: var(--muted-fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .grade {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 10px 0 2px;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  .grade.cel {
+    max-width: 358px;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 640px) {
+    .grade {
+      grid-template-columns: 1fr 1fr;
+    }
+    .rot {
+      min-width: 100%;
+    }
+  }
+  .card {
+    position: relative;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    will-change: transform;
+  }
+  .card.divergente {
+    border-color: color-mix(in oklab, var(--destructive) 55%, var(--border));
+  }
+  .card.sem-lancamento {
+    border-color: color-mix(in oklab, var(--warning) 60%, var(--border));
+  }
+  .quadro {
+    position: relative;
+    flex: none;
+    width: 40px;
+    padding: 8px 0;
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    align-content: center;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--muted);
+    color: var(--muted-fg);
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .quadro.divergente {
+    background: color-mix(in oklab, var(--destructive) 15%, var(--surface));
+    border-color: color-mix(in oklab, var(--destructive) 50%, transparent);
+    color: var(--destructive);
+  }
+  .quadro.sem-lancamento {
+    background: color-mix(in oklab, var(--warning) 15%, var(--surface));
+    border-color: color-mix(in oklab, var(--warning) 50%, transparent);
+    color: var(--warning);
+  }
+  .selo {
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0 6px;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+    border-radius: 999px;
+    background: var(--destructive);
+    color: var(--surface);
+  }
+  .selo.neutro {
+    background: var(--muted);
+    color: var(--muted-fg);
+  }
+  .meio {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .mesa {
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .mesa.longa {
+    font-size: 13px;
+    text-align: center;
+  }
+  .grupo {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted-fg);
+  }
+  .pes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--muted-fg);
+  }
+  .fantasma {
+    position: absolute;
+    margin: 0;
+    pointer-events: none;
+  }
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex: none;
+  }
+  .nota {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 4px 24px;
+    font-size: var(--t-s);
+  }
+  .nota div {
+    min-width: 0;
+  }
 </style>
 
 <div class="pagina">
   <header>
     <h1>Como os cards mudam de lugar</h1>
-    <p class="sec">Clique nos filtros e na ordem como na tela. As duas grades respondem ao mesmo clique. Mesas de demonstração.</p>
+    <p class="sec">
+      Clique nos filtros e na ordem como na tela. As duas grades respondem ao mesmo clique. Mesas de
+      demonstração.
+    </p>
   </header>
 
   <section class="barra filtros" aria-label="Filtros e ordem">
     <div class="linha chips" id="chips" role="group" aria-label="Filtrar mesas pela situação"></div>
     <div class="linha">
-      <input id="busca" type="text" placeholder="Mesa" aria-label="Buscar mesa" autocomplete="off" />
+      <input
+        id="busca"
+        type="text"
+        placeholder="Mesa"
+        aria-label="Buscar mesa"
+        autocomplete="off"
+      />
       <span class="linha" id="ordem" role="group" aria-label="Ordem das mesas"></span>
       <button type="button" class="forte" id="tocar">Tocar sequência</button>
     </div>
   </section>
 
   <section class="barra ajustes" aria-label="Ajustes">
-    <div class="linha"><span class="rot">Em cima</span><span class="linha" id="sel0" role="group" aria-label="Proposta de cima"></span></div>
-    <div class="linha"><span class="rot">Embaixo</span><span class="linha" id="sel1" role="group" aria-label="Proposta de baixo"></span></div>
+    <div class="linha">
+      <span class="rot">Em cima</span
+      ><span class="linha" id="sel0" role="group" aria-label="Proposta de cima"></span>
+    </div>
+    <div class="linha">
+      <span class="rot">Embaixo</span
+      ><span class="linha" id="sel1" role="group" aria-label="Proposta de baixo"></span>
+    </div>
     <div class="linha">
       <label class="rot" for="vel">Velocidade</label>
-      <input id="vel" type="range" min="0.25" max="2" step="0.25" value="1" /><span class="num" id="velTxt">1×</span>
+      <input id="vel" type="range" min="0.25" max="2" step="0.25" value="1" /><span
+        class="num"
+        id="velTxt"
+        >1×</span
+      >
       <button type="button" id="cascata" aria-pressed="false">Cascata</button>
       <button type="button" id="cel" aria-pressed="false">Largura de celular</button>
       <button type="button" id="copiar">Copiar minha escolha</button>
       <span class="medida" id="aviso" role="status"></span>
     </div>
-    <p class="medida" id="reduz" hidden>Seu sistema pede menos movimento, então aqui os cards só esmaecem. Desligue essa opção para ver os deslizes.</p>
+    <p class="medida" id="reduz" hidden>
+      Seu sistema pede menos movimento, então aqui os cards só esmaecem. Desligue essa opção para
+      ver os deslizes.
+    </p>
   </section>
 
   <section class="palco" id="palco0"></section>
@@ -129,184 +401,468 @@
 </div>
 
 <script>
-(() => {
-  const $ = (id) => document.getElementById(id)
-  // ---- mesas de demonstração: [mesa, grupo, pessoas, couvert, buffet]
-  const MESAS = [['12',1,2,2,2],['18',1,3,0,3],['22',1,4,2,4],['31',1,2,2,0],['45',2,3,4,3],['60',1,6,6,5],['61',1,2,1,0],['81',1,0,0,0],['82',1,0,2,0],['83',1,0,0,1],['120',1,10,7,10],['303',1,2,2,2],['310',1,1,1,1],['404',1,2,0,0],['505',1,2,2,2],['700',1,2,2,2],['701',1,2,2,2],['VIP Lounge',1,4,4,4]]
-    .map(([mesa, grupo, pessoas, couvert, buffet]) => ({ id: mesa, mesa, grupo, pessoas, couvert, buffet }))
-  const POR_ID = new Map(MESAS.map((m) => [m.id, m]))
-  // ---- mesmas regras do módulo (src/regras.ts)
-  const PESO = { divergente: 0, 'sem-lancamento': 1, 'sem-pessoas': 2, 'tudo-lancado': 3 }
-  const sit1 = (p, v) => p <= 0 ? (v === 0 ? 'sem-pessoas' : 'divergente') : v === p ? 'tudo-lancado' : v === 0 ? 'sem-lancamento' : 'divergente'
-  const sit = (m) => { const a = sit1(m.pessoas, m.couvert), b = sit1(m.pessoas, m.buffet); return PESO[b] < PESO[a] ? b : a }
-  const dif = (m, s) => [m.couvert, m.buffet].filter((v) => sit1(m.pessoas, v) === s).reduce((t, v) => t + Math.abs(v - m.pessoas), 0)
-  const nome = new Intl.Collator('pt-BR', { numeric: true })
-  const porMesa = (a, b) => nome.compare(a.mesa, b.mesa)
-  const porAtencao = (a, b) => PESO[sit(a)] - PESO[sit(b)] || dif(b, 'divergente') - dif(a, 'divergente') || dif(b, 'sem-lancamento') - dif(a, 'sem-lancamento') || porMesa(a, b)
-  const CHIPS = [['todas', 'Todas'], ['divergente', 'Divergentes'], ['sem-lancamento', 'Sem lançamento'], ['sem-pessoas', 'Sem pessoas'], ['tudo-lancado', 'Tudo lançado']]
-  const est = { filtro: 'todas', ordem: 'mesa', busca: '', vel: 1, cascata: false, sel: ['A', 'C'] }
-  const ids = () => MESAS.filter((m) => (est.filtro === 'todas' || sit(m) === est.filtro) && m.mesa.toLowerCase().includes(est.busca)).sort(est.ordem === 'mesa' ? porMesa : porAtencao).map((m) => m.id)
+  ;(() => {
+    const $ = (id) => document.getElementById(id)
+    // ---- mesas de demonstração: [mesa, grupo, pessoas, couvert, buffet]
+    const MESAS = [
+      ['12', 1, 2, 2, 2],
+      ['18', 1, 3, 0, 3],
+      ['22', 1, 4, 2, 4],
+      ['31', 1, 2, 2, 0],
+      ['45', 2, 3, 4, 3],
+      ['60', 1, 6, 6, 5],
+      ['61', 1, 2, 1, 0],
+      ['81', 1, 0, 0, 0],
+      ['82', 1, 0, 2, 0],
+      ['83', 1, 0, 0, 1],
+      ['120', 1, 10, 7, 10],
+      ['303', 1, 2, 2, 2],
+      ['310', 1, 1, 1, 1],
+      ['404', 1, 2, 0, 0],
+      ['505', 1, 2, 2, 2],
+      ['700', 1, 2, 2, 2],
+      ['701', 1, 2, 2, 2],
+      ['VIP Lounge', 1, 4, 4, 4],
+    ].map(([mesa, grupo, pessoas, couvert, buffet]) => ({
+      id: mesa,
+      mesa,
+      grupo,
+      pessoas,
+      couvert,
+      buffet,
+    }))
+    const POR_ID = new Map(MESAS.map((m) => [m.id, m]))
+    // ---- mesmas regras do módulo (src/regras.ts)
+    const PESO = { divergente: 0, 'sem-lancamento': 1, 'sem-pessoas': 2, 'tudo-lancado': 3 }
+    const sit1 = (p, v) =>
+      p <= 0
+        ? v === 0
+          ? 'sem-pessoas'
+          : 'divergente'
+        : v === p
+          ? 'tudo-lancado'
+          : v === 0
+            ? 'sem-lancamento'
+            : 'divergente'
+    const sit = (m) => {
+      const a = sit1(m.pessoas, m.couvert),
+        b = sit1(m.pessoas, m.buffet)
+      return PESO[b] < PESO[a] ? b : a
+    }
+    const dif = (m, s) =>
+      [m.couvert, m.buffet]
+        .filter((v) => sit1(m.pessoas, v) === s)
+        .reduce((t, v) => t + Math.abs(v - m.pessoas), 0)
+    const nome = new Intl.Collator('pt-BR', { numeric: true })
+    const porMesa = (a, b) => nome.compare(a.mesa, b.mesa)
+    const porAtencao = (a, b) =>
+      PESO[sit(a)] - PESO[sit(b)] ||
+      dif(b, 'divergente') - dif(a, 'divergente') ||
+      dif(b, 'sem-lancamento') - dif(a, 'sem-lancamento') ||
+      porMesa(a, b)
+    const CHIPS = [
+      ['todas', 'Todas'],
+      ['divergente', 'Divergentes'],
+      ['sem-lancamento', 'Sem lançamento'],
+      ['sem-pessoas', 'Sem pessoas'],
+      ['tudo-lancado', 'Tudo lançado'],
+    ]
+    const est = {
+      filtro: 'todas',
+      ordem: 'mesa',
+      busca: '',
+      vel: 1,
+      cascata: false,
+      sel: ['A', 'C'],
+    }
+    const ids = () =>
+      MESAS.filter(
+        (m) =>
+          (est.filtro === 'todas' || sit(m) === est.filtro) &&
+          m.mesa.toLowerCase().includes(est.busca)
+      )
+        .sort(est.ordem === 'mesa' ? porMesa : porAtencao)
+        .map((m) => m.id)
 
-  // ---- card
-  const NOTA = '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
-  const TAMPA = '<svg viewBox="0 0 24 24"><path d="M3 20h18M4 16a8 8 0 0 1 16 0zM12 8V5M10 5h4"/></svg>'
-  const GENTE = '<svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M22 21v-2a4 4 0 0 0-3-3.9"/></svg>'
-  const quadro = (m, v, ic) => { const s = sit1(m.pessoas, v), d = v - m.pessoas; return `<div class="quadro ${s}">${m.pessoas > 0 && s === 'divergente' ? `<span class="selo">${d > 0 ? '+' : '−'}${Math.abs(d)}</span>` : ''}${v}${ic}</div>` }
-  const card = (id) => {
-    const m = POR_ID.get(id), s = sit(m), li = document.createElement('li')
-    li.className = 'card ' + s; li.dataset.id = id
-    li.innerHTML = quadro(m, m.couvert, NOTA) + `<div class="meio">${m.pessoas <= 0 ? `<span class="selo ${s === 'sem-pessoas' ? 'neutro' : ''}" style="top:-15px">sem pessoas</span>` : ''}<span class="mesa ${m.mesa.length > 5 ? 'longa' : ''}">${m.mesa}<span class="grupo">/${m.grupo}</span></span><span class="pes">${GENTE}${m.pessoas}</span></div>` + quadro(m, m.buffet, TAMPA)
-    return li
-  }
+    // ---- card
+    const NOTA =
+      '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
+    const TAMPA =
+      '<svg viewBox="0 0 24 24"><path d="M3 20h18M4 16a8 8 0 0 1 16 0zM12 8V5M10 5h4"/></svg>'
+    const GENTE =
+      '<svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M22 21v-2a4 4 0 0 0-3-3.9"/></svg>'
+    const quadro = (m, v, ic) => {
+      const s = sit1(m.pessoas, v),
+        d = v - m.pessoas
+      return `<div class="quadro ${s}">${m.pessoas > 0 && s === 'divergente' ? `<span class="selo">${d > 0 ? '+' : '−'}${Math.abs(d)}</span>` : ''}${v}${ic}</div>`
+    }
+    const card = (id) => {
+      const m = POR_ID.get(id),
+        s = sit(m),
+        li = document.createElement('li')
+      li.className = 'card ' + s
+      li.dataset.id = id
+      li.innerHTML =
+        quadro(m, m.couvert, NOTA) +
+        `<div class="meio">${m.pessoas <= 0 ? `<span class="selo ${s === 'sem-pessoas' ? 'neutro' : ''}" style="top:-15px">sem pessoas</span>` : ''}<span class="mesa ${m.mesa.length > 5 ? 'longa' : ''}">${m.mesa}<span class="grupo">/${m.grupo}</span></span><span class="pes">${GENTE}${m.pessoas}</span></div>` +
+        quadro(m, m.buffet, TAMPA)
+      return li
+    }
 
-  // ---- propostas
-  const SUAVE = 'cubic-bezier(0.4, 0, 0.2, 1)', POUSO = 'cubic-bezier(0.2, 0, 0, 1)'
-  const reduz = matchMedia('(prefers-reduced-motion: reduce)')
-  const PROPOSTAS = {
-    A: { nome: 'Como está no módulo', dur: 320, txt: 'Quem vai para perto (até 2 colunas e 1 linha) desliza. Quem iria longe some e surge no lugar novo com um passo curto.', pro: 'Nenhum card atravessa a tela.', contra: 'Mistura dois movimentos: uns deslizam, outros só aparecem.' },
-    B: { nome: 'Deslize direto', dur: 420, txt: 'Todos os cards deslizam em linha reta até o lugar novo.', pro: 'Dá para seguir cada mesa com os olhos.', contra: 'Na troca de ordem, os cards cruzam a tela uns por cima dos outros.' },
-    C: { nome: 'Três tempos', dur: 560, txt: 'Primeiro sai quem não fica, depois os outros se ajeitam em passos curtos, e por fim entra quem chega.', pro: 'Uma coisa por vez: a tela se lê com calma e nada cruza longe.', contra: 'É o mais demorado até assentar.' },
-    D: { nome: 'Passo curto', dur: 300, txt: 'Todos fazem o mesmo gesto: encolhem de leve e chegam ao lugar novo com um passo de 40 px na direção certa.', pro: 'Uniforme e rápido, o embaralhar fica claro.', contra: 'Não mostra de onde cada mesa veio.' },
-    E: { nome: 'Virar a carta', dur: 440, txt: 'Os lugares não se mexem: cada carta vira e mostra a mesa nova daquela posição.', pro: 'Zero deslocamento, com cara de baralho.', contra: 'Com muitas mesas, muita carta vira ao mesmo tempo.' },
-  }
-  function criaPalco(i) {
-    const sec = $('palco' + i)
-    sec.innerHTML = '<div class="linha"><h2></h2><span class="medida"></span></div><p class="sec"></p><ul class="grade" aria-label="Mesas"></ul><div class="nota"><div></div><div></div></div>'
-    const p = { sec, ul: sec.querySelector('ul'), med: sec.querySelector('.medida'), prop: null, ids: [] }
-    return p
-  }
-  const palcos = [criaPalco(0), criaPalco(1)]
-  const lugar = (el, base) => { const r = el.getBoundingClientRect(); return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height } }
-
-  function fantasma(p, li, r, quadros, op) {
-    const f = li.cloneNode(true); f.classList.add('fantasma'); f.setAttribute('aria-hidden', 'true')
-    Object.assign(f.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' })
-    p.ul.appendChild(f)
-    f.animate(quadros, { fill: 'both', ...op }).finished.then(() => f.remove(), () => f.remove())
-  }
-  function muda(p, novos, animar) {
-    const antes = new Map(), base = p.ul.getBoundingClientRect(), slots = []
-    const vivos = [...p.ul.children].filter((li) => !li.classList.contains('fantasma'))
-    for (const li of vivos) antes.set(li.dataset.id, { li, r: lugar(li, base) })
-    p.ul.querySelectorAll('.fantasma').forEach((f) => f.remove())
-    for (const li of vivos) li.getAnimations().forEach((a) => a.cancel())
-    for (const li of vivos) slots.push(lugar(li, base))
-    const saem = p.ids.filter((id) => !novos.includes(id)), eram = p.ids
-    const lis = novos.map((id) => antes.get(id)?.li ?? card(id))
-    p.ul.replaceChildren(...lis)
-    p.ids = novos
-    if (!animar) return
-    const cols = getComputedStyle(p.ul).gridTemplateColumns.split(' ').length
-    const b2 = p.ul.getBoundingClientRect(), k = 1 / est.vel, P = p.prop, D = PROPOSTAS[P].dur * k
-    const atraso = (j) => est.cascata ? Math.min(j, 24) * 18 * k : 0
-    const some = (id, op, q) => { const a = antes.get(id); fantasma(p, a.li, a.r, q || [{ opacity: 1 }, { opacity: 0 }], op) }
-    let maior = 0, moveram = 0
-    if (reduz.matches) {
-      saem.forEach((id) => some(id, { duration: 120 * k }))
-      lis.forEach((li) => li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 * k }))
-    } else if (P === 'E') {
-      const n = Math.max(eram.length, novos.length)
-      for (let j = 0; j < n; j++) {
-        if (eram[j] === novos[j]) continue
-        moveram++
-        const d = est.cascata ? (j % cols) * 45 * k : 0
-        const giro = (g) => `perspective(700px) rotateY(${g}deg)`
-        if (eram[j] !== undefined) fantasma(p, antes.get(eram[j]).li, slots[j], [{ transform: giro(0) }, { transform: giro(90) }], { duration: D / 2, delay: d, easing: 'cubic-bezier(0.4, 0, 1, 1)' })
-        if (lis[j]) lis[j].animate([{ transform: giro(-90), opacity: 1 }, { transform: giro(0), opacity: 1 }], { duration: D / 2, delay: d + (eram[j] !== undefined ? D / 2 : 0), easing: 'cubic-bezier(0, 0, 0.2, 1)', fill: 'backwards' })
+    // ---- propostas
+    const SUAVE = 'cubic-bezier(0.4, 0, 0.2, 1)',
+      POUSO = 'cubic-bezier(0.2, 0, 0, 1)'
+    const reduz = matchMedia('(prefers-reduced-motion: reduce)')
+    const PROPOSTAS = {
+      A: {
+        nome: 'Como está no módulo',
+        dur: 320,
+        txt: 'Quem vai para perto (até 2 colunas e 1 linha) desliza. Quem iria longe some e surge no lugar novo com um passo curto.',
+        pro: 'Nenhum card atravessa a tela.',
+        contra: 'Mistura dois movimentos: uns deslizam, outros só aparecem.',
+      },
+      B: {
+        nome: 'Deslize direto',
+        dur: 420,
+        txt: 'Todos os cards deslizam em linha reta até o lugar novo.',
+        pro: 'Dá para seguir cada mesa com os olhos.',
+        contra: 'Na troca de ordem, os cards cruzam a tela uns por cima dos outros.',
+      },
+      C: {
+        nome: 'Três tempos',
+        dur: 560,
+        txt: 'Primeiro sai quem não fica, depois os outros se ajeitam em passos curtos, e por fim entra quem chega.',
+        pro: 'Uma coisa por vez: a tela se lê com calma e nada cruza longe.',
+        contra: 'É o mais demorado até assentar.',
+      },
+      D: {
+        nome: 'Passo curto',
+        dur: 300,
+        txt: 'Todos fazem o mesmo gesto: encolhem de leve e chegam ao lugar novo com um passo de 40 px na direção certa.',
+        pro: 'Uniforme e rápido, o embaralhar fica claro.',
+        contra: 'Não mostra de onde cada mesa veio.',
+      },
+      E: {
+        nome: 'Virar a carta',
+        dur: 440,
+        txt: 'Os lugares não se mexem: cada carta vira e mostra a mesa nova daquela posição.',
+        pro: 'Zero deslocamento, com cara de baralho.',
+        contra: 'Com muitas mesas, muita carta vira ao mesmo tempo.',
+      },
+    }
+    function criaPalco(i) {
+      const sec = $('palco' + i)
+      sec.innerHTML =
+        '<div class="linha"><h2></h2><span class="medida"></span></div><p class="sec"></p><ul class="grade" aria-label="Mesas"></ul><div class="nota"><div></div><div></div></div>'
+      const p = {
+        sec,
+        ul: sec.querySelector('ul'),
+        med: sec.querySelector('.medida'),
+        prop: null,
+        ids: [],
       }
-    } else {
-      const t = P === 'C' ? { sai: 130 * k, move: 280 * k, entra: 200 * k } : { sai: 120 * k, move: D, entra: 220 * k }
-      const houveSaida = P === 'C' && saem.length > 0
-      const t0 = houveSaida ? t.sai * 0.8 : 0
-      const pos = new Map(eram.map((id, i) => [id, i]))
-      saem.forEach((id) => some(id, { duration: t.sai }))
-      let algum = false
-      lis.forEach((li, j) => {
-        const id = novos[j], a = antes.get(id)
-        if (!a) return
-        const r = lugar(li, b2), dx = a.r.x - r.x, dy = a.r.y - r.y, dist = Math.hypot(dx, dy)
-        if (dist < 1) return
-        algum = true; moveram++
-        const i = pos.get(id), cx = (j % cols) - (i % cols), cy = Math.floor(j / cols) - Math.floor(i / cols)
-        const longe = Math.abs(cx) > 2 || Math.abs(cy) > 1
-        const ux = dx / dist, uy = dy / dist
-        const passo = (px, q, dur, at) => { const f = Math.min(px, dist); maior = Math.max(maior, f); some(id, { duration: t.sai, delay: at }); li.animate([{ opacity: 0, transform: `translate(${ux * f}px, ${uy * f}px) scale(${q})` }, { opacity: 1, transform: 'none' }], { duration: dur, delay: at + atraso(j), easing: POUSO, fill: 'backwards' }) }
-        const desliza = (at, dur) => { maior = Math.max(maior, dist); li.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: dur, delay: at + atraso(j), easing: SUAVE, fill: 'backwards' }) }
-        if (P === 'A') longe ? passo(28, 1, 200 * k, 0) : desliza(0, t.move)
-        else if (P === 'B') desliza(0, t.move)
-        else if (P === 'C') longe ? passo(56, 1, t.move, t0) : desliza(t0, t.move)
-        else passo(40, 0.94, t.move, 0)
-      })
-      const chega = P === 'C' ? t0 + (algum ? t.move * 0.75 : 0) : 0
-      lis.forEach((li, j) => { if (!antes.has(novos[j])) li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: t.entra, delay: chega + atraso(j), easing: SUAVE, fill: 'backwards' }) })
+      return p
     }
-    p.med.textContent = moveram ? `${moveram} ${moveram === 1 ? 'card mudou' : 'cards mudaram'} · maior percurso ${Math.round(maior)} px` : 'nenhum card mudou de lugar'
-  }
+    const palcos = [criaPalco(0), criaPalco(1)]
+    const lugar = (el, base) => {
+      const r = el.getBoundingClientRect()
+      return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height }
+    }
 
-  // ---- comandos
-  function botoes(pai, ops, atual, ao) {
-    pai.replaceChildren(...ops.map(([v, r]) => { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = r; b.setAttribute('aria-pressed', String(v === atual)); b.onclick = () => ao(v); return b }))
-  }
-  function comandos() {
-    botoes($('chips'), CHIPS.map(([v, r]) => [v, `${r} <b>${v === 'todas' ? MESAS.length : MESAS.filter((m) => sit(m) === v).length}</b>`]), est.filtro, (v) => { para(); aplica({ filtro: est.filtro === v ? 'todas' : v }) })
-    botoes($('ordem'), [['mesa', 'Mesa'], ['atencao', 'Atenção']], est.ordem, (v) => { para(); aplica({ ordem: v }) })
-    const ps = Object.entries(PROPOSTAS).map(([v, p]) => [v, `${v} · ${p.nome}`])
-    botoes($('sel0'), ps, est.sel[0], (v) => escolhe(0, v))
-    botoes($('sel1'), [...ps, ['', 'Nenhuma']], est.sel[1], (v) => escolhe(1, v))
-  }
-  function aplica(m) {
-    Object.assign(est, m); comandos()
-    const n = ids()
-    palcos.forEach((p) => { if (p.prop && n.join() !== p.ids.join()) muda(p, n, true) })
-  }
-  function altura() { // a grade guarda o lugar das 18 mesas: filtrar não encolhe a página
-    palcos.forEach((p) => {
-      if (!p.prop) return
-      p.ul.style.minHeight = ''
-      const c = getComputedStyle(p.ul).gridTemplateColumns.split(' ').length
-      const h = p.ul.firstElementChild?.offsetHeight || 74
-      p.ul.style.minHeight = Math.ceil(MESAS.length / c) * (h + 8) + 12 + 'px'
-    })
-  }
-  function escolhe(i, v) {
-    est.sel[i] = v
-    const p = palcos[i], d = PROPOSTAS[v]
-    p.prop = v || null; p.sec.hidden = !v
-    if (d) {
-      p.sec.querySelector('h2').textContent = `${v} · ${d.nome}`
-      p.sec.querySelector('p').textContent = d.txt
-      const [x, y] = p.sec.querySelectorAll('.nota div')
-      x.innerHTML = `<b>A favor:</b> ${d.pro}`; y.innerHTML = `<b>Contra:</b> ${d.contra}`
-      p.med.textContent = ''
-      muda(p, ids(), false)
+    function fantasma(p, li, r, quadros, op) {
+      const f = li.cloneNode(true)
+      f.classList.add('fantasma')
+      f.setAttribute('aria-hidden', 'true')
+      Object.assign(f.style, {
+        left: r.x + 'px',
+        top: r.y + 'px',
+        width: r.w + 'px',
+        height: r.h + 'px',
+      })
+      p.ul.appendChild(f)
+      f.animate(quadros, { fill: 'both', ...op }).finished.then(
+        () => f.remove(),
+        () => f.remove()
+      )
     }
-    comandos(); altura()
-  }
-  let relogio = null
-  const SEQ = [{ filtro: 'todas', ordem: 'atencao' }, { ordem: 'mesa' }, { filtro: 'divergente' }, { filtro: 'todas' }, { filtro: 'tudo-lancado' }, { filtro: 'todas' }]
-  function para() { clearTimeout(relogio); relogio = null; $('tocar').textContent = 'Tocar sequência' }
-  $('tocar').onclick = () => {
-    if (relogio) return para()
-    $('tocar').textContent = 'Parar'
-    if (est.busca) { est.busca = ''; $('busca').value = '' }
-    let i = 0
-    const passo = () => { aplica(SEQ[i++ % SEQ.length]); relogio = setTimeout(passo, 1500 / Math.min(est.vel, 1)) }
-    passo()
-  }
-  let espera = null
-  $('busca').oninput = (e) => { para(); clearTimeout(espera); espera = setTimeout(() => aplica({ busca: e.target.value.trim().toLowerCase() }), 250) }
-  const velTxt = () => String(est.vel).replace('.', ',') + '×'
-  $('vel').oninput = (e) => { est.vel = +e.target.value; $('velTxt').textContent = velTxt() }
-  const liga = (id, ao) => { $(id).onclick = () => { const v = $(id).getAttribute('aria-pressed') !== 'true'; $(id).setAttribute('aria-pressed', String(v)); ao(v) } }
-  liga('cascata', (v) => { est.cascata = v })
-  liga('cel', (v) => { palcos.forEach((p) => p.ul.classList.toggle('cel', v)); altura() })
-  $('copiar').onclick = async () => {
-    const t = `Animação dos cards: ${est.sel.filter(Boolean).map((v) => v + ' (' + PROPOSTAS[v].nome + ')').join(' ou ')}, velocidade ${velTxt()}, cascata ${est.cascata ? 'ligada' : 'desligada'}.`
-    try { await navigator.clipboard.writeText(t); $('aviso').textContent = 'Copiado: ' + t } catch { $('aviso').textContent = t }
-  }
-  const aviso = () => { $('reduz').hidden = !reduz.matches }
-  reduz.addEventListener('change', aviso); aviso()
-  addEventListener('resize', altura)
-  escolhe(0, 'A'); escolhe(1, 'C')
-})()
+    function muda(p, novos, animar) {
+      const antes = new Map(),
+        base = p.ul.getBoundingClientRect(),
+        slots = []
+      const vivos = [...p.ul.children].filter((li) => !li.classList.contains('fantasma'))
+      for (const li of vivos) antes.set(li.dataset.id, { li, r: lugar(li, base) })
+      p.ul.querySelectorAll('.fantasma').forEach((f) => f.remove())
+      for (const li of vivos) li.getAnimations().forEach((a) => a.cancel())
+      for (const li of vivos) slots.push(lugar(li, base))
+      const saem = p.ids.filter((id) => !novos.includes(id)),
+        eram = p.ids
+      const lis = novos.map((id) => antes.get(id)?.li ?? card(id))
+      p.ul.replaceChildren(...lis)
+      p.ids = novos
+      if (!animar) return
+      const cols = getComputedStyle(p.ul).gridTemplateColumns.split(' ').length
+      const b2 = p.ul.getBoundingClientRect(),
+        k = 1 / est.vel,
+        P = p.prop,
+        D = PROPOSTAS[P].dur * k
+      const atraso = (j) => (est.cascata ? Math.min(j, 24) * 18 * k : 0)
+      const some = (id, op, q) => {
+        const a = antes.get(id)
+        fantasma(p, a.li, a.r, q || [{ opacity: 1 }, { opacity: 0 }], op)
+      }
+      let maior = 0,
+        moveram = 0
+      if (reduz.matches) {
+        saem.forEach((id) => some(id, { duration: 120 * k }))
+        lis.forEach((li) => li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 * k }))
+      } else if (P === 'E') {
+        const n = Math.max(eram.length, novos.length)
+        for (let j = 0; j < n; j++) {
+          if (eram[j] === novos[j]) continue
+          moveram++
+          const d = est.cascata ? (j % cols) * 45 * k : 0
+          const giro = (g) => `perspective(700px) rotateY(${g}deg)`
+          if (eram[j] !== undefined)
+            fantasma(
+              p,
+              antes.get(eram[j]).li,
+              slots[j],
+              [{ transform: giro(0) }, { transform: giro(90) }],
+              { duration: D / 2, delay: d, easing: 'cubic-bezier(0.4, 0, 1, 1)' }
+            )
+          if (lis[j])
+            lis[j].animate(
+              [
+                { transform: giro(-90), opacity: 1 },
+                { transform: giro(0), opacity: 1 },
+              ],
+              {
+                duration: D / 2,
+                delay: d + (eram[j] !== undefined ? D / 2 : 0),
+                easing: 'cubic-bezier(0, 0, 0.2, 1)',
+                fill: 'backwards',
+              }
+            )
+        }
+      } else {
+        const t =
+          P === 'C'
+            ? { sai: 130 * k, move: 280 * k, entra: 200 * k }
+            : { sai: 120 * k, move: D, entra: 220 * k }
+        const houveSaida = P === 'C' && saem.length > 0
+        const t0 = houveSaida ? t.sai * 0.8 : 0
+        const pos = new Map(eram.map((id, i) => [id, i]))
+        saem.forEach((id) => some(id, { duration: t.sai }))
+        let algum = false
+        lis.forEach((li, j) => {
+          const id = novos[j],
+            a = antes.get(id)
+          if (!a) return
+          const r = lugar(li, b2),
+            dx = a.r.x - r.x,
+            dy = a.r.y - r.y,
+            dist = Math.hypot(dx, dy)
+          if (dist < 1) return
+          algum = true
+          moveram++
+          const i = pos.get(id),
+            cx = (j % cols) - (i % cols),
+            cy = Math.floor(j / cols) - Math.floor(i / cols)
+          const longe = Math.abs(cx) > 2 || Math.abs(cy) > 1
+          const ux = dx / dist,
+            uy = dy / dist
+          const passo = (px, q, dur, at) => {
+            const f = Math.min(px, dist)
+            maior = Math.max(maior, f)
+            some(id, { duration: t.sai, delay: at })
+            li.animate(
+              [
+                { opacity: 0, transform: `translate(${ux * f}px, ${uy * f}px) scale(${q})` },
+                { opacity: 1, transform: 'none' },
+              ],
+              { duration: dur, delay: at + atraso(j), easing: POUSO, fill: 'backwards' }
+            )
+          }
+          const desliza = (at, dur) => {
+            maior = Math.max(maior, dist)
+            li.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], {
+              duration: dur,
+              delay: at + atraso(j),
+              easing: SUAVE,
+              fill: 'backwards',
+            })
+          }
+          if (P === 'A') longe ? passo(28, 1, 200 * k, 0) : desliza(0, t.move)
+          else if (P === 'B') desliza(0, t.move)
+          else if (P === 'C') longe ? passo(56, 1, t.move, t0) : desliza(t0, t.move)
+          else passo(40, 0.94, t.move, 0)
+        })
+        const chega = P === 'C' ? t0 + (algum ? t.move * 0.75 : 0) : 0
+        lis.forEach((li, j) => {
+          if (!antes.has(novos[j]))
+            li.animate([{ opacity: 0 }, { opacity: 1 }], {
+              duration: t.entra,
+              delay: chega + atraso(j),
+              easing: SUAVE,
+              fill: 'backwards',
+            })
+        })
+      }
+      p.med.textContent = moveram
+        ? `${moveram} ${moveram === 1 ? 'card mudou' : 'cards mudaram'} · maior percurso ${Math.round(maior)} px`
+        : 'nenhum card mudou de lugar'
+    }
+
+    // ---- comandos
+    function botoes(pai, ops, atual, ao) {
+      pai.replaceChildren(
+        ...ops.map(([v, r]) => {
+          const b = document.createElement('button')
+          b.type = 'button'
+          b.innerHTML = r
+          b.setAttribute('aria-pressed', String(v === atual))
+          b.onclick = () => ao(v)
+          return b
+        })
+      )
+    }
+    function comandos() {
+      botoes(
+        $('chips'),
+        CHIPS.map(([v, r]) => [
+          v,
+          `${r} <b>${v === 'todas' ? MESAS.length : MESAS.filter((m) => sit(m) === v).length}</b>`,
+        ]),
+        est.filtro,
+        (v) => {
+          para()
+          aplica({ filtro: est.filtro === v ? 'todas' : v })
+        }
+      )
+      botoes(
+        $('ordem'),
+        [
+          ['mesa', 'Mesa'],
+          ['atencao', 'Atenção'],
+        ],
+        est.ordem,
+        (v) => {
+          para()
+          aplica({ ordem: v })
+        }
+      )
+      const ps = Object.entries(PROPOSTAS).map(([v, p]) => [v, `${v} · ${p.nome}`])
+      botoes($('sel0'), ps, est.sel[0], (v) => escolhe(0, v))
+      botoes($('sel1'), [...ps, ['', 'Nenhuma']], est.sel[1], (v) => escolhe(1, v))
+    }
+    function aplica(m) {
+      Object.assign(est, m)
+      comandos()
+      const n = ids()
+      palcos.forEach((p) => {
+        if (p.prop && n.join() !== p.ids.join()) muda(p, n, true)
+      })
+    }
+    function altura() {
+      // a grade guarda o lugar das 18 mesas: filtrar não encolhe a página
+      palcos.forEach((p) => {
+        if (!p.prop) return
+        p.ul.style.minHeight = ''
+        const c = getComputedStyle(p.ul).gridTemplateColumns.split(' ').length
+        const h = p.ul.firstElementChild?.offsetHeight || 74
+        p.ul.style.minHeight = Math.ceil(MESAS.length / c) * (h + 8) + 12 + 'px'
+      })
+    }
+    function escolhe(i, v) {
+      est.sel[i] = v
+      const p = palcos[i],
+        d = PROPOSTAS[v]
+      p.prop = v || null
+      p.sec.hidden = !v
+      if (d) {
+        p.sec.querySelector('h2').textContent = `${v} · ${d.nome}`
+        p.sec.querySelector('p').textContent = d.txt
+        const [x, y] = p.sec.querySelectorAll('.nota div')
+        x.innerHTML = `<b>A favor:</b> ${d.pro}`
+        y.innerHTML = `<b>Contra:</b> ${d.contra}`
+        p.med.textContent = ''
+        muda(p, ids(), false)
+      }
+      comandos()
+      altura()
+    }
+    let relogio = null
+    const SEQ = [
+      { filtro: 'todas', ordem: 'atencao' },
+      { ordem: 'mesa' },
+      { filtro: 'divergente' },
+      { filtro: 'todas' },
+      { filtro: 'tudo-lancado' },
+      { filtro: 'todas' },
+    ]
+    function para() {
+      clearTimeout(relogio)
+      relogio = null
+      $('tocar').textContent = 'Tocar sequência'
+    }
+    $('tocar').onclick = () => {
+      if (relogio) return para()
+      $('tocar').textContent = 'Parar'
+      if (est.busca) {
+        est.busca = ''
+        $('busca').value = ''
+      }
+      let i = 0
+      const passo = () => {
+        aplica(SEQ[i++ % SEQ.length])
+        relogio = setTimeout(passo, 1500 / Math.min(est.vel, 1))
+      }
+      passo()
+    }
+    let espera = null
+    $('busca').oninput = (e) => {
+      para()
+      clearTimeout(espera)
+      espera = setTimeout(() => aplica({ busca: e.target.value.trim().toLowerCase() }), 250)
+    }
+    const velTxt = () => String(est.vel).replace('.', ',') + '×'
+    $('vel').oninput = (e) => {
+      est.vel = +e.target.value
+      $('velTxt').textContent = velTxt()
+    }
+    const liga = (id, ao) => {
+      $(id).onclick = () => {
+        const v = $(id).getAttribute('aria-pressed') !== 'true'
+        $(id).setAttribute('aria-pressed', String(v))
+        ao(v)
+      }
+    }
+    liga('cascata', (v) => {
+      est.cascata = v
+    })
+    liga('cel', (v) => {
+      palcos.forEach((p) => p.ul.classList.toggle('cel', v))
+      altura()
+    })
+    $('copiar').onclick = async () => {
+      const t = `Animação dos cards: ${est.sel
+        .filter(Boolean)
+        .map((v) => v + ' (' + PROPOSTAS[v].nome + ')')
+        .join(' ou ')}, velocidade ${velTxt()}, cascata ${est.cascata ? 'ligada' : 'desligada'}.`
+      try {
+        await navigator.clipboard.writeText(t)
+        $('aviso').textContent = 'Copiado: ' + t
+      } catch {
+        $('aviso').textContent = t
+      }
+    }
+    const aviso = () => {
+      $('reduz').hidden = !reduz.matches
+    }
+    reduz.addEventListener('change', aviso)
+    aviso()
+    addEventListener('resize', altura)
+    escolhe(0, 'A')
+    escolhe(1, 'C')
+  })()
 </script>

@@ -1,0 +1,66 @@
+Couvert 0.1.0 - revisão SDK e primeira entrega - 23/11/2026
+
+Entrega
+- Módulo: couvert ("Couvert")
+- Versão: 0.1.0 (primeira entrega; nunca empacotada antes)
+- Pacote: modules-couvert-0.1.0.tgz (315,6 kB, 34 arquivos, sem .env nem segredos)
+- Menu: Simphony › Couvert
+- Permissões: couvert.ler e couvert.exportar (esta é reservada e não libera nada - ver "Não corrigido")
+- Validação SDK: gia validate 55/55 no empacotamento (52/52 antes de gerar a Edge Function), 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- SDK: @gia-cb 0.1.0-alpha.72 (a mesma do Dashboard do Simphony; os demais módulos usam da alpha.70 à alpha.71)
+- Tipo: só leitura (BI do Simphony, credencial simphony-bi), sem banco e sem migration
+
+Incongruências encontradas e corrigidas
+1. As duas chamadas à BI do handler mesas podiam somar 240 s, acima do limite de 150 s da Edge Function → o dia de negócio passou a ter limite próprio de 20 s (20 + 120 = 140 s). Fonte: AGENTS.md da raiz, padrão 14.
+2. Com erro na pesquisa, a barra de filtros continuava enxuta → volta à barra completa (aprovado pelo usuário). Fonte: AGENTS.md da raiz, padrão 8.
+3. A tela cheia só existia no computador → botão também no celular e no tablet em pé, com a saída ao lado do título em todos os estados, porque no toque não há Esc (aprovado pelo usuário). Fonte: conventions.md §11.
+4. No celular, campos de 40 e 42 px e botões Mesa/Atenção de 28 px → 44 px. Fonte: conventions.md §10 e delivery-checklists.md H.
+5. As dicas de Mesa e Atenção também eram montadas em tela de toque → só em aparelho com mouse. Fonte: AGENTS.md da raiz, padrão 2.
+6. INTEGRATION e código citavam a função "couvert-mesas" → o SDK gera uma função por módulo, "couvert". Fonte: commands.md (gia pack) e conventions.md §17.
+7. FAQ com a mesa do card descrita no lado errado, textos que ignoravam o buffet e sem a animação, os itens de R$ 0,00 e a tela cheia no celular → corrigida. Tour: o texto do quadrinho amarelo e vermelho vale para couvert e buffet. Fonte: conventions.md §14.
+8. PRD sem as 10 perguntas da FAQ e sem a tabela do tour, sem o detalhe da conta, sem duas rotas da BI, sem o Q-04 nos riscos e com critério de aceite desatualizado do buffet → completado. Fonte: prd-template.md §12 e §13, delivery-checklists.md A e N, AGENTS.md da raiz (regra geral).
+9. Sem capturas de tela → assets/screenshots com computador (1280x720), tablet (768x1024) e celular (375x667), da loja de demonstração, e no README. Fonte: conventions.md §11, delivery-checklists.md I e P.
+10. Conceito com decisões superadas (Q-01 aberto, buffet fora, banco do GIA) e README sem os arquivos novos → atualizados. Fonte: AGENTS.md da raiz (regra geral) e conventions.md §14.
+11. Campo "temBuffet" da lista de lojas que ninguém usava → removido.
+
+Conferido e já de acordo
+- Estrutura, nomes, named exports, imports e formatação: conventions.md §1, §2, §2.1 e §3
+- Tokens do tema, animação com os presets do @gia-cb/ui/motion e "reduzir movimento": conventions.md §7 e §8
+- WidthFrame como raiz e sem rolagem vertical nem lateral da página: conventions.md §11
+- groupPath único Simphony › Couvert: conventions.md §18 (permissões)
+- Handlers com requirePermission e requireEmpresa; RVC conferido contra a configuração; token só no servidor: conventions.md §17, dados-externos.md e api-reference.md §1.12
+- Consulta com staleTime e sem repetição automática: delivery-checklists.md K e AGENTS.md da raiz, padrão 14
+- Pesquisa recolhe no celular (padrão 1), FAQ e tour sem o sistema antigo (4), MensagemErro na posição dos estados vazios (11), SDK com versão exata (15), MensagemErro e Dica idênticos às referências (16), layout em várias larguras (19)
+- Não se aplicam: 3 (o desenho do usuário usa chips, decisão registrada), 5, 12 e 13 (não grava), 6, 7, 9 e 10 (sem tabela, abas nem carregamento massivo), 17 (sem PDF); migrations e histórico (sem banco)
+- Fontes lidas: docs do @gia-cb 0.1.0-alpha.72 (conventions e delivery-checklists; packaging, commands, dados-externos, api-reference e prd-template nas partes que o módulo usa), AGENTS.md da raiz e do módulo.
+
+Não corrigido (decisão ou fora do escopo)
+- couvert.exportar continua declarada sem liberar nada - o gia validate exige uma chave de ação além da de leitura; questionamento Q-03 aberto.
+- Dia de negócio só na dica do botão Atualizar (não aparece no toque) - o usuário preferiu deixar como está. Fonte: AGENTS.md da raiz, padrão 2.
+- Última loja guardada no navegador (só para quem não tem a loja 01) - questionamento Q-02 aberto.
+- Modificadores do pedido ("Sem Modificacao") aparecem como itens comuns no detalhe, contador do buffet amarelo em loja sem buffet, e mesas da loja anterior na tela até pesquisar de novo - aguardam decisão.
+- Botão "Rever tour" e chips do computador abaixo de 44 px no toque com tela larga - o primeiro é do SDK; os chips só aparecem no layout de computador.
+- Testes automáticos e stories (conventions.md §12) - o módulo não tem, e o gia validate não cobra.
+- README e PRD apontam para docs/conceito.md, que não vai no pacote.
+
+Testes
+- gia validate: 52/52 e, no empacotamento, 55/55, 0 erros, 0 avisos.
+- gia dev, loja de demonstração: 1440, 1280, 1024, 900, 820, 768, 640, 390 e 320 px sem rolagem lateral nem vertical da página; alvos de toque de 44 px até 820 px; tela cheia e saída no computador e no celular; erro 424 com a barra completa e volta à enxuta ao pesquisar de novo; 18 mesas.
+- Antes, no mesmo dia: tour completo em 1440, 1024 e 390 px, ordem Atenção, filtros, busca, animação e detalhe da conta.
+- Falta conferir: BI real depois desta revisão (o limite de 20 s do dia de negócio), Safari e Firefox, leitor de tela e axe, "reduzir movimento" no sistema, celular e terminais de verdade.
+
+Arquivos alterados
+- src/views/CouvertView.tsx, src/components/FiltrosBar.tsx, src/components/CartaoMesa.tsx (comentário)
+- src/server/mesas.ts, src/server/lojas.ts, src/types.ts
+- src/faq.ts, src/tour.ts
+- PRD.md, INTEGRATION.md, CHANGELOG.md, README.md, docs/conceito.md
+- assets/screenshots (desktop, tablet, mobile)
+- edge-functions/couvert (gerado no empacotamento)
+- docs/artefatos (só formatação)
+
+Pendências com outros times
+- Time GIA: liberar o módulo na credencial simphony-bi depois de instalar; confirmar 140 s para a função couvert; conferir a configuração de couvert das lojas; confirmar a regra de cor, o estorno (quantidade negativa) e a pré-conta impressa (numChkPrntd) numa conta real; definir o público de couvert.ler e se valores e garçom pedem permissão própria.
+- Time do SDK: responder Q-02 (lembrar a última loja), Q-03 (permissão em módulo só de leitura) e Q-04 (teclado virtual nos terminais).
+- Salão/TI: testar o teclado na tela nos terminais WS 610, 625 e 8 (docs/artefatos/teste-teclado-virtual.html).
+- O token da BI usado no gia dev vence em 26/11/2026 às 15h.
+- Enviar modules-couvert-0.1.0.tgz ao time do Portal GIA pelo canal combinado.

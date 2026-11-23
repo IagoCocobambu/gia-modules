@@ -26,11 +26,14 @@ const INTEGRACAO = 'simphony-bi'
  * Tempo limite de cada chamada à BI. O time do Portal GIA orientou 60 s, mas em
  * 19/11/2026 (17h, Campinas, um RVC) o `getGuestChecks` levou 89 s, 77 s e 8,5 s em
  * três tentativas seguidas — com 60 s a maioria das pesquisas caía no 504. 120 s fica
- * abaixo do limite da Edge Function (150 s); combinar com o time do Portal GIA o
- * `timeout_seconds` da função `couvert-mesas` (INTEGRATION §5). O legado esperava 180 s.
+ * abaixo do limite da Edge Function (150 s), e o dia de negócio tem limite próprio para as
+ * duas chamadas somadas não passarem dele; combinar com o time do Portal GIA o
+ * `timeout_seconds` da função `couvert` (INTEGRATION §5). O legado esperava 180 s.
  * Estourou: 504, e a tela não repete sozinha.
  */
 const TIMEOUT_MS = 120_000
+/** `getLatestBusDt` é leve (0,6 s medidos): 20 s + 120 s cabem nos 150 s da função. */
+const TIMEOUT_DIA_MS = 20_000
 
 interface Body {
   empresaId: number
@@ -90,7 +93,7 @@ interface Resposta {
   dia: string
   /** ISO da consulta (para o "atualizado há N min"). */
   consultadoEm: string
-  /** Loja com itens de buffet configurados: a tela mostra o buffet. */
+  /** Loja com itens de buffet configurados: o buffet conta para a situação. */
   temBuffet: boolean
   mesas: Mesa[]
 }
@@ -499,7 +502,12 @@ function contasDemo(rvc: number, temBuffet: boolean): Json[] {
 }
 
 /** POST numa rota da BI. Erros com status e frase curta; o detalhe fica no log. */
-async function bi(ctx: ServerContext<Body>, rota: string, corpo: Json): Promise<Json> {
+async function bi(
+  ctx: ServerContext<Body>,
+  rota: string,
+  corpo: Json,
+  limite = TIMEOUT_MS
+): Promise<Json> {
   const { baseUrl, token } = await ctx.credencial(INTEGRACAO)
   let r: Response
   try {
@@ -511,7 +519,7 @@ async function bi(ctx: ServerContext<Body>, rota: string, corpo: Json): Promise<
         Accept: 'application/json',
       },
       body: JSON.stringify(corpo),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(limite),
     })
   } catch (e) {
     if (e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
@@ -596,7 +604,7 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
     }
   }
 
-  const ultimo = await bi(ctx, 'getLatestBusDt', { locRef })
+  const ultimo = await bi(ctx, 'getLatestBusDt', { locRef }, TIMEOUT_DIA_MS)
   const dia = String(ultimo.latestBusDt ?? '').slice(0, 10)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) {
     console.error('[couvert] getLatestBusDt sem latestBusDt:', ultimo)

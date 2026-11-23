@@ -9,6 +9,14 @@ de pessoas. Menu **Simphony › Couvert**. Só leitura.
   Versões: [`CHANGELOG.md`](CHANGELOG.md)
 - Questionamentos ao time do SDK: [`docs/questionamentos-sdk/`](docs/questionamentos-sdk/)
 
+## Telas (loja de demonstração)
+
+![Couvert no computador](assets/screenshots/desktop.png)
+
+| Tablet                                   | Celular                                   |
+| ---------------------------------------- | ----------------------------------------- |
+| ![Tablet](assets/screenshots/tablet.png) | ![Celular](assets/screenshots/mobile.png) |
+
 ## Desenvolver
 
 ```bash
@@ -28,9 +36,13 @@ npm run validate       # gia validate — tem de ficar sem erros
 
 | Arquivo                            | O quê                                                           |
 | ---------------------------------- | --------------------------------------------------------------- |
-| `src/server/lojas.ts`              | lojas do escopo com a BI, RVCs e se têm buffet                  |
+| `src/server/lojas.ts`              | lojas do escopo com a BI e os RVCs                              |
 | `src/server/mesas.ts`              | `getLatestBusDt` + `getGuestChecks` de uma loja e RVC → mesas   |
+| `src/server/nomes.ts`              | nomes dos itens e do garçom, ao abrir o detalhe                 |
 | `src/regras.ts`                    | situação de cada mesa, selo, contagem dos chips, filtro e ordem |
 | `src/views/CouvertView.tsx`        | a tela                                                          |
 | `src/components/CartaoMesa.tsx`    | o card da mesa                                                  |
+| `src/components/DetalheMesa.tsx`   | o detalhe da conta                                              |
+| `src/components/ChipsSituacao.tsx` | chips de situação (no celular, lista suspensa)                  |
+| `src/components/FiltrosBar.tsx`    | barra de filtros (completa e enxuta)                            |
 | `src/hooks/use-ultima-pesquisa.ts` | última loja e RVC do usuário, sem a 01 no escopo (Q-02)         |
