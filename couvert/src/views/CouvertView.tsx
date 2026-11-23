@@ -258,7 +258,7 @@ export function CouvertView() {
         >
           <ChipsSituacao contagem={contagem} filtro={filtro} onFiltro={setFiltro} />
           <div className={cn('flex items-center gap-2', compacto && 'justify-between')}>
-            <div className={cn('min-w-0', compacto ? 'flex-1' : 'w-40')} data-tour="couvert-busca">
+            <div className={cn('min-w-0', compacto ? 'flex-1' : 'w-28')} data-tour="couvert-busca">
               <IconInput
                 icon={Search}
                 value={busca}
@@ -278,7 +278,7 @@ export function CouvertView() {
                   {
                     value: 'atencao',
                     label: 'Atenção',
-                    tooltip: 'Divergentes primeiro, depois sem lançamento',
+                    tooltip: 'Divergentes, sem lançamento e sem pessoas primeiro',
                   },
                 ]}
               />

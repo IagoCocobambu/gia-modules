@@ -10,17 +10,19 @@ import type { Mesa, Situacao } from '../types'
  * artístico (nota musical); no meio, a mesa em destaque com o grupo (`45/2`) e as
  * pessoas; à direita, sempre (como no legado), o quadrinho do buffet. Cada quadrinho tem a
  * cor da situação dele e, quando diverge, o selo da diferença (−2, +1); a borda do
- * card é a da pior situação. Mesa com 0 pessoas leva o selo "sem pessoas". Tocar no
+ * card é a da pior situação. Mesa com 0 pessoas fica neutra, com o selo "sem pessoas". Tocar no
  * card abre o detalhe da conta.
  */
 const BORDA: Record<Situacao, string> = {
   'tudo-lancado': 'border-border',
   'sem-lancamento': 'border-warning/60',
+  'sem-pessoas': 'border-border',
   divergente: 'border-destructive/50',
 }
 
 const QUADRO: Record<Situacao, string> = {
   'tudo-lancado': 'bg-muted text-muted-foreground',
+  'sem-pessoas': 'bg-muted text-muted-foreground',
   'sem-lancamento': 'border border-warning/50 bg-warning/15 text-warning',
   divergente: 'border border-destructive/50 bg-destructive/15 text-destructive',
 }
@@ -104,7 +106,12 @@ export function CartaoMesa({ mesa, temBuffet, onAbrir }: Props) {
       >
         <Quadro pessoas={mesa.pessoas} valor={mesa.couvert} icone={Music} />
         <div className="relative flex min-w-0 flex-1 flex-col items-center justify-center py-1">
-          {mesa.pessoas <= 0 && <Selo texto="sem pessoas" className="-top-3.5" />}
+          {mesa.pessoas <= 0 && (
+            <Selo
+              texto="sem pessoas"
+              className="-top-3.5 border border-border bg-muted text-muted-foreground"
+            />
+          )}
           <p className="flex min-w-0 max-w-full items-baseline">
             <span
               className={cn(

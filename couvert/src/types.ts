@@ -86,7 +86,7 @@ export interface Consulta {
 }
 
 /** Situação de um contador ou da mesa (regras R6–R9 do docs/conceito.md). */
-export type Situacao = 'divergente' | 'sem-lancamento' | 'tudo-lancado'
+export type Situacao = 'divergente' | 'sem-lancamento' | 'sem-pessoas' | 'tudo-lancado'
 
 /** Filtro dos chips: uma situação ou todas. */
 export type FiltroSituacao = Situacao | 'todas'

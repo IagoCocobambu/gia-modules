@@ -77,7 +77,7 @@ Só leitura; sem tabela, migration ou banco externo.
   grupo = `tblNum`, pessoas = `gstCnt`, couvert/buffet = soma de `dspQty` dos itens
   configurados.
 - **Regras de situação** (por contador): igual às pessoas = Tudo lançado; 0 = Sem
-  lançamento; diferente ou mesa com 0 pessoas = Divergente. A mesa fica com a pior das
+  lançamento; diferente = Divergente; mesa com 0 pessoas = Sem pessoas (neutra). A mesa fica com a pior das
   duas (suposição R14).
 
 ## 8. Integrações

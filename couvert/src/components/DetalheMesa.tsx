@@ -9,6 +9,7 @@ import {
   TriangleAlert,
   User,
   Users,
+  UserX,
 } from 'lucide-react'
 import { Modal, Spinner } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
@@ -41,11 +42,13 @@ function abertaHa(abertura: string | null, agora: number): string | null {
 const PILL: Record<Situacao, string> = {
   divergente: 'bg-destructive/15 text-destructive',
   'sem-lancamento': 'bg-warning/15 text-warning',
+  'sem-pessoas': 'bg-muted text-muted-foreground',
   'tudo-lancado': 'bg-success/15 text-success',
 }
 const CONTADOR: Record<Situacao, string> = {
   divergente: 'bg-destructive/15 text-destructive',
   'sem-lancamento': 'bg-warning/15 text-warning',
+  'sem-pessoas': 'bg-muted text-muted-foreground',
   'tudo-lancado': 'bg-muted text-muted-foreground',
 }
 
@@ -193,7 +196,7 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                       valor={mesa.pessoas}
                       rotulo="pessoas"
                       icone={Users}
-                      estilo={mesa.pessoas > 0 ? 'bg-muted text-foreground' : CONTADOR.divergente}
+                      estilo="bg-muted text-foreground"
                     />
                     <Contador
                       valor={mesa.buffet}
@@ -264,7 +267,8 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                             key={`${i.miNum}-${idx}`}
                             className={cn(
                               'border-b border-border last:border-0',
-                              i.tipo === 'couvert' && 'bg-destructive/[0.06]',
+                              i.tipo === 'couvert' &&
+                                (mesa.pessoas > 0 ? 'bg-destructive/[0.06]' : 'bg-muted/50'),
                               i.tipo === 'buffet' && 'bg-primary/[0.06]'
                             )}
                           >
@@ -273,7 +277,7 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                               className={cn(
                                 'px-1 py-2 sm:px-3',
                                 i.tipo && 'font-semibold',
-                                i.tipo === 'couvert' && 'text-destructive'
+                                i.tipo === 'couvert' && mesa.pessoas > 0 && 'text-destructive'
                               )}
                             >
                               <span className="flex items-center gap-1.5">
@@ -331,8 +335,8 @@ function Aviso({ mesa, temBuffet }: { mesa: Mesa; temBuffet: boolean }) {
   const s = situacao(mesa, temBuffet)
   if (mesa.pessoas <= 0) {
     return (
-      <p className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/[0.08] px-3 py-2 text-sm">
-        <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+      <p className="flex items-start gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm">
+        <UserX className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         <span>
           <b>Mesa sem pessoas.</b> Lance o número de pessoas no PDV para conferir o couvert.
         </span>

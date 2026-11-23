@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { CircleCheck, CircleDashed, TriangleAlert } from 'lucide-react'
+import { CircleCheck, CircleDashed, TriangleAlert, UserX } from 'lucide-react'
 import { Button } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
 import type { Contagem } from '../regras'
@@ -19,6 +19,7 @@ const CHIPS: Array<{
   { id: 'todas', rotulo: 'Todas' },
   { id: 'divergente', rotulo: 'Divergentes', icone: TriangleAlert, cor: 'text-destructive' },
   { id: 'sem-lancamento', rotulo: 'Sem lançamento', icone: CircleDashed, cor: 'text-warning' },
+  { id: 'sem-pessoas', rotulo: 'Sem pessoas', icone: UserX, cor: 'text-muted-foreground' },
   { id: 'tudo-lancado', rotulo: 'Tudo lançado', icone: CircleCheck, cor: 'text-success' },
 ]
 

@@ -55,7 +55,8 @@ programação artística e como buffet.
 | --- | --- | --- |
 | neutro | **Tudo lançado** | couvert (e buffet) igual ao número de pessoas |
 | amarelo | **Sem lançamento** | mesa com pessoas e nenhum couvert (ou buffet) lançado |
-| vermelho | **Divergente** | couvert (ou buffet) diferente do número de pessoas, ou mesa com 0 pessoas |
+| vermelho | **Divergente** | couvert (ou buffet) diferente do número de pessoas |
+| neutro, com o selo "sem pessoas" | **Sem pessoas** | mesa com 0 pessoas, qualquer que seja o lançamento: não dá para conferir |
 
 Cada quadrinho tem a cor da situação dele; a borda do card fica com a **pior** das
 duas (vermelho antes de amarelo). No quadrinho vermelho, o **selo** no alto diz a
@@ -63,8 +64,8 @@ diferença:
 
 - **−2**: faltam 2 couverts (ex.: 4 pessoas e 2 couverts);
 - **+1**: há 1 couvert a mais (ex.: 3 pessoas e 4 couverts);
-- **sem pessoas** (no alto da mesa): a conta está com 0 pessoas — lance o número de
-  pessoas no PDV para conferir o couvert.
+A mesa com o selo cinza **sem pessoas** está com 0 pessoas na conta: lance o número de
+pessoas no PDV para conferir o couvert.
       `,
     },
     {
@@ -93,7 +94,7 @@ podem levar alguns segundos para aparecer; até lá aparecem os códigos. A cont
 ## Chips de situação
 
 Acima das mesas, os chips contam quantas mesas há em cada situação:
-**Todas**, **Divergentes**, **Sem lançamento** e **Tudo lançado**. Clique num chip
+**Todas**, **Divergentes**, **Sem lançamento**, **Sem pessoas** e **Tudo lançado**. Clique num chip
 para ver **só aquelas mesas**; clique de novo (ou em **Todas**) para ver todas. Chip
 com 0 mesas fica apagado e não filtra.
 
@@ -108,7 +109,7 @@ mesas 3, 31, 303…
 ## Ordem
 
 - **Mesa**: pelo número da mesa.
-- **Atenção**: primeiro as **divergentes**, depois as **sem lançamento**, por último
+- **Atenção**: primeiro as **divergentes**, depois as **sem lançamento** e as **sem pessoas**, por último
   as que estão com **tudo lançado**.
       `,
     },
@@ -161,7 +162,11 @@ botão saem dela.
         },
         {
           q: 'O que faço com uma mesa vermelha?',
-          a: 'Veja o selo: **−N** quer dizer que faltam N couverts — lance no PDV; **+N**, que há couvert a mais que pessoas — confira o número de pessoas ou estorne o couvert; **sem pessoas**, que a conta está com 0 pessoas — lance o número de pessoas. Depois clique em **Atualizar**.',
+          a: 'Veja o selo: **−N** quer dizer que faltam N couverts — lance no PDV; **+N**, que há couvert a mais que pessoas — confira o número de pessoas ou estorne o couvert. Depois clique em **Atualizar**.',
+        },
+        {
+          q: 'O que é a mesa com o selo "sem pessoas"?',
+          a: 'É uma conta aberta com **0 pessoas**. Sem esse número não dá para dizer se o couvert está certo, então ela não é apontada como erro: fica neutra e entra no chip **Sem pessoas**. Lance o número de pessoas no PDV e clique em **Atualizar**.',
         },
         {
           q: 'E uma mesa amarela?',
