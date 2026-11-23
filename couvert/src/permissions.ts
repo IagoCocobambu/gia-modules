@@ -1,0 +1,18 @@
+import { definePermissions } from '@gia-cb/sdk/permissions'
+
+// Um groupPath para todas as permissões do módulo (máx. 2 níveis): Simphony › Couvert.
+export const couvertPermissions = definePermissions({
+  moduleId: 'couvert',
+  permissions: [
+    {
+      key: 'couvert.ler',
+      description: 'Consultar as mesas abertas e o couvert artístico lançado em cada uma',
+      groupPath: ['Simphony', 'Couvert'],
+    },
+    {
+      key: 'couvert.exportar',
+      description: 'Exportar as mesas da tela em planilha Excel',
+      groupPath: ['Simphony', 'Couvert'],
+    },
+  ],
+})

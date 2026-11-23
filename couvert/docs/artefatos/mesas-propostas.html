@@ -1,0 +1,839 @@
+<title>Mesas do Couvert</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+/>
+<style>
+  /* Layout: uma coluna de painéis (A–E); cada painel = maquete no computador + no celular + prós/contras. Cores = tokens do tema do portal (@gia-cb/ui styles.css). */
+  :root {
+    --bg: oklch(0.965 0.005 250);
+    --surface: oklch(1 0 0);
+    --fg: oklch(0.18 0.02 250);
+    --muted: oklch(0.965 0.005 250);
+    --muted-fg: oklch(0.535 0.02 250);
+    --border: oklch(0.925 0.008 250);
+    --primary: oklch(0.55 0.21 261);
+    --success: oklch(0.65 0.15 150);
+    --info: oklch(0.63 0.2 260);
+    --warning: oklch(0.7 0.16 70);
+    --destructive: oklch(0.6 0.22 25);
+    --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: oklch(0.13 0.018 250);
+      --surface: oklch(0.18 0.02 250);
+      --fg: oklch(0.97 0.005 250);
+      --muted: oklch(0.245 0.02 250);
+      --muted-fg: oklch(0.665 0.02 250);
+      --border: oklch(0.245 0.02 250);
+      --primary: oklch(0.63 0.2 260);
+      --success: oklch(0.7 0.14 150);
+      --info: oklch(0.7 0.18 260);
+      --warning: oklch(0.78 0.16 70);
+      --destructive: oklch(0.65 0.22 25);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    --bg: oklch(0.13 0.018 250);
+    --surface: oklch(0.18 0.02 250);
+    --fg: oklch(0.97 0.005 250);
+    --muted: oklch(0.245 0.02 250);
+    --muted-fg: oklch(0.665 0.02 250);
+    --border: oklch(0.245 0.02 250);
+    --primary: oklch(0.63 0.2 260);
+    --success: oklch(0.7 0.14 150);
+    --info: oklch(0.7 0.18 260);
+    --warning: oklch(0.78 0.16 70);
+    --destructive: oklch(0.65 0.22 25);
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding-block: 32px 64px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  header h1 {
+    font-size: 26px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 0 0 6px;
+    color: var(--muted-fg);
+    max-width: 78ch;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .legenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 12px;
+    color: var(--muted-fg);
+    margin-top: 8px;
+  }
+  .legenda span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .painel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .painel.rec {
+    border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+  }
+  .painel-topo {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 18px 20px 4px;
+    flex-wrap: wrap;
+  }
+  .letra {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--surface);
+    background: var(--fg);
+    border-radius: 5px;
+    padding: 1px 7px;
+  }
+  .painel h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .tag {
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 1px 8px;
+    border: 1px solid;
+  }
+  .tag.sdk {
+    color: var(--primary);
+    border-color: color-mix(in oklab, var(--primary) 45%, transparent);
+  }
+  .tag.novo {
+    color: var(--warning);
+    border-color: color-mix(in oklab, var(--warning) 45%, transparent);
+  }
+  .tag.rec {
+    color: var(--surface);
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  .ideia {
+    padding: 0 20px;
+    margin: 4px 0 0;
+    color: var(--muted-fg);
+    max-width: 82ch;
+  }
+
+  .palco {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 272px;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--bg);
+    border-block: 1px solid var(--border);
+    margin-top: 14px;
+  }
+  .tela {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rot-tela {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-fg);
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .filtros {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+  .filtros b {
+    font-weight: 600;
+    margin-right: auto;
+  }
+  .campo {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 8px;
+    color: var(--muted-fg);
+    white-space: nowrap;
+  }
+  .btn {
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .btn.p {
+    background: var(--primary);
+    color: var(--surface);
+  }
+  .btn.g {
+    border: 1px solid var(--border);
+    color: var(--fg);
+  }
+  .barra {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 5px;
+  }
+  .ind {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 3px 5px;
+    border-radius: 6px;
+    min-width: 0;
+  }
+  .ind i {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    flex: none;
+    background: color-mix(in oklab, var(--t) 16%, transparent);
+  }
+  .ind div {
+    min-width: 0;
+  }
+  .ind b {
+    display: block;
+    font-size: 14px;
+    color: var(--t);
+    line-height: 1.15;
+  }
+  .ind small {
+    display: block;
+    font-size: 10px;
+    color: var(--muted-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ind.on {
+    background: color-mix(in oklab, var(--primary) 10%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 40%, transparent);
+  }
+
+  /* tabela (DataReport) */
+  .grade {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+  }
+  th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--muted-fg);
+    font-size: 11px;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tr:last-child td {
+    border-bottom: 0;
+  }
+  td.n,
+  th.n {
+    text-align: right;
+  }
+  tr.tint-y td {
+    background: color-mix(in oklab, var(--warning) 9%, transparent);
+  }
+  tr.tint-r td {
+    background: color-mix(in oklab, var(--destructive) 9%, transparent);
+  }
+  .pil {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0 7px;
+    color: var(--c);
+    background: color-mix(in oklab, var(--c) 14%, transparent);
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c);
+    display: inline-block;
+  }
+  .val {
+    color: var(--c);
+    font-weight: 600;
+  }
+  .rodape-grade {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted-fg);
+    padding: 5px 10px;
+    border-top: 1px solid var(--border);
+  }
+  .sep {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted-fg);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 4px 2px 0;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* cards de mesa */
+  .mesas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .mesa {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: stretch;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 64px;
+  }
+  .mesa .lado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in oklab, var(--c) 16%, transparent);
+    color: var(--c);
+    padding: 4px;
+  }
+  .mesa .lado b {
+    font-size: 18px;
+    line-height: 1;
+  }
+  .mesa .lado small {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .mesa .meio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    text-align: center;
+  }
+  .mesa .meio b {
+    font-size: 13px;
+  }
+  .mesa .meio small {
+    font-size: 11px;
+    color: var(--muted-fg);
+  }
+  .mesa.r {
+    border-color: color-mix(in oklab, var(--destructive) 50%, var(--border));
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  .chip b {
+    font-weight: 600;
+  }
+  .chip .mini {
+    display: inline-flex;
+    gap: 3px;
+  }
+  .chip .mini span {
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 0 5px;
+    color: var(--c);
+    background: color-mix(in oklab, var(--c) 14%, transparent);
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 2px;
+    gap: 2px;
+    background: var(--surface);
+  }
+  .seg span {
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 5px;
+    color: var(--muted-fg);
+  }
+  .seg span.on {
+    background: var(--primary);
+    color: var(--surface);
+    font-weight: 600;
+  }
+
+  /* celular */
+  .cel {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    border-radius: 22px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .cel .filtros {
+    padding: 5px 8px;
+  }
+  .cel .mesas {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .cel .mesa {
+    min-height: 56px;
+  }
+  .cel .mesa .lado b {
+    font-size: 15px;
+  }
+  .cardlin {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 8px;
+  }
+  .cardlin small {
+    color: var(--muted-fg);
+    font-size: 11px;
+  }
+
+  .pc {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 14px 20px 18px;
+    font-size: 13px;
+  }
+  .pc h3 {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+  }
+  .pc ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+  .pc .pro h3 {
+    color: var(--success);
+  }
+  .pc .con h3 {
+    color: var(--destructive);
+  }
+  .meta {
+    padding: 0 20px 16px;
+    font-size: 12px;
+    color: var(--muted-fg);
+  }
+
+  .recom {
+    background: var(--surface);
+    border: 1px solid color-mix(in oklab, var(--primary) 55%, var(--border));
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .recom h2 {
+    margin: 0 0 6px;
+    font-size: 17px;
+  }
+  .recom p {
+    margin: 0 0 8px;
+    max-width: 82ch;
+  }
+  .comp {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 8px;
+  }
+  .comp th,
+  .comp td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    white-space: normal;
+  }
+
+  @media (max-width: 820px) {
+    .palco {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .barra {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .pc {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+    }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Mesas do Couvert — 5 propostas</h1>
+    <p>
+      Como mostrar as mesas abertas do salão na tela do módulo <b>Couvert</b>. Mesma pesquisa em
+      todas: loja de exemplo, salão <b>Principal</b>, 10 mesas abertas agora. A barra de totais é a
+      do padrão 3 do workspace e é igual em todas; o que muda é a lista de mesas.
+    </p>
+    <p>
+      Regras de cor do legado: contador igual a pessoas fica <b>verde</b>; diferente (a mais ou a
+      menos) fica <b>amarelo</b>; mesa com 0 pessoas fica <b>vermelha</b>.
+    </p>
+    <div class="legenda">
+      <span><i class="dot" style="--c: var(--success)"></i> confere</span>
+      <span><i class="dot" style="--c: var(--warning)"></i> diferente de pessoas</span>
+      <span><i class="dot" style="--c: var(--destructive)"></i> mesa sem pessoas</span>
+    </div>
+  </header>
+  <div id="paineis" style="display: flex; flex-direction: column; gap: 28px"></div>
+
+  <section class="recom">
+    <h2>Recomendação: A — DataReport do SDK</h2>
+    <p>
+      A lista de mesas é uma lista de linhas com números, e o SDK já tem a peça para isso: o
+      <code>DataReport</code>. Ele vira cards sozinho no celular, filtra, ordena e exporta, sem
+      componente novo no módulo. A cor fica no que o usuário precisa ver: o número e uma pílula de
+      situação. Ordenando pela coluna Situação, as mesas a conferir sobem.
+    </p>
+    <p>
+      Se o salão precisar de leitura “de longe”, num tablet no caixa, a <b>C</b> é a mais rápida de
+      bater o olho, mas pede um componente novo (com seu ok, pela regra do workspace) e perde o
+      Exportar.
+    </p>
+    <table class="comp">
+      <thead>
+        <tr>
+          <th>Proposta</th>
+          <th>Peças</th>
+          <th>Altura na tela (10 mesas, 1366×768)</th>
+          <th>Exportar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>A</b> DataReport</td>
+          <td>SDK</td>
+          <td>~420 px, rola dentro da tabela</td>
+          <td>sim</td>
+        </tr>
+        <tr>
+          <td><b>B</b> DataReport com linha tingida</td>
+          <td>SDK (props)</td>
+          <td>~420 px</td>
+          <td>sim</td>
+        </tr>
+        <tr>
+          <td><b>C</b> Cards de mesa</td>
+          <td>componente novo</td>
+          <td>~230 px (6 por linha)</td>
+          <td>não</td>
+        </tr>
+        <tr>
+          <td><b>D</b> Chips por situação</td>
+          <td>componente novo</td>
+          <td>~150 px</td>
+          <td>não</td>
+        </tr>
+        <tr>
+          <td><b>E</b> Cards + Tabela</td>
+          <td>SDK + componente novo</td>
+          <td>igual a A ou C</td>
+          <td>só no modo Tabela</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<script>
+  const MESAS = [
+    { m: '12', p: 4, c: 4, b: 4 },
+    { m: '14', p: 6, c: 5, b: 6 },
+    { m: '15', p: 2, c: 2, b: 0 },
+    { m: '21', p: 0, c: 0, b: 0 },
+    { m: '22', p: 3, c: 3, b: 3 },
+    { m: '23', p: 8, c: 8, b: 7 },
+    { m: '31', p: 5, c: 6, b: 5 },
+    { m: '32', p: 2, c: 2, b: 2 },
+    { m: '40', p: 4, c: 4, b: 4 },
+    { m: '41', p: 0, c: 2, b: 0 },
+  ]
+  const cor = (p, v) =>
+    p === 0 ? 'var(--destructive)' : v === p ? 'var(--success)' : 'var(--warning)'
+  const sit = (x) =>
+    x.p === 0
+      ? ['Sem pessoas', 'var(--destructive)', 2]
+      : x.c !== x.p || x.b !== x.p
+        ? ['Divergente', 'var(--warning)', 1]
+        : ['Confere', 'var(--success)', 0]
+  const ordenadas = [...MESAS].sort((a, b) => sit(b)[2] - sit(a)[2] || a.m.localeCompare(b.m))
+
+  const filtros = (cel) =>
+    cel
+      ? `<div class="filtros"><b>Couvert</b><span class="campo">Principal</span><span class="btn g">⌄</span></div>`
+      : `<div class="filtros"><b>Couvert</b><span class="campo" style="width:150px">Loja de exemplo</span><span class="campo">Salão Principal</span><span class="btn p">Atualizar</span></div>`
+  const ind = (t, v, l, on) =>
+    `<div class="ind${on ? ' on' : ''}" style="--t:${t}"><i></i><div><b class="num">${v}</b><small>${l}</small></div></div>`
+  const barra = (on) =>
+    `<div class="barra">${ind('var(--fg)', 10, 'mesas abertas')}${ind('var(--info)', 36, 'pessoas')}${ind('var(--warning)', 2, 'couvert diferente', on)}${ind('var(--warning)', 2, 'buffet diferente')}${ind('var(--destructive)', 2, 'mesas sem pessoas')}</div>`
+
+  function tabela(tint) {
+    const linhas = ordenadas
+      .map((x) => {
+        const [s, c, n] = sit(x)
+        const cls = tint ? (n === 2 ? 'tint-r' : n === 1 ? 'tint-y' : '') : ''
+        return `<tr class="${cls}"><td><b>Mesa ${x.m}</b></td><td class="n num">${x.p}</td>
+      <td class="n num"><span class="val" style="--c:${cor(x.p, x.c)}">${x.c}</span></td>
+      <td class="n num"><span class="val" style="--c:${cor(x.p, x.b)}">${x.b}</span></td>
+      <td>${tint ? `<span style="color:${c};font-weight:600">${s}</span>` : `<span class="pil" style="--c:${c}">${s}</span>`}</td></tr>`
+      })
+      .join('')
+    return `<div class="grade"><table><thead><tr><th>Mesa</th><th class="n">Pessoas</th><th class="n">Couvert</th><th class="n">Buffet</th><th>Situação ↓</th></tr></thead><tbody>${linhas}</tbody></table>
+    <div class="rodape-grade"><span>10 mesas</span><span>Exportar</span></div></div>`
+  }
+  const celTabela = (tint) =>
+    ordenadas
+      .slice(0, 4)
+      .map((x) => {
+        const [s, c, n] = sit(x)
+        const bg = tint && n ? `background:color-mix(in oklab, ${c} 9%, var(--surface))` : ''
+        return `<div class="cardlin" style="${bg}"><b>Mesa ${x.m}</b><span class="pil" style="--c:${c}">${s}</span>
+    <small class="num">${x.p} pessoas · couvert <span class="val" style="--c:${cor(x.p, x.c)}">${x.c}</span> · buffet <span class="val" style="--c:${cor(x.p, x.b)}">${x.b}</span></small></div>`
+      })
+      .join('')
+
+  const cardMesa = (x) => `<div class="mesa${x.p === 0 ? ' r' : ''}">
+  <div class="lado" style="--c:${cor(x.p, x.c)}"><b class="num">${x.c}</b><small>couvert</small></div>
+  <div class="meio"><b>Mesa ${x.m}</b><small class="num">${x.p} pessoas</small></div>
+  <div class="lado" style="--c:${cor(x.p, x.b)}"><b class="num">${x.b}</b><small>buffet</small></div></div>`
+  const chip = (
+    x
+  ) => `<span class="chip"><b>Mesa ${x.m}</b><span class="num" style="color:var(--muted-fg)">${x.p}p</span>
+  <span class="mini"><span class="num" style="--c:${cor(x.p, x.c)}">C ${x.c}</span><span class="num" style="--c:${cor(x.p, x.b)}">B ${x.b}</span></span></span>`
+  const grupoChips = (n, titulo, cel) => {
+    const l = ordenadas.filter((x) => sit(x)[2] === n)
+    return `<div class="sep"><i class="dot" style="--c:${sit(l[0])[1]}"></i>${titulo} · ${l.length}</div><div class="chips">${(cel ? l.slice(0, 4) : l).map(chip).join('')}</div>`
+  }
+
+  const P = [
+    {
+      l: 'A',
+      t: 'DataReport do SDK, como entregue',
+      tags: ['sdk', 'rec'],
+      ideia:
+        'Uma linha por mesa no DataReport: Mesa, Pessoas, Couvert, Buffet e Situação. O número fica na cor da regra e a Situação vira uma pílula; a grade vem ordenada por Situação, com as mesas a conferir no alto. No celular o próprio DataReport mostra cards.',
+      tela: barra(false) + tabela(false),
+      cel: filtros(true) + celTabela(false),
+      alt: 'Computador: filtros 56 px + totais 52 px + tabela (cabeçalho + 10 linhas de 32 px) ≈ 420 px. Celular: um card de ~56 px por mesa.',
+      pro: [
+        'Nenhum componente novo: só colunas do DataReport',
+        'Exportar, filtro de coluna, ordenação e cards no celular de graça',
+        'Mesmo visual dos outros relatórios do portal',
+      ],
+      con: [
+        'Menos “visual” que os cards do legado: lê-se por linha, não de relance',
+        'Com 40 mesas, rola dentro da tabela',
+      ],
+    },
+    {
+      l: 'B',
+      t: 'DataReport com a linha tingida',
+      tags: ['sdk'],
+      ideia:
+        'O mesmo DataReport, mas a linha inteira ganha um fundo leve amarelo ou vermelho quando a mesa diverge. A Situação vira texto colorido, sem pílula.',
+      tela: barra(false) + tabela(true),
+      cel: filtros(true) + celTabela(true),
+      alt: 'Igual à A (≈ 420 px).',
+      pro: ['Mesas a conferir saltam aos olhos mesmo sem ordenar', 'Continua só com o SDK'],
+      con: [
+        'Fundo de linha em tela de relatório foge do padrão das outras telas',
+        'Depende de o DataReport aceitar classe por linha (conferir a prop antes de prometer)',
+      ],
+    },
+    {
+      l: 'C',
+      t: 'Cards de mesa, como no legado',
+      tags: ['novo'],
+      ideia:
+        'Um card por mesa: couvert à esquerda e buffet à direita, cada lado tingido pela situação, e a mesa com o número de pessoas no meio. Grade que preenche a largura; mesa sem pessoas com borda vermelha.',
+      tela:
+        barra(true) +
+        `<div class="sep">Filtro: couvert diferente · <span style="color:var(--primary)">✕ tirar</span></div><div class="mesas">${ordenadas
+          .filter((x) => x.p && x.c !== x.p)
+          .map(cardMesa)
+          .join(
+            ''
+          )}</div><div class="sep">Sem filtro</div><div class="mesas">${ordenadas.map(cardMesa).join('')}</div>`,
+      cel:
+        filtros(true) + `<div class="mesas">${ordenadas.slice(0, 6).map(cardMesa).join('')}</div>`,
+      alt: 'Computador: 6 cards por linha, 10 mesas em 2 linhas ≈ 150 px de cards (≈ 230 px com os totais). Celular: 2 por linha, ~60 px cada.',
+      pro: [
+        'Leitura de relance, até de longe no tablet do caixa',
+        'Quem usava o legado reconhece na hora',
+        'Cabe muita mesa numa tela',
+      ],
+      con: [
+        'Componente novo no módulo (precisa do seu ok)',
+        'Sem Exportar nem ordenação prontos',
+        'Cor como única pista fica fraca para daltônicos: precisa do rótulo “couvert/buffet” sempre',
+      ],
+    },
+    {
+      l: 'D',
+      t: 'Chips agrupados por situação',
+      tags: ['novo'],
+      ideia:
+        'Mesas em fichas pequenas, separadas em três grupos: Sem pessoas, Divergentes e Confere. Cada ficha traz pessoas e os contadores C e B coloridos. O grupo Confere pode ficar recolhido.',
+      tela:
+        barra(false) +
+        grupoChips(2, 'Sem pessoas') +
+        grupoChips(1, 'Divergentes') +
+        grupoChips(0, 'Confere'),
+      cel: filtros(true) + grupoChips(2, 'Sem pessoas', true) + grupoChips(1, 'Divergentes', true),
+      alt: 'Computador: ≈ 150 px para 10 mesas. Celular: 3 a 4 fichas por linha.',
+      pro: ['O que precisa de ação vem primeiro, sem clicar', 'A mais compacta das cinco'],
+      con: [
+        '“C” e “B” precisam ser aprendidos (FAQ)',
+        'Componente novo, sem Exportar',
+        'Os grupos repetem o que o filtro pelos totais já faz',
+      ],
+    },
+    {
+      l: 'E',
+      t: 'Dois modos: Cards ou Tabela',
+      tags: ['sdk', 'novo'],
+      ideia:
+        'Um SegmentedControl do SDK na barra troca entre a grade de cards (C) e o DataReport (A). A escolha fica guardada no navegador.',
+      tela:
+        `<div class="filtros"><b>Couvert</b><span class="seg"><span class="on">Cards</span><span>Tabela</span></span><span class="campo">Salão Principal</span><span class="btn p">Atualizar</span></div>` +
+        barra(false) +
+        `<div class="mesas">${ordenadas.slice(0, 6).map(cardMesa).join('')}</div>`,
+      cel:
+        filtros(true) +
+        `<div class="seg"><span class="on">Cards</span><span>Tabela</span></span></div><div class="mesas">${ordenadas.slice(0, 4).map(cardMesa).join('')}</div>`,
+      alt: 'Cards: como a C. Tabela: como a A.',
+      pro: [
+        'O salão usa os cards, a supervisão usa a tabela e exporta',
+        'O SegmentedControl já existe no SDK',
+      ],
+      con: [
+        'Duas visões para manter, testar e explicar na FAQ e no tour',
+        'Ainda pede o componente de card',
+      ],
+    },
+  ]
+
+  document.getElementById('paineis').innerHTML = P.map(
+    (p) => `
+  <section class="painel${p.tags.includes('rec') ? ' rec' : ''}">
+    <div class="painel-topo"><span class="letra">${p.l}</span><h2>${p.t}</h2>
+      ${p.tags.map((t) => `<span class="tag ${t}">${t === 'sdk' ? 'SDK' : t === 'novo' ? 'componente novo' : 'recomendada'}</span>`).join('')}</div>
+    <p class="ideia">${p.ideia}</p>
+    <div class="palco">
+      <div class="tela"><div class="rot-tela"><span>Computador</span></div>${p.l === 'E' ? '' : filtros(false)}${p.tela}</div>
+      <div class="tela"><div class="rot-tela"><span>Celular</span></div><div class="cel">${p.cel}</div></div>
+    </div>
+    <div class="pc"><div class="pro"><h3>Prós</h3><ul>${p.pro.map((x) => `<li>${x}</li>`).join('')}</ul></div>
+      <div class="con"><h3>Contras</h3><ul>${p.con.map((x) => `<li>${x}</li>`).join('')}</ul></div></div>
+    <div class="meta">Altura: ${p.alt}</div>
+  </section>`
+  ).join('')
+</script>
