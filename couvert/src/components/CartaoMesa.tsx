@@ -87,12 +87,22 @@ interface Props {
   movimento: Movimento | undefined
   /** Ordem das mesas na tela: o card só desliza quando ela muda. */
   ordemNaTela: string
+  /** Primeiro card da tela: o passo do tour que explica o card aponta para ele. */
+  alvoDoTour: boolean
   ref?: Ref<HTMLLIElement>
   /** Toque no card: abre o detalhe da conta (`DetalheMesa`). */
   onAbrir: () => void
 }
 
-export function CartaoMesa({ mesa, temBuffet, movimento, ordemNaTela, ref, onAbrir }: Props) {
+export function CartaoMesa({
+  mesa,
+  temBuffet,
+  movimento,
+  ordemNaTela,
+  alvoDoTour,
+  ref,
+  onAbrir,
+}: Props) {
   const semMovimento = usePrefersReducedMotion()
   const vindo = semMovimento || !movimento ? { x: 0, y: 0 } : movimento
   const s = situacao(mesa, temBuffet)
@@ -109,6 +119,7 @@ export function CartaoMesa({ mesa, temBuffet, movimento, ordemNaTela, ref, onAbr
   return (
     <motion.li
       ref={ref}
+      data-tour={alvoDoTour ? 'couvert-mesa' : undefined}
       className="min-w-0"
       layout={semMovimento ? false : 'position'}
       layoutDependency={ordemNaTela}

@@ -361,13 +361,14 @@ export function CouvertView() {
             aria-label="Mesas abertas"
           >
             <AnimatePresence mode="popLayout">
-              {visiveis.map((m) => (
+              {visiveis.map((m, i) => (
                 <CartaoMesa
                   key={`${m.id}:${cena.movimentos.get(m.id)?.versao ?? 0}`}
                   mesa={m}
                   temBuffet={temBuffet}
                   movimento={cena.movimentos.get(m.id)}
                   ordemNaTela={ordemNaTela}
+                  alvoDoTour={i === 0}
                   onAbrir={() => setMesaAberta(m.id)}
                 />
               ))}
