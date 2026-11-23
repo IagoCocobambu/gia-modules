@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { FileSpreadsheet, Lock, Music, RefreshCw, Search, SearchX, Store } from 'lucide-react'
+import { Download, Lock, Music, RefreshCw, Search, SearchX, Store } from 'lucide-react'
 import {
   Button,
   EmptyState,
@@ -226,8 +226,9 @@ export function CouvertView() {
     )
     const lojaConsultada = lojas.find((l) => l.empresaId === consulta.empresaId)
     const exportar = canExport && (
+      // Mesmo visual do Exportar do `DataReport` do SDK (secondary + Download).
       <Button
-        variant="ghost"
+        variant="secondary"
         className={cn('shrink-0', compacto && 'h-11')}
         disabled={consultando || exportando || visiveis.length === 0}
         loading={exportando}
@@ -253,7 +254,7 @@ export function CouvertView() {
             .finally(() => setExportando(false))
         }}
       >
-        <FileSpreadsheet className="h-4 w-4" /> Exportar
+        <Download className="h-4 w-4" /> Exportar
       </Button>
     )
     conteudo = (
