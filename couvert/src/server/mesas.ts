@@ -386,7 +386,13 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
     )
   }
 
-  if (locRef === LOCREF_DEMO && envOptional('GIA_DEV_COUVERT_DEMO') === '1') {
+  if (locRef === LOCREF_DEMO && envOptional('GIA_DEV_COUVERT_DEMO') !== '1') {
+    throw new HttpError(
+      422,
+      'A loja de demonstração só funciona no gia dev com GIA_DEV_COUVERT_DEMO=1 no .env. Defina a variável e reinicie o gia dev.'
+    )
+  }
+  if (locRef === LOCREF_DEMO) {
     const dia = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(
       new Date()
     )

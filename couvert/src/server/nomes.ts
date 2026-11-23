@@ -120,7 +120,13 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
   const pedidosGarcons = codigos(ctx.body?.garcons)
   const resposta: Resposta = { itens: {}, garcons: {} }
 
-  if (locRef === LOCREF_DEMO && envOptional('GIA_DEV_COUVERT_DEMO') === '1') {
+  if (locRef === LOCREF_DEMO && envOptional('GIA_DEV_COUVERT_DEMO') !== '1') {
+    throw new HttpError(
+      422,
+      'A loja de demonstração só funciona no gia dev com GIA_DEV_COUVERT_DEMO=1 no .env. Defina a variável e reinicie o gia dev.'
+    )
+  }
+  if (locRef === LOCREF_DEMO) {
     for (const n of pedidosItens) if (DEMO_ITENS[n]) resposta.itens[n] = DEMO_ITENS[n]
     for (const n of pedidosGarcons) if (DEMO_GARCONS[n]) resposta.garcons[n] = DEMO_GARCONS[n]
     return resposta

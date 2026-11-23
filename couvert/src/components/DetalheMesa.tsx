@@ -92,14 +92,44 @@ function Fato({
   children: ReactNode
 }) {
   return (
-    <div className={cn('flex min-w-0 items-start gap-2', largo && 'col-span-2')}>
-      <Icone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+    <div
+      className={cn('grid min-w-0 grid-cols-[1rem_minmax(0,1fr)] gap-x-2', largo && 'col-span-2')}
+    >
+      <Icone className="mt-0.5 h-4 w-4 text-muted-foreground" />
       <div className="min-w-0">
         <dt className="truncate whitespace-nowrap text-xs text-muted-foreground">{rotulo}</dt>
         <dd className="truncate whitespace-nowrap text-sm font-semibold text-foreground">
           {children}
         </dd>
       </div>
+    </div>
+  )
+}
+
+function Valor({
+  rotulo,
+  valor,
+  forte = false,
+  separado = false,
+  tom,
+}: {
+  rotulo: string
+  valor: number
+  forte?: boolean
+  /** Linha tracejada acima, na largura toda (antes do Total). */
+  separado?: boolean
+  tom?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'flex items-baseline justify-between gap-3',
+        separado && 'mt-1 border-t border-dashed border-border pt-2',
+        forte ? cn('font-semibold', tom ?? 'text-foreground') : 'text-muted-foreground'
+      )}
+    >
+      <dt>{rotulo}</dt>
+      <dd className={cn('text-right', !forte && 'text-foreground')}>{brl(valor)}</dd>
     </div>
   )
 }
@@ -176,7 +206,7 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                       estilo={CONTADOR[situacaoDoContador(mesa.pessoas, mesa.buffet)]}
                     />
                   </div>
-                  <dl className="grid grid-cols-2 gap-3">
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
                     <Fato icone={User} rotulo="Garçom" largo>
                       {conta.garcom === null ? (
                         '—'
@@ -199,23 +229,13 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                       {conta.impressa ? 'impressa' : 'não impressa'}
                     </Fato>
                   </dl>
-                  <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 border-t border-border pt-3 text-sm tabular-nums">
-                    <dt className="text-muted-foreground">Subtotal</dt>
-                    <dd className="text-right">{brl(conta.subtotal)}</dd>
-                    <dt className="text-muted-foreground">Desconto</dt>
-                    <dd className="text-right">{brl(conta.desconto)}</dd>
-                    <dt className="text-muted-foreground">Taxa de serviço</dt>
-                    <dd className="text-right">{brl(conta.taxaServico)}</dd>
-                    <dt className="mt-1 border-t border-dashed border-border pt-1 font-semibold text-foreground">
-                      Total
-                    </dt>
-                    <dd className="mt-1 border-t border-dashed border-border pt-1 text-right font-semibold text-foreground">
-                      {brl(conta.total)}
-                    </dd>
-                    <dt className="text-muted-foreground">Pago</dt>
-                    <dd className="text-right">{brl(conta.pago)}</dd>
-                    <dt className="font-semibold text-warning">Saldo a pagar</dt>
-                    <dd className="text-right font-semibold text-warning">{brl(conta.saldo)}</dd>
+                  <dl className="flex flex-col gap-1 border-t border-border pt-3 text-sm tabular-nums">
+                    <Valor rotulo="Subtotal" valor={conta.subtotal} />
+                    <Valor rotulo="Desconto" valor={conta.desconto} />
+                    <Valor rotulo="Taxa de serviço" valor={conta.taxaServico} />
+                    <Valor rotulo="Total" valor={conta.total} forte separado />
+                    <Valor rotulo="Pago" valor={conta.pago} />
+                    <Valor rotulo="Saldo a pagar" valor={conta.saldo} forte tom="text-warning" />
                   </dl>
                 </aside>
 
@@ -228,14 +248,14 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                     <table className="w-full whitespace-nowrap text-sm">
                       <thead>
                         <tr className="border-b border-border text-xs text-muted-foreground">
-                          <th className="px-2 py-1.5 text-right font-semibold">Qtd</th>
-                          <th className="px-2 py-1.5 text-left font-semibold">Item</th>
-                          <th className="px-2 py-1.5 text-left font-semibold">Assento</th>
-                          <th className="hidden px-2 py-1.5 text-right font-semibold sm:table-cell">
+                          <th className="w-px px-3 py-2 text-right font-semibold">Qtd</th>
+                          <th className="px-3 py-2 text-left font-semibold">Item</th>
+                          <th className="w-px px-3 py-2 text-center font-semibold">Assento</th>
+                          <th className="hidden w-px px-3 py-2 text-center font-semibold sm:table-cell">
                             Rodada
                           </th>
-                          <th className="px-2 py-1.5 text-right font-semibold">Hora</th>
-                          <th className="px-2 py-1.5 text-right font-semibold">Valor</th>
+                          <th className="w-px px-3 py-2 text-center font-semibold">Hora</th>
+                          <th className="w-px px-3 py-2 text-right font-semibold">Valor</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -248,10 +268,10 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                               i.tipo === 'buffet' && 'bg-primary/[0.06]'
                             )}
                           >
-                            <td className="px-2 py-1.5 text-right tabular-nums">{i.qtd}×</td>
+                            <td className="px-3 py-2 text-right tabular-nums">{i.qtd}×</td>
                             <td
                               className={cn(
-                                'px-2 py-1.5',
+                                'px-3 py-2',
                                 i.tipo && 'font-semibold',
                                 i.tipo === 'couvert' && 'text-destructive'
                               )}
@@ -267,23 +287,21 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                                 )}
                               </span>
                             </td>
-                            <td className="px-2 py-1.5 text-muted-foreground tabular-nums">
+                            <td className="px-3 py-2 text-center text-muted-foreground tabular-nums">
                               {i.assento ?? '—'}
                             </td>
-                            <td className="hidden px-2 py-1.5 text-right text-muted-foreground tabular-nums sm:table-cell">
+                            <td className="hidden px-3 py-2 text-center text-muted-foreground tabular-nums sm:table-cell">
                               {i.rodada !== null ? `${i.rodada}ª` : '—'}
                             </td>
-                            <td className="px-2 py-1.5 text-right text-muted-foreground tabular-nums">
+                            <td className="px-3 py-2 text-center text-muted-foreground tabular-nums">
                               {hora(i.hora)}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-1.5 text-right tabular-nums">
-                              {brl(i.valor)}
-                            </td>
+                            <td className="px-3 py-2 text-right tabular-nums">{brl(i.valor)}</td>
                           </tr>
                         ))}
                         {conta.itens.length === 0 && (
                           <tr>
-                            <td colSpan={6} className="px-2 py-4 text-center text-muted-foreground">
+                            <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground">
                               Nenhum item lançado ainda.
                             </td>
                           </tr>
