@@ -191,8 +191,9 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
 - **Ícone do buffet: opção A, tampa de travessa (`ConciergeBell`)** — escolhida pelo
   usuário em 23/11/2026 entre as 6 de `docs/artefatos/icone-buffet-propostas.html`;
   é a mais parecida com o ícone do legado.
-- **Detalhe da mesa (em escolha, 23/11/2026)**: tocar no card mostraria a conta aberta
-  (conta, abertura, garçom, rodadas, último lançamento, pré-conta, itens com assento,
-  rodada, hora e valor, e os valores da conta). 5 propostas em
-  `docs/artefatos/detalhe-mesa-propostas.html` (recomendada: A, `Modal` do SDK). Em aberto:
-  permissão própria para valores e garçom (ex.: `couvert.ver-conta`).
+- **Detalhe da mesa — escolhida a combinação B+A (23/11/2026)**: tocar no card abre o
+  `Modal` do SDK (size `xl`) em duas colunas, como a proposta B (à esquerda contadores,
+  fatos e valores), com a lista única de itens da proposta A à direita (qtd, item,
+  assento, rodada, hora, valor; couvert e buffet em destaque) e o aviso do que falta
+  acima dela. Propostas em `docs/artefatos/detalhe-mesa-propostas.html` (a recomendação
+  era a A). Em aberto: permissão própria para valores e garçom (ex.: `couvert.ver-conta`).
