@@ -292,7 +292,7 @@ export function CouvertView() {
                   {
                     value: 'atencao',
                     label: 'Atenção',
-                    tooltip: 'Divergentes, sem lançamento e sem pessoas primeiro',
+                    tooltip: 'Maior número de divergências primeiro',
                   },
                 ]}
               />

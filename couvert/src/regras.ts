@@ -70,6 +70,26 @@ const NOME = new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' })
 const porMesa = (a: Mesa, b: Mesa) =>
   NOME.compare(a.mesa, b.mesa) || (a.grupo ?? 0) - (b.grupo ?? 0)
 
+/**
+ * Soma das diferenças (|lançado − pessoas|) dos contadores da mesa que estão na situação
+ * `s`. Divergente = o número de divergências; Sem lançamento = quanto falta lançar.
+ */
+export function diferenca(m: Mesa, temBuffet: boolean, s: Situacao): number {
+  return (temBuffet ? [m.couvert, m.buffet] : [m.couvert])
+    .filter((v) => situacaoDoContador(m.pessoas, v) === s)
+    .reduce((soma, v) => soma + Math.abs(v - m.pessoas), 0)
+}
+
+/**
+ * Ordem Atenção (R12): situação; maior número de divergências; no empate, quem tem mais a
+ * lançar (contador zerado); por último, a mesa.
+ */
+const porAtencao = (temBuffet: boolean) => (a: Mesa, b: Mesa) =>
+  PESO[situacao(a, temBuffet)] - PESO[situacao(b, temBuffet)] ||
+  diferenca(b, temBuffet, 'divergente') - diferenca(a, temBuffet, 'divergente') ||
+  diferenca(b, temBuffet, 'sem-lancamento') - diferenca(a, temBuffet, 'sem-lancamento') ||
+  porMesa(a, b)
+
 /** Busca (R13), filtro do chip (R11) e ordem (R12). */
 export function mesasVisiveis(
   mesas: Mesa[],
@@ -84,8 +104,7 @@ export function mesasVisiveis(
       (filtro === 'todas' || situacao(m, temBuffet) === filtro) &&
       (!termo || m.mesa.toLocaleLowerCase('pt-BR').includes(termo))
   )
-  const peso = (m: Mesa) => PESO[situacao(m, temBuffet)]
-  return lista.sort(ordem === 'atencao' ? (a, b) => peso(a) - peso(b) || porMesa(a, b) : porMesa)
+  return lista.sort(ordem === 'atencao' ? porAtencao(temBuffet) : porMesa)
 }
 
 export const ROTULO_SITUACAO: Record<Situacao, string> = {

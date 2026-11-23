@@ -81,7 +81,7 @@ Fontes do legado (19/11/2026): banco do GIA (lojas e configuração), banco do S
 | R9  | Mesa com **0 pessoas**: com **couvert ou buffet lançado** é **Divergente** (vermelha); **sem lançamento** é **Sem pessoas** (cinza, chip próprio). Nas duas, o selo “sem pessoas”. | 0 pessoas e 2 couverts → Divergente; 0 pessoas e nada lançado → Sem pessoas            | usuário, 23/11/2026 (em 19/11 era sempre Divergente); o chip próprio foi a recomendação, o usuário não teve preferência |
 | R10 | A lista só muda pelo botão **Atualizar** (ou trocando loja/RVC); nada de atualização automática. Mostra há quanto tempo foi a última atualização, sem “Ao vivo”.                   | “atualizado há 1 min”                                                                  | usuário, 19/11/2026                                                                                                     |
 | R11 | Os chips contam as mesas de cada situação na pesquisa inteira; o clique filtra os cards (não muda as contagens). **Todas** tira o filtro.                                          | Todas 21 · Divergentes 3 · Sem lançamento 6 · Tudo lançado 12                          | desenho do usuário                                                                                                      |
-| R12 | Ordem **Mesa**: pelo nome da mesa, número crescente. Ordem **Atenção**: Divergentes, depois Sem lançamento, depois Tudo lançado; dentro de cada grupo, pela mesa **(suposição)**.  | —                                                                                      | desenho do usuário + suposição                                                                                          |
+| R12 | Ordem **Mesa**: pelo nome da mesa, número crescente. Ordem **Atenção**: Divergentes, Sem lançamento, Sem pessoas, Tudo lançado; dentro do grupo, o **maior número de divergências** primeiro (soma das diferenças dos contadores vermelhos; no empate, a dos amarelos) e, por último, a mesa (usuário, 23/11/2026; a soma e o desempate são suposição).  | —                                                                                      | desenho do usuário + suposição                                                                                          |
 | R13 | A busca “Mesa” filtra os cards pelo nome da mesa (contém o texto digitado).                                                                                                        | “3” mostra 3, 31, 303…                                                                 | suposição                                                                                                               |
 
 ## 6. Permissões
@@ -153,7 +153,8 @@ Escolhas:
 - [x] Ao abrir: espera o clique; vem com a loja 01 (23/11/2026; em 19/11 era a última loja consultada, que ficou só para quem não tem a 01 no escopo).
 - [x] Tela das mesas: desenho do usuário (19/11/2026).
 - [ ] Trocar loja/RVC já pesquisa? (R10, suposição)
-- [ ] Ordem “Atenção” e busca por mesa (R12, R13, suposição).
+- [x] Ordem “Atenção”: maior número de divergências primeiro, por último a mesa (R12, 23/11/2026).
+- [ ] Busca por mesa (R13, suposição).
 - [ ] Dá para tirar o banco do GIA? Só se os itens de couvert forem achados pela BI do Simphony (grupo com o mesmo nome em todas as lojas, ou o mesmo número de item) e os RVCs vierem da BI (`getRevenueCenterDimensions`, a confirmar). O vínculo `BIAPI` do cadastro só traz o código da loja na BI. O usuário vai confirmar como o couvert está cadastrado (19/11/2026); até lá, banco do GIA.
 - [ ] Credenciais do banco do GIA (`GIA_SERVER_DATABASE_URL`) — o usuário vai receber.
 - [ ] Quem recebe `couvert.ler` — o usuário decide depois.

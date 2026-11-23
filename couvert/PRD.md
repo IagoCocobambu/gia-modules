@@ -128,7 +128,8 @@ Loja e RVC → cards das mesas e cores → chips, busca, ordem, Atualizar e Expo
 - [ ] Card com cores e selos pelas regras do conceito §5; buffet só na loja com buffet.
 - [ ] Chips contam a pesquisa inteira e filtram; zerado não filtra; Todas tira o filtro.
       No celular, o mesmo numa lista suspensa.
-- [ ] Busca e ordem Mesa/Atenção funcionam juntas com o chip.
+- [ ] Busca e ordem Mesa/Atenção funcionam juntas com o chip; Atenção põe primeiro as
+      divergentes com mais divergências e desempata pela mesa.
 - [ ] Atualizar busca de novo e o "atualizado há" acompanha; nada se atualiza sozinho.
 - [ ] Exportar baixa o Excel das mesas da tela, com o filtro no subtítulo; só com
       `couvert.exportar`.

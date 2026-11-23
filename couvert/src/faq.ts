@@ -113,8 +113,13 @@ mesas 3, 31, 303…
 ## Ordem
 
 - **Mesa**: pelo número da mesa.
-- **Atenção**: primeiro as **divergentes**, depois as **sem lançamento** e as **sem pessoas**, por último
-  as que estão com **tudo lançado**.
+- **Atenção**: primeiro as **divergentes**, da que tem o **maior número de divergências**
+  para a menor. O número é a diferença entre o lançado e as pessoas nos quadrinhos
+  vermelhos: **−3** conta 3, **+1** conta 1; com couvert e buffet vermelhos, os dois
+  somam. No empate, vem antes a que tem mais a lançar nos quadrinhos amarelos e, por
+  último, a ordem é pelo **número da mesa**.
+  Depois das divergentes vêm as **sem lançamento** (da que tem mais a lançar para a
+  menor), as **sem pessoas** e as que estão com **tudo lançado**.
       `,
     },
     {
