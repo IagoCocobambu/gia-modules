@@ -3,7 +3,7 @@ import type { Consulta } from '../types'
 
 /**
  * Última loja e RVC pesquisados, por usuário, para a tela abrir com eles escolhidos
- * (sem pesquisar sozinha). É preferência de tela — só os dois ids, nenhum dado de
+ * quando o usuário não tem a loja 01 no escopo (sem pesquisar sozinha). É preferência de tela — só os dois ids, nenhum dado de
  * negócio — e a tela confere se a loja ainda está no escopo antes de usar.
  *
  * Provisório: `createPersistedStore` do SDK até a resposta do

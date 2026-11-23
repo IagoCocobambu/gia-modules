@@ -15,8 +15,9 @@ export const faq: ModuleFaq = {
    vem escolhido.
 3. Clique em **Pesquisar**.
 
-A tela abre com a **última loja e o último salão** que você pesquisou já escolhidos,
-mas só busca as mesas quando você clicar.
+A tela abre com a **loja 01** e o primeiro salão dela já escolhidos, mas só busca as
+mesas quando você clicar. Se a loja 01 não está liberada para você, ela abre com a
+**última loja e o último salão** que você pesquisou.
 
 Com as mesas na tela, a barra fica numa linha só. Se você não mudou a loja nem o RVC,
 o botão vira **Atualizar** e busca as mesas de novo; trocando a loja ou o RVC, ele
@@ -192,7 +193,7 @@ botão saem dela.
       items: [
         {
           q: 'Por que a tela já abriu com uma loja escolhida?',
-          a: 'Ela guarda a **última loja e o último salão** que você pesquisou, para você só clicar em Pesquisar. Se a loja não estiver mais liberada para você, a tela abre sem loja.',
+          a: 'A tela sempre abre com a **loja 01** e o primeiro salão dela. Se a loja 01 não está liberada para você, ela abre com a **última loja e o último salão** que você pesquisou neste navegador; sem nenhuma pesquisa anterior, ou se essa loja não estiver mais liberada, abre sem loja. Para ver outra, escolha na lista e clique em Pesquisar.',
         },
         {
           q: 'Minha loja não aparece na lista.',

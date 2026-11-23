@@ -59,8 +59,16 @@ function useAgora(intervaloMs: number): number {
   return agora
 }
 
-/** Última loja/RVC do usuário, se a loja ainda está no escopo dele (Q-02). */
+/** Loja 01 da rede, pelo número no começo do nome do cadastro ("01.CB ..."). */
+const ehLoja01 = (l: LojaCouvert) => /^\s*0*1\D/.test(l.nome)
+
+/**
+ * Loja e RVC com que a tela abre: a loja 01 no 1º RVC. Quem não tem a 01 no escopo vê a
+ * última loja/RVC que pesquisou, se ela ainda está no escopo (Q-02).
+ */
 function sugestao(lojas: LojaCouvert[], ultima: Consulta | undefined): FiltrosValor {
+  const loja01 = lojas.find(ehLoja01)
+  if (loja01) return { empresaId: loja01.empresaId, rvc: loja01.rvcs[0]?.numero ?? null }
   const loja = ultima && lojas.find((l) => l.empresaId === ultima.empresaId)
   if (!loja) return { empresaId: null, rvc: null }
   const rvc = loja.rvcs.some((r) => r.numero === ultima.rvc) ? ultima.rvc : loja.rvcs[0]?.numero
@@ -88,7 +96,7 @@ export function CouvertView() {
   const lojasQuery = useLojasCouvert(canView)
   const lojas = useMemo(() => lojasQuery.data ?? [], [lojasQuery.data])
 
-  // Até o usuário mexer, os filtros são a última pesquisa dele (sem pesquisar).
+  // Até o usuário mexer, os filtros são a sugestão (sem pesquisar).
   const [escolha, setEscolha] = useState<FiltrosValor | null>(null)
   const filtros = escolha ?? sugestao(lojas, ultima)
 

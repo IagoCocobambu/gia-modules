@@ -84,6 +84,8 @@ o token nunca vai para log, resposta ou navegador.
       handler espera até **120 s** por chamada (a orientação era 60 s, que reprovava a
       maioria das pesquisas no horário de movimento). Confirmar que a função aceita
       ~125 s (limite da plataforma: 150 s). Passou disso: 504 e Tentar de novo.
+- **Loja ao abrir**: a 01, reconhecida pelo número no começo do nome da Empresa
+  (`01.…`), no 1º RVC. Quem não tem a 01 no escopo vê a última loja pesquisada.
 - **Última loja pesquisada**: guardada no navegador por usuário via
   `createPersistedStore` do SDK (só ids de loja e RVC) — questionamento Q-02 em aberto.
 - **Pendências com o time do Portal GIA**: regra de cor (desenho do usuário em

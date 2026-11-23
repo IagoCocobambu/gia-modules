@@ -8,7 +8,7 @@ export const tour = defineTour({
       screen: '/couvert',
       target: '[data-tour="couvert-filtros"]',
       title: 'Loja e salão',
-      body: 'Escolha a **loja** e o **RVC** (o salão) e clique em **Pesquisar**. A tela lembra a última loja e o último salão que você pesquisou. No celular, a barra se recolhe ao pesquisar; a seta abre de novo.',
+      body: 'Escolha a **loja** e o **RVC** (o salão) e clique em **Pesquisar**. A tela abre com a loja 01 já escolhida, se ela está liberada para você. No celular, a barra se recolhe ao pesquisar; a seta abre de novo.',
       placement: 'bottom',
     },
     {

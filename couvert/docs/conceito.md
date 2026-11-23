@@ -30,9 +30,10 @@ buffet; o módulo confere só o couvert artístico.
 
 ## 3. Fluxo de uso
 
-1. Abre o módulo em **Simphony › Couvert**. A tela vem com a **última loja e o último
-   RVC** que esse usuário consultou já escolhidos, mas **não pesquisa sozinha**
-   (decidido em 19/11/2026; ver §9, Q-02). Se a loja saiu do escopo dele, vem sem loja.
+1. Abre o módulo em **Simphony › Couvert**. A tela vem com a **loja 01** e o 1º RVC dela
+   já escolhidos (decidido em 23/11/2026), mas **não pesquisa sozinha**. Quem não tem a
+   01 no escopo vê a **última loja e o último RVC** que consultou (19/11/2026; §9, Q-02);
+   se essa loja saiu do escopo, vem sem loja.
 2. Escolhe a **loja** (só as que têm vínculo com a BI do Simphony) e o **RVC** (o
    salão). O 1º RVC da loja vem escolhido.
 3. Pesquisa: clica no botão **Atualizar** (↻). Trocar a loja ou o RVC já pesquisa
@@ -148,7 +149,7 @@ Escolhas:
 - [x] Buffet: sai do módulo (19/11/2026).
 - [x] Mesa com 0 pessoas: vermelha com couvert ou buffet lançado, neutra (chip Sem pessoas) sem lançamento (23/11/2026).
 - [x] Nome: “Couvert” no menu e no título da tela (19/11/2026).
-- [x] Ao abrir: espera o clique; vem com a última loja e RVC consultados (19/11/2026).
+- [x] Ao abrir: espera o clique; vem com a loja 01 (23/11/2026; em 19/11 era a última loja consultada, que ficou só para quem não tem a 01 no escopo).
 - [x] Tela das mesas: desenho do usuário (19/11/2026).
 - [ ] Trocar loja/RVC já pesquisa? (R10, suposição)
 - [ ] Ordem “Atenção” e busca por mesa (R12, R13, suposição).

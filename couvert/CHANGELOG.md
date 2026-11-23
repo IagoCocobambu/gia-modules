@@ -17,7 +17,8 @@ Primeira versão, migrada da tela Couvert do GIA antigo (`dashboard-e-couvert`).
 - Diferenças para o legado: dia de negócio pelo `getLatestBusDt` (não pela data do
   servidor); configuração de couvert do cadastro do portal (não de `gia.empresas`);
   token do hub (não de `auth.token_bi`); tempo limite de 120 s (o legado esperava 180 s);
-  sem pesquisa automática ao abrir — a tela vem com a última loja e RVC do usuário.
+  sem pesquisa automática ao abrir — a tela vem com a loja 01 e o 1º RVC dela (sem a 01
+  no escopo, com a última loja e RVC do usuário).
 - SDK `0.1.0-alpha.72` fixada.
 - Buffet sempre à vista no card (ícone tampa de travessa), como no legado; na loja sem
   buffet configurado ele não conta para a situação.

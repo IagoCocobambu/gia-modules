@@ -34,4 +34,4 @@ npm run validate       # gia validate — tem de ficar sem erros
 | `src/views/CouvertView.tsx`        | a tela                                                          |
 | `src/components/CartaoMesa.tsx`    | o card da mesa                                                  |
 | `src/exportar.ts`                  | planilha Excel das mesas da tela                                |
-| `src/hooks/use-ultima-pesquisa.ts` | última loja e RVC do usuário (Q-02)                             |
+| `src/hooks/use-ultima-pesquisa.ts` | última loja e RVC do usuário, sem a 01 no escopo (Q-02)         |

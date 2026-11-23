@@ -48,7 +48,8 @@ credencial `simphony-bi`.
 
 ### 5.2 Fluxos críticos
 
-1. Abre a tela: vem com a última loja e RVC do usuário, sem pesquisar.
+1. Abre a tela: vem com a loja 01 e o 1º RVC dela, sem pesquisar (quem não tem a 01 no
+   escopo vê a última loja e RVC que pesquisou).
 2. Escolhe loja e RVC → Pesquisar → cards das mesas abertas do dia de negócio.
 3. Clica num chip (ex.: Divergentes) → só aquelas mesas; ordem Atenção põe as
    divergentes primeiro.
@@ -130,7 +131,8 @@ Loja e RVC → cards das mesas e cores → chips, busca, ordem, Atualizar e Expo
 - [ ] Atualizar busca de novo e o "atualizado há" acompanha; nada se atualiza sozinho.
 - [ ] Exportar baixa o Excel das mesas da tela, com o filtro no subtítulo; só com
       `couvert.exportar`.
-- [ ] A tela abre com a última loja e RVC do usuário, sem pesquisar.
+- [ ] A tela abre com a loja 01 e o 1º RVC dela, sem pesquisar; sem a 01 no escopo, com a
+      última loja e RVC do usuário.
 - [ ] No celular, a barra recolhe ao pesquisar e a seta reabre (padrão 1).
 - [ ] Erro da BI mostra a `MensagemErro` com Tentar de novo, no lugar dos cards.
 - [ ] `gia validate` sem erros.
