@@ -91,5 +91,14 @@ export type Situacao = 'divergente' | 'sem-lancamento' | 'sem-pessoas' | 'tudo-l
 /** Filtro dos chips: uma situação ou todas. */
 export type FiltroSituacao = Situacao | 'todas'
 
+/** Como um card chegou à posição dele depois de um filtro, busca ou ordem. */
+export interface Movimento {
+  /** Sobe quando o card muda para longe: ele some no lugar antigo e surge no novo. */
+  versao: number
+  /** Direção do passo curto de chegada: −1, 0 ou 1. */
+  x: number
+  y: number
+}
+
 /** Ordem dos cards. */
 export type Ordem = 'mesa' | 'atencao'

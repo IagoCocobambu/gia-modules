@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Lock, Music, RefreshCw, Search, SearchX, Store } from 'lucide-react'
 import {
   Button,
@@ -8,6 +9,7 @@ import {
   Spinner,
   TelaCheia,
   TourReplayButton,
+  useDebouncedValue,
   WidthFrame,
 } from '@gia-cb/ui'
 import { cn } from '@gia-cb/ui/cn'
@@ -23,7 +25,7 @@ import { MensagemErro } from '../components/MensagemErro'
 import { formatData, formatHora, haQuantoTempo, MODULE_ID } from '../helpers'
 import { useUltimaPesquisa } from '../hooks/use-ultima-pesquisa'
 import { contar, mesasVisiveis } from '../regras'
-import type { Consulta, FiltroSituacao, LojaCouvert, Ordem } from '../types'
+import type { Consulta, FiltroSituacao, LojaCouvert, Movimento, Ordem } from '../types'
 
 /** Abaixo desta largura (px) a tela usa o layout de celular. */
 const LARGURA_COMPACTA = 768
@@ -74,6 +76,49 @@ function sugestao(lojas: LojaCouvert[], ultima: Consulta | undefined): FiltrosVa
   return { empresaId: loja.empresaId, rvc: rvc ?? null }
 }
 
+/** Colunas da grade dos cards agora (mede o elemento). */
+function useColunas(grade: HTMLElement | null): number {
+  const [colunas, setColunas] = useState(1)
+  useLayoutEffect(() => {
+    if (!grade || typeof ResizeObserver === 'undefined') return
+    const medir = () =>
+      setColunas(Math.max(1, getComputedStyle(grade).gridTemplateColumns.split(' ').length))
+    medir()
+    const ro = new ResizeObserver(medir)
+    ro.observe(grade)
+    return () => ro.disconnect()
+  }, [grade])
+  return colunas
+}
+
+/**
+ * Como cada card vai para o lugar novo. Perto (até 2 colunas e 1 linha), desliza. Longe,
+ * atravessaria a tela por cima dos outros: em vez disso some no lugar antigo e surge no
+ * novo com um passo curto na direção de onde veio (`versao` muda a `key` do card).
+ */
+function movimentos(
+  antes: string[],
+  depois: string[],
+  colunas: number,
+  anteriores: Map<string, Movimento>
+): Map<string, Movimento> {
+  const posicao = new Map(antes.map((id, i) => [id, i]))
+  return new Map(
+    depois.map((id, j) => {
+      const versao = anteriores.get(id)?.versao ?? 0
+      const i = posicao.get(id)
+      if (i === undefined) return [id, { versao, x: 0, y: 0 }]
+      const x = (j % colunas) - (i % colunas)
+      const y = Math.floor(j / colunas) - Math.floor(i / colunas)
+      const longe = Math.abs(x) > 2 || Math.abs(y) > 1
+      return [
+        id,
+        longe ? { versao: versao + 1, x: Math.sign(x), y: Math.sign(y) } : { versao, x: 0, y: 0 },
+      ]
+    })
+  )
+}
+
 const mesma = (a: Consulta | null, b: Consulta) =>
   a !== null && a.empresaId === b.empresaId && a.rvc === b.rvc
 
@@ -104,6 +149,8 @@ export function CouvertView() {
 
   const [filtro, setFiltro] = useState<FiltroSituacao>('todas')
   const [busca, setBusca] = useState('')
+  // Espera a pausa na digitação: os cards se reorganizam uma vez, não a cada tecla.
+  const buscaAplicada = useDebouncedValue(busca, 250)
   const [ordem, setOrdem] = useState<Ordem>('mesa')
   const [telaCheia, setTelaCheia] = useState(false)
   const [mesaAberta, setMesaAberta] = useState<string | null>(null)
@@ -112,9 +159,27 @@ export function CouvertView() {
   const temBuffet = resposta?.temBuffet ?? false
   const contagem = useMemo(() => contar(mesas, temBuffet), [mesas, temBuffet])
   const visiveis = useMemo(
-    () => mesasVisiveis(mesas, temBuffet, filtro, busca, ordem),
-    [mesas, temBuffet, filtro, busca, ordem]
+    () => mesasVisiveis(mesas, temBuffet, filtro, buscaAplicada, ordem),
+    [mesas, temBuffet, filtro, buscaAplicada, ordem]
   )
+
+  // Filtro, busca ou ordem mudou: como cada card sai do lugar antigo para o novo.
+  const [grade, setGrade] = useState<HTMLUListElement | null>(null)
+  const colunas = useColunas(grade)
+  const ordemNaTela = visiveis.map((m) => m.id).join('|')
+  const [cena, setCena] = useState({
+    ordem: '',
+    ids: [] as string[],
+    movimentos: new Map<string, Movimento>(),
+  })
+  if (cena.ordem !== ordemNaTela) {
+    const ids = visiveis.map((m) => m.id)
+    setCena({
+      ordem: ordemNaTela,
+      ids,
+      movimentos: movimentos(cena.ids, ids, colunas, cena.movimentos),
+    })
+  }
 
   /** Começa a pesquisa; `false` quando falta loja ou RVC (a barra fica aberta). */
   function pesquisar(valor: FiltrosValor): boolean {
@@ -280,9 +345,11 @@ export function CouvertView() {
             }
           />
         ) : (
-          <ul
+          <motion.ul
+            ref={setGrade}
+            layoutScroll
             className={cn(
-              'grid min-h-0 flex-1 auto-rows-min gap-2 overflow-y-auto px-0.5 pb-1 pt-2.5',
+              'relative grid min-h-0 flex-1 auto-rows-min gap-2 overflow-y-auto px-0.5 pb-1 pt-2.5',
               'grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))]',
               'transition-opacity duration-fast',
               consultando && 'opacity-60'
@@ -290,15 +357,19 @@ export function CouvertView() {
             aria-busy={consultando}
             aria-label="Mesas abertas"
           >
-            {visiveis.map((m) => (
-              <CartaoMesa
-                key={m.id}
-                mesa={m}
-                temBuffet={temBuffet}
-                onAbrir={() => setMesaAberta(m.id)}
-              />
-            ))}
-          </ul>
+            <AnimatePresence mode="popLayout">
+              {visiveis.map((m) => (
+                <CartaoMesa
+                  key={`${m.id}:${cena.movimentos.get(m.id)?.versao ?? 0}`}
+                  mesa={m}
+                  temBuffet={temBuffet}
+                  movimento={cena.movimentos.get(m.id)}
+                  ordemNaTela={ordemNaTela}
+                  onAbrir={() => setMesaAberta(m.id)}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.ul>
         )}
       </>
     )

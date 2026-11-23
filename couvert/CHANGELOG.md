@@ -30,5 +30,7 @@ Primeira versão, migrada da tela Couvert do GIA antigo (`dashboard-e-couvert`).
 - Mesa com 0 pessoas: vermelha (Divergente) só com couvert ou buffet lançado; sem
   lançamento fica neutra, com chip próprio (no legado ficava sempre vermelha).
 - No celular, os chips de situação viram uma lista suspensa.
+- Filtro, busca e ordem reorganizam os cards com animação (`framer-motion` e os presets do
+  SDK); a busca espera uma pausa de 250 ms na digitação.
 - Ordem Atenção: dentro da situação, o maior número de divergências primeiro e, por
   último, a mesa.

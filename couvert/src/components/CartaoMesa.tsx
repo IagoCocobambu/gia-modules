@@ -1,8 +1,10 @@
-import type { ComponentType } from 'react'
+import type { ComponentType, Ref } from 'react'
+import { motion } from 'framer-motion'
 import { ConciergeBell, Music, Users } from 'lucide-react'
 import { cn } from '@gia-cb/ui/cn'
+import { defaultTransition, fastTransition, usePrefersReducedMotion } from '@gia-cb/ui/motion'
 import { ROTULO_SITUACAO, selo, situacao, situacaoDoContador } from '../regras'
-import type { Mesa, Situacao } from '../types'
+import type { Mesa, Movimento, Situacao } from '../types'
 
 /**
  * Card de uma mesa aberta, no desenho aprovado pelo usuário em 19/11/2026
@@ -71,14 +73,26 @@ function Quadro({
   )
 }
 
+/** De onde vem o card que mudou para longe: um passo curto (px), na direção certa. */
+const PASSO = 28
+/** Deslize até o lugar novo: o `duration-slow` do tema (320 ms), sem quicar. */
+const DESLIZE = { ...defaultTransition, duration: 0.32 }
+
 interface Props {
   mesa: Mesa
   temBuffet: boolean
+  /** Como o card chegou à posição atual (ver `movimentos` na view). */
+  movimento: Movimento | undefined
+  /** Ordem das mesas na tela: o card só desliza quando ela muda. */
+  ordemNaTela: string
+  ref?: Ref<HTMLLIElement>
   /** Toque no card: abre o detalhe da conta (`DetalheMesa`). */
   onAbrir: () => void
 }
 
-export function CartaoMesa({ mesa, temBuffet, onAbrir }: Props) {
+export function CartaoMesa({ mesa, temBuffet, movimento, ordemNaTela, ref, onAbrir }: Props) {
+  const semMovimento = usePrefersReducedMotion()
+  const vindo = semMovimento || !movimento ? { x: 0, y: 0 } : movimento
   const s = situacao(mesa, temBuffet)
   const pessoas = `${mesa.pessoas} ${mesa.pessoas === 1 ? 'pessoa' : 'pessoas'}`
   const rotulo = [
@@ -91,7 +105,16 @@ export function CartaoMesa({ mesa, temBuffet, onAbrir }: Props) {
     .filter(Boolean)
     .join(', ')
   return (
-    <li className="min-w-0 animate-in fade-in duration-fast">
+    <motion.li
+      ref={ref}
+      className="min-w-0"
+      layout={semMovimento ? false : 'position'}
+      layoutDependency={ordemNaTela}
+      initial={{ opacity: 0, x: -vindo.x * PASSO, y: -vindo.y * PASSO }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
+      exit={{ opacity: 0, transition: fastTransition }}
+      transition={{ ...DESLIZE, opacity: defaultTransition }}
+    >
       <button
         type="button"
         onClick={onAbrir}
@@ -137,6 +160,6 @@ export function CartaoMesa({ mesa, temBuffet, onAbrir }: Props) {
         </div>
         <Quadro pessoas={mesa.pessoas} valor={mesa.buffet} icone={ConciergeBell} />
       </button>
-    </li>
+    </motion.li>
   )
 }

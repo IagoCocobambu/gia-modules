@@ -217,3 +217,10 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
   de couvert. As horas acompanham o relógio. Conferido na tela (1440 e 390 px): no
   celular o card tem blocos mais estreitos e o detalhe segue a ordem contadores, aviso,
   fatos, itens e valores.
+- **Cards se reorganizam com animação** (pedido do usuário, 23/11/2026: embaralhar fluido,
+  "sem ficar jogando os cards sem rumo pela tela"): `framer-motion` com os presets do
+  `@gia-cb/ui/motion`, sem componente novo. Card que vai para perto (até 2 colunas e 1
+  linha) desliza em 320 ms, sem quicar; o que iria longe some no lugar antigo e surge no
+  novo com um passo de 28 px na direção de onde veio; quem sai ou entra no filtro só
+  esmaece. Com "reduzir movimento" no sistema, só o esmaecer. A busca usa o
+  `useDebouncedValue` (250 ms) para reorganizar uma vez, não a cada tecla.
