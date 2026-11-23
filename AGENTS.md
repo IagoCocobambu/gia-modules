@@ -822,3 +822,43 @@ um módulo passa a arrastar o outro, e não dá para entregar um sem o outro.
 
 Referência: as branches de 19/11/2026 (`feat/fechamento-ifood-mensal-0.1.2`,
 `feat/fechamento-maestro-0.4.5`, `chore/padroes-workspace`…).
+
+## Padrões de layout
+
+### 19. Validar o layout em várias larguras, antes e depois de pesquisar
+
+Tela certa em 1440 px e no celular ainda pode quebrar **no meio**: em 1024 px o botão
+Pesquisar cai para a linha de baixo; no tablet em pé os campos ficam empilhados num
+canto. Toda tela nova, e toda mudança em barra de filtros, abas, totais ou botões, é
+conferida **olhando a tela** nas larguras abaixo antes de dar por pronta.
+
+- **Larguras da janela**: 1440, 1280, **1024**, 900, **820** e **768** (tablet em pé),
+  640 e 390. Confira também perto de onde o layout troca (os limites do módulo, como
+  768 e 900), um pouco acima e um pouco abaixo.
+- **Dois momentos**: **antes** de pesquisar (barra completa) e **depois** (barra enxuta
+  do padrão 8, totais, abas, tabela ou cards).
+- **Dado comprido**: repita com nome de loja longo — campo que cabe com `01.CB GOIANIA`
+  pode estourar com outro nome.
+- **O que conferir em cada uma**:
+  - sem rolagem lateral da página (`scrollWidth > innerWidth`) e nada passando da borda
+    do módulo;
+  - campos e botão da barra de filtros **na mesma linha**, alinhados pela base; abaixo de
+    640 px, empilhados na **largura toda**;
+  - nenhum texto cortado sem "…", nenhum campo espremido num canto;
+  - o celular continua seguindo os padrões 1, 2 e 8.
+- **Como corrigir a barra de filtros**:
+  - os campos ficam num `flex items-end gap-3` **sem** `flex-wrap`, com largura fixa e
+    `shrink-0`; quem cede o espaço é o **subtítulo**, que quebra e, com a área estreita
+    (abaixo de 900 px), sai;
+  - no layout de celular, `flex w-full flex-col sm:flex-row sm:items-end`: entre 640 px e
+    o limite do layout compacto, os campos dividem **uma linha**. O `w-full` é
+    obrigatório, porque dentro do `ListHeader` o bloco encolhe e vai para a direita;
+  - o campo que cresce leva `min-w-0 sm:w-0 sm:flex-1`: sem o `w-0`, o nome comprido
+    conta na largura mínima e estoura a barra;
+  - decida pela **área do módulo** (`ResizeObserver`), não pela janela: o menu do portal
+    ocupa parte dela.
+- **Diga o que conferiu** na entrega: as larguras testadas e o que ficou de fora. Não
+  afirme que está certo sem ter olhado a tela.
+
+Referência: `couvert/src/components/FiltrosBar.tsx` (props `compacto` e `estreito`) e
+`useMenorQue` em `couvert/src/views/CouvertView.tsx` (0.1.0).
