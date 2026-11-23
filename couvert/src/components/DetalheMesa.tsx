@@ -79,29 +79,23 @@ function Contador({
   )
 }
 
+/** Uma linha de fato: ícone e rótulo à esquerda, valor à direita (como os valores). */
 function Fato({
   icone: Icone,
   rotulo,
-  largo = false,
   children,
 }: {
   icone: ComponentType<{ className?: string }>
   rotulo: string
-  /** Ocupa a linha toda (nome do garçom, que é longo). */
-  largo?: boolean
   children: ReactNode
 }) {
   return (
-    <div
-      className={cn('grid min-w-0 grid-cols-[1rem_minmax(0,1fr)] gap-x-2', largo && 'col-span-2')}
-    >
-      <Icone className="mt-0.5 h-4 w-4 text-muted-foreground" />
-      <div className="min-w-0">
-        <dt className="truncate whitespace-nowrap text-xs text-muted-foreground">{rotulo}</dt>
-        <dd className="truncate whitespace-nowrap text-sm font-semibold text-foreground">
-          {children}
-        </dd>
-      </div>
+    <div className="flex items-center justify-between gap-3 whitespace-nowrap">
+      <dt className="flex items-center gap-2 text-muted-foreground">
+        <Icone className="h-4 w-4 shrink-0" />
+        {rotulo}
+      </dt>
+      <dd className="min-w-0 truncate text-right font-semibold text-foreground">{children}</dd>
     </div>
   )
 }
@@ -184,9 +178,11 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
               </Modal.Description>
             </Modal.Header>
             <Modal.Body>
-              <div className="grid gap-4 md:grid-cols-[17rem_minmax(0,1fr)]">
-                <aside className="flex min-w-0 flex-col gap-4">
-                  <div className="grid grid-cols-3 gap-1.5">
+              {/* Celular: uma coluna na ordem contadores, aviso, fatos, itens, valores (`contents`
+                  + `order`); de `md` em diante, as duas colunas. */}
+              <div className="flex flex-col gap-4 md:grid md:grid-cols-[17rem_minmax(0,1fr)]">
+                <aside className="contents min-w-0 flex-col gap-4 md:flex">
+                  <div className="order-1 grid grid-cols-3 gap-1.5">
                     <Contador
                       valor={mesa.couvert}
                       rotulo="couvert"
@@ -206,8 +202,8 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                       estilo={CONTADOR[situacaoDoContador(mesa.pessoas, mesa.buffet)]}
                     />
                   </div>
-                  <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <Fato icone={User} rotulo="Garçom" largo>
+                  <dl className="order-3 flex flex-col gap-1.5 text-sm tabular-nums">
+                    <Fato icone={User} rotulo="Garçom">
                       {conta.garcom === null ? (
                         '—'
                       ) : nomes.isLoading ? (
@@ -229,7 +225,7 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                       {conta.impressa ? 'impressa' : 'não impressa'}
                     </Fato>
                   </dl>
-                  <dl className="flex flex-col gap-1 border-t border-border pt-3 text-sm tabular-nums">
+                  <dl className="order-6 flex flex-col gap-1 border-t border-border pt-3 text-sm tabular-nums">
                     <Valor rotulo="Subtotal" valor={conta.subtotal} />
                     <Valor rotulo="Desconto" valor={conta.desconto} />
                     <Valor rotulo="Taxa de serviço" valor={conta.taxaServico} />
@@ -239,23 +235,27 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                   </dl>
                 </aside>
 
-                <section className="flex min-w-0 flex-col gap-3">
-                  <Aviso mesa={mesa} temBuffet={temBuffet} />
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <section className="contents min-w-0 flex-col gap-3 md:flex">
+                  <div className="order-2">
+                    <Aviso mesa={mesa} temBuffet={temBuffet} />
+                  </div>
+                  <h3 className="order-4 -mb-2 text-xs md:mb-0 font-semibold uppercase tracking-wide text-muted-foreground">
                     Itens ({conta.itens.length})
                   </h3>
-                  <div className="overflow-x-auto rounded-lg border border-border">
-                    <table className="w-full whitespace-nowrap text-sm">
+                  <div className="order-5 min-w-0 overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full whitespace-nowrap text-xs sm:text-sm">
                       <thead>
-                        <tr className="border-b border-border text-xs text-muted-foreground">
-                          <th className="w-px px-3 py-2 text-right font-semibold">Qtd</th>
-                          <th className="px-3 py-2 text-left font-semibold">Item</th>
-                          <th className="w-px px-3 py-2 text-center font-semibold">Assento</th>
-                          <th className="hidden w-px px-3 py-2 text-center font-semibold sm:table-cell">
+                        <tr className="border-b border-border text-[11px] text-muted-foreground sm:text-xs">
+                          <th className="w-px px-1 py-2 text-right font-semibold sm:px-3">Qtd</th>
+                          <th className="px-1 py-2 text-left font-semibold sm:px-3">Item</th>
+                          <th className="w-px px-1 py-2 text-center font-semibold sm:px-3">
+                            Assento
+                          </th>
+                          <th className="hidden w-px px-1 py-2 text-center font-semibold sm:px-3 sm:table-cell">
                             Rodada
                           </th>
-                          <th className="w-px px-3 py-2 text-center font-semibold">Hora</th>
-                          <th className="w-px px-3 py-2 text-right font-semibold">Valor</th>
+                          <th className="w-px px-1 py-2 text-center font-semibold sm:px-3">Hora</th>
+                          <th className="w-px px-1 py-2 text-right font-semibold sm:px-3">Valor</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -268,15 +268,15 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                               i.tipo === 'buffet' && 'bg-primary/[0.06]'
                             )}
                           >
-                            <td className="px-3 py-2 text-right tabular-nums">{i.qtd}×</td>
+                            <td className="px-1 py-2 text-right tabular-nums sm:px-3">{i.qtd}×</td>
                             <td
                               className={cn(
-                                'px-3 py-2',
+                                'px-1 py-2 sm:px-3',
                                 i.tipo && 'font-semibold',
                                 i.tipo === 'couvert' && 'text-destructive'
                               )}
                             >
-                              <span className="inline-flex items-center gap-1.5">
+                              <span className="flex items-center gap-1.5">
                                 {i.tipo === 'couvert' && <Music className="h-3.5 w-3.5" />}
                                 {i.tipo === 'buffet' && <ConciergeBell className="h-3.5 w-3.5" />}
                                 {nomes.data?.itens[i.miNum] ?? (
@@ -287,16 +287,18 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                                 )}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-center text-muted-foreground tabular-nums">
+                            <td className="px-1 py-2 text-center text-muted-foreground tabular-nums sm:px-3">
                               {i.assento ?? '—'}
                             </td>
-                            <td className="hidden px-3 py-2 text-center text-muted-foreground tabular-nums sm:table-cell">
+                            <td className="hidden px-1 py-2 text-center text-muted-foreground tabular-nums sm:px-3 sm:table-cell">
                               {i.rodada !== null ? `${i.rodada}ª` : '—'}
                             </td>
-                            <td className="px-3 py-2 text-center text-muted-foreground tabular-nums">
+                            <td className="px-1 py-2 text-center text-muted-foreground tabular-nums sm:px-3">
                               {hora(i.hora)}
                             </td>
-                            <td className="px-3 py-2 text-right tabular-nums">{brl(i.valor)}</td>
+                            <td className="px-1 py-2 text-right tabular-nums sm:px-3">
+                              {brl(i.valor)}
+                            </td>
                           </tr>
                         ))}
                         {conta.itens.length === 0 && (
@@ -310,7 +312,7 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                     </table>
                   </div>
                   {nomes.error && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="order-5 text-xs text-muted-foreground">
                       Não deu para buscar os nomes dos itens agora; aparecem os códigos.
                     </p>
                   )}

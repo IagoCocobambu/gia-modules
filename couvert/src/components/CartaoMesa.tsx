@@ -25,9 +25,21 @@ const QUADRO: Record<Situacao, string> = {
   divergente: 'border border-destructive/50 bg-destructive/15 text-destructive',
 }
 
-function Selo({ texto }: { texto: string }) {
+/** Nome curto (o normal, um número) em destaque; nome longo encolhe e quebra em 2 linhas. */
+function tamanhoDoNome(nome: string): string {
+  if (nome.length <= 3) return 'text-xl sm:text-2xl'
+  if (nome.length <= 5) return 'text-base sm:text-xl'
+  return 'line-clamp-2 break-words text-center text-xs sm:text-sm'
+}
+
+function Selo({ texto, className }: { texto: string; className?: string }) {
   return (
-    <span className="absolute -top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-destructive px-1.5 text-[11px] font-bold leading-4 text-destructive-foreground shadow-sm">
+    <span
+      className={cn(
+        'absolute -top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-destructive px-1.5 text-[11px] font-bold leading-4 text-destructive-foreground shadow-sm',
+        className
+      )}
+    >
       {texto}
     </span>
   )
@@ -46,7 +58,7 @@ function Quadro({
   return (
     <div
       className={cn(
-        'relative flex w-11 shrink-0 flex-col items-center justify-center gap-1 rounded-lg py-2',
+        'relative flex w-9 shrink-0 sm:w-11 flex-col items-center justify-center gap-1 rounded-lg py-2',
         QUADRO[situacaoDoContador(pessoas, valor)]
       )}
     >
@@ -84,7 +96,7 @@ export function CartaoMesa({ mesa, temBuffet, onAbrir }: Props) {
         aria-label={`${rotulo}. Ver a conta.`}
         aria-haspopup="dialog"
         className={cn(
-          'flex w-full min-w-0 items-stretch gap-2 rounded-xl border bg-surface p-1.5 text-left shadow-sm',
+          'flex w-full min-w-0 items-stretch gap-1 rounded-xl sm:gap-2 border bg-surface p-1.5 text-left shadow-sm',
           'transition-[box-shadow,transform] duration-fast hover:shadow-md active:scale-[0.99]',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           BORDA[s]
@@ -92,9 +104,14 @@ export function CartaoMesa({ mesa, temBuffet, onAbrir }: Props) {
       >
         <Quadro pessoas={mesa.pessoas} valor={mesa.couvert} icone={Music} />
         <div className="relative flex min-w-0 flex-1 flex-col items-center justify-center py-1">
-          {mesa.pessoas <= 0 && <Selo texto="sem pessoas" />}
+          {mesa.pessoas <= 0 && <Selo texto="sem pessoas" className="-top-3.5" />}
           <p className="flex min-w-0 max-w-full items-baseline">
-            <span className="truncate text-2xl font-bold leading-tight text-foreground tabular-nums">
+            <span
+              className={cn(
+                'font-bold leading-tight text-foreground tabular-nums',
+                tamanhoDoNome(mesa.mesa)
+              )}
+            >
               {mesa.mesa}
             </span>
             {mesa.grupo !== null && (

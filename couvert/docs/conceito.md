@@ -205,3 +205,10 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
 - **Loja de demonstração no `gia dev`** (pedido do usuário, 23/11/2026): "999.LOJA
   DEMONSTRAÇÃO (gia dev)", vínculo BIAPI `DEMO`, com `GIA_DEV_COUVERT_DEMO=1` — mesas,
   contas e nomes fictícios, sem chamar a BI; tem buffet configurado.
+- **Demonstração cobre todos os casos (23/11/2026)**: 17 mesas (cada situação de couvert
+  e buffet, mesa sem pessoas, estorno, pré-conta impressa, desconto e pagamento parcial,
+  conta sem itens, item sem assento ou sem nome, falha nos nomes, sem garçom, nome longo),
+  RVCs que simulam nenhuma mesa, 504, 424 e 502, e lojas sem buffet, sem RVC e sem itens
+  de couvert. As horas acompanham o relógio. Conferido na tela (1440 e 390 px): no
+  celular o card tem blocos mais estreitos e o detalhe segue a ordem contadores, aviso,
+  fatos, itens e valores.

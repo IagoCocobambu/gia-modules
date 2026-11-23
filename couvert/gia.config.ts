@@ -30,9 +30,14 @@ export default {
   ],
 
   empresas: [
-    // Loja de DEMONSTRAÇÃO (só gia dev, com GIA_DEV_COUVERT_DEMO=1 no .env): vínculo
-    // BIAPI `DEMO` — os handlers `mesas` e `nomes` devolvem contas e nomes fictícios
-    // sem chamar a BI. Tem buffet configurado, para ver o quadrinho do buffet em uso.
+    // Lojas de DEMONSTRAÇÃO (só gia dev, com GIA_DEV_COUVERT_DEMO=1 no .env): vínculo
+    // BIAPI `DEMO` — os handlers `mesas` e `nomes` devolvem contas e nomes fictícios sem
+    // chamar a BI (src/server/mesas.ts, MESAS_DEMO). Cobrem todos os casos da tela:
+    // - 999.LOJA DEMONSTRAÇÃO: RVC 101 com uma mesa para cada situação e detalhe da
+    //   conta; 102 sem mesas abertas; 901/902/903 simulam erros da BI (504/424/502);
+    // - …SEM BUFFET: as mesmas mesas, buffet não configurado (não conta na situação);
+    // - …SEM RVC: aparece como "Sem RVC configurado" e não pesquisa;
+    // - …SEM ITENS DE COUVERT: pesquisa e recebe 422 (configuração incompleta).
     {
       id: 999001,
       label: '999.LOJA DEMONSTRAÇÃO (gia dev)',
@@ -40,6 +45,42 @@ export default {
       couvert: {
         programacao: [500060, 500061, 500062, 500063, 500116, 500161],
         buffet: [23001],
+        rvcs: [
+          { nome: 'Restaurante', numero: 101 },
+          { nome: 'Varanda (sem mesas abertas)', numero: 102 },
+          { nome: 'Teste — BI demorou (504)', numero: 901 },
+          { nome: 'Teste — credencial recusada (424)', numero: 902 },
+          { nome: 'Teste — BI com erro (502)', numero: 903 },
+        ],
+      },
+    },
+    {
+      id: 999002,
+      label: '999.LOJA DEMONSTRAÇÃO SEM BUFFET (gia dev)',
+      locRefs: { BIAPI: 'DEMO' },
+      couvert: {
+        programacao: [500060, 500061, 500062, 500063, 500116, 500161],
+        buffet: [] as number[],
+        rvcs: [{ nome: 'Restaurante', numero: 101 }],
+      },
+    },
+    {
+      id: 999003,
+      label: '999.LOJA DEMONSTRAÇÃO SEM RVC (gia dev)',
+      locRefs: { BIAPI: 'DEMO' },
+      couvert: {
+        programacao: [500063],
+        buffet: [] as number[],
+        rvcs: [] as { nome: string; numero: number }[],
+      },
+    },
+    {
+      id: 999004,
+      label: '999.LOJA DEMONSTRAÇÃO SEM ITENS DE COUVERT (gia dev)',
+      locRefs: { BIAPI: 'DEMO' },
+      couvert: {
+        programacao: [] as number[],
+        buffet: [] as number[],
         rvcs: [{ nome: 'Restaurante', numero: 101 }],
       },
     },

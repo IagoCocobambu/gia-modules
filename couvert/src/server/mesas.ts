@@ -162,149 +162,322 @@ function montarMesas(contas: unknown[], programacao: Set<number>, buffet: Set<nu
 }
 
 // ── Loja de demonstração (só `gia dev`) ─────────────────────────────────────
-// Com GIA_DEV_COUVERT_DEMO=1 no `.env`, a Empresa cujo vínculo BIAPI é `DEMO` (a
-// "999.LOJA DEMONSTRAÇÃO" do gia.config.ts) não chama a BI: devolve contas fictícias
-// no formato do `getGuestChecks`. Em produção a variável não existe e nenhum
-// cadastro real tem `DEMO`.
+// Com GIA_DEV_COUVERT_DEMO=1 no `.env`, a Empresa cujo vínculo BIAPI é `DEMO` (as
+// "999.LOJA DEMONSTRAÇÃO…" do gia.config.ts) não chama a BI: devolve contas fictícias
+// no formato do `getGuestChecks`, cobrindo todos os casos que a tela trata. Em produção
+// a variável não existe e nenhum cadastro real tem `DEMO`.
+//
+// RVCs da demonstração (configurados no gia.config.ts):
+// - 101 Restaurante: uma mesa para cada situação e cada detalhe da conta (abaixo);
+// - 102 Varanda: nenhuma conta aberta (estado vazio);
+// - 901/902/903: simulam a BI lenta (504), a credencial recusada (424) e a BI com erro (502).
 const LOCREF_DEMO = 'DEMO'
 
-function contasDemo(dia: string): Json[] {
-  const h = (hm: string) => `${dia}T${hm}:00`
-  // [mesa, grupo, pessoas, garçom, rodadas, impressa, abertura, linhas: [miNum, qtd, unit, assento, rodada, hora]]
-  type Linha = [number, number, number, number, number, string]
-  const mesas: Array<[string, number, number, number, number, boolean, string, Linha[]]> = [
-    [
-      '22',
-      1,
-      4,
-      1043,
-      3,
-      false,
-      '19:42',
-      [
-        [500063, 2, 19.9, 1, 1, '19:44'],
-        [23001, 4, 89.9, 1, 1, '19:45'],
-        [3001, 2, 8.9, 1, 1, '19:46'],
-        [3010, 1, 12.9, 4, 1, '19:46'],
-        [4020, 2, 24.9, 1, 2, '20:15'],
-        [9743, 2, 18.9, 3, 3, '21:05'],
-      ],
+/** [miNum, qtd, preço unitário, assento|null, rodada|null, hora] */
+type LinhaDemo = [number, number, number, number | null, number | null, string]
+interface MesaDemo {
+  caso: string
+  mesa: string
+  grupo?: number
+  pessoas: number
+  garcom?: number | null
+  rodadas?: number
+  impressa?: boolean
+  desconto?: number
+  pago?: number
+  abertura: string
+  linhas: LinhaDemo[]
+}
+
+// Itens: 500063/500060 couvert artístico; 23001 buffet; 3001 refrigerante; 3010 suco;
+// 4020 caipirinha; 9743 pudim; 777777 item sem nome na BI. Garçom 9999 faz o handler
+// `nomes` falhar (a tela mostra os códigos).
+const MESAS_DEMO: MesaDemo[] = [
+  {
+    caso: 'tudo lançado',
+    mesa: '12',
+    pessoas: 2,
+    garcom: 1021,
+    rodadas: 1,
+    abertura: '20:05',
+    linhas: [
+      [500063, 2, 19.9, 1, 1, '20:07'],
+      [23001, 2, 89.9, 1, 1, '20:07'],
+      [3001, 2, 8.9, 2, 1, '20:08'],
     ],
-    [
-      '12',
-      1,
-      2,
-      1021,
-      1,
-      false,
-      '20:05',
-      [
-        [500063, 2, 19.9, 1, 1, '20:07'],
-        [23001, 2, 89.9, 1, 1, '20:07'],
-        [3001, 2, 8.9, 2, 1, '20:08'],
-      ],
+  },
+  {
+    caso: 'couvert sem lançamento',
+    mesa: '18',
+    pessoas: 3,
+    garcom: 1043,
+    rodadas: 1,
+    abertura: '20:20',
+    linhas: [
+      [23001, 3, 89.9, 1, 1, '20:22'],
+      [3010, 3, 12.9, 2, 1, '20:23'],
     ],
-    [
-      '31',
-      1,
-      2,
-      1021,
-      2,
-      false,
-      '20:30',
-      [
-        [23001, 2, 89.9, 1, 1, '20:31'],
-        [4020, 2, 24.9, 2, 2, '20:50'],
-      ],
+  },
+  {
+    caso: 'faltam 2 couverts',
+    mesa: '22',
+    pessoas: 4,
+    garcom: 1043,
+    rodadas: 3,
+    abertura: '19:42',
+    linhas: [
+      [500063, 1, 19.9, 1, 1, '19:44'],
+      [500063, 1, 19.9, 2, 1, '19:44'],
+      [23001, 1, 89.9, 1, 1, '19:45'],
+      [23001, 1, 89.9, 2, 1, '19:45'],
+      [23001, 1, 89.9, 3, 1, '19:45'],
+      [23001, 1, 89.9, 4, 1, '19:45'],
+      [3001, 1, 8.9, 1, 1, '19:46'],
+      [3001, 1, 8.9, 3, 1, '19:46'],
+      [3010, 1, 12.9, 4, 1, '19:46'],
+      [4020, 2, 24.9, 1, 2, '20:15'],
+      [9743, 1, 18.9, 3, 3, '21:05'],
+      [9743, 1, 18.9, 4, 3, '21:05'],
     ],
-    [
-      '45',
-      2,
-      3,
-      1055,
-      2,
-      true,
-      '19:10',
-      [
-        [500063, 4, 19.9, 1, 1, '19:12'],
-        [23001, 3, 89.9, 1, 1, '19:12'],
-        [3010, 3, 12.9, 2, 2, '19:40'],
-      ],
+  },
+  {
+    caso: '1 couvert a mais, grupo 2',
+    mesa: '45',
+    grupo: 2,
+    pessoas: 3,
+    garcom: 1055,
+    rodadas: 2,
+    abertura: '19:10',
+    linhas: [
+      [500063, 4, 19.9, 1, 1, '19:12'],
+      [23001, 3, 89.9, 1, 1, '19:12'],
+      [3010, 3, 12.9, 2, 2, '19:40'],
     ],
-    [
-      '60',
-      1,
-      6,
-      1043,
-      2,
-      false,
-      '20:12',
-      [
-        [500060, 6, 19.9, 1, 1, '20:14'],
-        [23001, 6, 89.9, 1, 1, '20:14'],
-        [3001, 6, 8.9, 3, 2, '20:40'],
-      ],
+  },
+  {
+    caso: 'sem pessoas, nada lançado',
+    mesa: '81',
+    pessoas: 0,
+    garcom: 1055,
+    rodadas: 1,
+    abertura: '21:00',
+    linhas: [[3010, 1, 12.9, 1, 1, '21:02']],
+  },
+  {
+    caso: 'sem pessoas, com couvert',
+    mesa: '82',
+    pessoas: 0,
+    garcom: 1021,
+    rodadas: 1,
+    abertura: '20:58',
+    linhas: [[500063, 2, 19.9, 1, 1, '21:00']],
+  },
+  {
+    caso: 'buffet sem lançamento',
+    mesa: '31',
+    pessoas: 2,
+    garcom: 1021,
+    rodadas: 2,
+    abertura: '20:30',
+    linhas: [
+      [500063, 2, 19.9, 1, 1, '20:31'],
+      [4020, 2, 24.9, 2, 2, '20:50'],
     ],
-    ['81', 1, 0, 1055, 1, false, '21:00', [[3010, 1, 12.9, 1, 1, '21:02']]],
-    [
-      '120',
-      1,
-      10,
-      1021,
-      3,
-      false,
-      '19:30',
-      [
-        [500063, 7, 19.9, 1, 1, '19:32'],
-        [23001, 10, 89.9, 1, 1, '19:33'],
-        [4020, 6, 24.9, 2, 2, '20:05'],
-        [9743, 4, 18.9, 5, 3, '21:00'],
-      ],
+  },
+  {
+    caso: 'falta 1 buffet',
+    mesa: '60',
+    pessoas: 6,
+    garcom: 1043,
+    rodadas: 2,
+    abertura: '20:12',
+    linhas: [
+      [500060, 6, 19.9, 1, 1, '20:14'],
+      [23001, 5, 89.9, 1, 1, '20:14'],
+      [3001, 6, 8.9, 3, 2, '20:40'],
     ],
-    [
-      '303',
-      1,
-      2,
-      1043,
-      1,
-      false,
-      '20:45',
-      [
-        [500063, 2, 19.9, 1, 1, '20:46'],
-        [23001, 1, 89.9, 1, 1, '20:46'],
-      ],
+  },
+  {
+    caso: 'couvert e buffet faltando',
+    mesa: '61',
+    pessoas: 2,
+    garcom: 1055,
+    rodadas: 1,
+    abertura: '20:40',
+    linhas: [
+      [500063, 1, 19.9, 1, 1, '20:41'],
+      [3001, 2, 8.9, 1, 1, '20:41'],
     ],
-  ]
-  return mesas.map(([mesa, grupo, pessoas, garcom, rodadas, impressa, abertura, linhas], i) => {
-    const sub = Math.round(linhas.reduce((s, l) => s + l[1] * l[2], 0) * 100) / 100
-    const taxa = Math.round(sub * 10) / 100
+  },
+  {
+    caso: 'mesa grande, faltam 3',
+    mesa: '120',
+    pessoas: 10,
+    garcom: 1021,
+    rodadas: 3,
+    abertura: '19:30',
+    linhas: [
+      [500063, 7, 19.9, 1, 1, '19:32'],
+      [23001, 10, 89.9, 1, 1, '19:33'],
+      [4020, 6, 24.9, 2, 2, '20:05'],
+      [9743, 4, 18.9, 5, 3, '21:00'],
+    ],
+  },
+  {
+    caso: 'pré-conta impressa, desconto e pagamento parcial',
+    mesa: '303',
+    pessoas: 2,
+    garcom: 1043,
+    rodadas: 2,
+    impressa: true,
+    desconto: 20,
+    pago: 150,
+    abertura: '19:05',
+    linhas: [
+      [500063, 2, 19.9, 1, 1, '19:06'],
+      [23001, 2, 89.9, 1, 1, '19:06'],
+      [9743, 2, 18.9, 2, 2, '20:30'],
+    ],
+  },
+  {
+    caso: 'estorno de couvert (linha negativa)',
+    mesa: '310',
+    pessoas: 1,
+    garcom: 1055,
+    rodadas: 1,
+    abertura: '20:10',
+    linhas: [
+      [500063, 2, 19.9, 1, 1, '20:11'],
+      [500063, -1, 19.9, 1, 1, '20:12'],
+      [23001, 1, 89.9, 1, 1, '20:11'],
+    ],
+  },
+  {
+    caso: 'conta acabou de abrir, sem itens',
+    mesa: '404',
+    pessoas: 2,
+    garcom: 1021,
+    rodadas: 0,
+    abertura: '21:10',
+    linhas: [],
+  },
+  {
+    caso: 'itens sem assento e item sem nome na BI',
+    mesa: '505',
+    pessoas: 2,
+    garcom: 1043,
+    rodadas: 1,
+    abertura: '20:50',
+    linhas: [
+      [500063, 2, 19.9, null, null, '20:51'],
+      [23001, 2, 89.9, null, 1, '20:51'],
+      [777777, 1, 35, null, 1, '20:52'],
+    ],
+  },
+  {
+    caso: 'nomes não chegam (falha no handler nomes)',
+    mesa: '700',
+    pessoas: 2,
+    garcom: 9999,
+    rodadas: 1,
+    abertura: '20:25',
+    linhas: [
+      [500063, 2, 19.9, 1, 1, '20:26'],
+      [23001, 2, 89.9, 1, 1, '20:26'],
+    ],
+  },
+  {
+    caso: 'conta sem garçom',
+    mesa: '701',
+    pessoas: 2,
+    garcom: null,
+    rodadas: 1,
+    abertura: '20:35',
+    linhas: [
+      [500063, 2, 19.9, 1, 1, '20:36'],
+      [23001, 2, 89.9, 2, 1, '20:36'],
+    ],
+  },
+  {
+    caso: 'nome de mesa longo',
+    mesa: 'VIP Lounge 12',
+    pessoas: 4,
+    garcom: 1055,
+    rodadas: 1,
+    abertura: '20:00',
+    linhas: [
+      [500063, 4, 19.9, 1, 1, '20:02'],
+      [23001, 4, 89.9, 1, 1, '20:02'],
+    ],
+  },
+]
+
+const r2 = (v: number) => Math.round(v * 100) / 100
+
+function contasDemo(rvc: number): Json[] {
+  if (rvc === 901) {
+    throw new HttpError(
+      504,
+      'A BI do Simphony demorou demais para responder. Tente atualizar de novo.'
+    )
+  }
+  if (rvc === 902) {
+    throw new HttpError(
+      424,
+      'A BI do Simphony recusou a credencial do portal (código 401). Avise o time do Portal GIA.'
+    )
+  }
+  if (rvc === 903)
+    throw new HttpError(502, 'A BI do Simphony não conseguiu responder agora (código 500).')
+  if (rvc !== 101) return [] // 102 Varanda: nenhuma conta aberta
+  // As horas das contas são de um turno fictício que está em 21:15; andam junto com o
+  // relógio (21:15 = agora em São Paulo) para o "aberta há" fazer sentido a qualquer hora.
+  const sp = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/Sao_Paulo',
+    dateStyle: 'short',
+    timeStyle: 'medium',
+  }).format(new Date())
+  const agora = Date.parse(`${sp.replace(' ', 'T')}Z`)
+  const h = (hm: string) => {
+    const [hh, mm] = hm.split(':').map(Number)
+    const atras = (21 * 60 + 15 - (hh * 60 + mm)) * 60_000
+    return new Date(agora - atras).toISOString().slice(0, 19)
+  }
+  return MESAS_DEMO.map((m, i) => {
+    const sub = r2(m.linhas.reduce((s, l) => s + l[1] * l[2], 0))
+    const desconto = m.desconto ?? 0
+    const taxa = r2((sub - desconto) * 0.1)
+    const total = r2(sub - desconto + taxa)
+    const pago = m.pago ?? 0
+    const ultima = m.linhas.length ? m.linhas[m.linhas.length - 1][5] : m.abertura
     return {
       guestCheckId: 900000 + i,
       chkNum: 2930 + i,
-      tblName: mesa,
-      tblNum: grupo,
-      gstCnt: pessoas,
-      empNum: garcom,
-      numSrvcRd: rodadas,
-      numChkPrntd: impressa ? 1 : 0,
-      opnLcl: h(abertura),
-      lastTransLcl: h(linhas[linhas.length - 1][5]),
+      tblName: m.mesa,
+      tblNum: m.grupo ?? 1,
+      gstCnt: m.pessoas,
+      empNum: m.garcom === undefined ? 1021 : m.garcom,
+      numSrvcRd: m.rodadas ?? 1,
+      numChkPrntd: m.impressa ? 1 : 0,
+      opnLcl: h(m.abertura),
+      lastTransLcl: h(ultima),
       subTtl: sub,
-      dscTtl: 0,
+      dscTtl: desconto,
       svcChgTtl: taxa,
-      chkTtl: Math.round((sub + taxa) * 100) / 100,
-      payTtl: 0,
-      balDueTtl: Math.round((sub + taxa) * 100) / 100,
+      autoSvcTtl: taxa, // a BI repete a taxa aqui; o handler não pode somar os dois
+      chkTtl: total,
+      payTtl: pago,
+      balDueTtl: r2(total - pago),
       detailLines: [
-        ...linhas.map(([miNum, qtd, unit, assento, rodada, hora]) => ({
+        ...m.linhas.map(([miNum, qtd, unit, assento, rodada, hora]) => ({
           menuItem: { miNum },
           dspQty: qtd,
-          dspTtl: Math.round(qtd * unit * 100) / 100,
+          dspTtl: r2(qtd * unit),
           seatNum: assento,
           svcRndNum: rodada,
           detailLcl: h(hora),
         })),
-        { serviceCharge: {}, dspQty: 0, dspTtl: taxa },
+        { serviceCharge: {}, dspQty: 0, dspTtl: taxa }, // linha sem item: fica de fora
       ],
     }
   })
@@ -400,7 +573,7 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
       dia,
       consultadoEm: new Date().toISOString(),
       temBuffet: config.buffet.length > 0,
-      mesas: montarMesas(contasDemo(dia), new Set(config.programacao), new Set(config.buffet)),
+      mesas: montarMesas(contasDemo(rvc), new Set(config.programacao), new Set(config.buffet)),
     }
   }
 

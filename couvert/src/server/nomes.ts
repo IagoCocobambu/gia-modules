@@ -127,6 +127,10 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
     )
   }
   if (locRef === LOCREF_DEMO) {
+    // Garçom 9999 (mesa 700 da demonstração): simula a falha da BI ao buscar os nomes.
+    if (pedidosGarcons.includes(9999)) {
+      throw new HttpError(502, 'A BI do Simphony não conseguiu responder agora (código 500).')
+    }
     for (const n of pedidosItens) if (DEMO_ITENS[n]) resposta.itens[n] = DEMO_ITENS[n]
     for (const n of pedidosGarcons) if (DEMO_GARCONS[n]) resposta.garcons[n] = DEMO_GARCONS[n]
     return resposta
