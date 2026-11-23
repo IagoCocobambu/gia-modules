@@ -11,7 +11,9 @@ export const couvertPermissions = definePermissions({
     },
     {
       key: 'couvert.exportar',
-      description: 'Exportar as mesas da tela em planilha Excel',
+      // Reservada: a tela não tem Exportar (saiu em 23/11/2026). O `gia validate` exige uma
+      // chave de ação além da `.ler` — ver docs/questionamentos-sdk/Q-03.
+      description: 'Reservada — hoje não libera nada na tela (não precisa atribuir)',
       groupPath: ['Simphony', 'Couvert'],
     },
   ],

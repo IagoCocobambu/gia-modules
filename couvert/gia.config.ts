@@ -25,7 +25,6 @@ export default {
   users: [
     { id: 'admin', name: 'Admin', permissions: '*' as const },
     { id: 'leitor', name: 'Leitor', permissions: ['couvert.ler'] },
-    { id: 'exportador', name: 'Exportador', permissions: ['couvert.ler', 'couvert.exportar'] },
     { id: 'sem-acesso', name: 'Sem acesso', permissions: [] },
   ],
 

@@ -33,5 +33,4 @@ npm run validate       # gia validate — tem de ficar sem erros
 | `src/regras.ts`                    | situação de cada mesa, selo, contagem dos chips, filtro e ordem |
 | `src/views/CouvertView.tsx`        | a tela                                                          |
 | `src/components/CartaoMesa.tsx`    | o card da mesa                                                  |
-| `src/exportar.ts`                  | planilha Excel das mesas da tela                                |
 | `src/hooks/use-ultima-pesquisa.ts` | última loja e RVC do usuário, sem a 01 no escopo (Q-02)         |

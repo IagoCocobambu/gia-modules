@@ -28,7 +28,7 @@ Couvert do GIA antigo faz essa conferência e precisa ir para o portal novo.
 
 Um card por mesa aberta (desenho do usuário), com chips que contam e filtram as mesas
 por situação, busca por mesa, ordem por mesa ou por atenção, Atualizar manual, tela
-cheia e Exportar em Excel. Dados: `ctx.empresas()` (lojas, vínculo `BIAPI` e
+cheia. Dados: `ctx.empresas()` (lojas, vínculo `BIAPI` e
 configuração de couvert) e a BI do Simphony (`getLatestBusDt` + `getGuestChecks`) pela
 credencial `simphony-bi`.
 
@@ -42,9 +42,9 @@ credencial `simphony-bi`.
 
 ### 5.1 Mapa de telas
 
-| Tela    | path       | Permissão                                    |
-| ------- | ---------- | -------------------------------------------- |
-| Couvert | `/couvert` | `couvert.ler` (Exportar: `couvert.exportar`) |
+| Tela    | path       | Permissão     |
+| ------- | ---------- | ------------- |
+| Couvert | `/couvert` | `couvert.ler` |
 
 ### 5.2 Fluxos críticos
 
@@ -54,16 +54,14 @@ credencial `simphony-bi`.
 3. Clica num chip (ex.: Divergentes) → só aquelas mesas; ordem Atenção põe as
    divergentes primeiro.
 4. Corrige no PDV → Atualizar.
-5. Exportar → planilha das mesas da tela, com o filtro ligado.
-6. No celular: a barra recolhe ao pesquisar (padrão 1); Atualizar e Exportar acima das
-   mesas.
+5. No celular: a barra recolhe ao pesquisar (padrão 1); Atualizar acima das mesas.
 
 ## 6. Permissões
 
 | Chave              | O que libera                                          |
 | ------------------ | ----------------------------------------------------- |
 | `couvert.ler`      | abrir a tela e consultar as mesas das lojas do escopo |
-| `couvert.exportar` | baixar a planilha Excel das mesas da tela             |
+| `couvert.exportar` | nada — reservada, não atribuir (Q-03)                 |
 
 Público sugerido: a definir pelo gestor.
 
@@ -89,15 +87,16 @@ Só leitura; sem tabela, migration ou banco externo.
 
 ## 9. Riscos / dependências
 
-| Risco                                                         | Mitigação                                                                     |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| BI lenta (2 s a 89 s medidos em 19/11/2026)                   | tempo limite de 120 s, 504 com Tentar de novo, sem repetição automática       |
-| Módulo não liberado na `simphony-bi` depois de instalar       | INTEGRATION §2.1; a tela mostra a falha de acesso (403)                       |
-| Loja sem configuração de couvert no cadastro                  | seletor mostra "Sem RVC configurado"; pesquisa responde 422 com o motivo      |
-| Estorno com `dspQty` negativo não conferido                   | conferir na primeira conta com estorno (pendência com o time do Portal GIA)   |
-| Regra de cor ainda a confirmar pelo time do Portal GIA        | regra do desenho do usuário (conceito §5); trocar em `src/regras.ts`          |
-| Q-02 aberto: lembrar a última loja com `createPersistedStore` | só ids de loja e RVC; troca concentrada em `src/hooks/use-ultima-pesquisa.ts` |
-| Não há BI de homologação                                      | módulo só lê; dado real em todos os ambientes                                 |
+| Risco                                                          | Mitigação                                                                               |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| BI lenta (2 s a 89 s medidos em 19/11/2026)                    | tempo limite de 120 s, 504 com Tentar de novo, sem repetição automática                 |
+| Módulo não liberado na `simphony-bi` depois de instalar        | INTEGRATION §2.1; a tela mostra a falha de acesso (403)                                 |
+| Loja sem configuração de couvert no cadastro                   | seletor mostra "Sem RVC configurado"; pesquisa responde 422 com o motivo                |
+| Estorno com `dspQty` negativo não conferido                    | conferir na primeira conta com estorno (pendência com o time do Portal GIA)             |
+| Regra de cor ainda a confirmar pelo time do Portal GIA         | regra do desenho do usuário (conceito §5); trocar em `src/regras.ts`                    |
+| Q-02 aberto: lembrar a última loja com `createPersistedStore`  | só ids de loja e RVC; troca concentrada em `src/hooks/use-ultima-pesquisa.ts`           |
+| Q-03 aberto: módulo só de leitura precisa de uma chave de ação | `couvert.exportar` declarada como reservada, sem efeito; trocar ou tirar com a resposta |
+| Não há BI de homologação                                       | módulo só lê; dado real em todos os ambientes                                           |
 
 ## 10. Métricas de sucesso
 
@@ -114,12 +113,12 @@ resposta da BI.
 ## 12. Insumos pra FAQ
 
 Como pesquisar e o dia de negócio; como ler o card (couvert, mesa/grupo, pessoas,
-buffet); cores e selos; chips, busca e ordem; Atualizar, Exportar e tela cheia;
+buffet); cores e selos; chips, busca e ordem; Atualizar e tela cheia;
 celular; por que uma mesa não aparece; loja sem configuração; erros da BI.
 
 ## 13. Insumos pra tour
 
-Loja e RVC → cards das mesas e cores → chips, busca, ordem, Atualizar e Exportar.
+Loja e RVC → cards das mesas e cores → chips, busca, ordem e Atualizar.
 
 ## 14. Critérios de aceite
 
@@ -131,8 +130,7 @@ Loja e RVC → cards das mesas e cores → chips, busca, ordem, Atualizar e Expo
 - [ ] Busca e ordem Mesa/Atenção funcionam juntas com o chip; Atenção põe primeiro as
       divergentes com mais divergências e desempata pela mesa.
 - [ ] Atualizar busca de novo e o "atualizado há" acompanha; nada se atualiza sozinho.
-- [ ] Exportar baixa o Excel das mesas da tela, com o filtro no subtítulo; só com
-      `couvert.exportar`.
+- [ ] A tela não tem Exportar.
 - [ ] A tela abre com a loja 01 e o 1º RVC dela, sem pesquisar; sem a 01 no escopo, com a
       última loja e RVC do usuário.
 - [ ] No celular, a barra recolhe ao pesquisar e a seta reabre (padrão 1).

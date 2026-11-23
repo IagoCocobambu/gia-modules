@@ -7,8 +7,9 @@ Primeira versão, migrada da tela Couvert do GIA antigo (`dashboard-e-couvert`).
 - Tela única em **Simphony › Couvert**: loja e RVC, mesas abertas em cards no desenho
   aprovado pelo usuário (`docs/artefatos/mesas-referencia-usuario.png`), chips de
   situação que filtram (Todas, Divergentes, Sem lançamento, Tudo lançado), busca por
-  mesa, ordem Mesa/Atenção, Atualizar com "atualizado há", tela cheia e Exportar em
-  Excel.
+  mesa, ordem Mesa/Atenção, Atualizar com "atualizado há" e tela cheia. Sem
+  Exportar: `couvert.exportar` está declarada só porque o `gia validate` exige uma chave
+  de ação (Q-03).
 - Couvert artístico e, na loja com buffet, buffet contra o número de pessoas; selo da
   diferença (−2, +1) e "sem pessoas".
 - Fontes: `ctx.empresas()` (lojas, `locRefs.BIAPI` e `empresa.couvert`) e BI do

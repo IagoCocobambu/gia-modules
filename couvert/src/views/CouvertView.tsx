@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { Download, Lock, Music, RefreshCw, Search, SearchX, Store } from 'lucide-react'
+import { Lock, Music, RefreshCw, Search, SearchX, Store } from 'lucide-react'
 import {
   Button,
   EmptyState,
@@ -13,17 +13,16 @@ import {
 import { cn } from '@gia-cb/ui/cn'
 import { useUser } from '@gia-cb/sdk/auth'
 import { useTourReplayTrigger } from '@gia-cb/sdk/modules'
-import { useCanAccess, useCanAccessState } from '@gia-cb/sdk/permissions'
+import { useCanAccessState } from '@gia-cb/sdk/permissions'
 import { useLojasCouvert, useMesas } from '../api/couvert'
 import { CartaoMesa } from '../components/CartaoMesa'
 import { DetalheMesa } from '../components/DetalheMesa'
 import { ChipsSituacao } from '../components/ChipsSituacao'
 import { FiltrosBar, type FiltrosValor } from '../components/FiltrosBar'
 import { MensagemErro } from '../components/MensagemErro'
-import { exportarMesas } from '../exportar'
 import { formatData, formatHora, haQuantoTempo, MODULE_ID } from '../helpers'
 import { useUltimaPesquisa } from '../hooks/use-ultima-pesquisa'
-import { contar, mesasVisiveis, ROTULO_SITUACAO } from '../regras'
+import { contar, mesasVisiveis } from '../regras'
 import type { Consulta, FiltroSituacao, LojaCouvert, Ordem } from '../types'
 
 /** Abaixo desta largura (px) a tela usa o layout de celular. */
@@ -82,7 +81,6 @@ export function CouvertView() {
   // Com o estado de carregamento: sem ele, a tela piscaria "Sem acesso" até as
   // permissões chegarem (api-reference §1.2, `useCanAccessState`).
   const { allowed: canView, loading: carregandoAcesso } = useCanAccessState('couvert.ler')
-  const canExport = useCanAccess('couvert.exportar')
   const replayTour = useTourReplayTrigger(MODULE_ID)
   const { user } = useUser()
   const usuarioId = user?.id ?? null
@@ -117,7 +115,6 @@ export function CouvertView() {
     () => mesasVisiveis(mesas, temBuffet, filtro, busca, ordem),
     [mesas, temBuffet, filtro, busca, ordem]
   )
-  const [exportando, setExportando] = useState(false)
 
   /** Começa a pesquisa; `false` quando falta loja ou RVC (a barra fica aberta). */
   function pesquisar(valor: FiltrosValor): boolean {
@@ -224,39 +221,6 @@ export function CouvertView() {
         {atualizado && <span className="text-muted-foreground">· {atualizado}</span>}
       </Button>
     )
-    const lojaConsultada = lojas.find((l) => l.empresaId === consulta.empresaId)
-    const exportar = canExport && (
-      // Mesmo visual do Exportar do `DataReport` do SDK (secondary + Download).
-      <Button
-        variant="secondary"
-        className={cn('shrink-0', compacto && 'h-11')}
-        disabled={consultando || exportando || visiveis.length === 0}
-        loading={exportando}
-        data-tour="couvert-exportar"
-        onClick={() => {
-          setExportando(true)
-          const partes = [
-            filtro !== 'todas' ? ROTULO_SITUACAO[filtro] : null,
-            busca.trim() ? `mesa "${busca.trim()}"` : null,
-          ].filter(Boolean)
-          exportarMesas(visiveis, {
-            lojaNome: lojaConsultada?.nome ?? `Loja ${consulta.empresaId}`,
-            rvcNome:
-              lojaConsultada?.rvcs.find((r) => r.numero === consulta.rvc)?.nome ??
-              `RVC ${consulta.rvc}`,
-            dia: resposta.dia,
-            consultadoEm: resposta.consultadoEm,
-            temBuffet,
-            filtro: partes.length > 0 ? partes.join(' · ') : null,
-            total: mesas.length,
-          })
-            .catch((e) => console.error('[couvert] falha ao gerar a planilha:', e))
-            .finally(() => setExportando(false))
-        }}
-      >
-        <Download className="h-4 w-4" /> Exportar
-      </Button>
-    )
     conteudo = (
       <>
         <div
@@ -302,14 +266,8 @@ export function CouvertView() {
                 atualizado {atualizado}
               </span>
             )}
-            {!compacto && exportar}
           </div>
-          {compacto ? (
-            <div className="flex items-center justify-between gap-2">
-              {atualizar}
-              {exportar}
-            </div>
-          ) : null}
+          {atualizar && <div className="flex items-center">{atualizar}</div>}
         </div>
         {visiveis.length === 0 ? (
           <EmptyState

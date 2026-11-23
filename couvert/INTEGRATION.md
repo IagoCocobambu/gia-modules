@@ -58,7 +58,9 @@ lê, então não há trava de teste (padrão 12 não se aplica).
 ## 4. Permissões e erros
 
 - `couvert.ler` — consultar as mesas abertas e o couvert lançado em cada uma.
-- `couvert.exportar` — baixar a planilha Excel das mesas da tela.
+- `couvert.exportar` — **reservada, não atribuir**: não libera nada (a tela não tem
+  Exportar). Está declarada só porque o `gia validate` exige uma chave de ação além da
+  `.ler` — questionamento Q-03 em aberto.
 - `groupPath`: `['Simphony', 'Couvert']`. Público sugerido: **a definir** pelo gestor.
 
 Status que o handler `mesas` devolve (a `MensagemErro` decide o texto por eles):

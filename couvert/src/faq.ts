@@ -124,7 +124,7 @@ mesas 3, 31, 303…
     },
     {
       id: 'atualizar',
-      title: 'Atualizar, exportar e tela cheia',
+      title: 'Atualizar e tela cheia',
       content: `
 ## Atualizar
 
@@ -132,14 +132,6 @@ As mesas **não se atualizam sozinhas**. Depois de corrigir no PDV, clique em
 **Atualizar** no alto para buscar de novo. Na linha dos chips aparece há quanto tempo
 foi a última busca ("atualizado há 3 min"); com o mouse sobre o botão Atualizar, o dia
 de negócio e a hora exata.
-
-## Exportar
-
-O botão **Exportar** baixa uma planilha Excel com as mesas **que estão na tela** —
-com o chip e a busca que estiverem ligados: mesa, grupo, pessoas, couvert artístico,
-buffet e situação. O subtítulo da planilha diz o dia de negócio, a
-hora das mesas e o filtro usado. Aparece só para quem tem a permissão
-\`couvert.exportar\`.
 
 ## Tela cheia
 
@@ -156,8 +148,7 @@ botão saem dela.
   **seta** no cabeçalho abre a barra de novo para trocar de loja ou de salão.
 - Os cards ficam em **duas colunas**. No lugar dos chips há uma **lista**: toque nela e
   escolha a situação (com quantas mesas há em cada uma); **Todas** tira o filtro.
-- Os botões **Atualizar** (com o tempo desde a última busca) e **Exportar** ficam
-  acima das mesas.
+- O botão **Atualizar** (com o tempo desde a última busca) fica acima das mesas.
 - A tela cheia só aparece no computador e no tablet.
       `,
     },
