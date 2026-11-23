@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teste do teclado virtual</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; padding: 16px 16px 340px; background: #eef2f6; color: #1f2937; font: 17px/1.45 "Segoe UI", Arial, sans-serif; }
+main { max-width: 940px; margin: 0 auto; }
+h1 { margin: 0 0 4px; font-size: 24px; }
+h2 { margin: 0 0 4px; font-size: 18px; }
+p { margin: 0 0 10px; }
+.sec { color: #4b5563; }
+.bloco { margin: 14px 0; padding: 14px 16px; background: #fff; border: 1px solid #d1d6db; border-radius: 10px; }
+button { min-height: 48px; margin: 4px 6px 4px 0; padding: 8px 18px; font: inherit; color: #1f2937; background: #e5e9ee; border: 2px solid #e5e9ee; border-radius: 8px; cursor: pointer; }
+button.on { background: #dbe8ff; border-color: #1e64d8; font-weight: bold; }
+button.azul { background: #1e64d8; border-color: #1e64d8; color: #fff; font-weight: bold; }
+input[type=text], textarea { display: block; width: 100%; max-width: 520px; padding: 11px 12px; font: inherit; color: #1f2937; background: #fff; border: 2px solid #9aa4b2; border-radius: 8px; }
+input[type=text]:focus, textarea:focus { border-color: #1e64d8; outline: none; }
+textarea { max-width: none; height: 300px; margin-top: 8px; font: 14px/1.4 Consolas, monospace; }
+.rot { margin: 10px 0 2px; font-weight: bold; }
+.auto { min-height: 22px; margin: 6px 0 0; font-size: 14px; color: #4b5563; }
+.oculto { display: none; }
+#faltam { font-weight: bold; color: #9a4b00; }
+</style>
+</head>
+<body>
+<main>
+<h1>Teste do teclado virtual</h1>
+<p class="sec">Use o dedo, na tela do terminal. A página não usa internet e não envia nada: no fim, você baixa, copia ou fotografa o resultado.</p>
+
+<div class="bloco">
+  <h2>1. Sobre o terminal</h2>
+  <p class="rot">Modelo</p><div data-grupo="modelo" data-op="WS 610|WS 625|WS 8|Outro"></div>
+  <p class="rot">Onde esta página está aberta</p><div data-grupo="onde" data-op="Navegador|Dentro do Simphony|Não sei"></div>
+  <p class="rot">Há teclado físico ligado?</p><div data-grupo="fisico" data-op="Não|Sim"></div>
+  <p class="rot">Há mouse ligado?</p><div data-grupo="mouse" data-op="Não|Sim"></div>
+</div>
+
+<div class="bloco">
+  <h2>2. Testes</h2>
+  <p>Faça um por vez. Antes do próximo, feche o teclado e toque numa parte vazia da página. A página não enxerga o teclado com certeza, então <b>responda o que você viu</b>.</p>
+</div>
+<div id="testes"></div>
+
+<div class="bloco">
+  <h2>3. Resultado</h2>
+  <p id="faltam"></p>
+  <button type="button" class="azul" id="baixar">Baixar resultado</button>
+  <button type="button" id="copiar">Copiar</button>
+  <span id="aviso" class="sec"></span>
+  <textarea id="saida" readonly></textarea>
+</div>
+</main>
+
+<script>
+// ES5 de propósito: o WS 610 pode ter navegador antigo.
+(function () {
+  var $ = function (id) { return document.getElementById(id) }
+  var resp = {}, medida = {}, marca = null, versaoSo = ''
+
+  // ---- testes ----
+  var TESTES = [
+    { id: 'A', nome: 'Campo de texto comum', faz: 'Toque no campo abaixo.', attrs: {} },
+    { id: 'B', nome: 'Campo como a busca Mesa', faz: 'Toque no campo abaixo.', attrs: { inputmode: 'search' } },
+    { id: 'C', nome: 'Campo numérico', faz: 'Toque no campo abaixo.', attrs: { inputmode: 'numeric' } },
+    { id: 'D', nome: 'Foco dado pela página (como ao abrir a lista de Loja)', faz: 'Toque no botão e NÃO toque no campo que aparece.', botao: 'Abrir a lista', revela: true, attrs: {} },
+    { id: 'E', nome: 'Tocar no campo que já tem o foco', faz: 'Logo depois do teste D, toque no campo que apareceu nele.', usa: 'D' },
+    { id: 'F', nome: 'Pedir o teclado pela página (VirtualKeyboard)', faz: 'Toque no campo abaixo.', attrs: { virtualkeyboardpolicy: 'manual' }, api: true }
+  ]
+  var OPCOES = ['Abriu', 'Abriu e fechou', 'Não abriu']
+  var temApi = 'virtualKeyboard' in navigator
+
+  function el(tag, props, pai) {
+    var e = document.createElement(tag), k
+    for (k in props) if (props.hasOwnProperty(k)) e[k] = props[k]
+    if (pai) pai.appendChild(e)
+    return e
+  }
+  function grupo(pai, chave, ops) {
+    var bs = []
+    for (var i = 0; i < ops.length; i++) (function (op) {
+      var b = el('button', { type: 'button', textContent: op }, pai)
+      b.onclick = function () {
+        resp[chave] = op
+        for (var j = 0; j < bs.length; j++) bs[j].className = bs[j] === b ? 'on' : ''
+        mostra()
+      }
+      bs.push(b)
+    })(ops[i])
+  }
+
+  function altura() { return Math.round(window.visualViewport ? window.visualViewport.height : window.innerHeight) }
+  function comeca(id, tipo) {
+    var m = medida[id] = { toque: tipo || '?', antes: altura(), menor: altura(), letras: 0, erro: '' }
+    marca = id
+    setTimeout(function () { if (marca === id) marca = null; mostra() }, 4000)
+    return m
+  }
+  function mede() {
+    if (!marca || !medida[marca]) return
+    medida[marca].menor = Math.min(medida[marca].menor, altura())
+    mostra()
+  }
+  window.addEventListener('resize', mede)
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', mede)
+
+  // Tipo do último toque (touch, pen ou mouse): no Windows, "mouse" não abre o teclado.
+  var ultimo = { tipo: '?', alvo: null }
+  function anota(tipo) { return function (ev) { ultimo = { tipo: tipo || ev.pointerType || '?', alvo: ev.target } } }
+  if (window.PointerEvent) document.addEventListener('pointerdown', anota(), true)
+  else {
+    document.addEventListener('mousedown', function (ev) { if (ultimo.alvo !== ev.target || ultimo.tipo !== 'touch') anota('mouse')(ev) }, true)
+    document.addEventListener('touchstart', anota('touch'), true)
+  }
+
+  var campos = {}
+  for (var t = 0; t < TESTES.length; t++) (function (T) {
+    var b = el('div', { className: 'bloco' }, $('testes'))
+    el('h2', { textContent: T.id + '. ' + T.nome }, b)
+    el('p', { className: 'sec', textContent: T.faz }, b)
+    var campo = null
+    if (!T.usa) {
+      if (T.botao) {
+        var abre = el('button', { type: 'button', className: 'azul', textContent: T.botao }, b)
+        abre.onclick = function () {
+          comeca(T.id, ultimo.tipo)
+          campo.className = ''
+          setTimeout(function () { campo.focus() }, 150)
+        }
+      }
+      campo = el('input', { type: 'text', autocomplete: 'off', className: T.revela ? 'oculto' : '' }, b)
+      campo.setAttribute('aria-label', T.nome)
+      for (var k in T.attrs) if (T.attrs.hasOwnProperty(k)) campo.setAttribute(k, T.attrs[k])
+      campos[T.id] = campo
+      campo.addEventListener('click', function () {
+        var id = T.id === 'D' ? 'E' : T.id
+        var m = comeca(id, ultimo.tipo)
+        if (T.api) {
+          if (!temApi) m.erro = 'este navegador não tem a API'
+          else try { navigator.virtualKeyboard.show() } catch (e) { m.erro = String(e.message || e) }
+        }
+        mostra()
+      })
+      campo.addEventListener('input', function () {
+        var id = T.id === 'D' && medida.E ? 'E' : T.id
+        if (medida[id]) { medida[id].letras = campo.value.length; mostra() }
+      })
+    }
+    if (T.api && !temApi) {
+      el('p', { className: 'auto', textContent: 'Este navegador não tem essa API: o teste não vale aqui.' }, b)
+      resp[T.id] = 'não se aplica (sem a API)'
+    } else {
+      el('p', { className: 'rot', textContent: 'O teclado na tela:' }, b)
+      grupo(el('div', {}, b), T.id, OPCOES)
+    }
+    el('p', { className: 'auto', id: 'auto-' + T.id }, b)
+  })(TESTES[t])
+
+  var gs = document.querySelectorAll('[data-grupo]')
+  for (var g = 0; g < gs.length; g++) grupo(gs[g], gs[g].getAttribute('data-grupo'), gs[g].getAttribute('data-op').split('|'))
+
+  // ---- aparelho ----
+  function mq(q) { return window.matchMedia ? (window.matchMedia(q).matches ? 'sim' : 'não') : '?' }
+  function sn(v) { return v ? 'sim' : 'não' }
+  function emQuadro() { try { return window.self !== window.top } catch (e) { return true } }
+  function aparelho() {
+    return [
+      'Navegador: ' + navigator.userAgent,
+      'Plataforma: ' + navigator.platform + (versaoSo ? ' | ' + versaoSo : ''),
+      'Tela: ' + screen.width + 'x' + screen.height + ' | janela: ' + window.innerWidth + 'x' + window.innerHeight + ' | escala: ' + (window.devicePixelRatio || '?'),
+      'Pontos de toque: ' + (navigator.maxTouchPoints === undefined ? '?' : navigator.maxTouchPoints),
+      'Apontador principal de toque: ' + mq('(pointer: coarse)') + ' | algum de toque: ' + mq('(any-pointer: coarse)') + ' | passa o mouse: ' + mq('(hover: hover)'),
+      'API VirtualKeyboard: ' + sn(temApi) + ' | virtualkeyboardpolicy: ' + sn('virtualKeyboardPolicy' in document.createElement('input')) + ' | inputmode: ' + sn('inputMode' in document.createElement('input')),
+      'Contexto seguro: ' + (window.isSecureContext === undefined ? '?' : sn(window.isSecureContext)) + ' | aberta por: ' + location.protocol + ' | dentro de outra página: ' + sn(emQuadro())
+    ]
+  }
+  // No Chrome/Edge, platformVersion 13 ou mais = Windows 11.
+  if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+    navigator.userAgentData.getHighEntropyValues(['platformVersion']).then(function (d) {
+      versaoSo = d.platform + ' (platformVersion ' + d.platformVersion + ')'
+      mostra()
+    }, function () {})
+  }
+
+  // ---- resultado ----
+  function detalhe(id) {
+    var m = medida[id]
+    if (!m) return ''
+    var q = m.antes - m.menor
+    return 'toque: ' + m.toque + ' | altura da página: ' + (q > 60 ? 'diminuiu ' + q + ' px' : 'não mudou') + ' | letras digitadas: ' + m.letras + (m.erro ? ' | erro: ' + m.erro : '')
+  }
+  function mostra() {
+    var i, T, falta = []
+    var L = ['TESTE DO TECLADO VIRTUAL', 'Data: ' + new Date().toLocaleString('pt-BR'), '',
+      'Modelo: ' + (resp.modelo || '-'), 'Aberta em: ' + (resp.onde || '-'),
+      'Teclado físico ligado: ' + (resp.fisico || '-') + ' | mouse ligado: ' + (resp.mouse || '-'), '']
+    var info = ['modelo', 'onde', 'fisico', 'mouse']
+    for (i = 0; i < info.length; i++) if (!resp[info[i]]) { falta.push('sobre o terminal'); break }
+    for (i = 0; i < TESTES.length; i++) {
+      T = TESTES[i]
+      if (!resp[T.id]) falta.push(T.id)
+      L.push(T.id + '. ' + T.nome + ': ' + (resp[T.id] || '(sem resposta)'))
+      var d = detalhe(T.id)
+      if (d) L.push('   ' + d)
+      $('auto-' + T.id).textContent = d
+    }
+    L.push('')
+    L = L.concat(aparelho())
+    $('saida').value = L.join('\r\n')
+    $('faltam').textContent = falta.length ? 'Falta responder: ' + falta.join(', ') + '.' : ''
+  }
+  $('copiar').onclick = function () {
+    $('saida').focus(); $('saida').select()
+    var ok = false
+    try { ok = document.execCommand('copy') } catch (e) {}
+    $('aviso').textContent = ok ? 'Copiado.' : 'Não deu para copiar: fotografe o resultado.'
+  }
+  $('baixar').onclick = function () {
+    var nome = 'teclado-virtual-' + (resp.modelo || 'terminal').toLowerCase().replace(/ /g, '') + '.txt'
+    try {
+      var blob = new Blob(['﻿' + $('saida').value], { type: 'text/plain;charset=utf-8' })
+      if (navigator.msSaveBlob) navigator.msSaveBlob(blob, nome)
+      else {
+        var a = el('a', { href: URL.createObjectURL(blob), download: nome }, document.body)
+        a.click(); document.body.removeChild(a)
+      }
+      $('aviso').textContent = 'Arquivo: ' + nome + '. Se não baixar, fotografe o resultado.'
+    } catch (e) { $('aviso').textContent = 'Não deu para baixar: fotografe o resultado.' }
+  }
+  mostra()
+})()
+</script>
+</body>
+</html>
