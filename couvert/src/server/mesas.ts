@@ -414,7 +414,9 @@ const MESAS_DEMO: MesaDemo[] = [
 
 const r2 = (v: number) => Math.round(v * 100) / 100
 
-function contasDemo(rvc: number): Json[] {
+const ITEM_BUFFET_DEMO = 23001
+
+function contasDemo(rvc: number, temBuffet: boolean): Json[] {
   if (rvc === 901) {
     throw new HttpError(
       504,
@@ -443,7 +445,11 @@ function contasDemo(rvc: number): Json[] {
     const atras = (21 * 60 + 15 - (hh * 60 + mm)) * 60_000
     return new Date(agora - atras).toISOString().slice(0, 19)
   }
-  return MESAS_DEMO.map((m, i) => {
+  // Loja sem buffet não vende buffet: as contas dela vêm sem esses itens.
+  const daLoja = MESAS_DEMO.map((m) =>
+    temBuffet ? m : { ...m, linhas: m.linhas.filter(([miNum]) => miNum !== ITEM_BUFFET_DEMO) }
+  )
+  return daLoja.map((m, i) => {
     const sub = r2(m.linhas.reduce((s, l) => s + l[1] * l[2], 0))
     const desconto = m.desconto ?? 0
     const taxa = r2((sub - desconto) * 0.1)
@@ -573,7 +579,11 @@ export default defineHandler<Body, Resposta>(async (ctx) => {
       dia,
       consultadoEm: new Date().toISOString(),
       temBuffet: config.buffet.length > 0,
-      mesas: montarMesas(contasDemo(rvc), new Set(config.programacao), new Set(config.buffet)),
+      mesas: montarMesas(
+        contasDemo(rvc, config.buffet.length > 0),
+        new Set(config.programacao),
+        new Set(config.buffet)
+      ),
     }
   }
 
