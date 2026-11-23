@@ -25,5 +25,5 @@ Primeira versão, migrada da tela Couvert do GIA antigo (`dashboard-e-couvert`).
   rodadas, último lançamento, pré-conta, valores e todos os itens com assento, rodada,
   hora e valor. Handler novo `nomes` para os nomes de itens e garçom.
 - Loja de demonstração no `gia dev` (`GIA_DEV_COUVERT_DEMO=1`, vínculo `DEMO`).
-- Mesa com 0 pessoas fica neutra (cinza), com o selo "sem pessoas" e chip próprio; não é
-  mais Divergente (no legado ficava vermelha).
+- Mesa com 0 pessoas: vermelha (Divergente) só com couvert ou buffet lançado; sem
+  lançamento fica neutra, com chip próprio (no legado ficava sempre vermelha).

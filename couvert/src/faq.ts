@@ -55,8 +55,8 @@ programação artística e como buffet.
 | --- | --- | --- |
 | neutro | **Tudo lançado** | couvert (e buffet) igual ao número de pessoas |
 | amarelo | **Sem lançamento** | mesa com pessoas e nenhum couvert (ou buffet) lançado |
-| vermelho | **Divergente** | couvert (ou buffet) diferente do número de pessoas |
-| neutro, com o selo "sem pessoas" | **Sem pessoas** | mesa com 0 pessoas, qualquer que seja o lançamento: não dá para conferir |
+| vermelho | **Divergente** | couvert (ou buffet) diferente do número de pessoas, ou lançado numa mesa com 0 pessoas |
+| neutro, com o selo "sem pessoas" | **Sem pessoas** | mesa com 0 pessoas e nenhum couvert ou buffet lançado |
 
 Cada quadrinho tem a cor da situação dele; a borda do card fica com a **pior** das
 duas (vermelho antes de amarelo). No quadrinho vermelho, o **selo** no alto diz a
@@ -64,7 +64,8 @@ diferença:
 
 - **−2**: faltam 2 couverts (ex.: 4 pessoas e 2 couverts);
 - **+1**: há 1 couvert a mais (ex.: 3 pessoas e 4 couverts);
-A mesa com o selo cinza **sem pessoas** está com 0 pessoas na conta: lance o número de
+A mesa com o selo **sem pessoas** está com 0 pessoas na conta. Selo cinza: nada foi
+lançado. Selo vermelho: já há couvert ou buffet lançado. Nos dois casos, lance o número de
 pessoas no PDV para conferir o couvert.
       `,
     },
@@ -166,7 +167,7 @@ botão saem dela.
         },
         {
           q: 'O que é a mesa com o selo "sem pessoas"?',
-          a: 'É uma conta aberta com **0 pessoas**. Sem esse número não dá para dizer se o couvert está certo, então ela não é apontada como erro: fica neutra e entra no chip **Sem pessoas**. Lance o número de pessoas no PDV e clique em **Atualizar**.',
+          a: 'É uma conta aberta com **0 pessoas**. **Sem couvert nem buffet lançado**, ela fica neutra e entra no chip **Sem pessoas**. **Com couvert ou buffet lançado**, fica vermelha e entra em **Divergentes**: lance o número de pessoas no PDV ou estorne o lançamento, e clique em **Atualizar**.',
         },
         {
           q: 'E uma mesa amarela?',

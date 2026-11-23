@@ -268,7 +268,9 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                             className={cn(
                               'border-b border-border last:border-0',
                               i.tipo === 'couvert' &&
-                                (mesa.pessoas > 0 ? 'bg-destructive/[0.06]' : 'bg-muted/50'),
+                                (mesa.pessoas > 0 || mesa.couvert !== 0
+                                  ? 'bg-destructive/[0.06]'
+                                  : 'bg-muted/50'),
                               i.tipo === 'buffet' && 'bg-primary/[0.06]'
                             )}
                           >
@@ -277,7 +279,9 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                               className={cn(
                                 'px-1 py-2 sm:px-3',
                                 i.tipo && 'font-semibold',
-                                i.tipo === 'couvert' && mesa.pessoas > 0 && 'text-destructive'
+                                i.tipo === 'couvert' &&
+                                  (mesa.pessoas > 0 || mesa.couvert !== 0) &&
+                                  'text-destructive'
                               )}
                             >
                               <span className="flex items-center gap-1.5">
@@ -334,11 +338,33 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
 function Aviso({ mesa, temBuffet }: { mesa: Mesa; temBuffet: boolean }) {
   const s = situacao(mesa, temBuffet)
   if (mesa.pessoas <= 0) {
+    // Com couvert ou buffet lançado e 0 pessoas: divergente (R9).
+    const lancado = [
+      mesa.couvert !== 0 ? `${mesa.couvert} couvert${mesa.couvert === 1 ? '' : 's'}` : null,
+      temBuffet && mesa.buffet !== 0
+        ? `${mesa.buffet} buffet${mesa.buffet === 1 ? '' : 's'}`
+        : null,
+    ].filter(Boolean)
+    const erro = s === 'divergente'
+    const Icone = erro ? TriangleAlert : UserX
     return (
-      <p className="flex items-start gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm">
-        <UserX className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+      <p
+        className={cn(
+          'flex items-start gap-2 rounded-lg border px-3 py-2 text-sm',
+          erro ? 'border-destructive/40 bg-destructive/[0.08]' : 'border-border bg-muted'
+        )}
+      >
+        <Icone
+          className={cn(
+            'mt-0.5 h-4 w-4 shrink-0',
+            erro ? 'text-destructive' : 'text-muted-foreground'
+          )}
+        />
         <span>
-          <b>Mesa sem pessoas.</b> Lance o número de pessoas no PDV para conferir o couvert.
+          <b>{erro ? `Mesa sem pessoas, com ${lancado.join(' e ')}.` : 'Mesa sem pessoas.'}</b>{' '}
+          {erro
+            ? 'Lance o número de pessoas no PDV ou estorne o lançamento.'
+            : 'Lance o número de pessoas no PDV para conferir o couvert.'}
         </span>
       </p>
     )

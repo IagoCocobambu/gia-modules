@@ -10,7 +10,7 @@ import type { Mesa, Situacao } from '../types'
  * artístico (nota musical); no meio, a mesa em destaque com o grupo (`45/2`) e as
  * pessoas; à direita, sempre (como no legado), o quadrinho do buffet. Cada quadrinho tem a
  * cor da situação dele e, quando diverge, o selo da diferença (−2, +1); a borda do
- * card é a da pior situação. Mesa com 0 pessoas fica neutra, com o selo "sem pessoas". Tocar no
+ * card é a da pior situação. Mesa com 0 pessoas leva o selo "sem pessoas": neutra sem lançamento, vermelha com couvert ou buffet lançado. Tocar no
  * card abre o detalhe da conta.
  */
 const BORDA: Record<Situacao, string> = {
@@ -109,7 +109,10 @@ export function CartaoMesa({ mesa, temBuffet, onAbrir }: Props) {
           {mesa.pessoas <= 0 && (
             <Selo
               texto="sem pessoas"
-              className="-top-3.5 border border-border bg-muted text-muted-foreground"
+              className={cn(
+                '-top-3.5',
+                s === 'sem-pessoas' && 'border border-border bg-muted text-muted-foreground'
+              )}
             />
           )}
           <p className="flex min-w-0 max-w-full items-baseline">

@@ -273,6 +273,15 @@ const MESAS_DEMO: MesaDemo[] = [
     linhas: [[500063, 2, 19.9, 1, 1, '21:00']],
   },
   {
+    caso: 'sem pessoas, com buffet',
+    mesa: '83',
+    pessoas: 0,
+    garcom: 1043,
+    rodadas: 1,
+    abertura: '20:55',
+    linhas: [[23001, 1, 89.9, 1, 1, '20:56']],
+  },
+  {
     caso: 'buffet sem lançamento',
     mesa: '31',
     pessoas: 2,

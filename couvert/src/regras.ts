@@ -5,13 +5,13 @@ import type { FiltroSituacao, Mesa, Ordem, Situacao } from './types'
 
 /**
  * Situação de UM contador (couvert ou buffet) contra as pessoas da mesa:
- * - 0 pessoas → Sem pessoas (R9), qualquer que seja o valor: não dá para conferir;
+ * - 0 pessoas (R9): com lançamento → Divergente; sem lançamento → Sem pessoas (neutro);
  * - igual às pessoas → Tudo lançado (R6);
  * - 0 → Sem lançamento (R7);
  * - senão → Divergente (R8).
  */
 export function situacaoDoContador(pessoas: number, valor: number): Situacao {
-  if (pessoas <= 0) return 'sem-pessoas'
+  if (pessoas <= 0) return valor === 0 ? 'sem-pessoas' : 'divergente'
   if (valor === pessoas) return 'tudo-lancado'
   if (valor === 0) return 'sem-lancamento'
   return 'divergente'
@@ -37,7 +37,7 @@ export function situacao(m: Mesa, temBuffet: boolean): Situacao {
   return PESO[buffet] < PESO[couvert] ? buffet : couvert
 }
 
-/** Selo de um contador: `−2`, `+1`, ou nada. Mesa sem pessoas não tem selo de diferença. */
+/** Selo de um contador: `−2`, `+1`, ou nada. Na mesa sem pessoas, o selo é o "sem pessoas". */
 export function selo(pessoas: number, valor: number): string | null {
   if (pessoas <= 0 || situacaoDoContador(pessoas, valor) !== 'divergente') return null
   const d = valor - pessoas
