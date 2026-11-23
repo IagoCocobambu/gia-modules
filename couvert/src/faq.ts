@@ -81,7 +81,9 @@ Toque num card para ver a **conta aberta** da mesa:
   (subtotal, desconto, taxa de serviço, total, pago e **saldo a pagar**);
 - **à direita**: o aviso do que falta (ex.: "Faltam 2 couverts") e **todos os itens**
   da conta, com quantidade, **assento**, rodada, hora e valor. Os itens de couvert e
-  de buffet aparecem em destaque.
+  de buffet aparecem em destaque: o couvert em **ciano**, com a nota musical, e o buffet
+  com a tampa de travessa. Na lista, a cor só identifica o item; quem diz se confere são
+  os contadores e o aviso.
 
 O assento mostra quem pediu o quê: se o couvert foi lançado só nos assentos 1 e 2 de
 uma mesa com 4 pessoas, faltam os assentos 3 e 4. Os nomes dos itens e do garçom

@@ -195,7 +195,7 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
 - **Detalhe da mesa — escolhida a combinação B+A (23/11/2026)**: tocar no card abre o
   `Modal` do SDK (size `xl`) em duas colunas, como a proposta B (à esquerda contadores,
   fatos e valores), com a lista única de itens da proposta A à direita (qtd, item,
-  assento, rodada, hora, valor; couvert e buffet em destaque) e o aviso do que falta
+  assento, rodada, hora, valor; couvert e buffet em destaque — o couvert em ciano pouco saturado, que só identifica o item; pedido do usuário em 23/11/2026, antes era vermelho fixo) e o aviso do que falta
   acima dela. Propostas em `docs/artefatos/detalhe-mesa-propostas.html` (a recomendação
   era a A). Em aberto: permissão própria para valores e garçom (ex.: `couvert.ver-conta`).
 - **Detalhe da mesa implementado (23/11/2026)**: `DetalheMesa` (`Modal` xl, B+A). O

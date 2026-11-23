@@ -52,6 +52,15 @@ const CONTADOR: Record<Situacao, string> = {
   'tudo-lancado': 'bg-muted text-muted-foreground',
 }
 
+/**
+ * Cor do item de couvert na lista: ciano pouco saturado, que só identifica o item (não é
+ * situação — quem diz se confere são os contadores e o aviso). O tema não tem ciano:
+ * mistura os tokens `info` e `success` (e um pouco do texto, pelo contraste), para
+ * acompanhar o claro e o escuro sem cor raw.
+ */
+const COR_COUVERT =
+  '[--cor-couvert:color-mix(in_oklab,color-mix(in_oklab,var(--color-info),var(--color-success)),var(--color-foreground)_25%)]'
+
 /** Frase do que falta num contador ("Faltam 2 couverts."), ou `null` se confere. */
 function falta(pessoas: number, valor: number, nome: string, plural: string): string | null {
   if (pessoas <= 0 || valor === pessoas) return null
@@ -268,9 +277,10 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                             className={cn(
                               'border-b border-border last:border-0',
                               i.tipo === 'couvert' &&
-                                (mesa.pessoas > 0 || mesa.couvert !== 0
-                                  ? 'bg-destructive/[0.06]'
-                                  : 'bg-muted/50'),
+                                cn(
+                                  COR_COUVERT,
+                                  'bg-[color-mix(in_oklab,var(--cor-couvert)_8%,transparent)]'
+                                ),
                               i.tipo === 'buffet' && 'bg-primary/[0.06]'
                             )}
                           >
@@ -279,9 +289,7 @@ export function DetalheMesa({ mesa, empresaId, temBuffet, agora, onFechar }: Pro
                               className={cn(
                                 'px-1 py-2 sm:px-3',
                                 i.tipo && 'font-semibold',
-                                i.tipo === 'couvert' &&
-                                  (mesa.pessoas > 0 || mesa.couvert !== 0) &&
-                                  'text-destructive'
+                                i.tipo === 'couvert' && 'text-[var(--cor-couvert)]'
                               )}
                             >
                               <span className="flex items-center gap-1.5">
