@@ -137,11 +137,12 @@ Escolhas:
 
 ## 9. Questionamentos ao SDK
 
-| Nº   | Tema                                                                                                      | Situação                                                                | Solução provisória                                                 |
-| ---- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Q-01 | Configuração do módulo por loja (itens de couvert e RVCs)                                                 | aberto — `docs/questionamentos-sdk/Q-01-configuracao-por-loja.md`       | ler do banco do GIA (`gia.empresas`); mock até as credenciais      |
-| Q-02 | Lembrar a última loja/RVC do usuário entre acessos (`createPersistedStore` diz "só theme persiste no v1") | aberto — `docs/questionamentos-sdk/Q-02-lembrar-ultima-loja.md`         | `createPersistedStore` com chave por usuário, só ids de loja e RVC |
-| Q-03 | Módulo só de leitura: o `gia validate` exige uma chave de ação além da `.ler`                             | aberto — `docs/questionamentos-sdk/Q-03-permissao-modulo-so-leitura.md` | `couvert.exportar` declarada como reservada, sem efeito            |
+| Nº   | Tema                                                                                                      | Situação                                                                  | Solução provisória                                                 |
+| ---- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Q-01 | Configuração do módulo por loja (itens de couvert e RVCs)                                                 | aberto — `docs/questionamentos-sdk/Q-01-configuracao-por-loja.md`         | ler do banco do GIA (`gia.empresas`); mock até as credenciais      |
+| Q-02 | Lembrar a última loja/RVC do usuário entre acessos (`createPersistedStore` diz "só theme persiste no v1") | aberto — `docs/questionamentos-sdk/Q-02-lembrar-ultima-loja.md`           | `createPersistedStore` com chave por usuário, só ids de loja e RVC |
+| Q-03 | Módulo só de leitura: o `gia validate` exige uma chave de ação além da `.ler`                             | aberto — `docs/questionamentos-sdk/Q-03-permissao-modulo-so-leitura.md`   | `couvert.exportar` declarada como reservada, sem efeito            |
+| Q-04 | Teclado virtual nos terminais Oracle MICROS (WS 610, 625 e 8)                                             | aberto — `docs/questionamentos-sdk/Q-04-teclado-virtual-terminais-pdv.md` | nenhuma; aguarda o teste nos aparelhos                             |
 
 ## 10. Perguntas em aberto
 
