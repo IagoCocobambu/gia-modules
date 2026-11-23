@@ -224,4 +224,6 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
   linha) desliza em 320 ms, sem quicar; o que iria longe some no lugar antigo e surge no
   novo com um passo de 28 px na direção de onde veio; quem sai ou entra no filtro só
   esmaece. Com "reduzir movimento" no sistema, só o esmaecer. A busca usa o
-  `useDebouncedValue` (250 ms) para reorganizar uma vez, não a cada tecla.
+  `useDebouncedValue` (250 ms) para reorganizar uma vez, não a cada tecla. **Opção A,
+  aprovada pelo usuário em 23/11/2026** entre as 5 de
+  `docs/artefatos/animacao-cards-propostas.html` (a recomendação era a C).

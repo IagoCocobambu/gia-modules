@@ -77,6 +77,8 @@ function Quadro({
 const PASSO = 28
 /** Deslize até o lugar novo: o `duration-slow` do tema (320 ms), sem quicar. */
 const DESLIZE = { ...defaultTransition, duration: 0.32 }
+/** Passo curto do card que mudou para longe: 200 ms, freando no fim. */
+const CHEGADA = { ...defaultTransition, ease: [0.2, 0, 0, 1] as [number, number, number, number] }
 
 interface Props {
   mesa: Mesa
@@ -113,7 +115,7 @@ export function CartaoMesa({ mesa, temBuffet, movimento, ordemNaTela, ref, onAbr
       initial={{ opacity: 0, x: -vindo.x * PASSO, y: -vindo.y * PASSO }}
       animate={{ opacity: 1, x: 0, y: 0 }}
       exit={{ opacity: 0, transition: fastTransition }}
-      transition={{ ...DESLIZE, opacity: defaultTransition }}
+      transition={{ layout: DESLIZE, x: CHEGADA, y: CHEGADA, opacity: CHEGADA }}
     >
       <button
         type="button"

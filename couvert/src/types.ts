@@ -95,7 +95,7 @@ export type FiltroSituacao = Situacao | 'todas'
 export interface Movimento {
   /** Sobe quando o card muda para longe: ele some no lugar antigo e surge no novo. */
   versao: number
-  /** Direção do passo curto de chegada: −1, 0 ou 1. */
+  /** Direção do passo curto de chegada (vetor de tamanho 1; 0 e 0 = sem passo). */
   x: number
   y: number
 }

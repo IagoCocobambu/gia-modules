@@ -111,10 +111,10 @@ function movimentos(
       const x = (j % colunas) - (i % colunas)
       const y = Math.floor(j / colunas) - Math.floor(i / colunas)
       const longe = Math.abs(x) > 2 || Math.abs(y) > 1
-      return [
-        id,
-        longe ? { versao: versao + 1, x: Math.sign(x), y: Math.sign(y) } : { versao, x: 0, y: 0 },
-      ]
+      if (!longe) return [id, { versao, x: 0, y: 0 }]
+      // O card tem umas 3 vezes mais largura que altura: a direção é a da tela.
+      const tamanho = Math.hypot(x * 3, y)
+      return [id, { versao: versao + 1, x: (x * 3) / tamanho, y: y / tamanho }]
     })
   )
 }
