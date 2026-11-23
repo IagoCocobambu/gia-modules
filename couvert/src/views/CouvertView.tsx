@@ -29,6 +29,8 @@ import type { Consulta, FiltroSituacao, LojaCouvert, Movimento, Ordem } from '..
 
 /** Abaixo desta largura (px) a tela usa o layout de celular. */
 const LARGURA_COMPACTA = 768
+/** Abaixo desta largura (px) a barra de filtros fica sem o subtítulo. */
+const LARGURA_ESTREITA = 900
 
 /** De onde veio o erro, em palavras (a mensagem padrão mostra embaixo do título). */
 const ORIGEM_HANDLER: Record<string, string> = {
@@ -36,18 +38,18 @@ const ORIGEM_HANDLER: Record<string, string> = {
   mesas: 'Mesas da BI do Simphony',
 }
 
-/** `true` quando a ÁREA do módulo é estreita (mede o elemento, não a janela). */
-function useModoCompacto(el: HTMLElement | null): boolean {
-  const [compacto, setCompacto] = useState(false)
+/** `true` quando a ÁREA do módulo é menor que `limite` (mede o elemento, não a janela). */
+function useMenorQue(el: HTMLElement | null, limite: number): boolean {
+  const [menor, setMenor] = useState(false)
   useLayoutEffect(() => {
     if (!el || typeof ResizeObserver === 'undefined') return
-    const medir = (largura: number) => setCompacto(largura > 0 && largura < LARGURA_COMPACTA)
+    const medir = (largura: number) => setMenor(largura > 0 && largura < limite)
     medir(el.getBoundingClientRect().width)
     const ro = new ResizeObserver((entries) => medir(entries[0]?.contentRect.width ?? 0))
     ro.observe(el)
     return () => ro.disconnect()
-  }, [el])
-  return compacto
+  }, [el, limite])
+  return menor
 }
 
 /** Relógio da tela, para o "atualizado há N min" andar sozinho (sem pesquisar). */
@@ -133,7 +135,8 @@ export function CouvertView() {
   const gravarUltima = useUltimaPesquisa((s) => s.gravar)
 
   const [area, setArea] = useState<HTMLDivElement | null>(null)
-  const compacto = useModoCompacto(area)
+  const compacto = useMenorQue(area, LARGURA_COMPACTA)
+  const estreito = useMenorQue(area, LARGURA_ESTREITA)
   const agora = useAgora(30_000)
 
   const lojasQuery = useLojasCouvert(canView)
@@ -387,6 +390,7 @@ export function CouvertView() {
             consultando={consultando}
             onPesquisar={() => pesquisar(filtros)}
             compacto={compacto}
+            estreito={estreito}
             enxuto={consulta !== null}
             mesmaPesquisa={
               consulta?.empresaId === filtros.empresaId && consulta?.rvc === filtros.rvc

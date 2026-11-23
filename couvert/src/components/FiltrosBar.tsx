@@ -29,6 +29,8 @@ interface FiltrosBarProps {
   dicaPesquisar?: string
   /** Layout de celular: campos empilhados, a barra recolhe ao pesquisar (padrão 1). */
   compacto: boolean
+  /** Área estreita: sem subtítulo, para os campos caberem numa linha. */
+  estreito: boolean
   /**
    * Com mesas na tela, fora do celular: uma linha só (padrão 8) — título e tour à
    * esquerda; loja, RVC, Pesquisar e tela cheia juntos à direita.
@@ -49,6 +51,7 @@ export function FiltrosBar({
   mesmaPesquisa,
   dicaPesquisar,
   compacto,
+  estreito,
   enxuto,
   telaCheia,
   onTelaCheia,
@@ -161,21 +164,36 @@ export function FiltrosBar({
       <ListHeader
         title={NOME_MODULO}
         titleExtra={tituloExtra}
-        subtitle="Mesas abertas do salão e o couvert artístico lançado em cada uma."
+        subtitle={
+          estreito ? undefined : 'Mesas abertas do salão e o couvert artístico lançado em cada uma.'
+        }
         controlsTourId="couvert-filtros"
         className={cn(
           'shrink-0 rounded-lg border border-border bg-surface',
           compacto && 'sm:flex-col sm:items-stretch'
         )}
       >
-        <div className={compacto ? 'flex flex-col gap-3' : 'flex flex-wrap items-end gap-3'}>
-          <Field label="Loja" className={compacto ? 'w-full' : 'w-64'}>
+        {/* Uma linha só: no celular os campos empilham; no tablet em pé, dividem a largura. */}
+        <div
+          className={
+            compacto
+              ? 'flex w-full flex-col gap-3 sm:flex-row sm:items-end'
+              : 'flex items-end gap-3'
+          }
+        >
+          <Field
+            label="Loja"
+            className={compacto ? 'w-full min-w-0 sm:w-0 sm:flex-1' : 'w-64 shrink-0'}
+          >
             {(controle) => seletorLoja(controle)}
           </Field>
-          <Field label="RVC (salão)" className={compacto ? 'w-full' : 'w-44'}>
+          <Field
+            label="RVC (salão)"
+            className={compacto ? 'w-full shrink-0 sm:w-44' : 'w-44 shrink-0'}
+          >
             {(controle) => seletorRvc(controle)}
           </Field>
-          <div className={compacto ? 'w-full' : undefined}>{pesquisar}</div>
+          <div className={compacto ? 'w-full shrink-0 sm:w-auto' : 'shrink-0'}>{pesquisar}</div>
         </div>
       </ListHeader>
     </div>
