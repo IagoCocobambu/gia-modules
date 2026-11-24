@@ -1,6 +1,6 @@
 {
   "name": "@modules/couvert",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Couvert — módulo GIA: mesas abertas e couvert artístico lançado, pela BI do Simphony",
   "private": true,
   "type": "module",

@@ -1,7 +1,7 @@
 # Couvert — conceito
 
 > Módulo `couvert` · SDK `0.1.0-alpha.72` · template `rich-api`
-> Situação: **confirmado e implementado — 0.1.0** (23/11/2026). As decisões do §11 valem
+> Situação: **confirmado e implementado — 0.1.1** (24/11/2026). As decisões do §11 valem
 > sobre o que está antes dele.
 > Marque com **(suposição)** tudo que não veio do usuário.
 
@@ -95,7 +95,8 @@ Menu: grupo **Simphony** (`navGroup: 'simphony'`, de fábrica no portal) › **C
 — confirmado pelo usuário em 19/11/2026. Permissões no mesmo lugar:
 `groupPath: ['Simphony', 'Couvert']`.
 
-Sem Exportar: a tela é de cards. Público de `couvert.ler`: o usuário decide depois.
+Sem Exportar: a tela é de cards. Público de `couvert.ler`: Gerentes, Diretores, Auditoria e
+Administração/GIA (23/11/2026).
 
 ## 7. Fora do escopo
 
@@ -158,7 +159,7 @@ Escolhas:
 - [x] Ordem “Atenção”: maior número de divergências primeiro, por último a mesa (R12, 23/11/2026).
 - [ ] Busca por mesa (R13, suposição).
 - [x] Banco do GIA: não é usado (alpha.72, §11).
-- [ ] Quem recebe `couvert.ler` — o usuário decide depois.
+- [x] Quem recebe `couvert.ler`: Gerentes, Diretores, Auditoria e Administração/GIA (23/11/2026).
 
 ## 11. Atualização de 19/11/2026 — orientação do time do Portal GIA
 

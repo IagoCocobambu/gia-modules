@@ -3,7 +3,7 @@
 ## 1. Identificação
 
 - **Módulo**: `couvert` — Couvert
-- **Versão do pacote**: 0.1.0
+- **Versão do pacote**: 0.1.1
 - **Autor / contato**: Iago Pereira <iago.pereira@cocobambu.com>
 - **Versão do SDK usada**: `@gia-cb/*` 0.1.0-alpha.72 (fixada; mínimo para
   `GiaEmpresa.couvert`)
@@ -61,7 +61,9 @@ lê, então não há trava de teste (padrão 12 não se aplica).
 - `couvert.exportar` — **reservada, não atribuir**: não libera nada (a tela não tem
   Exportar). Está declarada só porque o `gia validate` exige uma chave de ação além da
   `.ler` — questionamento Q-03 em aberto.
-- `groupPath`: `['Simphony', 'Couvert']`. Público sugerido: **a definir** pelo gestor.
+- `groupPath`: `['Simphony', 'Couvert']`. Público sugerido (aviso de entrega de
+  23/11/2026): `couvert.ler` para Gerentes, Diretores, Auditoria e Administração/GIA;
+  `couvert.exportar` para ninguém.
 
 Status que os handlers `mesas` e `nomes` devolvem (a `MensagemErro` decide o texto por eles):
 
@@ -93,8 +95,8 @@ o token nunca vai para log, resposta ou navegador.
   `createPersistedStore` do SDK (só ids de loja e RVC) — questionamento Q-02 em aberto.
 - **Pendências com o time do Portal GIA**: regra de cor (desenho do usuário em
   `docs/conceito.md` §5), estorno (se `dspQty` vem negativo na linha estornada — ainda
-  não houve conta com estorno para conferir), `numChkPrntd` numa conta com pré-conta impressa,
-  público das permissões e se valores e garçom pedem permissão própria.
+  não houve conta com estorno para conferir), `numChkPrntd` numa conta com pré-conta impressa
+  e se valores e garçom pedem permissão própria.
 - **Dependência**: `framer-motion` (a do `@gia-cb/ui`), para a animação dos cards.
 - **Terminais de PDV** (Oracle MICROS WS 610, 625 e 8): o teclado na tela depende do
   sistema do aparelho — questionamento Q-04 em aberto, falta testar.

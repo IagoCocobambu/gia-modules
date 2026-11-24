@@ -2,11 +2,11 @@
 
 | Campo                  | Valor                                                     |
 | ---------------------- | --------------------------------------------------------- |
-| **Versão do módulo**   | 0.1.0                                                     |
+| **Versão do módulo**   | 0.1.1                                                     |
 | **SDK version mínima** | `@gia-cb/*` 0.1.0-alpha.72 (fixada; `GiaEmpresa.couvert`) |
 | **Menu**               | Simphony › Couvert (`navGroup: 'simphony'`)               |
 | **Autor**              | Iago Pereira                                              |
-| **Status**             | em homologação — 23/11/2026                               |
+| **Status**             | em homologação — 24/11/2026                               |
 
 O detalhe das regras, das decisões e dos componentes está em
 [`docs/conceito.md`](docs/conceito.md); este PRD resume.
@@ -67,7 +67,8 @@ num card abre o detalhe da conta da mesa.
 | `couvert.ler`      | abrir a tela e consultar as mesas das lojas do escopo |
 | `couvert.exportar` | nada — reservada, não atribuir (Q-03)                 |
 
-Público sugerido: a definir pelo gestor.
+Público sugerido (23/11/2026): `couvert.ler` para Gerentes, Diretores, Auditoria e
+Administração/GIA; `couvert.exportar` para ninguém.
 
 ## 7. Dados
 
@@ -161,6 +162,7 @@ resposta da BI.
       sistema, só esmaecem.
 - [ ] Tela cheia no computador e no celular, com a saída sempre à vista.
 - [ ] Layout sem quebra de 320 a 1440 px, antes e depois de pesquisar (padrão 19).
+- [ ] A tela usa a largura toda, sem os botões de expandir das bordas.
 - [ ] Chips contam a pesquisa inteira e filtram; zerado não filtra; Todas tira o filtro.
       No celular, o mesmo numa lista suspensa.
 - [ ] Busca e ordem Mesa/Atenção funcionam juntas com o chip; Atenção põe primeiro as
@@ -173,3 +175,14 @@ resposta da BI.
 - [ ] Erro da BI mostra a `MensagemErro` com Tentar de novo, no lugar dos cards, e a barra
       de filtros volta à completa.
 - [ ] `gia validate` sem erros.
+
+## 15. Histórico
+
+### 23/11/2026 — 0.1.0
+
+- Primeira entrega.
+
+### 24/11/2026 — 0.1.1
+
+- A tela usa sempre a largura toda, sem os botões de expandir das bordas.
+- Público das permissões definido.

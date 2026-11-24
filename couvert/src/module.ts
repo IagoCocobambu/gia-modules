@@ -5,7 +5,7 @@ import { couvertRoutes } from './routes'
 export const couvertModule = defineModule({
   id: 'couvert',
   label: 'Couvert',
-  version: '0.1.0',
+  version: '0.1.1',
   description:
     'Conferência do couvert artístico: as mesas abertas do salão e onde o couvert lançado no Simphony não bate com o número de pessoas.',
   icon: 'music',

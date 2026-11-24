@@ -1,0 +1,52 @@
+Couvert 0.1.1 - revisão SDK e largura total da tela - 24/11/2026
+
+Entrega
+- Módulo: couvert ("Couvert")
+- Versão: 0.1.0 → 0.1.1
+- Pacote: modules-couvert-0.1.1.tgz (315,9 kB, 34 arquivos, sem .env nem segredos)
+- Menu: Simphony › Couvert
+- Permissões: couvert.ler e couvert.exportar (sem chave nova; couvert.exportar continua reservada, sem liberar nada)
+- Validação SDK: gia validate 55/55, 0 erros, 0 avisos (ESLint do host e tsc sem erros)
+- SDK: @gia-cb 0.1.0-alpha.72 (a mesma do Dashboard do Simphony; os demais módulos usam da alpha.70 à alpha.71)
+- Tipo: só leitura (BI do Simphony, credencial simphony-bi), sem banco e sem migration
+
+Mudança pedida
+1. A tela usa sempre a largura toda da janela, sem os botões de expandir/restaurar das bordas. O componente do SDK é o mesmo (WidthFrame), com o limite de largura acima de qualquer monitor.
+
+Incongruências encontradas e corrigidas
+1. PRD e INTEGRATION diziam "público a definir" → público do aviso de entrega de 23/11/2026: couvert.ler para Gerentes, Diretores, Auditoria e Administração/GIA; couvert.exportar para ninguém. Fonte: delivery-checklists.md R.1 (PRD alinhado com a entrega real).
+2. PRD sem o histórico de versões e sem o critério da largura total → incluídos. Fonte: prd-template.md §14 e AGENTS.md da raiz, padrão 19.
+3. A mudança da largura estava anotada na 0.1.0, já enviada sem ela → passou para a entrada da 0.1.1. Fonte: packaging.md §7.4.
+
+Conferido e já de acordo
+- WidthFrame continua sendo a raiz da tela, com a altura padrão e sem max-w no className: conventions.md §11
+- Layout sem rolagem lateral nem vertical de 390 a 2560 px: conventions.md §11 e AGENTS.md da raiz, padrão 19
+- Permissão de exportar: a tela não exporta e a chave reservada é a situação que o padrão 20 descreve: AGENTS.md da raiz, padrão 20
+- FAQ e tour não citavam os botões de largura nem o sistema antigo: conventions.md §14 e AGENTS.md da raiz, padrão 4
+- Fora a mudança da largura, o código de src é o da 0.1.0, revisada em 23/11/2026 contra o mesmo SDK; as demais regras seguem conferidas no resumo daquela entrega
+- Fontes lidas: docs do @gia-cb 0.1.0-alpha.72 (as mesmas da 0.1.0, sem alteração; conventions.md §11 relido), AGENTS.md da raiz (com os padrões 19 e 20) e do módulo.
+
+Não corrigido (decisão ou fora do escopo)
+- couvert.exportar declarada sem liberar nada - questionamento Q-03 aberto.
+- Dia de negócio só na dica do botão Atualizar (não aparece no toque) - decisão do usuário em 23/11/2026.
+- Última loja guardada no navegador (só para quem não tem a loja 01) - questionamento Q-02 aberto.
+- Modificadores do pedido ("Sem Modificacao") como itens comuns no detalhe, contador do buffet amarelo em loja sem buffet, e mesas da loja anterior na tela até pesquisar de novo - aguardam decisão.
+- Testes automáticos e stories (conventions.md §12) - o módulo não tem, e o gia validate não cobra.
+- README e PRD apontam para docs/conceito.md, que não vai no pacote.
+
+Testes
+- gia validate: 55/55, 0 erros, 0 avisos.
+- gia dev, loja de demonstração: 1920, 1440, 1280, 1024, 900, 820, 768, 640 e 390 px, antes e depois de pesquisar, e 2560 px depois: sem os botões das bordas, conteúdo na largura toda, sem rolagem da página.
+- Falta conferir: BI real com o limite de 20 s do dia de negócio (desde a 0.1.0), Safari e Firefox, leitor de tela e axe, "reduzir movimento" no sistema, celular e terminais de verdade.
+
+Arquivos alterados
+- src/views/CouvertView.tsx, src/module.ts (versão)
+- package.json, package-lock.json (versão)
+- PRD.md, INTEGRATION.md, CHANGELOG.md, docs/conceito.md
+
+Pendências com outros times
+- Time GIA: liberar o módulo na credencial simphony-bi depois de instalar; confirmar 140 s para a função couvert; conferir a configuração de couvert das lojas; confirmar a regra de cor, o estorno (quantidade negativa) e a pré-conta impressa (numChkPrntd) numa conta real; definir se valores e garçom pedem permissão própria.
+- Time do SDK: responder Q-02 (lembrar a última loja), Q-03 (permissão em módulo só de leitura) e Q-04 (teclado virtual nos terminais).
+- Salão/TI: testar o teclado na tela nos terminais WS 610, 625 e 8 (docs/artefatos/teste-teclado-virtual.html).
+- O token da BI usado no gia dev vence em 26/11/2026 às 15h.
+- Enviar modules-couvert-0.1.1.tgz ao time do Portal GIA pelo canal combinado.
