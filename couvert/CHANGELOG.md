@@ -33,6 +33,7 @@ Primeira versão, migrada da tela Couvert do GIA antigo (`dashboard-e-couvert`).
   Atualizar; barra de filtros numa linha também em telas médias e no tablet em pé.
 - Com erro na pesquisa, a barra de filtros volta à completa.
 - Tour: os passos das mesas esperam as mesas aparecerem.
+- A tela usa sempre a largura toda, sem os botões de expandir das bordas.
 - Filtro, busca e ordem reorganizam os cards com animação (`framer-motion` e os presets do
   SDK); a busca espera uma pausa de 250 ms na digitação.
 - Ordem Atenção: dentro da situação, o maior número de divergências primeiro e, por

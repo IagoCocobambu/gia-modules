@@ -229,3 +229,6 @@ do usuário mudaram estas decisões; elas valem sobre o que está acima:
 - **Revisão contra o SDK (23/11/2026)**: com erro, a barra volta à completa (padrão 8);
   tela cheia também no celular (`conventions §11`), com a saída ao lado do título; o dia de
   negócio continua só na dica do mouse, por decisão do usuário.
+- **Sem os botões de expandir a largura** (pedido do usuário, 24/11/2026): a tela usa sempre
+  a largura toda, com o `WidthFrame` do SDK e `collapsedMaxWidth` alto. Os botões das bordas
+  só existem quando a janela passa do limite.

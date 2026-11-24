@@ -31,6 +31,12 @@ import type { Consulta, FiltroSituacao, LojaCouvert, Movimento, Ordem } from '..
 const LARGURA_COMPACTA = 768
 /** Abaixo desta largura (px) a barra de filtros fica sem o subtítulo. */
 const LARGURA_ESTREITA = 900
+/**
+ * Limite de largura do `WidthFrame` acima de qualquer monitor: a tela usa sempre a largura
+ * toda e os botões de expandir/restaurar das bordas não aparecem (pedido do usuário,
+ * 24/11/2026).
+ */
+const LARGURA_TOTAL = 100_000
 
 /** De onde veio o erro, em palavras (a mensagem padrão mostra embaixo do título). */
 const ORIGEM_HANDLER: Record<string, string> = {
@@ -202,14 +208,20 @@ export function CouvertView() {
 
   if (carregandoAcesso) {
     return (
-      <WidthFrame className="flex h-64 items-center justify-center">
+      <WidthFrame
+        collapsedMaxWidth={LARGURA_TOTAL}
+        className="flex h-64 items-center justify-center"
+      >
         <Spinner />
       </WidthFrame>
     )
   }
   if (!canView) {
     return (
-      <WidthFrame className="h-[calc(100vh-6.5rem)] md:h-[calc(100vh-7.5rem)]">
+      <WidthFrame
+        collapsedMaxWidth={LARGURA_TOTAL}
+        className="h-[calc(100vh-6.5rem)] md:h-[calc(100vh-7.5rem)]"
+      >
         <EmptyState
           icon={Lock}
           title="Sem acesso"
@@ -404,7 +416,10 @@ export function CouvertView() {
   }
 
   return (
-    <WidthFrame className="flex h-[calc(100vh-6.5rem)] flex-col md:h-[calc(100vh-7.5rem)]">
+    <WidthFrame
+      collapsedMaxWidth={LARGURA_TOTAL}
+      className="flex h-[calc(100vh-6.5rem)] flex-col md:h-[calc(100vh-7.5rem)]"
+    >
       <TelaCheia ativa={telaCheia} onSair={() => setTelaCheia(false)} className="gap-3 p-4">
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <FiltrosBar
